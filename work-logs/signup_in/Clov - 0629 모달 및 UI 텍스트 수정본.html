@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -64,7 +64,7 @@
             --title-color: #4ade80;
             --bg-gradient: linear-gradient(145deg, #102932 0%, #1a3a41 48%, #244b56 100%);
             --button-text: #052e16;   /* 다크모드에서 밝은 초록색 버튼 위의 가독성 높은 짙은 글자색 */
-            --btn-primary-bg: #008535; /* 다크모드용 적당히 밝은 버튼 배경색 */
+            --btn-primary-bg: #1da858; /* 다크모드용 적당히 밝은 버튼 배경색 */
 
             /* 우정 대시보드 배너의 낮/밤 하늘 (다크모드 = 밤) */
             --sky-top: #050a18;
@@ -844,7 +844,7 @@
             font-size: 16px;
             font-weight: 700;
             margin-bottom: 16px;
-            color: rgba(255, 255, 255, 0.92);
+            color: var(--text-color);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -1416,7 +1416,7 @@
             display: block;
             font-size: 17px;
             font-weight: 900;
-            color: rgba(255,255,255,0.96);
+            color: var(--text-color);
             margin-bottom: 4px;
         }
 
@@ -1425,7 +1425,7 @@
             font-size: 12px;
             font-weight: 700;
             line-height: 1.45;
-            color: rgba(255,255,255,0.66);
+            color: var(--text-muted);
         }
 
         .feed-hero-meta {
@@ -1512,6 +1512,145 @@
         .feed-month-btn span {
             font-size: 10px;
             opacity: 0.78;
+        }
+
+        .feed-month-picker-wrap {
+            min-width: 0;
+            position: relative;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 42px;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .month-picker-trigger {
+            width: 40px;
+            height: 40px;
+            border: 1px solid rgba(255,255,255,0.24);
+            border-radius: 16px;
+            background: rgba(255,255,255,0.86);
+            color: var(--primary-green);
+            font-size: 17px;
+            cursor: pointer;
+            display: grid;
+            place-items: center;
+            box-shadow: 0 10px 22px rgba(8, 28, 22, 0.14);
+            backdrop-filter: blur(12px);
+            transition: transform 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .month-picker-trigger:hover,
+        .month-picker-trigger.active {
+            transform: translateY(-1px);
+            background: var(--primary-green);
+            color: #ffffff;
+            border-color: rgba(82,183,136,0.7);
+            box-shadow: 0 14px 28px rgba(8, 28, 22, 0.2);
+        }
+
+        .month-picker-popover {
+            position: fixed;
+            width: min(320px, calc(100vw - 32px));
+            padding: 14px;
+            border-radius: 26px;
+            background: rgba(255, 255, 255, 0.78);
+            border: 1px solid rgba(255, 255, 255, 0.48);
+            box-shadow: 0 24px 60px rgba(8, 28, 22, 0.28);
+            backdrop-filter: blur(22px) saturate(1.18);
+            z-index: 260;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(8px) scale(0.98);
+            transform-origin: top right;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .month-picker-popover.open {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0) scale(1);
+        }
+
+        .month-picker-header {
+            display: grid;
+            grid-template-columns: 38px 1fr 38px;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .month-picker-year {
+            color: #173f2e;
+            font-size: 16px;
+            font-weight: 900;
+            text-align: center;
+        }
+
+        .month-picker-nav {
+            width: 38px;
+            height: 34px;
+            border: 0;
+            border-radius: 14px;
+            background: rgba(232, 243, 237, 0.9);
+            color: var(--primary-green);
+            font-size: 18px;
+            font-weight: 900;
+            cursor: pointer;
+            transition: transform 0.18s ease, background-color 0.18s ease;
+        }
+
+        .month-picker-nav:hover {
+            transform: scale(1.04);
+            background: rgba(210, 239, 224, 0.96);
+        }
+
+        .month-picker-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .month-picker-month {
+            min-height: 58px;
+            border: 1px solid rgba(82, 183, 136, 0.18);
+            border-radius: 18px;
+            background: rgba(255,255,255,0.72);
+            color: #24473a;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            font-weight: 900;
+            transition: transform 0.18s ease, background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+        }
+
+        .month-picker-month span {
+            font-size: 10px;
+            color: #6c8175;
+            font-weight: 800;
+        }
+
+        .month-picker-month:hover {
+            transform: translateY(-1px);
+            border-color: rgba(82, 183, 136, 0.44);
+            background: rgba(232, 243, 237, 0.92);
+        }
+
+        .month-picker-month.active {
+            background: var(--primary-green);
+            color: #ffffff;
+            border-color: var(--accent-green);
+            box-shadow: 0 10px 22px rgba(27, 67, 50, 0.22);
+        }
+
+        .month-picker-month.active span {
+            color: rgba(255,255,255,0.78);
+        }
+
+        .month-picker-month.empty {
+            opacity: 0.62;
         }
         
         .feed-filter-tabs {
@@ -1985,6 +2124,7 @@
         .growth-shell {
             display: grid;
             gap: 16px;
+            position: relative;
         }
 
         .growth-hero {
@@ -2009,8 +2149,8 @@
             align-items: center;
             padding: 0 9px;
             border-radius: 999px;
-            background: rgba(255,255,255,0.16);
-            color: rgba(255,255,255,0.72);
+            background: rgba(255,255,255,0.4);
+            color: var(--primary-green);
             font-size: 10px;
             font-weight: 900;
             margin-bottom: 9px;
@@ -2018,7 +2158,7 @@
 
         .growth-title {
             display: block;
-            color: rgba(255,255,255,0.97);
+            color: var(--text-color);
             font-size: 19px;
             font-weight: 900;
             line-height: 1.25;
@@ -2027,7 +2167,7 @@
 
         .growth-subtitle {
             display: block;
-            color: rgba(255,255,255,0.66);
+            color: var(--text-muted);
             font-size: 12.5px;
             font-weight: 700;
             line-height: 1.45;
@@ -2887,18 +3027,18 @@
             z-index: 2;
             gap: 7px;
             padding: 14px;
-            color: #fff;
+            color: var(--primary-green);
         }
 
         .mobile-window .cover-kicker {
-            color: rgba(255, 255, 255, 0.82);
+            color: var(--text-muted);
             font-size: 10px;
         }
 
         .mobile-window .cover-title-row .editable-title {
-            color: #fff;
+            color: var(--text-color);
             font-size: 15px;
-            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+            text-shadow: none;
         }
 
         .mobile-window .cover-avatar {
@@ -2929,7 +3069,7 @@
 
         .mobile-window .cover-meta-value {
             margin-top: 0;
-            color: #fff;
+            color: var(--text-color);
             font-size: 10px;
         }
 
@@ -3420,6 +3560,28 @@
             color: #ffffff;
         }
 
+        body.dark-mode .section-title,
+        body.dark-mode .feed-title {
+            color: rgba(255, 255, 255, 0.96);
+        }
+
+        body.dark-mode .feed-subtitle {
+            color: rgba(255, 255, 255, 0.66);
+        }
+
+        body.dark-mode .growth-kicker {
+            background: rgba(255,255,255,0.16);
+            color: rgba(255,255,255,0.72);
+        }
+
+        body.dark-mode .growth-title {
+            color: rgba(255,255,255,0.97);
+        }
+
+        body.dark-mode .growth-subtitle {
+            color: rgba(255,255,255,0.66);
+        }
+
         body.dark-mode .cover-title-row .editable-title,
         body.dark-mode .cover-meta-value,
         body.dark-mode .memory-title,
@@ -3496,6 +3658,31 @@
         body.dark-mode .memory-detail-close {
             background: rgba(232, 243, 237, 0.96);
             color: #1b4332;
+        }
+
+        body.dark-mode .month-picker-trigger {
+            background: rgba(255, 255, 255, 0.86);
+            color: #1b4332;
+            border-color: rgba(198, 224, 211, 0.72);
+        }
+
+        body.dark-mode .month-picker-trigger:hover,
+        body.dark-mode .month-picker-trigger.active {
+            background: #e8f3ed;
+            color: #1b4332;
+            border-color: rgba(82,183,136,0.7);
+        }
+
+        body.dark-mode .btn-lucky-write {
+            background-color: var(--btn-primary-bg);
+            border-color: var(--btn-primary-bg);
+            color: var(--button-text);
+        }
+
+        body.dark-mode .month-picker-popover {
+            background: rgba(247, 252, 249, 0.82);
+            border-color: rgba(255, 255, 255, 0.5);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
         }
 
         body.dark-mode .memory-detail-sheet {
@@ -3612,6 +3799,188 @@
 
         .toggle-icon.slide-animation {
             animation: slide-pass 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        /* ==========================================
+           일정 세부 사이드바 (Schedule Detail Sidebar)
+           ========================================== */
+        .schedule-detail-sidebar {
+            position: absolute;
+            right: -100%;
+            top: 0;
+            bottom: 0;
+            width: 320px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            border-left: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.08);
+            transition: right 0.4s cubic-bezier(0.33, 1, 0.68, 1);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .schedule-detail-sidebar.open {
+            right: 0;
+        }
+
+        .mobile-window .schedule-detail-sidebar {
+            width: 80%;
+            max-width: 300px;
+        }
+
+        body.dark-mode .schedule-detail-sidebar {
+            background: rgba(15, 23, 18, 0.88);
+            border-left-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--primary-green);
+        }
+
+        .sidebar-close-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--text-muted);
+            padding: 4px;
+        }
+
+        .sidebar-close-btn:hover {
+            color: var(--danger);
+        }
+
+        .sidebar-form-section {
+            padding: 20px;
+            background: rgba(82, 183, 136, 0.05);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .sidebar-form-group {
+            margin-bottom: 12px;
+        }
+        
+        .sidebar-form-group label {
+            display: block;
+            font-size: 11px;
+            margin-bottom: 4px;
+            color: var(--text-muted);
+        }
+        
+        .sidebar-form-group input {
+            width: 100%;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--input-border);
+            background: var(--input-bg);
+            color: var(--text-color);
+            font-size: 13px;
+        }
+
+        .detail-timeline-list {
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .detail-timeline-item {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .detail-timeline-time {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--accent-green);
+            flex-shrink: 0;
+            width: 40px;
+            margin-top: 2px;
+        }
+
+        .detail-timeline-content {
+            background: var(--card-bg);
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            flex: 1;
+            font-size: 13px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+            position: relative;
+        }
+        
+        .detail-timeline-content::before {
+            content: "";
+            position: absolute;
+            left: -18px;
+            top: 14px;
+            width: 8px;
+            height: 8px;
+            background: var(--accent-green);
+            border-radius: 50%;
+            border: 2px solid var(--body-bg);
+        }
+
+        .timeline-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .pull-handle-trigger {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 24px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(8px);
+            border-radius: 12px 0 0 12px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-right: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.05);
+            transition: all 0.2s;
+            z-index: 10;
+        }
+        
+        body.dark-mode .pull-handle-trigger {
+            background: rgba(0, 0, 0, 0.4);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .pull-handle-trigger:hover {
+            width: 28px;
+            background: rgba(255, 255, 255, 0.6);
+        }
+
+        .pull-handle-trigger::after {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: var(--text-muted);
+            border-radius: 2px;
+            opacity: 0.5;
         }
     </style>
 </head>
@@ -3762,7 +4131,10 @@
                                 </div>
                             </div>
                             <div class="feed-controls">
-                                <div class="feed-month-rail" id="dt-feed-month-rail"></div>
+                                <div class="feed-month-picker-wrap">
+                                    <div class="feed-month-rail" id="dt-feed-month-rail"></div>
+                                    <button class="month-picker-trigger" id="dt-month-picker-trigger" type="button" onclick="toggleMonthPicker(event)" title="월 선택">📅</button>
+                                </div>
                                 <div class="feed-filter-tabs">
                                     <button class="feed-tab active" data-filter="all" onclick="setFeedFilter('all')">전체</button>
                                     <button class="feed-tab" data-filter="mine" onclick="setFeedFilter('mine')">내 기록</button>
@@ -3820,12 +4192,12 @@
                             </div>
                             <div class="modal-form-group">
                                 <label>해시태그 선택</label>
-                                <div class="tag-picker">
-                                    <label class="tag-choice"><input type="checkbox" class="dt-feed-tag-choice" value="#소중한순간" checked> #소중한순간</label>
-                                    <label class="tag-choice"><input type="checkbox" class="dt-feed-tag-choice" value="#우리만의장소"> #우리만의장소</label>
-                                    <label class="tag-choice"><input type="checkbox" class="dt-feed-tag-choice" value="#웃긴날"> #웃긴날</label>
-                                    <label class="tag-choice"><input type="checkbox" class="dt-feed-tag-choice" value="#다시보고싶은날"> #다시보고싶은날</label>
-                                </div>
+
+
+
+
+
+
                                 <input class="custom-tag-input" type="text" id="dt-custom-tags" placeholder="직접 태그 입력 예: #한강 #시험끝">
                             </div>
                             <div class="modal-buttons">
@@ -4072,7 +4444,10 @@
                                 </div>
                             </div>
                             <div class="feed-controls">
-                                <div class="feed-month-rail" id="mb-feed-month-rail"></div>
+                                <div class="feed-month-picker-wrap">
+                                    <div class="feed-month-rail" id="mb-feed-month-rail"></div>
+                                    <button class="month-picker-trigger" id="mb-month-picker-trigger" type="button" onclick="toggleMonthPicker(event)" title="월 선택">📅</button>
+                                </div>
                                 <div class="feed-filter-tabs">
                                     <button class="feed-tab active" data-filter="all" onclick="setFeedFilter('all')">전체</button>
                                     <button class="feed-tab" data-filter="mine" onclick="setFeedFilter('mine')">내 기록</button>
@@ -4156,12 +4531,12 @@
                             </div>
                             <div class="modal-form-group">
                                 <label>해시태그 선택</label>
-                                <div class="tag-picker">
-                                    <label class="tag-choice"><input type="checkbox" class="mb-feed-tag-choice" value="#소중한순간" checked> #소중한순간</label>
-                                    <label class="tag-choice"><input type="checkbox" class="mb-feed-tag-choice" value="#우리만의장소"> #우리만의장소</label>
-                                    <label class="tag-choice"><input type="checkbox" class="mb-feed-tag-choice" value="#웃긴날"> #웃긴날</label>
-                                    <label class="tag-choice"><input type="checkbox" class="mb-feed-tag-choice" value="#다시보고싶은날"> #다시보고싶은날</label>
-                                </div>
+
+
+
+
+
+
                                 <input class="custom-tag-input" type="text" id="custom-tags" placeholder="직접 태그 입력 예: #한강 #시험끝">
                             </div>
                             <div class="modal-buttons">
@@ -4291,6 +4666,51 @@
                         </div>
                     </div>
 
+                    <!-- 사이드바 (모바일) -->
+                    <div class="schedule-detail-sidebar" id="mb-schedule-detail-sidebar">
+                        <div class="sidebar-header">
+                            <span class="sidebar-title">날짜별 세부 일정</span>
+                            <button class="sidebar-close-btn" onclick="closeScheduleSidebar('mb')">✖</button>
+                        </div>
+                        <div class="sidebar-form-section">
+                            <div style="display: flex; gap: 8px;">
+                                <div class="sidebar-form-group" style="flex: 1;">
+                                    <label>시간</label>
+                                    <input type="time" id="mb-detail-time" value="08:00">
+                                </div>
+                            </div>
+                            <div class="sidebar-form-group">
+                                <label>일정 내용</label>
+                                <input type="text" id="mb-detail-content" placeholder="일정을 입력하세요">
+                            </div>
+                            <button class="btn-main" style="width: 100%; padding: 8px;" onclick="addDetailSchedule('mb')">일정 추가</button>
+                        </div>
+                        <div class="detail-timeline-list" id="mb-detail-timeline-list">
+                            <div class="detail-timeline-item">
+                                <div class="detail-timeline-time">08:00</div>
+                                <div class="detail-timeline-content">
+                                    <div>여행 출발</div>
+                                    <div class="timeline-meta">
+                                        <span>🚗</span>
+                                        <span>🔔 알림 10분 전</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="detail-timeline-item">
+                                <div class="detail-timeline-time">09:45</div>
+                                <div class="detail-timeline-content">
+                                    <div>여행지 도착</div>
+                                </div>
+                            </div>
+                            <div class="detail-timeline-item">
+                                <div class="detail-timeline-time">11:20</div>
+                                <div class="detail-timeline-content">
+                                    <div>점심 예약 확인</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -4312,6 +4732,15 @@
         <div class="memory-detail-tags" id="memory-detail-tags"></div>
     </section>
 
+    <div class="month-picker-popover" id="month-picker-popover" role="dialog" aria-label="월 선택">
+        <div class="month-picker-header">
+            <button class="month-picker-nav" type="button" onclick="moveMonthPickerYear(-1)" aria-label="이전 년도">❮</button>
+            <div class="month-picker-year" id="month-picker-year">2026년</div>
+            <button class="month-picker-nav" type="button" onclick="moveMonthPickerYear(1)" aria-label="다음 년도">❯</button>
+        </div>
+        <div class="month-picker-grid" id="month-picker-grid"></div>
+    </div>
+
     <!-- ==========================================
        3. 인터랙션 및 프로토타입 상태 제어 스크립트 
        ========================================== */ -->
@@ -4320,6 +4749,7 @@
         let activeGroup = 'friend'; // 기본값: 단짝친구
         let activeFeedFilter = 'all';
         let activeFeedMonth = 'all';
+        let monthPickerYear = new Date().getFullYear();
         let activeEvidenceIndexes = {
             friend: 0,
             family: 0,
@@ -4709,6 +5139,7 @@
 
         function setFeedMonth(monthKey) {
             activeFeedMonth = monthKey;
+            closeMonthPicker();
             renderFeeds();
         }
 
@@ -5702,6 +6133,7 @@
 
             zone.innerHTML = `
                 <section class="growth-shell">
+                    <div class="pull-handle-trigger" onclick="toggleScheduleSidebar('${viewType}')"></div>
                     <div class="growth-detail" style="--chip-accent:${accent}; --chip-glow:${glow};">
                         <div class="spotlight-actions">
                             <button onclick="openScheduleModal('${viewType}', ${selectedSchedule.id})">⚙️ 수정</button>
@@ -6116,6 +6548,87 @@
 
         // 9. 다크모드 제어 기능
         let isDarkMode = false;
+        function getFeedMonthCounts(posts) {
+            const counts = {};
+            getFeedMonths(posts).forEach(month => {
+                counts[month.key] = month.count;
+            });
+            return counts;
+        }
+
+        function getDefaultMonthPickerYear(posts) {
+            if (/^\d{4}-\d{2}$/.test(activeFeedMonth)) {
+                return Number(activeFeedMonth.slice(0, 4));
+            }
+            const firstMonth = getFeedMonths(posts)[0];
+            return firstMonth ? Number(firstMonth.key.slice(0, 4)) : new Date().getFullYear();
+        }
+
+        function renderMonthPicker() {
+            const popover = document.getElementById('month-picker-popover');
+            const yearLabel = document.getElementById('month-picker-year');
+            const grid = document.getElementById('month-picker-grid');
+            if (!popover || !yearLabel || !grid) return;
+
+            const posts = groupsData[activeGroup].posts || [];
+            const counts = getFeedMonthCounts(posts);
+            yearLabel.innerText = `${monthPickerYear}년`;
+            grid.innerHTML = Array.from({ length: 12 }, (_, index) => {
+                const month = String(index + 1).padStart(2, '0');
+                const key = `${monthPickerYear}-${month}`;
+                const count = counts[key] || 0;
+                return `
+                    <button class="month-picker-month ${activeFeedMonth === key ? 'active' : ''} ${count === 0 ? 'empty' : ''}" type="button" onclick="setFeedMonth('${key}')">
+                        ${index + 1}월
+                        <span>${count}개</span>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function positionMonthPicker(trigger) {
+            const popover = document.getElementById('month-picker-popover');
+            if (!popover || !trigger) return;
+            const rect = trigger.getBoundingClientRect();
+            const width = Math.min(320, window.innerWidth - 32);
+            const left = Math.min(Math.max(16, rect.right - width), window.innerWidth - width - 16);
+            const top = Math.min(rect.bottom + 10, window.innerHeight - 360);
+            popover.style.width = `${width}px`;
+            popover.style.left = `${left}px`;
+            popover.style.top = `${Math.max(16, top)}px`;
+        }
+
+        function toggleMonthPicker(event) {
+            event.stopPropagation();
+            const trigger = event.currentTarget;
+            const popover = document.getElementById('month-picker-popover');
+            if (!popover) return;
+            const isOpen = popover.classList.contains('open');
+
+            document.querySelectorAll('.month-picker-trigger').forEach(btn => btn.classList.remove('active'));
+            if (isOpen) {
+                closeMonthPicker();
+                return;
+            }
+
+            monthPickerYear = getDefaultMonthPickerYear(groupsData[activeGroup].posts || []);
+            renderMonthPicker();
+            positionMonthPicker(trigger);
+            popover.classList.add('open');
+            trigger.classList.add('active');
+        }
+
+        function closeMonthPicker() {
+            const popover = document.getElementById('month-picker-popover');
+            if (popover) popover.classList.remove('open');
+            document.querySelectorAll('.month-picker-trigger').forEach(btn => btn.classList.remove('active'));
+        }
+
+        function moveMonthPickerYear(direction) {
+            monthPickerYear += direction;
+            renderMonthPicker();
+        }
+
         function toggleDarkMode() {
             isDarkMode = !isDarkMode;
             
@@ -6148,15 +6661,72 @@
                 document.getElementById('mb-drop').style.display = 'none';
                 document.getElementById('dt-drop').style.display = 'none';
             }
+            const monthPicker = document.getElementById('month-picker-popover');
+            if (monthPicker && !event.target.closest('.month-picker-popover') && !event.target.closest('.month-picker-trigger')) {
+                closeMonthPicker();
+            }
             if (event.target.classList.contains('modal-overlay')) {
                 event.target.style.display = 'none';
             }
         }
 
         // 초기 실행 시 피드 데이터 및 우정 레벨 UI 로드
+        function toggleScheduleSidebar(viewType) {
+            const prefix = viewType === 'dt' ? 'dt' : 'mb';
+            const sidebar = document.getElementById(`${prefix}-schedule-detail-sidebar`);
+            if (sidebar) {
+                sidebar.classList.toggle('open');
+            }
+        }
+
+        function closeScheduleSidebar(viewType) {
+            const prefix = viewType === 'dt' ? 'dt' : 'mb';
+            const sidebar = document.getElementById(`${prefix}-schedule-detail-sidebar`);
+            if (sidebar) {
+                sidebar.classList.remove('open');
+            }
+        }
+
+        function addDetailSchedule(viewType) {
+            const prefix = viewType === 'dt' ? 'dt' : 'mb';
+            const timeInput = document.getElementById(`${prefix}-detail-time`);
+            const contentInput = document.getElementById(`${prefix}-detail-content`);
+            const list = document.getElementById(`${prefix}-detail-timeline-list`);
+            
+            if (timeInput && contentInput && list && timeInput.value && contentInput.value) {
+                const newItem = document.createElement('div');
+                newItem.className = 'detail-timeline-item';
+                newItem.innerHTML = `
+                    <div class="detail-timeline-time">${escapeHtml(timeInput.value)}</div>
+                    <div class="detail-timeline-content">
+                        <div>${escapeHtml(contentInput.value)}</div>
+                        <div class="timeline-meta">
+                            <span>👤 나</span>
+                            <span>🔔 알림</span>
+                        </div>
+                    </div>
+                `;
+                list.appendChild(newItem);
+                
+                const items = Array.from(list.children);
+                items.sort((a, b) => {
+                    const timeA = a.querySelector('.detail-timeline-time').innerText;
+                    const timeB = b.querySelector('.detail-timeline-time').innerText;
+                    return timeA.localeCompare(timeB);
+                });
+                list.innerHTML = '';
+                items.forEach(item => list.appendChild(item));
+                
+                contentInput.value = '';
+            }
+        }
+
         document.addEventListener('keydown', function(event) {
             if (event.key === 'Escape') {
                 closeMemoryDetail();
+                closeScheduleSidebar('dt');
+                closeScheduleSidebar('mb');
+                closeMonthPicker();
             }
         });
 
