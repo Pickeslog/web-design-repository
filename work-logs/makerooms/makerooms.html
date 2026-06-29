@@ -171,17 +171,116 @@
     }
     .icon-btn:hover { background-color: var(--input-border); }
 
+    .avatar-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background-color: var(--primary-green);
+        color: #fff;
+        border: none;
+        font-weight: 700;
+        font-size: 13px;
+        cursor: pointer;
+    }
+
     .main-content {
         flex: 1;
         overflow-y: auto;
         padding: 28px 24px 32px;
     }
 
+    .panel-view { display: block; }
+    .panel-view.hidden { display: none; }
+
     .page-heading { margin-bottom: 20px; }
     .page-heading h2 { font-size: 20px; color: var(--primary-green); margin-bottom: 6px; }
     .page-heading p { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
 
-    /* 대표 사진/아이콘 업로드 */
+    /* ---------- 우정공간 목록 ---------- */
+    .room-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+
+    .room-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: var(--bg-light);
+        border: 1px solid var(--border-color);
+        border-radius: 14px;
+        padding: 12px;
+        cursor: pointer;
+    }
+    .room-row:hover { border-color: var(--accent-green); }
+
+    .room-photo {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: var(--nav-item-bg-active);
+        border: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        flex-shrink: 0;
+        background-size: cover;
+        background-position: center;
+        color: var(--text-muted);
+    }
+    .room-row.has-dday .room-photo {
+        border-color: var(--accent-green);
+        color: var(--primary-green);
+    }
+
+    .room-info { flex: 1; min-width: 0; }
+    .room-name { font-size: 13px; font-weight: 700; color: var(--text-color); margin-bottom: 3px; }
+    .room-intro {
+        font-size: 11px;
+        color: var(--text-muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .room-dday-chip {
+        flex-shrink: 0;
+        background: var(--btn-primary-bg);
+        color: var(--button-text);
+        border-radius: 10px;
+        padding: 7px 12px;
+        text-align: center;
+    }
+    .room-dday-chip .dday-count { display: block; font-size: 12px; font-weight: 800; }
+    .room-dday-chip .dday-label { display: block; font-size: 9px; opacity: 0.9; margin-top: 1px; }
+
+    .add-room-btn {
+        width: 100%;
+        padding: 13px;
+        border-radius: 14px;
+        border: 1.5px dashed var(--accent-green);
+        background: transparent;
+        color: var(--primary-green);
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+    .add-room-btn:hover { background: var(--nav-item-bg-active); }
+
+    /* ---------- 방 만들기 폼 ---------- */
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        margin-bottom: 14px;
+        padding: 0;
+    }
+    .back-link:hover { color: var(--primary-green); }
+
     .photo-upload-box {
         width: 88px;
         height: 88px;
@@ -238,8 +337,6 @@
     }
     .input-group.invalid .warning-text { opacity: 1; }
 
-    .helper-text { font-size: 11px; color: var(--text-muted); margin-top: -8px; margin-bottom: 16px; }
-
     .btn-main {
         width: 100%;
         background: var(--btn-primary-bg);
@@ -265,18 +362,13 @@
         margin-top: 8px;
     }
 
-    /* 생성 완료 패널 */
-    .success-panel { display: none; text-align: center; padding: 18px 0; }
-    .success-panel.active { display: block; }
+    /* ---------- 생성 완료 패널 ---------- */
+    .success-panel-inner { text-align: center; padding: 18px 0; }
     .success-icon { font-size: 38px; margin-bottom: 10px; }
-    .success-panel h3 { font-size: 17px; color: var(--primary-green); margin-bottom: 6px; }
-    .success-panel p { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; }
+    .success-panel-inner h3 { font-size: 17px; color: var(--primary-green); margin-bottom: 6px; }
+    .success-panel-inner p { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; }
 
-    .invite-code-row {
-        display: flex;
-        gap: 8px;
-        margin-bottom: 8px;
-    }
+    .invite-code-row { display: flex; gap: 8px; margin-bottom: 8px; }
     .invite-code-row input {
         flex: 1;
         text-align: center;
@@ -301,16 +393,13 @@
         cursor: pointer;
     }
     .copy-btn.copied { background: var(--accent-green); color: #fff; border-color: var(--accent-green); }
-
-    .create-form { display: block; }
-    .create-form.hidden { display: none; }
 </style>
 </head>
 <body>
 
 <div class="preview-title">
-    <h2>🍀 Clov. 우정공간 만들기</h2>
-    <p>새 우정공간을 만드는 화면을 데스크톱/모바일에서 동시에 확인합니다.</p>
+    <h2>🍀 Clov. 우정공간 목록 / 만들기</h2>
+    <p>우정공간 목록 화면과, "+ 새 우정공간 만들기"로 진입하는 생성 화면을 데스크톱/모바일에서 동시에 확인합니다.</p>
 </div>
 
 <div class="split-workspace">
@@ -329,11 +418,19 @@
                     <div class="logo">🍀 Clov.</div>
                     <div class="header-actions">
                         <button class="icon-btn dt-dark-btn" onclick="toggleDarkMode()" title="다크모드 토글"><span class="toggle-icon">☀️</span></button>
-                        <button class="icon-btn" onclick="alert('우정공간 목록으로 돌아갑니다.')" title="닫기">✕</button>
+                        <button class="icon-btn" onclick="alert('받은 행운편지함을 엽니다.')" title="행운편지">✉️</button>
+                        <button class="avatar-btn" title="프로필">김</button>
                     </div>
                 </header>
                 <main class="main-content">
-                    <div id="dt-create-form" class="create-form">
+
+                    <div id="dt-panel-list" class="panel-view">
+                        <div class="room-list" id="dt-room-list"></div>
+                        <button class="add-room-btn" onclick="showPanel('dt','create')">+ 새 우정공간 만들기</button>
+                    </div>
+
+                    <div id="dt-panel-create" class="panel-view hidden">
+                        <button class="back-link" onclick="showPanel('dt','list')">← 목록으로</button>
                         <div class="page-heading">
                             <h2>새 우정공간 만들기</h2>
                             <p>친구와 함께 약속, 추억, 편지를 쌓아갈 공간이에요. 인원 제한 없이 나중에 친구를 더 초대할 수도 있어요.</p>
@@ -357,17 +454,19 @@
                         <button class="btn-main" onclick="submitCreateRoom('dt')">🍀 우정공간 만들기</button>
                     </div>
 
-                    <div id="dt-success-panel" class="success-panel">
-                        <div class="success-icon">🎉</div>
-                        <h3 id="dt-success-title">우정공간이 만들어졌어요!</h3>
-                        <p>아래 초대 코드를 친구에게 보내서 함께 시작해보세요. 지금 안 보내도 나중에 언제든 초대할 수 있어요.</p>
-                        <div class="invite-code-row">
-                            <input type="text" id="dt-invite-code" readonly>
-                            <button class="copy-btn" id="dt-copy-btn" onclick="copyInviteCode('dt')">복사</button>
+                    <div id="dt-panel-success" class="panel-view hidden">
+                        <div class="success-panel-inner">
+                            <div class="success-icon">🎉</div>
+                            <h3 id="dt-success-title">우정공간이 만들어졌어요!</h3>
+                            <p>아래 초대 코드를 친구에게 보내서 함께 시작해보세요. 지금 안 보내도 나중에 언제든 초대할 수 있어요.</p>
+                            <div class="invite-code-row">
+                                <input type="text" id="dt-invite-code" readonly>
+                                <button class="copy-btn" id="dt-copy-btn" onclick="copyInviteCode('dt')">복사</button>
+                            </div>
+                            <button class="btn-main" onclick="finishCreateRoom('dt')">우정공간 목록으로</button>
                         </div>
-                        <button class="btn-main" onclick="alert('우정공간으로 이동합니다.')">우정공간으로 이동</button>
-                        <button class="btn-sub" onclick="resetCreateRoom('dt')">다른 우정공간 더 만들기</button>
                     </div>
+
                 </main>
             </div>
         </div>
@@ -382,11 +481,19 @@
                     <div class="logo">🍀 Clov.</div>
                     <div class="header-actions">
                         <button class="icon-btn mb-dark-btn" onclick="toggleDarkMode()" title="다크모드 토글"><span class="toggle-icon">☀️</span></button>
-                        <button class="icon-btn" onclick="alert('우정공간 목록으로 돌아갑니다.')" title="닫기">✕</button>
+                        <button class="icon-btn" onclick="alert('받은 행운편지함을 엽니다.')" title="행운편지">✉️</button>
+                        <button class="avatar-btn" title="프로필">김</button>
                     </div>
                 </header>
                 <main class="main-content">
-                    <div id="mb-create-form" class="create-form">
+
+                    <div id="mb-panel-list" class="panel-view">
+                        <div class="room-list" id="mb-room-list"></div>
+                        <button class="add-room-btn" onclick="showPanel('mb','create')">+ 새 우정공간 만들기</button>
+                    </div>
+
+                    <div id="mb-panel-create" class="panel-view hidden">
+                        <button class="back-link" onclick="showPanel('mb','list')">← 목록으로</button>
                         <div class="page-heading">
                             <h2>새 우정공간 만들기</h2>
                             <p>친구와 함께 약속, 추억, 편지를 쌓아갈 공간이에요. 인원 제한 없이 나중에 친구를 더 초대할 수도 있어요.</p>
@@ -410,17 +517,19 @@
                         <button class="btn-main" onclick="submitCreateRoom('mb')">🍀 우정공간 만들기</button>
                     </div>
 
-                    <div id="mb-success-panel" class="success-panel">
-                        <div class="success-icon">🎉</div>
-                        <h3 id="mb-success-title">우정공간이 만들어졌어요!</h3>
-                        <p>아래 초대 코드를 친구에게 보내서 함께 시작해보세요. 지금 안 보내도 나중에 언제든 초대할 수 있어요.</p>
-                        <div class="invite-code-row">
-                            <input type="text" id="mb-invite-code" readonly>
-                            <button class="copy-btn" id="mb-copy-btn" onclick="copyInviteCode('mb')">복사</button>
+                    <div id="mb-panel-success" class="panel-view hidden">
+                        <div class="success-panel-inner">
+                            <div class="success-icon">🎉</div>
+                            <h3 id="mb-success-title">우정공간이 만들어졌어요!</h3>
+                            <p>아래 초대 코드를 친구에게 보내서 함께 시작해보세요. 지금 안 보내도 나중에 언제든 초대할 수 있어요.</p>
+                            <div class="invite-code-row">
+                                <input type="text" id="mb-invite-code" readonly>
+                                <button class="copy-btn" id="mb-copy-btn" onclick="copyInviteCode('mb')">복사</button>
+                            </div>
+                            <button class="btn-main" onclick="finishCreateRoom('mb')">우정공간 목록으로</button>
                         </div>
-                        <button class="btn-main" onclick="alert('우정공간으로 이동합니다.')">우정공간으로 이동</button>
-                        <button class="btn-sub" onclick="resetCreateRoom('mb')">다른 우정공간 더 만들기</button>
                     </div>
+
                 </main>
             </div>
         </div>
@@ -431,6 +540,46 @@
 <script>
     let isDarkMode = false;
     const roomPhotos = { dt: '', mb: '' };
+
+    function seedRooms() {
+        return [
+            { name: '단짝 모임', level: 4, intro: '토요일마다 만나는 우리들의 공간', photo: '', dday: { count: 3, label: '토요일 약속' } },
+            { name: '고등학교 4총사', level: 7, intro: '졸업해도 변하지 않는 우리', photo: '', dday: null },
+            { name: '민지랑 나', level: 2, intro: '소개글을 아직 안 적었어요', photo: '', dday: null }
+        ];
+    }
+
+    const roomsData = { dt: seedRooms(), mb: seedRooms() };
+
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.innerText = str;
+        return div.innerHTML;
+    }
+
+    function renderRoomList(view) {
+        const container = document.getElementById(`${view}-room-list`);
+        container.innerHTML = roomsData[view].map(room => `
+            <div class="room-row ${room.dday ? 'has-dday' : ''}" onclick="alert('${escapeHtml(room.name)} 우정공간으로 이동합니다.')">
+                <div class="room-photo" style="${room.photo ? `background-image:url('${room.photo}')` : ''}">${room.photo ? '' : '🖼️'}</div>
+                <div class="room-info">
+                    <p class="room-name">${escapeHtml(room.name)} · Lv.${room.level}</p>
+                    <p class="room-intro">${escapeHtml(room.intro)}</p>
+                </div>
+                ${room.dday ? `
+                <div class="room-dday-chip">
+                    <span class="dday-count">D-${room.dday.count}</span>
+                    <span class="dday-label">${escapeHtml(room.dday.label)}</span>
+                </div>` : ''}
+            </div>
+        `).join('');
+    }
+
+    function showPanel(view, name) {
+        ['list', 'create', 'success'].forEach(panel => {
+            document.getElementById(`${view}-panel-${panel}`).classList.toggle('hidden', panel !== name);
+        });
+    }
 
     function toggleDarkMode() {
         isDarkMode = !isDarkMode;
@@ -470,16 +619,21 @@
         return `CLOV-${code}`;
     }
 
+    let pendingRoom = { dt: null, mb: null };
+
     function submitCreateRoom(view) {
         if (!validateRoomName(view)) {
             document.getElementById(`${view}-room-name`).focus();
             return;
         }
         const name = document.getElementById(`${view}-room-name`).value.trim();
+        const intro = document.getElementById(`${view}-room-intro`).value.trim() || '소개글을 아직 안 적었어요';
+
+        pendingRoom[view] = { name, level: 1, intro, photo: roomPhotos[view], dday: null };
+
         document.getElementById(`${view}-success-title`).innerText = `'${name}' 우정공간이 만들어졌어요!`;
         document.getElementById(`${view}-invite-code`).value = generateInviteCode();
-        document.getElementById(`${view}-create-form`).classList.add('hidden');
-        document.getElementById(`${view}-success-panel`).classList.add('active');
+        showPanel(view, 'success');
     }
 
     function copyInviteCode(view) {
@@ -498,7 +652,12 @@
         }
     }
 
-    function resetCreateRoom(view) {
+    function finishCreateRoom(view) {
+        if (pendingRoom[view]) {
+            roomsData[view].unshift(pendingRoom[view]);
+            pendingRoom[view] = null;
+            renderRoomList(view);
+        }
         document.getElementById(`${view}-room-name`).value = '';
         document.getElementById(`${view}-room-intro`).value = '';
         document.getElementById(`${view}-name-group`).classList.remove('invalid');
@@ -506,11 +665,11 @@
         const box = document.getElementById(`${view}-room-photo`);
         box.style.backgroundImage = '';
         box.classList.remove('has-photo');
-        document.getElementById(`${view}-success-panel`).classList.remove('active');
-        document.getElementById(`${view}-create-form`).classList.remove('hidden');
+        showPanel(view, 'list');
     }
 
     ['dt', 'mb'].forEach(view => {
+        renderRoomList(view);
         document.getElementById(`${view}-room-name`).addEventListener('input', () => {
             const group = document.getElementById(`${view}-name-group`);
             if (group.classList.contains('invalid')) validateRoomName(view);
