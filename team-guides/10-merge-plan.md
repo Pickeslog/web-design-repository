@@ -4,6 +4,8 @@
 
 이 문서는 현재 분리되어 있는 HTML 프로토타입을 하나의 기준본으로 정리하기 위한 병합 계획이다.
 
+> 참고: 이 문서는 `clov-계획서/화면구상html/` 안의 두 원본 HTML 파일을 병합하는 계획이며, 실제 팀 구현체인 `test-web-design/`은 이 계획과 다른 방식으로 이미 유사한 기능을 구현했다. 예를 들어 행운편지 작성은 모달이 아니라 탭 내 인라인 전환으로, 상세 보기는 모달이 아니라 별도 페이지(`letter_detail.html`) 이동으로 구현되어 있다(자세한 내용은 [04-lucky-letter-screen.md](../screen-spec-source/04-lucky-letter-screen.md), [06-modal-and-interaction.md](../screen-spec-source/06-modal-and-interaction.md) 참고). 또한 일정계획의 `Clover Growth Path`는 실제 구현에서 "포토부스 인생4컷 카드"로 대체되었다([05-schedule-screen.md](../screen-spec-source/05-schedule-screen.md) 참고). 아래 병합 계획은 원본 HTML 두 파일을 대상으로 한 역사적 기록으로 유지하되, 실제 서비스 명세를 확인할 때는 `screen-spec-source/`의 최신 화면 문서를 우선한다.
+
 ## 현재 파일 상태
 
 ### 기준본

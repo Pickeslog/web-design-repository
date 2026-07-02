@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clov. - 방 접속하기</title>
+<style>
+    :root {
+        --primary-green: #1b4332;
+        --accent-green: #52b788;
+        --body-bg: #cbdad2;
+        --card-bg: #ffffff;
+        --bg-light: #fafbfc;
+        --text-color: #2c3e35;
+        --text-muted: #61766a;
+        --border-color: #eef2f0;
+        --header-glass-bg: rgba(255, 255, 255, 0.86);
+        --input-bg: #ffffff;
+        --input-border: #d8ebd2;
+        --nav-item-bg-active: #e8f3ed;
+        --shadow-color: rgba(0, 0, 0, 0.1);
+        --title-color: #1b4332;
+        --button-text: #ffffff;
+        --btn-primary-bg: #357a58;
+        --danger: #d95f5f;
+        --danger-bg: #fff4f4;
+    }
+
+    body.dark-mode {
+        --primary-green: #007c2e;
+        --accent-green: #00bd45;
+        --body-bg: #090d0a;
+        --card-bg: #151f18;
+        --bg-light: #0d1510;
+        --text-color: #f0fdf4;
+        --text-muted: #86efac;
+        --border-color: #1e2f24;
+        --header-glass-bg: rgba(9, 13, 10, 0.78);
+        --input-bg: #0d1510;
+        --input-border: #22c55e;
+        --nav-item-bg-active: #1e3a27;
+        --shadow-color: rgba(0, 0, 0, 0.5);
+        --title-color: #4ade80;
+        --button-text: #052e16;
+        --btn-primary-bg: #1da858;
+        --danger: #ff8a8a;
+        --danger-bg: #271414;
+    }
+
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    body {
+        background-color: var(--body-bg);
+        padding: 40px 20px;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 24px;
+        color: var(--text-color);
+    }
+
+    .desktop-window {
+        width: 850px;
+        height: 750px;
+        background: var(--card-bg);
+        border-radius: 16px;
+        box-shadow: 0 20px 50px var(--shadow-color);
+        overflow: hidden;
+        border: 4px solid var(--primary-green);
+        display: flex;
+        flex-direction: column;
+    }
+    .desktop-browser-bar {
+        height: 32px;
+        background: var(--primary-green);
+        display: flex;
+        align-items: center;
+        padding: 0 16px;
+        gap: 6px;
+    }
+    .browser-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.3); }
+
+    .window-content {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        background: var(--bg-light);
+    }
+
+    .header {
+        padding: 18px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: var(--header-glass-bg);
+        backdrop-filter: blur(18px) saturate(1.4);
+        -webkit-backdrop-filter: blur(18px) saturate(1.4);
+        border-bottom: 1px solid var(--border-color);
+        z-index: 10;
+    }
+
+    .logo {
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--primary-green);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        letter-spacing: -0.5px;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .header-actions { display: flex; align-items: center; gap: 10px; }
+
+    .icon-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background-color: var(--nav-item-bg-active);
+        border: none;
+        cursor: pointer;
+        font-size: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary-green);
+    }
+    .icon-btn:hover { background-color: var(--input-border); }
+
+    .avatar-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background-color: var(--primary-green);
+        color: #fff;
+        border: none;
+        font-weight: 700;
+        font-size: 13px;
+        cursor: pointer;
+    }
+
+    .main-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 28px 24px 32px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .form-container {
+        width: 100%;
+        max-width: 400px;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        margin-bottom: 24px;
+        padding: 0;
+        text-decoration: none;
+    }
+    .back-link:hover { color: var(--primary-green); }
+
+    .page-heading { margin-bottom: 30px; text-align: center; }
+    .page-heading h2 { font-size: 24px; color: var(--primary-green); margin-bottom: 10px; }
+    .page-heading p { font-size: 14px; color: var(--text-muted); line-height: 1.5; }
+
+    .input-group { margin-bottom: 24px; }
+    .input-group label {
+        display: block;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text-color);
+        margin-bottom: 8px;
+    }
+    .input-group input {
+        width: 100%;
+        padding: 14px 16px;
+        background: var(--input-bg);
+        border: 1px solid var(--input-border);
+        border-radius: 12px;
+        font-size: 15px;
+        outline: none;
+        color: var(--text-color);
+        text-align: center;
+        letter-spacing: 1px;
+        font-weight: 700;
+    }
+    .input-group input::placeholder {
+        color: var(--text-muted);
+        font-weight: 400;
+        letter-spacing: normal;
+    }
+    .input-group input:focus {
+        border-color: var(--accent-green);
+        box-shadow: 0 0 0 3px rgba(82, 183, 136, 0.18);
+    }
+    .input-group.invalid input { border-color: var(--danger); background: var(--danger-bg); }
+
+    .warning-text {
+        display: block;
+        min-height: 16px;
+        margin-top: 8px;
+        font-size: 12px;
+        color: var(--danger);
+        opacity: 0;
+        text-align: center;
+    }
+    .input-group.invalid .warning-text { opacity: 1; }
+
+    .btn-main {
+        width: 100%;
+        background: var(--btn-primary-bg);
+        color: var(--button-text);
+        border: none;
+        padding: 16px;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        margin-top: 10px;
+    }
+    .btn-main:hover { opacity: 0.9; }
+
+    /* ---------- 생성 완료 패널 ---------- */
+    .success-panel-inner { text-align: center; padding: 18px 0; display: none; }
+    .success-panel-inner.active { display: block; }
+    .success-icon { font-size: 48px; margin-bottom: 16px; }
+    .success-panel-inner h3 { font-size: 20px; color: var(--primary-green); margin-bottom: 10px; }
+    .success-panel-inner p { font-size: 14px; color: var(--text-muted); margin-bottom: 30px; line-height: 1.5; }
+
+</style>
+</head>
+<body>
+
+<div class="desktop-window">
+    <div class="desktop-browser-bar">
+        <div class="browser-dot"></div>
+        <div class="browser-dot"></div>
+        <div class="browser-dot"></div>
+    </div>
+    <div class="window-content">
+        <header class="header">
+            <a href="index.html" class="logo">🍀 Clov.</a>
+            <div class="header-actions">
+                <button class="icon-btn dt-dark-btn" onclick="toggleDarkMode()" title="다크모드 토글"><span class="toggle-icon">☀️</span></button>
+                <button class="icon-btn" onclick="alert('받은 행운편지함을 엽니다.')" title="행운편지">✉️</button>
+                <button class="avatar-btn" title="프로필">김</button>
+            </div>
+        </header>
+        <main class="main-content">
+
+            <div class="form-container" id="join-form-panel">
+                <a href="index.html" class="back-link">← 홈으로 돌아가기</a>
+                
+                <div class="page-heading">
+                    <h2>방 접속하기</h2>
+                    <p>친구에게 전달받은 우정공간의<br>고유 방 코드를 입력하여 접속하세요.</p>
+                </div>
+
+                <div class="input-group" id="code-group">
+                    <label for="room-code">방 코드 입력</label>
+                    <input type="text" id="room-code" placeholder="CLOV-XXXX-XXXX" maxlength="20" oninput="this.value = this.value.toUpperCase()">
+                    <span class="warning-text">유효하지 않은 코드 형식입니다.</span>
+                </div>
+
+                <button class="btn-main" onclick="submitJoinRoom()">🍀 방 접속하기</button>
+            </div>
+
+            <div class="form-container success-panel-inner" id="success-panel">
+                <div class="success-icon">🎉</div>
+                <h3>우정공간에 접속되었습니다!</h3>
+                <p>이제 친구들과 함께 약속을 만들고<br>이야기를 나눌 수 있어요.</p>
+                <button class="btn-main" onclick="location.href='index.html'">메인으로 이동</button>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<script>
+    let isDarkMode = false;
+    
+    // 다크모드 설정 로드
+    if(localStorage.getItem('theme') === 'dark') {
+        toggleDarkMode();
+    }
+
+    const joinParams = new URLSearchParams(window.location.search);
+    const prefilledRoomCode = joinParams.get('code') || joinParams.get('roomCode');
+    if (prefilledRoomCode) {
+        document.getElementById('room-code').value = prefilledRoomCode.toUpperCase();
+    }
+
+    function toggleDarkMode() {
+        isDarkMode = !isDarkMode;
+        document.querySelectorAll('.toggle-icon').forEach(icon => {
+            icon.innerText = isDarkMode ? '🌙' : '☀️';
+        });
+        document.body.classList.toggle('dark-mode', isDarkMode);
+        localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+    }
+
+    function submitJoinRoom() {
+        const input = document.getElementById('room-code');
+        const group = document.getElementById('code-group');
+        const code = input.value.trim();
+        
+        // 간단한 유효성 검사 (실제 환경에 맞게 수정 가능)
+        if (code.length < 5) {
+            group.classList.add('invalid');
+            input.focus();
+            return;
+        }
+        
+        group.classList.remove('invalid');
+        
+        // 연동 성공 UI 전환
+        document.getElementById('join-form-panel').style.display = 'none';
+        document.getElementById('success-panel').classList.add('active');
+        
+        // 그룹 데이터에 추가하는 로직 (기존 groupsData 기반)
+        try {
+            let groupsData = JSON.parse(localStorage.getItem('clov_groupsData')) || {};
+            // 더미 데이터 추가 (새 그룹 접속 시뮬레이션)
+            const newGroupId = 'group_' + Date.now();
+            groupsData[newGroupId] = {
+                name: '새로운 친구들 (' + code + ')',
+                icon: '🍀',
+                ddayLabel: '우리 함께한 지',
+                ddayCount: 0,
+                level: 1,
+                levelName: '새싹 우정',
+                progress: '20%',
+                photoTitle: '새로운 우정공간',
+                roomCode: code,
+                notifications: [],
+                posts: [],
+                schedules: [],
+                letters: []
+            };
+            localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
+            // 활성 그룹 변경
+            localStorage.setItem('clov_activeGroup', newGroupId);
+        } catch(e) {
+            console.error("데이터 저장 실패", e);
+        }
+    }
+</script>
+</body>
+</html>

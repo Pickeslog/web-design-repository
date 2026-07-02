@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clov - 알림</title>
+    <style>
+        :root {
+            --bg-color: #cbdad2;
+            --card-bg: #ffffff;
+            --text-color: #2c3e35;
+            --text-muted: #61766a;
+            --border-color: #eef2f0;
+            --primary-green: #1b4332;
+            --accent-green: #52b788;
+            --btn-hover: #357a58;
+            --input-bg: #fafbfc;
+            --btn-secondary-bg: rgba(0,0,0,0.05);
+        }
+
+        body.dark-mode {
+            --bg-color: #090d0a;
+            --card-bg: #151f18;
+            --text-color: #f0fdf4;
+            --text-muted: #86efac;
+            --border-color: #1e2f24;
+            --primary-green: #007c2e;
+            --accent-green: #4ade80;
+            --btn-hover: #16a34a;
+            --input-bg: #0d1510;
+            --btn-secondary-bg: rgba(255,255,255,0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 32px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            animation: fadeUp 0.6s ease-out;
+            min-height: 500px;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 16px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent-green);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-btn {
+            background: transparent;
+            color: var(--text-muted);
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .back-btn:hover {
+            color: var(--text-color);
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 300px;
+            color: var(--text-muted);
+            text-align: center;
+        }
+        
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state p {
+            font-size: 16px;
+            line-height: 1.5;
+        }
+    </style>
+    <script id="dark-mode-init">
+        const urlParamsTheme = new URLSearchParams(window.location.search);
+        const themeParam = urlParamsTheme.get('theme');
+        let isDark = false;
+        
+        if (themeParam === 'dark') {
+            isDark = true;
+        } else if (themeParam === 'light') {
+            isDark = false;
+        } else {
+            isDark = localStorage.getItem('clov_darkMode') === 'true';
+        }
+
+        if (isDark) {
+            document.documentElement.classList.add('dark-mode');
+            window.addEventListener('DOMContentLoaded', () => {
+                document.body.classList.add('dark-mode');
+            });
+        }
+    </script>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1><span>🔔</span> 알림</h1>
+        <button class="back-btn" onclick="goBack()">✕ 닫기</button>
+    </div>
+
+        <div class="tabs" style="display: flex; gap: 10px; margin-bottom: 20px;">
+        <button id="tab-admin" onclick="switchNotiTab('admin')" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--primary-green); background: var(--primary-green); color: white; font-weight: bold; cursor: pointer; transition: all 0.2s;">📢 관리진 공지</button>
+        <button id="tab-friends" onclick="switchNotiTab('friends')" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-muted); font-weight: bold; cursor: pointer; transition: all 0.2s;">🔔 친구들 알림</button>
+    </div>
+
+    <div id="content-admin">
+        <div style="background: rgba(82, 183, 136, 0.1); border-left: 4px solid var(--primary-green); padding: 16px; border-radius: 8px; margin-bottom: 12px; transition: transform 0.2s;">
+            <div style="font-weight: bold; color: var(--primary-green); margin-bottom: 6px;">[업데이트] ➕ 새로운 방 추가 기능이 적용되었습니다!</div>
+            <div style="font-size: 13px; color: var(--text-color); line-height: 1.5;">이제 번거로운 친구 초대코드 대신 <b>'새로운 방 추가'</b> 기능을 통해 코드를 적고 간편하게 방에 접속할 수 있습니다. 메인 화면의 프로필 메뉴를 확인해 보세요!</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">2026. 06. 30</div>
+        </div>
+        <div style="background: rgba(82, 183, 136, 0.1); border-left: 4px solid var(--primary-green); padding: 16px; border-radius: 8px; transition: transform 0.2s;">
+            <div style="font-weight: bold; color: var(--primary-green); margin-bottom: 6px;">[공지] Clov v2.0 정식 오픈 안내 🎉</div>
+            <div style="font-size: 13px; color: var(--text-color); line-height: 1.5;">일대일 단짝 연동 기능과 다크 모드 동기화 기능이 대폭 개선되었습니다. 더욱 안정적인 환경에서 소중한 추억을 기록해 보세요.</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">2026. 06. 29</div>
+        </div>
+    </div>
+
+    <div id="content-friends" style="display: none;">
+        <div class="empty-state">
+            <div class="icon">📭</div>
+            <p>새로운 친구 알림이 없습니다.</p>
+        </div>
+    </div>
+</div>
+<script>
+    function switchNotiTab(tab) {
+        const btnAdmin = document.getElementById('tab-admin');
+        const btnFriends = document.getElementById('tab-friends');
+        const contentAdmin = document.getElementById('content-admin');
+        const contentFriends = document.getElementById('content-friends');
+
+        if (tab === 'admin') {
+            btnAdmin.style.background = 'var(--primary-green)';
+            btnAdmin.style.color = 'white';
+            btnAdmin.style.borderColor = 'var(--primary-green)';
+            
+            btnFriends.style.background = 'var(--card-bg)';
+            btnFriends.style.color = 'var(--text-muted)';
+            btnFriends.style.borderColor = 'var(--border-color)';
+
+            contentAdmin.style.display = 'block';
+            contentFriends.style.display = 'none';
+        } else {
+            btnFriends.style.background = 'var(--primary-green)';
+            btnFriends.style.color = 'white';
+            btnFriends.style.borderColor = 'var(--primary-green)';
+            
+            btnAdmin.style.background = 'var(--card-bg)';
+            btnAdmin.style.color = 'var(--text-muted)';
+            btnAdmin.style.borderColor = 'var(--border-color)';
+
+            contentFriends.style.display = 'block';
+            contentAdmin.style.display = 'none';
+            renderFriendsNotifications();
+        }
+    }
+
+    function renderFriendsNotifications() {
+        const contentFriends = document.getElementById('content-friends');
+        let groupsData = {};
+        try {
+            groupsData = JSON.parse(localStorage.getItem('clov_groupsData')) || {};
+        } catch(e) {}
+        
+        const activeGroup = new URLSearchParams(window.location.search).get('groupId') || localStorage.getItem('clov_activeGroup') || 'friend';
+        const notiList = (groupsData[activeGroup] && groupsData[activeGroup].notifications) ? groupsData[activeGroup].notifications : [];
+        
+        if (notiList.length === 0) {
+            contentFriends.innerHTML = `
+                <div class="empty-state">
+                    <div class="icon">📭</div>
+                    <p>새로운 친구 알림이 없습니다.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        let html = '<div style="display: flex; flex-direction: column; gap: 12px;">';
+        notiList.forEach(n => {
+            const bg = n.isRead ? 'transparent' : 'rgba(82, 183, 136, 0.1)';
+            const border = n.isRead ? '1px solid var(--border-color)' : '1px solid var(--primary-green)';
+            const newBadge = n.isRead ? '' : ' <span style="color:red; font-size:10px; vertical-align:top; font-weight:bold;">NEW</span>';
+            html += `
+                <div style="background: ${bg}; border: ${border}; padding: 16px; border-radius: 8px; text-align: left; transition: transform 0.2s;">
+                    <div style="font-weight: bold; color: var(--text-color); margin-bottom: 6px;">${n.title}${newBadge}</div>
+                    <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px; line-height: 1.5;">${n.message}</div>
+                    <div style="font-size: 11px; color: var(--text-muted);">${n.date}</div>
+                </div>
+            `;
+        });
+        html += '</div>';
+        contentFriends.innerHTML = html;
+        
+        // Mark all as read
+        let changed = false;
+        notiList.forEach(n => {
+            if (!n.isRead) {
+                n.isRead = true;
+                changed = true;
+            }
+        });
+        if (changed) {
+            localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
+        }
+    }
+</script>
+
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const activeGroup = urlParams.get('groupId') || localStorage.getItem('clov_activeGroup') || 'friend';
+
+    function goBack() {
+        window.location.href = `index.html?selectedGroup=${activeGroup}&theme=${isDark ? 'dark' : 'light'}`;
+    }
+</script>
+</body>
+</html>
+

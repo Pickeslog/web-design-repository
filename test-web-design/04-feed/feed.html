@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clov. - 추억피드</title>
+<!-- 공통 디자인 시스템 (CSS 변수 + 피드/카드 스타일 재사용) -->
+<link rel="stylesheet" href="../02-main/css/desktop.css">
+<style>
+  /* ===== 스탠드얼론 레이아웃 재정의 ===== */
+  body {
+    display: block !important;
+    padding: 0 !important;
+    align-items: unset !important;
+    background-color: var(--bg-light);
+    min-height: 100vh;
+  }
+
+  /* ===== 헤더 ===== */
+  .feed-header {
+    position: sticky; top: 0; z-index: 200;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 56px; padding: 0 28px;
+    background: var(--header-glass-bg);
+    backdrop-filter: blur(18px) saturate(1.4);
+    border-bottom: 1px solid var(--border-color);
+  }
+  .feed-header-left { display: flex; align-items: center; gap: 12px; }
+  .feed-back-btn {
+    display: flex; align-items: center; gap: 4px;
+    background: none; border: none; cursor: pointer;
+    color: var(--text-muted); font-size: 13px; font-weight: 600;
+    padding: 6px 10px; border-radius: 8px;
+    transition: background .15s, color .15s;
+    text-decoration: none;
+  }
+  .feed-back-btn:hover { background: var(--nav-item-bg-active); color: var(--primary-green); }
+  .feed-back-btn svg { width: 14px; height: 14px; }
+  .feed-logo {
+    font-size: 16px; font-weight: 800; color: var(--primary-green); letter-spacing: -.3px;
+  }
+  .feed-header-right { display: flex; align-items: center; gap: 6px; }
+  .hdr-icon-btn {
+    width: 34px; height: 34px; border-radius: 9px; border: none;
+    background: none; cursor: pointer; font-size: 16px; color: var(--text-muted);
+    display: flex; align-items: center; justify-content: center;
+    transition: background .15s, color .15s;
+  }
+  .hdr-icon-btn:hover { background: var(--nav-item-bg-active); color: var(--primary-green); }
+  .dark-toggle-btn {
+    width: 44px; height: 26px; border-radius: 13px;
+    background: rgba(120,120,128,.28); border: none; cursor: pointer;
+    position: relative; transition: background .25s;
+  }
+  body.dark-mode .dark-toggle-btn { background: var(--accent-green); }
+  .toggle-knob-dot {
+    position: absolute; top: 2px; left: 2px;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25);
+    font-size: 10px; display: flex; align-items: center; justify-content: center;
+    transition: transform .25s cubic-bezier(.2,.9,.2,1.1);
+  }
+  body.dark-mode .toggle-knob-dot { transform: translateX(18px); }
+  .avatar-btn {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--primary-green); color: #fff;
+    font-size: 11px; font-weight: 700; border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* ===== 페이지 컨테이너 ===== */
+  .feed-page {
+    max-width: 900px; margin: 0 auto; padding: 32px 24px 80px;
+  }
+
+  /* ===== 피드 헤더 영역 재정의 ===== */
+  .feed-hero {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    flex-wrap: wrap; gap: 12px; margin-bottom: 20px;
+  }
+  .feed-title { font-size: 20px; font-weight: 800; color: var(--primary-green); }
+  .feed-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 4px; line-height: 1.5; }
+  .feed-hero-meta { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .feed-month-summary {
+    font-size: 13px; color: var(--text-muted); font-weight: 600;
+    background: var(--nav-item-bg-active); padding: 5px 12px;
+    border-radius: 20px;
+  }
+
+  /* ===== 그룹 선택 칩 ===== */
+  .group-chips {
+    display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;
+  }
+  .group-chip {
+    padding: 6px 14px; border-radius: 20px;
+    border: 1.5px solid var(--border-color);
+    background: var(--card-bg); color: var(--text-muted);
+    font-size: 12px; font-weight: 600; cursor: pointer;
+    transition: all .15s;
+  }
+  .group-chip.active { background: var(--primary-green); border-color: var(--primary-green); color: #fff; }
+  body.dark-mode .group-chip.active { color: #0a0f0c; }
+  .group-chip:hover:not(.active) { border-color: var(--accent-green); color: var(--primary-green); }
+</style>
+</head>
+<body>
+
+<!-- ===== 헤더 ===== -->
+<header class="feed-header">
+  <div class="feed-header-left">
+    <a class="feed-back-btn" href="../03-rooms/makerooms.html" title="우정공간 목록으로">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 6 9 12 15 18"></polyline>
+      </svg>
+      방 목록
+    </a>
+    <div class="feed-logo">🍀 Clov.</div>
+  </div>
+  <div class="feed-header-right">
+    <button class="hdr-icon-btn" title="알림">🔔</button>
+    <button class="dark-toggle-btn" onclick="toggleDarkMode()" title="다크모드">
+      <div class="toggle-knob-dot" id="feed-toggle-knob">☀️</div>
+    </button>
+    <button class="avatar-btn">김</button>
+  </div>
+</header>
+
+<!-- ===== 메인 피드 ===== -->
+<div class="feed-page">
+
+  <!-- 그룹 선택 -->
+  <div class="group-chips">
+    <button class="group-chip active" onclick="switchGroup('friend', this)">🍀 단짝친구</button>
+    <button class="group-chip" onclick="switchGroup('family', this)">👨‍👩‍👧‍👦 우리가족</button>
+    <button class="group-chip" onclick="switchGroup('study', this)">💻 코딩 스터디</button>
+  </div>
+
+  <!-- 피드 헤더 -->
+  <div class="feed-hero">
+    <div class="section-title">
+      <span class="feed-title">월별 추억 아카이브</span>
+      <span class="feed-subtitle">단짝과 남긴 기록을 월 단위로 접어서 보고, 필요한 달만 빠르게 꺼내봅니다.</span>
+    </div>
+    <div class="feed-hero-meta">
+      <div class="feed-month-summary" id="dt-feed-month-summary">전체 추억</div>
+      <button class="btn-action-sm feed-write-btn" onclick="openWriteModal()">✏️ 글쓰기</button>
+    </div>
+  </div>
+
+  <!-- 월별 필터 + 전체/내기록/친구기록 탭 -->
+  <div class="feed-controls">
+    <div class="feed-month-picker-wrap">
+      <div class="feed-month-rail" id="dt-feed-month-rail"></div>
+      <button class="month-picker-trigger" id="dt-month-picker-trigger"
+              type="button" onclick="toggleMonthPicker(event)" title="월 선택">📅</button>
+    </div>
+    <div class="feed-filter-tabs">
+      <button class="feed-tab active" data-filter="all"    onclick="setFeedFilter('all')">전체</button>
+      <button class="feed-tab"        data-filter="mine"   onclick="setFeedFilter('mine')">내 기록</button>
+      <button class="feed-tab"        data-filter="others" onclick="setFeedFilter('others')">친구 기록</button>
+    </div>
+  </div>
+
+  <!-- 피드 카드 그리드 -->
+  <div id="dt-full-feed-zone" class="feed-grid">
+    <!-- desktop.js의 renderFeeds()가 동적으로 채움 -->
+  </div>
+</div>
+
+<!-- ===== 추억 상세 바텀 시트 ===== -->
+<div class="memory-detail-backdrop" id="memory-detail-backdrop" onclick="closeMemoryDetail()"></div>
+<section class="memory-detail-sheet" id="memory-detail-sheet"
+         aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="memory-detail-title">
+  <div class="memory-detail-handle"></div>
+  <div class="memory-detail-head">
+    <div>
+      <div class="memory-detail-kicker" id="memory-detail-author">내 기록</div>
+      <div class="memory-detail-title" id="memory-detail-title">추억 기록</div>
+      <div class="memory-detail-date"  id="memory-detail-date"></div>
+    </div>
+    <button type="button" class="memory-detail-close" onclick="closeMemoryDetail()" aria-label="닫기">×</button>
+  </div>
+  <div class="memory-detail-body" id="memory-detail-body"></div>
+  <div class="memory-detail-tags" id="memory-detail-tags"></div>
+</section>
+
+<!-- ===== 월 선택 팝오버 ===== -->
+<div class="month-picker-popover" id="month-picker-popover" role="dialog" aria-label="월 선택">
+  <div class="month-picker-header">
+    <button class="month-picker-nav" type="button" onclick="moveMonthPickerYear(-1)" aria-label="이전 년도">❮</button>
+    <div class="month-picker-year" id="month-picker-year">2026년</div>
+    <button class="month-picker-nav" type="button" onclick="moveMonthPickerYear(1)"  aria-label="다음 년도">❯</button>
+  </div>
+  <div class="month-picker-grid" id="month-picker-grid"></div>
+</div>
+
+<!-- ===== 글쓰기 모달 ===== -->
+<style>
+.write-modal-backdrop {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.55); z-index: 9500;
+  align-items: center; justify-content: center;
+}
+.write-modal-backdrop.open { display: flex; }
+.write-modal {
+  background: var(--card-bg); border-radius: 20px;
+  width: min(480px, calc(100vw - 32px));
+  max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 24px 60px rgba(0,0,0,.28);
+  animation: wm-rise .22s cubic-bezier(.2,.9,.2,1.05);
+}
+@keyframes wm-rise {
+  from { transform: translateY(18px) scale(.96); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
+.wm-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 22px 24px 0;
+}
+.wm-head h2 { font-size: 17px; font-weight: 800; color: var(--primary-green); margin: 0; }
+.wm-close {
+  width: 32px; height: 32px; border-radius: 50%; border: none;
+  background: var(--bg-light); color: var(--text-muted); font-size: 16px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background .15s;
+}
+.wm-close:hover { background: var(--nav-item-bg-active); color: var(--primary-green); }
+.wm-body { padding: 18px 24px 26px; display: flex; flex-direction: column; gap: 18px; }
+.wm-img-zone {
+  border: 2px dashed var(--border-color); border-radius: 14px;
+  height: 150px; cursor: pointer; overflow: hidden; position: relative;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 6px; background: var(--bg-light); transition: border-color .15s, background .15s;
+}
+.wm-img-zone:hover { border-color: var(--accent-green); background: var(--nav-item-bg-active); }
+.wm-img-zone.filled { border-style: solid; border-color: var(--accent-green); }
+.wm-img-zone .wm-ph-icon { font-size: 26px; pointer-events: none; }
+.wm-img-zone .wm-ph-text { font-size: 12px; color: var(--text-muted); font-weight: 600; pointer-events: none; }
+.wm-img-zone img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.wm-img-remove {
+  position: absolute; top: 8px; right: 8px; z-index: 2;
+  background: rgba(0,0,0,.6); color: #fff; border: none;
+  border-radius: 50%; width: 26px; height: 26px; font-size: 12px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.wm-field { display: flex; flex-direction: column; gap: 7px; }
+.wm-label { font-size: 11px; font-weight: 700; color: var(--text-muted); letter-spacing: .5px; text-transform: uppercase; }
+.wm-title-wrap { position: relative; }
+.wm-input {
+  width: 100%; padding: 11px 14px; border-radius: 10px;
+  border: 1.5px solid var(--border-color);
+  background: var(--input-bg); color: var(--text-color);
+  font-size: 14px; font-family: inherit; resize: none;
+  transition: border-color .15s;
+}
+.wm-input:focus { outline: none; border-color: var(--accent-green); }
+.wm-title-wrap .wm-input { padding-right: 52px; }
+.wm-char-count {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  font-size: 11px; color: var(--text-muted); pointer-events: none;
+}
+.wm-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.wm-chip {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 12px; border-radius: 20px;
+  border: 1.5px solid var(--border-color);
+  background: var(--card-bg); cursor: pointer;
+  font-size: 13px; color: var(--text-muted);
+  transition: all .15s; user-select: none;
+}
+.wm-chip.on {
+  border-color: var(--primary-green);
+  background: var(--nav-item-bg-active);
+  color: var(--primary-green); font-weight: 700;
+}
+.wm-chip-av {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--border-color); color: var(--text-muted);
+  font-size: 10px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s, color .15s;
+}
+.wm-chip.on .wm-chip-av { background: var(--primary-green); color: #fff; }
+.wm-submit {
+  width: 100%; padding: 14px; border-radius: 12px; border: none;
+  background: var(--primary-green); color: #fff;
+  font-size: 15px; font-weight: 700; cursor: pointer; transition: opacity .15s;
+}
+.wm-submit:hover { opacity: .85; }
+body.dark-mode .wm-submit { color: #0a0f0c; }
+</style>
+
+<div class="write-modal-backdrop" id="wm-backdrop" onclick="if(event.target===this)closeWriteModal()">
+  <div class="write-modal" role="dialog" aria-modal="true" aria-label="추억 기록하기">
+    <div class="wm-head">
+      <h2>✏️ 추억 기록하기</h2>
+      <button class="wm-close" onclick="closeWriteModal()" aria-label="닫기">✕</button>
+    </div>
+    <div class="wm-body">
+      <div class="wm-img-zone" id="wm-img-zone" onclick="document.getElementById('wm-img-input').click()">
+        <span class="wm-ph-icon">📷</span>
+        <span class="wm-ph-text">클릭해서 대표 사진 추가 (선택)</span>
+        <input type="file" id="wm-img-input" accept="image/*" style="display:none"
+               onchange="previewWriteImg(this)">
+      </div>
+      <div class="wm-field">
+        <span class="wm-label">제목</span>
+        <div class="wm-title-wrap">
+          <input class="wm-input" id="wm-title" type="text" maxlength="25"
+                 placeholder="오늘의 추억 제목을 입력하세요"
+                 oninput="document.getElementById('wm-char-count').textContent=this.value.length+'/25'">
+          <span class="wm-char-count" id="wm-char-count">0/25</span>
+        </div>
+      </div>
+      <div class="wm-field">
+        <span class="wm-label">본문</span>
+        <textarea class="wm-input" id="wm-body" rows="4"
+                  placeholder="오늘 어떤 추억을 남겼나요?"></textarea>
+      </div>
+      <div class="wm-field">
+        <span class="wm-label">함께한 친구</span>
+        <div class="wm-chips" id="wm-chips"></div>
+      </div>
+      <button class="wm-submit" onclick="saveWritePost()">기록 남기기 🍀</button>
+    </div>
+  </div>
+</div>
+
+<!-- desktop.js 재사용 (데이터 + 피드 렌더링 로직) -->
+<script src="../02-main/js/desktop.js"></script>
+<script>
+  /* ===== 글쓰기 모달 ===== */
+  (function() {
+    var _wmBg = null;
+
+    window.openWriteModal = function() {
+      _wmBg = null;
+      document.getElementById('wm-title').value = '';
+      document.getElementById('wm-body').value = '';
+      document.getElementById('wm-char-count').textContent = '0/25';
+      document.getElementById('wm-img-input').value = '';
+      _resetZone();
+      _buildChips();
+      document.getElementById('wm-backdrop').classList.add('open');
+    };
+    window.closeWriteModal = function() {
+      document.getElementById('wm-backdrop').classList.remove('open');
+    };
+    function _resetZone() {
+      var z = document.getElementById('wm-img-zone');
+      z.classList.remove('filled');
+      z.querySelectorAll('img, .wm-img-remove').forEach(function(el){ el.remove(); });
+      if (!z.querySelector('.wm-ph-icon')) {
+        z.insertAdjacentHTML('afterbegin',
+          '<span class="wm-ph-icon">📷</span>' +
+          '<span class="wm-ph-text">클릭해서 대표 사진 추가 (선택)</span>');
+      }
+    }
+    window.previewWriteImg = function(input) {
+      if (!input.files[0]) return;
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        _wmBg = e.target.result;
+        var z = document.getElementById('wm-img-zone');
+        z.querySelectorAll('.wm-ph-icon,.wm-ph-text,img,.wm-img-remove').forEach(function(el){ el.remove(); });
+        var img = document.createElement('img'); img.src = _wmBg;
+        var btn = document.createElement('button'); btn.className = 'wm-img-remove'; btn.textContent = '✕';
+        btn.onclick = function(ev) {
+          ev.stopPropagation(); _wmBg = null;
+          document.getElementById('wm-img-input').value = ''; _resetZone();
+        };
+        z.appendChild(img); z.appendChild(btn); z.classList.add('filled');
+      };
+      reader.readAsDataURL(input.files[0]);
+    };
+    function _buildChips() {
+      var posts = window._clov ? window._clov.getPosts() : [];
+      var seen = new Map();
+      posts.forEach(function(post) {
+        (post.participants || []).forEach(function(p) {
+          var key = p.name || p.icon;
+          if (!seen.has(key)) seen.set(key, p);
+        });
+      });
+      var container = document.getElementById('wm-chips');
+      container.innerHTML = [...seen.values()].map(function(m) {
+        var icon = m.icon || (m.name || '?').slice(0, 1);
+        var name = m.name || icon;
+        var type = m.type || (name === '나' ? 'mine' : 'friend');
+        return '<label class="wm-chip on" data-name="' + name + '" data-icon="' + icon + '" data-type="' + type + '">' +
+          '<div class="wm-chip-av">' + icon + '</div>' + name + '</label>';
+      }).join('');
+      container.querySelectorAll('.wm-chip').forEach(function(chip) {
+        chip.addEventListener('click', function(){ chip.classList.toggle('on'); });
+      });
+    }
+    window.saveWritePost = function() {
+      var title = document.getElementById('wm-title').value.trim();
+      var body  = document.getElementById('wm-body').value.trim();
+      if (!title) { document.getElementById('wm-title').focus(); return; }
+      if (!body)  { document.getElementById('wm-body').focus(); return; }
+      var selected = [...document.querySelectorAll('#wm-chips .wm-chip.on')];
+      if (!selected.length) { alert('함께한 친구를 한 명 이상 선택해주세요.'); return; }
+      var today = new Date();
+      var pad = function(n){ return String(n).padStart(2,'0'); };
+      var dateStr = today.getFullYear() + '.' + pad(today.getMonth()+1) + '.' + pad(today.getDate());
+      var participants = selected.map(function(chip) {
+        return { id: chip.dataset.name+'-new', name: chip.dataset.name,
+                 icon: chip.dataset.icon, text: body, type: chip.dataset.type };
+      });
+      var newPost = {
+        date: dateStr, title: title, subtitle: '', text: body,
+        bg: _wmBg ? "url('" + _wmBg + "')" : '',
+        participants: participants,
+        tags: [selected.length > 1 ? selected.length+'명 기록' : '나만의 기록'],
+      };
+      if (window._clov) {
+        window._clov.addPost(newPost);
+        window._clov.refreshFeed();
+      }
+      window.closeWriteModal();
+    };
+  })();
+
+  /* 그룹 전환 (피드 페이지 전용) */
+  function switchGroup(groupId, btn) {
+    activeGroup = groupId;
+    activeFeedFilter = 'all';
+    activeFeedMonth  = 'all';
+    document.querySelectorAll('.group-chip').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.feed-tab').forEach(t =>
+      t.classList.toggle('active', t.dataset.filter === 'all')
+    );
+    renderFeeds();
+  }
+
+  /* 다크모드 토글 (feed 전용 - desktop.js의 toggleDarkMode 재사용) */
+  const _origToggleDark = typeof toggleDarkMode === 'function' ? toggleDarkMode : null;
+  function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('darkMode', isDark);
+    const knob = document.getElementById('feed-toggle-knob');
+    if (knob) knob.textContent = isDark ? '🌙' : '☀️';
+  }
+  if (localStorage.getItem('darkMode') === 'true') {
+    document.body.classList.add('dark-mode');
+    const knob = document.getElementById('feed-toggle-knob');
+    if (knob) knob.textContent = '🌙';
+  }
+
+  /* openMemoryDetail: 이 페이지에서는 바텀 시트로 열기 */
+  function openMemoryDetail(postIndex, encodedParticipantId) {
+    const posts = groupsData[activeGroup].posts || [];
+    const post   = posts[postIndex];
+    if (!post) return;
+
+    const participantId = decodeURIComponent(encodedParticipantId);
+    const np = normalizeMemoryPost(post);
+    const participant = np.participants.find(p => p.id === participantId) || np.participants[0];
+    const authorLabel = participant.type === 'mine' ? '내 기록' : `${participant.name}의 기록`;
+
+    document.getElementById('memory-detail-author').textContent = authorLabel;
+    document.getElementById('memory-detail-title').textContent  = np.title;
+    document.getElementById('memory-detail-date').textContent   = `${np.date}${np.subtitle ? ' · ' + np.subtitle : ''}`;
+    document.getElementById('memory-detail-body').textContent   = getMemoryDetailText(np, participant);
+
+    const tags  = getMemoryHashtags(np, participant);
+    const tagsEl = document.getElementById('memory-detail-tags');
+    tagsEl.innerHTML = tags.map(t => `<span class="memory-tag">${t}</span>`).join('');
+
+    document.getElementById('memory-detail-sheet').classList.add('open');
+    document.getElementById('memory-detail-backdrop').classList.add('open');
+    document.getElementById('memory-detail-sheet').setAttribute('aria-hidden', 'false');
+  }
+</script>
+</body>
+</html>

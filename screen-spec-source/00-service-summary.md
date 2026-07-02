@@ -100,3 +100,11 @@ Clov.는 친구와의 약속이 시간이 지나 추억으로 자라나는 과�
 - To/From 입력
 - 편지 즐겨찾기 빈 화면 텍스트 스타일 개선
 - `--btn-primary-bg` 기반 버튼 색상 보정
+
+## 실제 구현 반영 현황 (2026-07 기준)
+
+위 내용은 원본 HTML 두 파일(`Clov - 추억피드.html`, `Clov - 행운 편지.html`) 기준의 초기 계획이다. 실제 팀 구현체(`test-web-design/`)에서는 아래처럼 반영·변형되었으므로, 화면 세부 스펙을 확인할 때는 각 화면 문서의 최신 내용을 우선한다.
+
+- 행운편지 작성/이모지/미리보기/To·From 입력은 이미 구현되었으나, 팝업 모달이 아니라 탭 내 인라인 전환 방식으로 구현되었다. 상세 보기도 모달이 아니라 별도 페이지(`letter_detail.html`) 이동이다. → [04-lucky-letter-screen.md](04-lucky-letter-screen.md)
+- 일정계획의 `Clover Growth Path`(약속 씨앗 → D-day 새싹 → 만남 클로버 → 추억 꽃)는 "포토부스 인생4컷 카드"(제안하기 → 일정 맞추기 → 약속 확정 → 만남)로 대체되었다. → [05-schedule-screen.md](05-schedule-screen.md)
+- 우정공간 대시보드의 추억 미리보기는 "빨랫줄 폴라로이드 + 카메라 필름 스트립" 구조로 구체화되었다. → [02-dashboard-screen.md](02-dashboard-screen.md)

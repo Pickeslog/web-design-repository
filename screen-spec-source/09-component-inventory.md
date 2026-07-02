@@ -68,16 +68,21 @@
 - 진행률
 - 진행 바
 
-### GrowthScene
+### GrowthScene (V5 Scene Banner)
+
+`data-time`/`data-season`/`data-level`/`data-event` 속성으로 동적 전환되는 레이어형 배너.
 
 구성:
 
-- 하늘
-- 별
-- 해/달
-- 안개
-- 지면
-- 클로버 성장
+- `.scene-sky` 하늘
+- `.scene-stars` 별
+- `.scene-celestial` 해/달
+- `.scene-clouds` 구름 (3개, 개별 애니메이션)
+- `.scene-mountains` 산
+- `.scene-clover-field` 클로버밭
+- `.scene-particles` 파티클
+- `.scene-balloons` 풍선
+- HUD: `D+N일째`, `.lv-pill` 레벨 진행 바
 
 ### CoverPhotoCard
 
@@ -98,13 +103,17 @@
 - 일정 날짜
 - D-day 배지
 
-### SpaceMemoryPreview
+### SpaceMemoryPreview (빨랫줄 폴라로이드 + 카메라 필름 스트립)
+
+자세한 내용은 [02-dashboard-screen.md](02-dashboard-screen.md) 참고.
 
 구성:
 
 - 섹션 타이틀
 - 전체 피드 보기 버튼
-- 추억 미리보기 카드
+- 빨랫줄(와이어) + 빈티지 필름 집게 SVG
+- 폴라로이드 카드 슬롯 (데스크톱 5장 / 모바일 3장, ◁ ▷ 이동 버튼)
+- 하단 카메라 필름 스트립 (썸네일 클릭 이동)
 
 ## Memory Feed Components
 
@@ -177,17 +186,14 @@
 
 ## Lucky Letter Components
 
+> 실제 구현에서는 아래처럼 이미 반영되어 있다. 자세한 내용은 [04-lucky-letter-screen.md](04-lucky-letter-screen.md) 참고.
+
 ### LuckyLetterHeader
 
 구성:
 
 - 타이틀
 - 설명
-- 작성 버튼
-
-주의:
-
-- 작성 버튼은 행운편지 분기에서 병합 필요
 
 ### LetterFilterTabs
 
@@ -195,26 +201,21 @@
 
 - 전체 편지
 - 즐겨찾기
+- 편지 쓰기 (인라인 작성 폼으로 전환하는 토글)
 
 ### LetterCard
 
-현재 기준본 구성:
-
-- 즐겨찾기 버튼
-- From
-- 본문
-
-병합 후 구성:
+구성:
 
 - 즐겨찾기 버튼
 - To
 - From
-- 본문 미리보기
-- 상세 열기
+- 본문
+- 클릭 시 상세 페이지(`letter_detail.html`)로 이동
 
-### LetterComposeModal
+### LetterComposeInline
 
-병합 대상.
+팝업 모달이 아니라, `편지 쓰기` 필터 선택 시 목록 자리에 나타나는 인라인 컴포넌트.
 
 구성:
 
@@ -226,18 +227,21 @@
 - 미리보기
 - 제출
 
-### LetterDetailModal
+### LetterDetailPage (`letter_detail.html`)
 
-병합 대상.
+모달이 아니라 별도 페이지. URL 파라미터(`groupId`, `index`, `theme`)로 데이터를 전달받는다.
 
 구성:
 
-- To
-- From
+- 발신자 레이블
 - 전체 내용
-- 닫기
+- 즐겨찾기 토글
+- 삭제
+- 닫기 (목록으로 복귀)
 
 ## Schedule Components
+
+> 과거 명세의 `CloverGrowthPath`/`ScheduleDensityControl`/`GrowthScheduleCard`(식물 성장 단계형)는 실제 구현에서 인생4컷 포토부스 카드 방식으로 대체되었다. 자세한 내용은 [05-schedule-screen.md](05-schedule-screen.md) 참고.
 
 ### ScheduleHeader
 
@@ -246,33 +250,41 @@
 - 약속 여정 타이틀
 - 새 D-day 만들기 버튼
 
-### CloverGrowthPath
+### ScheduleStatusFilter
 
 구성:
 
-- 히어로
-- 표시 밀도 컨트롤
-- 성장 카드 리스트
+- 전체
+- 인증 가능
+- 다가오는 약속
+- 완료된 약속
+
+### LifeFourCutScheduleBoard
+
+구성:
+
+- 성장 카드 리스트 (데스크톱: 반응형 그리드 보드 / 모바일: 가로 스와이프)
 - 선택 일정 상세
 
-### ScheduleDensityControl
-
-상태:
-
-- compact
-- standard
-- detailed
-
-### GrowthScheduleCard
+### LifeFourCutCard (`growth-card four-cut`)
 
 구성:
 
 - 제목
 - 날짜
 - D-day
-- 성장 단계
+- 인생4컷 프레임 4개 (제안하기 / 일정 맞추기 / 약속 확정 / 만남)
 - 진행 바
 - 현재 단계 설명
+
+### StagePhotoUploadModal
+
+구성:
+
+- 업로드 전 확인 모달 (`사진 선택하기` 버튼으로 실제 파일 선택 진행)
+- 이미 업로드된 프레임 안내 모달 (`이미 업로드됐어요`)
+- 인생4컷 완성 축하 모달
+- 저장 공간 부족 안내 모달
 
 ### ScheduleDetailPanel
 
