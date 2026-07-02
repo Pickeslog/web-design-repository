@@ -10,8 +10,9 @@
 Clov의 핵심 화면. 방 목록에서 방을 선택하면 진입한다.  
 하나의 HTML 안에서 4개 탭을 전환하는 SPA 구조.
 
-- 외부 스타일: `css/desktop.css`
+- 외부 스타일: `css/desktop.css?v=17`
 - 외부 스크립트: `js/desktop.js`
+- 공통 헤더 컴포넌트: `components/clov-header.js?v=3`
 
 ---
 
@@ -40,6 +41,12 @@ Clov의 핵심 화면. 방 목록에서 방을 선택하면 진입한다.
   - 🤝 현재 방 코드 공유하기 → `openModal('dt-invite-modal')`
   - 개인정보 수정 → `openProfileModal()` 모달
   - 로그아웃 → `../01-auth/login.html`
+
+### 공통 헤더 컴포넌트
+
+`index.html`은 헤더 마크업을 직접 작성하지 않고 `components/clov-header.js`의 `ClovHeader.init({ type: 'main', activeTab: 'space' })`로 삽입한다.
+
+헤더는 탭 이동, 알림 이동, 방 목록 뒤로가기, 다크모드, 프로필 드롭다운을 묶는 공통 진입점이다.
 
 ---
 
@@ -74,6 +81,12 @@ HUD 요소: 함께한 날수(`D+N일째`), 레벨 진행 바(`.lv-pill`)
 
 - `transform-origin: bottom center` — 카드 하단 축 기준 부채꼴 회전
 - 비활성 카드: `opacity: 0.68`, `filter: saturate(0.55)`
+
+대시보드 안에는 대표 사진 카드와 다가오는 약속 배너도 함께 있다.
+
+- 대표 사진 카드: `#dt-main-photo`, `#dt-photo-title`, 참여 멤버 아바타 스택, 최근 근황/참여 기록/다가오는 약속 메타를 표시한다.
+- 대표 사진 수정: `triggerPhotoUpload('dt')`와 공통 사진 업로드 모달을 사용한다.
+- 다가오는 약속 배너: `#dt-schedule-title`, `#dt-schedule-date`, `#dt-schedule-dday`를 표시하고 클릭 시 `switchDesktopTab('schedule')`로 일정계획 탭으로 이동한다.
 
 ---
 
@@ -116,6 +129,10 @@ HUD 요소: 함께한 날수(`D+N일째`), 레벨 진행 바(`.lv-pill`)
 - 사진: 썸네일 묶음 + `📷 추가` 타일, 여러 장(최대 6장) 한 번에 선택 가능. 업로드 완료 시 상세 모달 수정과 동일하게 "이미지 업로드 완료" 모달 표시
 - 제목 / 본문 / 해시태그(직접 입력, `#` 자동 접두·중복 제거·최대 5개, 비우면 자동 태그로 대체) / 함께한 친구(칩 선택 — "나"는 항상 자동 포함되므로 칩 목록에는 없음)
 - 저장 시 `authorId: CURRENT_USER_ID`, `messages: []`로 생성되어 상세 모달의 메시지 기능과 바로 호환된다.
+- 제목은 최대 25자이며 `#wm-char-count`로 입력 길이를 표시한다.
+- 사진은 `_wmPhotos` 배열에 저장되고 `WM_PHOTO_LIMIT = 6`을 넘을 수 없다.
+- 참여자 칩은 현재 우정공간의 기존 게시글 참여자 목록에서 수집하며, 현재 사용자(`CURRENT_USER_ID`)는 자동 포함되므로 칩 목록에서 제외한다.
+- 저장 후 `groupsData[activeGroup].posts.unshift(newPost)`로 피드 맨 앞에 추가되고, 추억피드와 대시보드 추억 미리보기가 다시 렌더링된다.
 
 ### 피드 필터
 
@@ -125,18 +142,48 @@ HUD 요소: 함께한 날수(`D+N일째`), 레벨 진행 바(`.lv-pill`)
 
 `dt-tab-schedule`은 일반 캘린더가 아니라 약속이 추억으로 완성되는 과정을 포토부스 4컷 카드로 보여준다.
 
-| 컷 | 단계 | 상태 규칙 |
+| 컷 | 단계 | 열림 기준 | 상태 규칙 |
 |---|---|---|
-| 1 | 약속 씨앗 | 날짜가 지나면 체크 완료, 현재 단계면 강조 |
-| 2 | D-day 새싹 | 날짜가 지나면 체크 완료, 현재 단계면 강조 |
-| 3 | 만남 클로버 | 약속 당일 단계, 현재 단계면 강조 |
-| 4 | 추억 꽃 | 약속 당일 이후 인증 사진 업로드 가능 |
+| 1 | 제안하기 | 일정 생성 즉시 열림 | 사진 없음 `active`, 사진 있음 `done` |
+| 2 | 일정 맞추기 | `제안하기` 사진 업로드 후 열림 | 1단계 미완료 시 `locked`, 사진 있음 `done` |
+| 3 | 약속 확정 | `일정 맞추기` 사진 업로드 + 약속 당일 또는 이후(`D-day <= 0`) | 날짜 전이거나 2단계 미완료면 `locked`, 사진 있음 `done` |
+| 4 | 만남 | `약속 확정` 사진 업로드 후 열림 | 3단계 미완료 시 `locked`, 사진 있음 `done` |
 
-- 프레임 1~3: 지난 단계는 `✓`, 현재 진행 중인 단계는 pulse 강조, 미래 단계는 잠금 상태로 표시한다.
-- 프레임 4: 약속 당일 또는 지난 뒤에 `인증하기` 업로드 버튼을 노출한다.
-- 인증 사진이 업로드되면 마지막 컷이 사진으로 채워지고 일정 카드가 완료 상태가 된다.
-- 인증 완료 상태는 `groupsData[activeGroup].schedules[].stagePhotos.bloom`에 저장한다.
+단계 상태는 `getGrowthStageStatus(schedule, stage)`에서 계산한다.
+
+- `locked`: 아직 열리지 않은 단계. 흐림/잠금 상태이며 클릭하면 안내 모달만 표시하고 파일 선택창은 열지 않는다.
+- `active`: 업로드 가능한 현재 단계. 색이 들어오고 카메라 업로드 액션을 제공한다.
+- `done`: 해당 단계 사진이 업로드된 상태. 업로드된 사진과 완료 표시를 보여준다.
+
+단계별 안내 문구는 `getGrowthStageMessage(stage, schedule, status)`에서 반환한다.
+
+- 제안하기 active: `첫 약속의 순간을 올려주세요`
+- 일정 맞추기 locked: `제안하기 사진을 먼저 올려주세요`
+- 일정 맞추기 active: `준비와 기대를 기록해보세요`
+- 약속 확정 locked, 2단계 미완료: `일정 맞추기 사진을 먼저 올려주세요`
+- 약속 확정 locked, 날짜 전: `약속 당일부터 열려요`
+- 약속 확정 active: `오늘의 약속을 인증해보세요`
+- 만남 locked: `약속 확정 사진을 올리면 열려요`
+- 만남 active: `만남의 마지막 장면을 남겨주세요`
+
+업로드 정책:
+
+- 각 단계는 열림 기준을 만족해야만 업로드 가능하다.
+- 약속 확정 단계는 약속 당일에 올리지 못해도 `today >= schedule.date`이면 이후 언제든 업로드 가능하다.
+- 이미 업로드된 단계는 재업로드하지 않고 안내 모달을 표시한다.
+- 네 단계 사진이 모두 업로드되면 인생4컷이 완성된 일정으로 취급한다.
+- 단계 사진은 `groupsData[activeGroup].schedules[].stagePhotos`에 `proposal`, `coordinate`, `confirm`, `meet` 키로 저장한다.
 - 일정 카드 상단은 `전체`, `인증 가능`, `다가오는 약속`, `완료된 약속` 상태 필터 칩으로 분류한다.
+
+관련 함수:
+
+- `buildGrowthStages(schedule)`: `proposal`, `coordinate`, `confirm`, `meet` 4단계 정의
+- `getGrowthStagePhotos(schedule)`: `stagePhotos` 객체 보정 및 반환
+- `getGrowthStageStatus(schedule, stage)`: `locked` / `active` / `done` 판정
+- `requestStagePhotoUpload(scheduleId, stageKey, inputId)`: 업로드 가능 여부 확인 후 사진 선택 진행
+- `uploadStagePhoto(scheduleId, stageKey, input)`: 사진 저장, 용량 예외 처리, 완료 모달 표시
+- `showStageLockedGuidanceModal(message)`: 잠긴 단계 클릭 시 이유 안내
+- `showProofResultModal(options)`: 업로드 완료/이미 업로드/저장 공간 부족/인생4컷 완성 안내
 
 ---
 
@@ -148,6 +195,67 @@ HUD 요소: 함께한 날수(`D+N일째`), 레벨 진행 바(`.lv-pill`)
 게시글의 사진은 `post.photos: string[]`로 여러 장을 담을 수 있다. `post.bg`는 `photos[0]`와 항상 동기화되는 하위호환용 필드다.
 
 버전 관리: `DATA_VERSION = '4'` — 불일치 시 localStorage 자동 리셋 (친구 저자 시드 반영을 위해 `3`→`4`로 올림)
+
+---
+
+## 방 변경 / 초대 공유 모달
+
+### 방 변경 (`#dt-group-modal`)
+
+- 프로필 드롭다운의 `방 변경하기`에서 열린다.
+- `#dt-room-list`에 현재 사용자의 우정공간 목록을 렌더링한다.
+- 방을 선택하면 `activeGroup`이 바뀌고 대시보드, 추억피드, 행운편지, 일정계획 데이터가 모두 갱신된다.
+- 방장/대표자/관리자 개념은 없고, 단순히 현재 보고 있는 우정공간을 바꾸는 UI다.
+
+### 현재 방 코드 공유 (`#dt-invite-modal`)
+
+- 프로필 드롭다운의 `현재 방 코드 공유하기`에서 열린다.
+- 현재 우정공간 아이콘, 이름, 메타 정보를 보여준다.
+- `#dt-current-room-code`와 `#dt-current-room-link`를 읽기 전용으로 표시한다.
+- `copyCurrentRoomCode()`와 `copyCurrentRoomLink()`로 코드/링크를 복사한다.
+- 초대 코드는 참여 수단일 뿐, 초대한 사람에게 특별 권한을 부여하지 않는다.
+
+---
+
+## 개인정보 수정 모달 (`#dt-profile-modal`)
+
+프로필 드롭다운의 개인정보 수정 항목에서 열린다.
+
+구성:
+
+- 프로필 미리보기 패널: 아바타, 닉네임, 상태 메시지, 프로필 사진 업로드
+- 기본 정보: 이름/닉네임, 상태 메시지, 프로필 아이콘 칩
+- 연락처: 이메일, 생년월일
+- 비밀번호 변경: 현재 비밀번호, 새 비밀번호, 새 비밀번호 확인, 보기/숨기기 버튼
+- 하단 액션: 계정 탈퇴, 취소, 저장하기
+
+관련 함수:
+
+- `openProfileModal()`
+- `updateProfilePreview()`
+- `triggerProfileAvatarUpload()`
+- `handleProfileAvatarUpload(event)`
+- `selectProfileEmoji(button)`
+- `toggleProfilePassword(inputId, button)`
+- `checkProfilePasswordMatch()`
+- `saveProfileModal()`
+- `confirmDeleteProfileAccount()`
+
+---
+
+## 공통 사진 업로드 / 결과 모달
+
+### 대표 사진 업로드 (`#photo-upload-overlay`)
+
+- 대표 사진 카드의 수정 오버레이에서 열린다.
+- 드롭존, 파일 선택, 미리보기, 삭제, 취소, 확인 버튼을 제공한다.
+- 대표 사진 변경 후 우정공간 홈의 커버 이미지에 반영한다.
+
+### 업로드 결과 모달 (`#dt-proof-result-modal`)
+
+- 일정계획 단계 사진 업로드, 추억 글쓰기/수정 사진 업로드 등에서 공통으로 사용한다.
+- `showProofResultModal()`로 제목, 메시지, 버튼 문구, 아이콘을 바꿔 재사용한다.
+- 사용 사례: 업로드 완료, 이미 업로드됨, 저장 공간 부족, 인생4컷 완성 안내.
 
 ---
 
@@ -166,6 +274,7 @@ index.html  내부 모달  (개인정보 수정)
 index.html  →  01-auth/login.html  (로그아웃)
 index.html  →  05-letter/letter_detail.html  (편지 클릭)
 index.html  내부 모달  (추억 더보기 → 상세 모달, 페이지 이동 아님. 04-feed/memory_detail.html은 더 이상 진입 경로가 아닌 레거시 페이지)
+index.html  내부 모달  (방 변경, 현재 방 코드 공유, 개인정보 수정, 대표 사진 업로드, 추억 글쓰기, 추억 상세, 업로드 결과)
 03-rooms/makerooms.html  ←  index.html  (‹ 뒤로가기)
 ```
 
