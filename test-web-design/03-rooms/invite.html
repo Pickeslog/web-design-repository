@@ -19,15 +19,16 @@
         }
 
         body.dark-mode {
-            --bg-color: #090d0a;
-            --card-bg: #151f18;
-            --text-color: #f0fdf4;
-            --text-muted: #86efac;
-            --border-color: #1e2f24;
-            --primary-green: #007c2e;
-            --accent-green: #4ade80;
-            --btn-hover: #16a34a;
-            --input-bg: #0d1510;
+            /* 미드나잇 올리브 팔레트 — 02-main/desktop.css와 동일 계열로 통일 */
+            --bg-color: #14150e;
+            --card-bg: #1e2016;
+            --text-color: #eef0e2;
+            --text-muted: #b7c99a;
+            --border-color: #2a2c1e;
+            --primary-green: #5a7a3e;
+            --accent-green: #9ccc65;
+            --btn-hover: #6b8f47;
+            --input-bg: #191a12;
             --btn-secondary-bg: rgba(255,255,255,0.05);
         }
 
@@ -146,6 +147,7 @@
             transform: translateY(0);
         }
     </style>
+    <link rel="stylesheet" href="../02-main/css/global-theme.css">
     <script id="dark-mode-init">
         const urlParamsTheme = new URLSearchParams(window.location.search);
         const themeParam = urlParamsTheme.get('theme');
@@ -182,11 +184,12 @@
     <button class="btn-submit" onclick="submitCode()">연동 및 디데이 시작</button>
 </div>
 
+<script src="../02-main/components/clov-modal.js"></script>
 <script>
     function submitCode() {
         const code = document.getElementById('invite-code').value.trim();
         if(code.length < 4) {
-            alert("유효한 초대 코드를 입력해주세요.");
+            clovAlert("유효한 초대 코드를 입력해주세요.", { icon: "⚠️", type: "warn" });
             return;
         }
         

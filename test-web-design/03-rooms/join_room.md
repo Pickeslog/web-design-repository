@@ -37,7 +37,9 @@
 
 ## 다크모드
 
-URL 파라미터 `?theme=dark|light` 우선 적용, 없으면 `localStorage` 폴백
+URL 파라미터 `?theme=dark|light` 우선 적용, 없으면 `localStorage` 폴백.
+
+**0703**: `body.dark-mode` 색상을 `02-main`과 동일한 미드나잇 올리브 팔레트로 교체 (`--body-bg: #14150e`, `--card-bg: #1e2016`, `--primary-green: #5a7a3e`, `--accent-green: #9ccc65`, `--title-color: #9ccc65`, `--btn-primary-bg: #7c9c52`). 자세한 배경은 `_docs/0703-사용자설정_다크모드_통일_작업기록.md` 참고.
 
 ---
 

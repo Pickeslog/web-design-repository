@@ -13,7 +13,6 @@ test-web-design/
 ├── 03-rooms/         우정공간 목록 / 만들기 / 초대
 ├── 04-feed/          추억피드 (독립 페이지)
 ├── 05-letter/        행운편지 상세
-├── 06-schedule/      일정계획 ← 신규 개발
 ├── 07-notification/  알림
 ├── 08-profile/       내 프로필 / 개인정보 수정
 ├── _archive/         구버전 보관 (건드리지 않음)
@@ -31,9 +30,10 @@ test-web-design/
 | `03-rooms/` | `makerooms.html`, `invite.html`, `join_room.html` | ✅ 완성 + 연결됨 |
 | `04-feed/` | `feed.html`, `memory_detail.html` | ✅ 완성 + 연결됨 |
 | `05-letter/` | `letter_detail.html` | ✅ 완성 + 연결됨 |
-| `06-schedule/` | `schedule.html` | ✅ 완성 + 연결됨 |
 | `07-notification/` | `notification.html` | ✅ 완성 + 연결됨 |
 | `08-profile/` | `profile_edit.html` | ✅ 완성 + 연결됨 |
+
+> 일정계획은 별도 폴더 없이 `02-main/index.html` 내부 탭(인생4컷)으로만 존재한다. 과거 독립 캘린더 페이지(`06-schedule/schedule.html`)는 실제 구현과 컨셉이 갈라져 사용되지 않았으므로 `_archive/schedule/`로 이동했다.
 
 ---
 
@@ -54,7 +54,7 @@ test-web-design/
     │                                                  │
     ├──[📸 추억피드 탭]── 04-feed/memory_detail.html ──┤
     ├──[💌 행운편지 탭]── 05-letter/letter_detail.html ┤
-    ├──[📅 일정계획 탭]── 06-schedule/schedule.html    │
+    ├──[📅 일정계획 탭]── index.html 내부 (인생4컷)     │
     ├──[🔔 알림]──────── 07-notification/notification.html
     ├──[개인정보 수정]──── index.html 내부 모달 ┘
     └──[로그아웃]──────── 01-auth/login.html

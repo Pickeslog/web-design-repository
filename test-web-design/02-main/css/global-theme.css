@@ -1,0 +1,75 @@
+/* ==========================================
+   Clov global background theme
+   Keep page markup intact and inject the LP / wood / clover concept
+   through shared background tokens and late-loaded background layers.
+   ========================================== */
+:root {
+    --body-bg: #f4ead8;
+    --bg-color: #f4ead8;
+    --bg: #f4ead8;
+    --bg-gradient: linear-gradient(145deg, #fff8ec 0%, #f1ead8 46%, #dce8d6 100%);
+    --clov-bg-ink: rgba(54, 73, 40, 0.14);
+    --clov-bg-wood: rgba(145, 94, 45, 0.13);
+    --clov-bg-paper: rgba(255, 252, 243, 0.66);
+    --clov-bg-halftone: rgba(165, 40, 82, 0.10);
+    --clov-bg-cyan: rgba(33, 176, 188, 0.07);
+    --clov-bg-vignette: rgba(25, 45, 30, 0.08);
+    --clov-bg-sheen: rgba(255, 255, 255, 0.08);
+}
+
+body {
+    background-color: var(--body-bg);
+    background-image:
+        radial-gradient(circle at 12% 8%, rgba(255, 255, 255, 0.74), transparent 23rem),
+        radial-gradient(circle at 88% 18%, rgba(83, 116, 59, 0.18), transparent 24rem),
+        radial-gradient(circle at 52% 100%, var(--clov-bg-vignette), transparent 32rem),
+        repeating-linear-gradient(7deg, var(--clov-bg-wood) 0 1px, transparent 1px 18px),
+        var(--bg-gradient);
+    background-attachment: fixed;
+}
+
+.window-content,
+.main-content {
+    background-color: var(--body-bg);
+    background-image:
+        radial-gradient(circle at 7% 12%, var(--clov-bg-paper), transparent 20rem),
+        radial-gradient(circle at 96% 4%, rgba(76, 104, 52, 0.18), transparent 20rem),
+        radial-gradient(circle at 12% 84%, rgba(193, 44, 89, 0.08), transparent 16rem),
+        repeating-radial-gradient(circle at 102% 7%, var(--clov-bg-halftone) 0 1px, transparent 1px 7px),
+        repeating-radial-gradient(circle at 0% 92%, var(--clov-bg-cyan) 0 1px, transparent 1px 8px),
+        linear-gradient(112deg, transparent 0 44%, var(--clov-bg-sheen) 50%, transparent 56%),
+        repeating-linear-gradient(8deg, var(--clov-bg-wood) 0 1px, transparent 1px 20px),
+        var(--bg-gradient);
+    background-size:
+        auto,
+        auto,
+        auto,
+        96px 96px,
+        110px 110px,
+        auto,
+        auto,
+        auto;
+    background-position:
+        center,
+        center,
+        center,
+        right top,
+        left bottom,
+        center,
+        center,
+        center;
+}
+
+body.dark-mode {
+    --body-bg: #14160f;
+    --bg-color: #14160f;
+    --bg: #14160f;
+    --bg-gradient: linear-gradient(145deg, #15170f 0%, #202617 50%, #263522 100%);
+    --clov-bg-ink: rgba(195, 218, 158, 0.16);
+    --clov-bg-wood: rgba(214, 184, 130, 0.07);
+    --clov-bg-paper: rgba(255, 244, 218, 0.08);
+    --clov-bg-halftone: rgba(255, 144, 179, 0.08);
+    --clov-bg-cyan: rgba(96, 207, 216, 0.06);
+    --clov-bg-vignette: rgba(0, 0, 0, 0.32);
+    --clov-bg-sheen: rgba(255, 255, 255, 0);
+}

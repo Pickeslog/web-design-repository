@@ -16,8 +16,10 @@ document.getElementById = function(id) {
 };
 // -------------------------------
 
-        // 👥 그룹 전환용 인메모리 데이터 저장소
+        // 추억피드 게시글의 "나" 식별자. 참여자 id·게시자(authorId) 판정에 공용으로 사용한다.
         const CURRENT_USER_ID = 'me';
+
+        // 👥 그룹 전환용 인메모리 데이터 저장소
         let activeGroup = 'friend'; // 기본값: 단짝친구
         let activeFeedFilter = 'all';
         let activeFeedMonth = 'all';
@@ -39,7 +41,7 @@ document.getElementById = function(id) {
         let activeScheduleDensity = 'all';
 
         function formatDdayText(dayCount) {
-            return `D+${dayCount} \uC77C\uC9F8`;
+            return `D+${dayCount} 일째`;
         }
 
         function animateDdayElement(elementId, targetNumber, duration = 1500) {
@@ -50,23 +52,27 @@ document.getElementById = function(id) {
                 cancelAnimationFrame(ddayAnimationFrames[elementId]);
             }
 
-            const safeTarget = Math.max(0, Number(targetNumber) || 0);
+            const safeTarget = Math.max(1, Number(targetNumber) || 1);
+            const isV5Span = elementId.endsWith('-v5dday');
+            const formatVal = (val) => isV5Span ? String(val) : formatDdayText(val);
+
+            const startCount = Math.min(1, safeTarget);
             const startTime = performance.now();
             element.classList.add('is-counting');
-            element.innerText = formatDdayText(0);
+            element.innerText = formatVal(startCount);
 
             function updateCount(currentTime) {
                 const elapsedTime = currentTime - startTime;
                 const progress = Math.min(elapsedTime / duration, 1);
                 const easeOutProgress = progress * (2 - progress);
-                const currentCount = Math.floor(easeOutProgress * safeTarget);
+                const currentCount = Math.floor(startCount + easeOutProgress * (safeTarget - startCount));
 
-                element.innerText = formatDdayText(currentCount);
+                element.innerText = formatVal(currentCount);
 
                 if (progress < 1) {
                     ddayAnimationFrames[elementId] = requestAnimationFrame(updateCount);
                 } else {
-                    element.innerText = formatDdayText(safeTarget);
+                    element.innerText = formatVal(safeTarget);
                     element.classList.remove('is-counting');
                     ddayAnimationFrames[elementId] = null;
                 }
@@ -76,8 +82,11 @@ document.getElementById = function(id) {
         }
 
         function animateDdayCount(targetNumber, duration = 1500) {
-            animateDdayElement('dt-dday', targetNumber, duration);
-            animateDdayElement('mb-dday', targetNumber, duration);
+            const safeTarget = Math.max(1, Number(targetNumber) || 1);
+            animateDdayElement('dt-dday', safeTarget, duration);
+            animateDdayElement('mb-dday', safeTarget, duration);
+            animateDdayElement('dt-v5dday', safeTarget, duration);
+            animateDdayElement('mb-v5dday', safeTarget, duration);
         }
 
         let defaultGroupsData = {
@@ -89,7 +98,7 @@ document.getElementById = function(id) {
                 level: 3,
                 levelName: "초록 클로버",
                 progress: "65%",
-                photo: "https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?auto=format&fit=crop&w=500&q=80",
+                photo: (window.CLOV_MAIN_BASE || '../') + "../assets/banner-style/sleeping_cat.gif",
                 photoTitle: "우리가 고등학교때 찍은 사진 📸",
                 schedules: [
                     {
@@ -402,7 +411,7 @@ document.getElementById = function(id) {
                     }
                 ],
                 letters: [
-                    { from: "방장 코더 💻", text: "팀원 여러분! 다음 달 해커톤 대상 가봅시다! 이번 주 개발 스프린트 과제 다들 깃허브 PR 올려주세요! 🔥", favorite: false },
+                    { from: "열정 코더 💻", text: "팀원 여러분! 다음 달 해커톤 대상 가봅시다! 이번 주 개발 스프린트 과제 다들 깃허브 PR 올려주세요! 🔥", favorite: false },
                     { from: "데브옵스 🍀", text: "서버 배포 스크립트 도커 연동 끝냈습니다. 테스트 해보시고 문제 있으면 슬랙으로 편하게 제보해주세요!", favorite: false }
                 ]
             }
@@ -413,7 +422,69 @@ document.getElementById = function(id) {
             groupsData = defaultGroupsData;
             localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
             localStorage.setItem('clov_dataVersion', DATA_VERSION);
+        } else {
+            let modified = false;
+            for (let key in groupsData) {
+                if (groupsData[key] && (!groupsData[key].ddayCount || groupsData[key].ddayCount < 1)) {
+                    groupsData[key].ddayCount = 1;
+                    modified = true;
+                }
+            }
+            if (modified) {
+                localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
+            }
         }
+
+        // --- Clov Global API (Write Modal & Data Integration) ---
+        window._clov = {
+            getPosts: function(groupId) {
+                const gid = groupId || (typeof activeGroup !== 'undefined' ? activeGroup : 'friend');
+                if (typeof groupsData !== 'undefined' && groupsData[gid]) {
+                    return groupsData[gid].posts || [];
+                }
+                try {
+                    const stored = JSON.parse(localStorage.getItem('clov_groupsData') || '{}');
+                    return stored[gid] ? (stored[gid].posts || []) : [];
+                } catch(e) {
+                    return [];
+                }
+            },
+            addPost: function(newPost, groupId) {
+                const gid = groupId || (typeof activeGroup !== 'undefined' ? activeGroup : 'friend');
+                if (typeof groupsData === 'undefined' || !groupsData[gid]) return;
+                if (!groupsData[gid].posts) groupsData[gid].posts = [];
+
+                if (!newPost.selectedParticipantId && newPost.participants && newPost.participants.length > 0) {
+                    newPost.selectedParticipantId = newPost.participants[0].id || 'me';
+                } else if (!newPost.selectedParticipantId) {
+                    newPost.selectedParticipantId = 'me';
+                }
+
+                groupsData[gid].posts.unshift(newPost);
+                try {
+                    localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
+                } catch(e) {
+                    console.error("저장 실패", e);
+                }
+
+                if (typeof clovToast === 'function') {
+                    clovToast('🎉 새 추억 피드가 성공적으로 등록되었습니다!', 'success');
+                }
+                if (typeof addUnreadNotification === 'function') {
+                    addUnreadNotification('✨ 새로운 추억', '새로운 추억 피드가 등록되었어요!');
+                }
+            },
+            refreshFeed: function() {
+                if (typeof setFeedFilter === 'function') {
+                    setFeedFilter('all');
+                } else if (typeof renderFeeds === 'function') {
+                    renderFeeds();
+                }
+                if (typeof v5render === 'function') {
+                    v5render();
+                }
+            }
+        };
 
         const lifeFourCutScheduleExamples = [
             {
@@ -513,21 +584,43 @@ document.getElementById = function(id) {
                 let badge = document.getElementById('dt-noti-badge-red');
                 if(badge) badge.style.display = 'none';
             }
+            if(id === 'dt-invite-modal') {
+                const urlParams = new URLSearchParams(window.location.search);
+                const code = urlParams.get('roomCode') || 'CLOV-2002';
+                const name = urlParams.get('roomName') || '단짝친구';
+                const codeEl = document.getElementById('dt-current-room-code');
+                const linkEl = document.getElementById('dt-current-room-link');
+                const nameEl = document.getElementById('dt-share-room-name');
+                if(codeEl) codeEl.value = code;
+                if(linkEl) linkEl.value = window.location.origin + window.location.pathname + `?roomCode=${code}`;
+                if(nameEl) nameEl.textContent = name;
+            }
             // 열 때 프로필 드롭다운은 자연스럽게 닫아줌
-            document.getElementById('mb-drop').style.display = 'none';
-            document.getElementById('dt-drop').style.display = 'none';
+            const mbDropOnOpen = document.getElementById('mb-drop');
+            const dtDropOnOpen = document.getElementById('dt-drop');
+            if (mbDropOnOpen) mbDropOnOpen.style.display = 'none';
+            if (dtDropOnOpen) dtDropOnOpen.style.display = 'none';
+            document.querySelectorAll('.clov-hdr-dropdown.open').forEach(d => d.classList.remove('open'));
         }
 
         function closeModal(id) {
             document.getElementById(id).style.display = 'none';
         }
 
-        function openProfileModal() {
-            // 드롭다운 닫기
-            const drops = document.querySelectorAll('[id$="-drop"], .profile-dropdown, .dt-drop, .mb-drop');
-            drops.forEach(el => el.style.display = 'none');
-            openModal('dt-profile-modal');
+        function copyCurrentRoomCode() {
+            const el = document.getElementById('dt-current-room-code');
+            if(!el || !el.value) return;
+            if (navigator.clipboard) navigator.clipboard.writeText(el.value).then(() => clovToast(`초대 코드 [${el.value}] 복사되었어요! 📋`, 'success'));
+            else { el.select(); document.execCommand('copy'); clovToast(`초대 코드 [${el.value}] 복사되었어요! 📋`, 'success'); }
         }
+        function copyCurrentRoomLink() {
+            const el = document.getElementById('dt-current-room-link');
+            if(!el || !el.value) return;
+            if (navigator.clipboard) navigator.clipboard.writeText(el.value).then(() => clovToast('초대 링크 복사되었어요! 🔗', 'success'));
+            else { el.select(); document.execCommand('copy'); clovToast('초대 링크 복사되었어요! 🔗', 'success'); }
+        }
+        window.copyCurrentRoomCode = copyCurrentRoomCode;
+        window.copyCurrentRoomLink = copyCurrentRoomLink;
 
         // 3. 하단 탭 메뉴 네비게이션 제어
         function switchTab(tabName) {
@@ -580,6 +673,10 @@ document.getElementById = function(id) {
             if (participant.type) return participant.type;
             if (index === 0 || participant.name === '나') return 'mine';
             return 'friend';
+        }
+
+        function saveGroupsData() {
+            localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
         }
 
         // post.participants는 "누가 함께했는가"만 나타낸다. 각자의 전체 기록(participants[].text)은
@@ -671,22 +768,6 @@ document.getElementById = function(id) {
                 activeFeedMonth = 'all';
             }
 
-            const controls = [
-                { key: 'all', count: posts.length },
-                ...months
-            ];
-            const controlsHtml = controls.map(month => `
-                <button class="feed-month-btn ${month.key === activeFeedMonth ? 'active' : ''}" onclick="setFeedMonth('${escapeHtml(month.key)}')">
-                    <strong>${escapeHtml(formatFeedMonthLabel(month.key))}</strong>
-                    <span>${month.count}개 추억</span>
-                </button>
-            `).join('');
-
-            ['dt-feed-month-rail', 'mb-feed-month-rail'].forEach(id => {
-                const zone = document.getElementById(id);
-                if (zone) zone.innerHTML = controlsHtml;
-            });
-
             const summaryText = `${formatFeedMonthLabel(activeFeedMonth)} · ${visibleCount}개`;
             ['dt-feed-month-summary', 'mb-feed-month-summary'].forEach(id => {
                 const summary = document.getElementById(id);
@@ -716,6 +797,7 @@ document.getElementById = function(id) {
         }
 
         function setEvidenceIndex(index) {
+            if (window.isFilmDraggingPreventClick) return;
             const posts = groupsData[activeGroup].posts || [];
             if (posts.length === 0) return;
             const previousIndex = getEvidenceIndex();
@@ -723,11 +805,6 @@ document.getElementById = function(id) {
             evidenceSlideDirection = nextIndex > previousIndex ? 'past' : nextIndex < previousIndex ? 'current' : 'idle';
             activeEvidenceIndexes[activeGroup] = nextIndex;
             renderEvidenceViewers();
-        }
-
-        function moveEvidence(direction) {
-            const currentIndex = getEvidenceIndex();
-            setEvidenceIndex(currentIndex + direction);
         }
 
         function renderMemoryCard(post, postIndex) {
@@ -741,7 +818,7 @@ document.getElementById = function(id) {
                 ? ''
                 : `<span class="memory-clover-placeholder">🍀</span><span class="memory-image-text">사진이 없는 추억은<br>클로버로 보관됩니다</span>`;
             const photoCountBadge = normalizedPost.photos.length > 1
-                ? `<span class="polaroid-photo-count">📷 ${normalizedPost.photos.length}</span>`
+                ? `<span class="polaroid-photo-count"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:2px;"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"/><circle cx="12" cy="13" r="3.5"/></svg>${normalizedPost.photos.length}</span>`
                 : '';
 
             const visibleParticipants = normalizedPost.participants.slice(0, 4);
@@ -767,7 +844,6 @@ document.getElementById = function(id) {
                 <div class="memory-card polaroid-card ${isMine ? 'mine' : 'friend'}">
                     <div class="polaroid-presence-row">
                         ${avatarRail}
-                        <span class="presence-name-label">${escapeHtml(nameSummary)}</span>
                     </div>
                     <div class="polaroid-photo${coverPhoto ? '' : ' is-empty'}" style="${styleBg}" onclick="openMemoryDetail(${postIndex})">
                         <span class="author-badge">${escapeHtml(authorLabel)}</span>
@@ -787,7 +863,7 @@ document.getElementById = function(id) {
                         ${tagsHtml}
                         <div class="memory-meta-row">
                             <span class="memory-date">${escapeHtml(normalizedPost.date)}${normalizedPost.subtitle ? ` · ${escapeHtml(normalizedPost.subtitle)}` : ''}</span>
-                            <span class="memory-message-count">💬 ${messageCount}</span>
+                            <span class="memory-message-count"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:2px;"><path d="M21 15a2 2 0 0 1-2 2H8l-5 4V6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>${messageCount}</span>
                         </div>
                     </div>
                 </div>
@@ -850,7 +926,7 @@ document.getElementById = function(id) {
                     `).join('')}
                     ${(memoryDetailState.photoDraft || []).length < MEMORY_PHOTO_LIMIT ? `
                         <button type="button" class="memory-edit-photo-add" onclick="document.getElementById('memory-edit-photo-input').click()">
-                            <span>📷</span><span>추가</span>
+                            <span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"/><circle cx="12" cy="13" r="3.5"/></svg></span><span>추가</span>
                         </button>
                     ` : ''}
                 </div>
@@ -1052,6 +1128,7 @@ document.getElementById = function(id) {
             memoryDetailState.editing = false;
             memoryDetailState.photoDraft = null;
             memoryDetailState.photoIndex = 0;
+            saveGroupsData();
             renderMemoryDetailModal();
             renderFeeds();
         }
@@ -1070,6 +1147,7 @@ document.getElementById = function(id) {
             const postIndex = memoryDetailState.postIndex;
             if (postIndex === null) return;
             groupsData[activeGroup].posts.splice(postIndex, 1);
+            saveGroupsData();
             closeMemoryDetail();
             activeEvidenceIndexes[activeGroup] = 0;
             renderFeeds();
@@ -1087,6 +1165,7 @@ document.getElementById = function(id) {
             post.messages = post.messages.filter(message => message.authorId !== CURRENT_USER_ID);
             post.messages.push({ authorId: CURRENT_USER_ID, text });
             memoryDetailState.composeDraft = '';
+            saveGroupsData();
             renderMemoryDetailModal();
             renderFeeds();
         }
@@ -1117,6 +1196,7 @@ document.getElementById = function(id) {
             }
             memoryDetailState.editingMsgAuthorId = null;
             memoryDetailState.msgEditDraft = '';
+            saveGroupsData();
             renderMemoryDetailModal();
             renderFeeds();
         }
@@ -1125,12 +1205,11 @@ document.getElementById = function(id) {
             const post = getCurrentMemoryPost();
             if (!post) return;
             post.messages = (post.messages || []).filter(message => message.authorId !== authorId);
+            saveGroupsData();
             renderMemoryDetailModal();
             renderFeeds();
         }
 
-        const chevronLeftSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 6 9 12 15 18"></polyline></svg>`;
-        const chevronRightSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"></polyline></svg>`;
         const clothespinSvg = `
             <svg class="cline-clip-svg" viewBox="0 0 28 48" aria-hidden="true">
                 <defs>
@@ -1180,8 +1259,7 @@ document.getElementById = function(id) {
 
             const currentIndex = getEvidenceIndex();
             const total = posts.length;
-            const isLatest = currentIndex === 0;
-            const isOldest = currentIndex === total - 1;
+            const cardTheme = getEvidenceCardTheme();
             const avatarColors = ['#52b788', '#e76f51', '#457b9d', '#f4a261', '#2a9d8f'];
 
             function renderAvatars(post) {
@@ -1200,14 +1278,14 @@ document.getElementById = function(id) {
 
             function renderClinePolaroid(post, postIndex, isActive) {
                 const normalizedPost = normalizeMemoryPost(post);
-                const tags = getMemoryHashtags(normalizedPost).slice(0, 3);
+                const tags = getMemoryHashtags(normalizedPost, normalizedPost.participants[0]).slice(0, 3);
                 const dateText = String(normalizedPost.date || '').replace(/^2026\./, '');
                 const photo = normalizedPost.bg
                     ? `<img src="${escapeHtml(normalizedPost.bg)}" alt="${escapeHtml(normalizedPost.title)}">`
-                    : `<div class="cline-no-photo"><span>🍀</span><span class="cline-no-photo-text">사진 없음</span></div>`;
+                    : `<div class="cline-no-photo"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"/><path d="m4 18 4-4 3 2 4-5 5 4"/></svg></span><span class="cline-no-photo-text">사진 없음</span></div>`;
 
                 return `
-                    <article class="cline-polaroid ${isActive ? 'is-active' : ''}" onclick="event.stopPropagation(); openMemoryDetail(${postIndex})">
+                    <article class="cline-polaroid ${isActive ? 'is-active' : ''}" onclick="event.stopPropagation(); ${isActive ? `openMemoryDetail(${postIndex})` : `setEvidenceIndex(${postIndex})`}">
                         <div class="cline-card-header">
                             ${renderAvatars(normalizedPost)}
                             <span class="cline-header-date">${escapeHtml(dateText)}</span>
@@ -1227,13 +1305,15 @@ document.getElementById = function(id) {
             function makeSlot(delta, slotCls) {
                 const postIndex = currentIndex + delta;
                 if (postIndex < 0 || postIndex >= total) {
-                    return `<div class="cline-card-slot cline-slot--empty"></div>`;
+                    return cardTheme === 'coverflow'
+                        ? `<div class="cline-card-slot cline-slot--empty cline-slot--${slotCls} is-empty"></div>`
+                        : `<div class="cline-card-slot cline-slot--empty"></div>`;
                 }
                 const isActive = delta === 0;
                 return `
                     <div class="cline-card-slot cline-slot--${slotCls} ${isActive ? 'is-active' : ''}"
                          ${!isActive ? `onclick="event.stopPropagation(); setEvidenceIndex(${postIndex})"` : ''}>
-                        ${clothespinSvg}
+                        ${cardTheme === 'coverflow' ? '' : clothespinSvg}
                         ${renderClinePolaroid(posts[postIndex], postIndex, isActive)}
                     </div>
                 `;
@@ -1253,25 +1333,27 @@ document.getElementById = function(id) {
             }).join('');
 
             return `
-                <div class="memory-evidence-viewer cline-viewer ${viewType === 'mobile' ? 'mobile-evidence' : 'desktop-evidence'}">
+                <div class="memory-evidence-viewer cline-viewer ${viewType === 'mobile' ? 'mobile-evidence' : 'desktop-evidence'} ${cardTheme === 'coverflow' ? 'theme-coverflow' : ''}">
                     <div class="cline-stage">
-                        <button class="cline-nav" onclick="moveEvidence(1)" ${isOldest ? 'disabled' : ''} aria-label="과거 추억 보기">${chevronLeftSvg}</button>
                         <div class="cline-wire-area">
                             <div class="cline-wire"></div>
                             <div class="cline-cards">
+                                ${viewType === 'desktop' && cardTheme === 'coverflow' ? makeSlot(+3, 'far-far-past') : ''}
                                 ${viewType === 'desktop' ? makeSlot(+2, 'far-past') : ''}
                                 ${makeSlot(+1, 'past')}
                                 ${makeSlot(0, 'current')}
                                 ${makeSlot(-1, 'newer')}
                                 ${viewType === 'desktop' ? makeSlot(-2, 'far-newer') : ''}
+                                ${viewType === 'desktop' && cardTheme === 'coverflow' ? makeSlot(-3, 'far-far-newer') : ''}
                             </div>
                         </div>
-                        <button class="cline-nav" onclick="moveEvidence(-1)" ${isLatest ? 'disabled' : ''} aria-label="최근 추억 보기">${chevronRightSvg}</button>
                     </div>
                     <div class="cline-film-strip">
                         <span class="cline-film-label">과거</span>
                         <div class="cline-film-frames" id="${viewType === 'mobile' ? 'mb' : 'dt'}-cline-film-frames">
-                            ${filmFrames}
+                            <div class="cline-film-track">
+                                ${filmFrames}
+                            </div>
                         </div>
                         <span class="cline-film-label">현재</span>
                     </div>
@@ -1279,16 +1361,79 @@ document.getElementById = function(id) {
             `;
         }
 
+        // 하단 필름(cline-film-frames) 전용 드래그-스크롤 / 휠-스크롤 상호작용
+        // (윈도우 레벨 이벤트 위임 — 렌더링마다 다시 바인딩하지 않도록 최초 1회만 등록)
+        function initEvidenceInteractions() {
+            if (window._evidenceInteractionsBound) return;
+            window._evidenceInteractionsBound = true;
+
+            // 크롬 등 브라우저 기본 이미지 끌고가기(드래그 앤 드롭) 방지
+            window.addEventListener('dragstart', (e) => {
+                if (e.target.closest('.cline-film-frames') || e.target.tagName === 'IMG') {
+                    e.preventDefault();
+                }
+            });
+
+            // 필름 스트립 드래그-스크롤 핸들러
+            let filmDrag = { active: false, el: null, startX: 0, startScrollLeft: 0, dist: 0 };
+            window.addEventListener('pointerdown', (e) => {
+                const framesEl = e.target.closest('.cline-film-frames');
+                if (framesEl) {
+                    filmDrag = { active: true, el: framesEl, startX: e.clientX, startScrollLeft: framesEl.scrollLeft, dist: 0 };
+                    window.isFilmDraggingPreventClick = false;
+                }
+            });
+            window.addEventListener('pointermove', (e) => {
+                if (!filmDrag.active || !filmDrag.el) return;
+                const dx = e.clientX - filmDrag.startX;
+                filmDrag.dist = Math.max(filmDrag.dist, Math.abs(dx));
+                if (filmDrag.dist > 4) {
+                    window.isFilmDraggingPreventClick = true;
+                    filmDrag.el.scrollLeft = filmDrag.startScrollLeft - dx;
+                }
+            });
+            const endFilmDrag = () => {
+                if (filmDrag.active) {
+                    filmDrag.active = false;
+                    setTimeout(() => { window.isFilmDraggingPreventClick = false; }, 50);
+                }
+            };
+            window.addEventListener('pointerup', endFilmDrag);
+            window.addEventListener('pointercancel', endFilmDrag);
+
+            // 필름 스트립 마우스 휠 가로 스크롤 변환 핸들러
+            window.addEventListener('wheel', (e) => {
+                const framesEl = e.target.closest('.cline-film-frames');
+                if (framesEl) {
+                    if (Math.abs(e.deltaY) >= Math.abs(e.deltaX) && e.deltaY !== 0) {
+                        framesEl.scrollLeft += e.deltaY;
+                        e.preventDefault();
+                    }
+                }
+            }, { passive: false });
+        }
+
         function renderEvidenceViewers() {
             const dtZone = document.getElementById('dt-space-memory-zone');
             const mbZone = document.getElementById('mb-space-memory-zone');
             if (dtZone) dtZone.innerHTML = renderEvidenceViewer('desktop');
             if (mbZone) mbZone.innerHTML = renderEvidenceViewer('mobile');
+            initEvidenceInteractions();
             requestAnimationFrame(() => {
                 document.querySelectorAll('.cline-film-frame.is-current').forEach(frame => {
                     frame.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
                 });
             });
+            if (!window._evidenceResizeBound) {
+                window._evidenceResizeBound = true;
+                window.addEventListener('resize', () => {
+                    requestAnimationFrame(() => {
+                        document.querySelectorAll('.cline-film-frame.is-current').forEach(frame => {
+                            frame.scrollIntoView({ behavior: 'instant', block: 'nearest', inline: 'center' });
+                        });
+                    });
+                });
+            }
         }
 
         // 4. 피드 리스트 동적 렌더링 함수
@@ -1307,11 +1452,8 @@ document.getElementById = function(id) {
                     if (activeFeedMonth !== 'all' && getPostMonthKey(normalizedPost) !== activeFeedMonth) {
                         return false;
                     }
-                    if (activeFeedFilter === 'mine') {
-                        return normalizedPost.authorId === CURRENT_USER_ID;
-                    }
                     if (activeFeedFilter === 'others') {
-                        return normalizedPost.authorId !== CURRENT_USER_ID;
+                        return normalizedPost.participants.some(participant => participant.type !== 'mine');
                     }
                     return true;
                 });
@@ -1365,7 +1507,7 @@ document.getElementById = function(id) {
             const contentInput = document.getElementById('post-content');
 
             if (!titleInput.value || !contentInput.value) {
-                alert('제목과 내용을 모두 작성해주세요.');
+                clovAlert('제목과 내용을 모두 작성해주세요.', { icon: '✏️', type: 'warn' });
                 return;
             }
 
@@ -1379,9 +1521,8 @@ document.getElementById = function(id) {
                 subtitle: "새로운 장소",
                 text: contentInput.value,
                 bg: "",
-                authorId: "me",
-                messages: [],
-                participants: [{ id: "me", name: "나", icon: "나", type: "mine" }],
+                selectedParticipantId: "me",
+                participants: [{ id: "me", name: "나", icon: "나", type: "mine", text: getRecordPreviewText(contentInput.value) }],
                 tags: getSelectedPostTags('mb')
             });
             activeEvidenceIndexes[activeGroup] = 0;
@@ -1394,8 +1535,8 @@ document.getElementById = function(id) {
 
             // 리렌더링 후 완료 알림
             setFeedFilter('all');
-              alert('🎉 새 추억 피드가 성공적으로 등록되었습니다!');
-              if(typeof addUnreadNotification === 'function') addUnreadNotification('✨ 새로운 추억', '친구가 새로운 추억 피드를 남겼어요!');
+            clovToast('🎉 새 추억 피드가 등록되었습니다!', 'success');
+            if(typeof addUnreadNotification === 'function') addUnreadNotification('✨ 새로운 추억', '친구가 새로운 추억 피드를 남겼어요!');
           }
 
         // 5-2. 기획서 CRUD 명세 구현 (새 글 추가 함수 - 데스크톱)
@@ -1404,7 +1545,7 @@ document.getElementById = function(id) {
             const contentInput = document.getElementById('dt-post-content');
 
             if (!titleInput.value || !contentInput.value) {
-                alert('제목과 내용을 모두 작성해주세요.');
+                clovAlert('제목과 내용을 모두 작성해주세요.', { icon: '✏️', type: 'warn' });
                 return;
             }
 
@@ -1418,9 +1559,8 @@ document.getElementById = function(id) {
                 subtitle: "새로운 장소",
                 text: contentInput.value,
                 bg: "",
-                authorId: "me",
-                messages: [],
-                participants: [{ id: "me", name: "나", icon: "나", type: "mine" }],
+                selectedParticipantId: "me",
+                participants: [{ id: "me", name: "나", icon: "나", type: "mine", text: getRecordPreviewText(contentInput.value) }],
                 tags: getSelectedPostTags('dt')
             });
             activeEvidenceIndexes[activeGroup] = 0;
@@ -1433,7 +1573,7 @@ document.getElementById = function(id) {
 
             // 리렌더링 후 완료 알림
             setFeedFilter('all');
-            alert('🎉 새 추억 피드가 성공적으로 등록되었습니다!');
+            clovToast('🎉 새 추억 피드가 등록되었습니다!', 'success');
             
             // 직접 DOM 조작하여 빨간 배지 띄우기
             const dtNavNoti = document.getElementById('dt-nav-noti');
@@ -1454,61 +1594,83 @@ document.getElementById = function(id) {
         function connectFriend() {
             const code = document.getElementById('partner-code').value;
             if (!code.trim()) {
-                alert('상대방의 초대 코드를 입력해주세요!');
+                clovAlert('상대방의 초대 코드를 입력해주세요!', { icon: '🔑', type: 'warn' });
                 return;
             }
-            // 디데이 날짜 변경 시뮬레이션 효과
             groupsData[activeGroup].ddayCount = 1;
             animateDdayCount(1, 900);
+            localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
+            if (typeof v5render === 'function') v5render();
             closeModal('mb-invite-modal');
-            alert(`🤝 [${code}] 파트너와 성공적으로 1:1 연동이 완료되어 오늘부터 디데이를 시작합니다!`);
+            clovToast(`🤝 [${code}] 파트너와 연동 완료! 오늘부터 디데이를 시작합니다.`, 'success', 3200);
         }
 
         // 6-2. 친구 코드 연동 기능 시뮬레이션 - 데스크톱
         function connectDesktopFriend() {
             const code = document.getElementById('dt-partner-code').value;
             if (!code.trim()) {
-                alert('상대방의 초대 코드를 입력해주세요!');
+                clovAlert('상대방의 초대 코드를 입력해주세요!', { icon: '🔑', type: 'warn' });
                 return;
             }
-            // 디데이 날짜 변경 시뮬레이션 효과
             groupsData[activeGroup].ddayCount = 1;
             animateDdayCount(1, 900);
+            localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
+            if (typeof v5render === 'function') v5render();
             closeModal('dt-invite-modal');
-            alert(`🤝 [${code}] 파트너와 성공적으로 1:1 연동이 완료되어 오늘부터 디데이를 시작합니다!`);
+            clovToast(`🤝 [${code}] 파트너와 연동 완료! 오늘부터 디데이를 시작합니다.`, 'success', 3200);
         }
 
         // 7. 우정 레벨 및 클로버 비주얼 인터랙션 제어
+        //
+        // 레벨 시스템: 최대 777레벨. 레벨 하나하나에 이름을 붙일 수 없으므로(777개!),
+        // 111레벨씩 7개 티어로 묶어서 이름/아이콘을 부여한다 (777 = 111 × 7).
+        // 클릭 1번 = 12.5%(=1/8), 하루 최대 8번까지만 경험치가 오르고 그 이후 클릭은
+        // 배너 인터랙션(회전+색종이)은 그대로 재생되지만 경험치는 더 늘지 않는다.
+        // 최대 레벨(777)에 도달하면 배지 표기가 "Lv.777"이 아니라 "+777"로 고정된다.
+        const CLOV_MAX_LEVEL = 777;
+        const CLOV_XP_PER_CLICK = 12.5; // 8번 클릭 = 100%
+        const CLOV_MAX_CLICKS_PER_DAY = 8;
+        const CLOV_LEVEL_TIERS = [
+            { max: 111, name: '씨앗의 우정',         icon: '🌱' },
+            { max: 222, name: '새싹의 우정',         icon: '🌿' },
+            { max: 333, name: '초록 클로버 우정',     icon: '💚' },
+            { max: 444, name: '무성한 클로버 들판',   icon: '🍀' },
+            { max: 555, name: '반짝이는 클로버 우정', icon: '🌟' },
+            { max: 666, name: '황금빛 클로버 우정',   icon: '👑' },
+            { max: 777, name: '전설의 클로버 우정',   icon: '💎' },
+        ];
+        function clovLevelTierIndex(level) {
+            for (let i = 0; i < CLOV_LEVEL_TIERS.length; i++) {
+                if (level <= CLOV_LEVEL_TIERS[i].max) return i;
+            }
+            return CLOV_LEVEL_TIERS.length - 1;
+        }
+        function clovLevelInfo(level) {
+            const idx = clovLevelTierIndex(level);
+            return { tierIndex: idx, name: CLOV_LEVEL_TIERS[idx].name, icon: CLOV_LEVEL_TIERS[idx].icon, isMax: level >= CLOV_MAX_LEVEL };
+        }
+        function clovTodayStr() {
+            const d = new Date();
+            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        }
+        window.clovLevelInfo = clovLevelInfo;
+        window.CLOV_MAX_LEVEL = CLOV_MAX_LEVEL;
+
         let friendshipLevel = 3;
 
-        const levelIcons = {
-            1: "🌱",
-            2: "🌿",
-            3: "💚",
-            4: "🍀",
-            5: "✨"
-        };
-
         function updateFriendshipUI() {
-            const levelNames = {
-                1: "새싹 클로버",
-                2: "성장기 클로버",
-                3: "초록 클로버",
-                4: "희망의 클로버",
-                5: "행운의 네잎클로버"
-            };
-            const levelIcon = levelIcons[friendshipLevel] || "🍀";
-            const levelText = `${levelIcon} 우정 Lv.${friendshipLevel} ${levelNames[friendshipLevel] || "클로버"}`;
+            const grp = groupsData[activeGroup] || {};
+            const info = clovLevelInfo(friendshipLevel);
+            const isMax = friendshipLevel >= CLOV_MAX_LEVEL;
+            const badgeLevelText = isMax ? '+777' : ('Lv.' + friendshipLevel);
+            const progress = isMax ? 100 : (typeof grp.levelProgress === 'number' ? grp.levelProgress : 0);
 
-            
             ['dt', 'mb'].forEach(p => {
                 const elIcon = document.getElementById(p + '-lvIcon');
                 const elName = document.getElementById(p + '-lvName');
-                if(elIcon) elIcon.innerText = 'Lv.' + friendshipLevel;
-                if(elName) elName.innerText = levelNames[friendshipLevel] || "클로버 우정";
+                if(elIcon) elIcon.innerText = badgeLevelText;
+                if(elName) elName.innerText = info.name;
             });
-
-            
 
             // 레벨별 색상 테마 전환 (대시보드 카드 전체에 컬러가 진화하듯 반영)
             const dtDashboard = document.getElementById('dt-dashboard');
@@ -1516,14 +1678,7 @@ document.getElementById = function(id) {
             if (dtDashboard) dtDashboard.dataset.level = friendshipLevel;
             if (mbDashboard) mbDashboard.dataset.level = friendshipLevel;
 
-            const progressPercentages = {
-                1: "20%",
-                2: "45%",
-                3: "65%",
-                4: "85%",
-                5: "100%"
-            };
-            const fillWidth = progressPercentages[friendshipLevel] || "65%";
+            const fillWidth = Math.round(progress) + '%';
             document.querySelectorAll('.progress-bar-fill').forEach(fill => {
                 fill.style.width = fillWidth;
             });
@@ -1544,21 +1699,88 @@ document.getElementById = function(id) {
         }
 
         // 레벨업 순간 대시보드 카드에 충격파 펄스 애니메이션을 재생
+        // 배너 테두리에 도는 "불효과"(펄스 글로우) 색상 — 하양·말차·하늘색·연분홍 중 클릭마다 랜덤
+        const CLOV_PULSE_GLOW_COLORS = ['rgba(255,255,255,0.6)', 'rgba(182,201,138,0.6)', 'rgba(168,216,234,0.6)', 'rgba(255,194,209,0.6)'];
         function triggerLevelPulse() {
+            const glow = CLOV_PULSE_GLOW_COLORS[Math.floor(Math.random() * CLOV_PULSE_GLOW_COLORS.length)];
             ['dt-dashboard', 'mb-dashboard'].forEach(id => {
                 const el = document.getElementById(id);
                 if (!el) return;
+                el.style.setProperty('--pulse-glow', glow);
                 el.classList.remove('levelup-pulse');
                 void el.offsetWidth; // 강제 리플로우로 애니메이션 재실행 보장
                 el.classList.add('levelup-pulse');
             });
         }
 
+        // 클릭으로 실제 경험치가 오른 순간, 게이지가 반짝여서 "지금 찼다"는 걸 눈에 띄게 알려줌
+        function triggerXpFlash() {
+            ['dt-v5pillbg', 'mb-v5pillbg'].forEach(id => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.classList.remove('is-pulse-xp');
+                void el.offsetWidth;
+                el.classList.add('is-pulse-xp');
+            });
+        }
+
         function levelUp() {
-            friendshipLevel = (friendshipLevel % 5) + 1; // 1 ~ 5 순환
-            groupsData[activeGroup].level = friendshipLevel; // 현재 그룹의 레벨 상태에 저장
-            updateFriendshipUI();
+            // 실제 레벨업 여부와 상관없이, 클릭할 때마다 배너가 통통 튀는 느낌을 매번 준다
             triggerLevelPulse();
+
+            const grp = groupsData[activeGroup];
+            const today = clovTodayStr();
+            if (typeof grp.levelProgress !== 'number') grp.levelProgress = 0;
+            if (typeof grp.xpClicksToday !== 'number') grp.xpClicksToday = 0;
+            if (typeof grp.level !== 'number') grp.level = friendshipLevel;
+            if (!grp.xpDate) grp.xpDate = today;
+
+            // 날짜가 바뀌었으면: 어제 게이지가 100%까지 다 찼었는지 확인해서 그때 비로소 레벨업을 확정한다.
+            // (게이지가 8번째 클릭에 꽉 찬 순간 바로 다음 레벨로 넘어가 버리면 "가득 찬 상태"를 볼 틈이 없어서,
+            //  오늘은 가득 찬 채로 유지하고, 내일 첫 클릭에서 레벨업 + 게이지 리셋이 함께 일어나도록 미룬다.)
+            let leveledUp = false;
+            if (grp.xpDate !== today) {
+                if (grp.levelProgress >= 100 && grp.level < CLOV_MAX_LEVEL) {
+                    grp.level = Math.min(CLOV_MAX_LEVEL, grp.level + 1);
+                    grp.levelProgress = 0;
+                    leveledUp = true;
+                }
+                grp.xpDate = today;
+                grp.xpClicksToday = 0;
+            }
+            friendshipLevel = grp.level;
+
+            if (grp.level >= CLOV_MAX_LEVEL) {
+                grp.level = CLOV_MAX_LEVEL;
+                grp.levelProgress = 0;
+                friendshipLevel = CLOV_MAX_LEVEL;
+                localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
+                updateFriendshipUI();
+                clovToast('🏆 이미 우리 우정은 최고치(777)에 도달했어요!', 'info');
+                return;
+            }
+
+            if (leveledUp) {
+                const info = clovLevelInfo(grp.level);
+                const badgeText = grp.level >= CLOV_MAX_LEVEL ? '+777' : ('Lv.' + grp.level);
+                clovToast(`${info.icon} ${badgeText} 달성! ${info.name}`, 'success');
+            }
+
+            if (grp.xpClicksToday >= CLOV_MAX_CLICKS_PER_DAY) {
+                localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
+                updateFriendshipUI();
+                if (!leveledUp) clovToast('오늘의 우정 경험치를 다 채웠어요! 내일 다시 함께해요 🍀', 'info');
+                return;
+            }
+
+            grp.xpClicksToday += 1;
+            grp.levelProgress = Math.min(100, grp.levelProgress + CLOV_XP_PER_CLICK);
+            localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
+            updateFriendshipUI();
+            triggerXpFlash();
+            if (grp.levelProgress >= 100 && grp.xpClicksToday >= CLOV_MAX_CLICKS_PER_DAY) {
+                clovToast('🎉 오늘의 우정 경험치를 가득 채웠어요! 내일 레벨업 돼요', 'success');
+            }
         }
 
         function updateDashboardEnvironment() {
@@ -1638,6 +1860,87 @@ document.getElementById = function(id) {
             }
         }
 
+        // 대표 사진 전체 보기 — 썸네일이 있던 자리/크기에서 시작해 화면 중앙 큰 사이즈로
+        // "펼쳐지는" FLIP 애니메이션. 닫을 때는 반대로 원래 썸네일 자리로 되돌아가며 사라진다.
+        let photoViewSourceImg = null;
+        let photoViewCloseTimer = null;
+
+        function openMainPhotoView(sourceImg) {
+            const modal = document.getElementById('dt-photo-view-modal');
+            const viewImg = document.getElementById('dt-photo-view-img');
+            if (!modal || !viewImg || !sourceImg || !sourceImg.src) return;
+
+            clearTimeout(photoViewCloseTimer);
+            photoViewSourceImg = sourceImg;
+            const startRect = sourceImg.getBoundingClientRect();
+
+            viewImg.src = sourceImg.src;
+            viewImg.style.transition = 'none';
+            viewImg.style.top = startRect.top + 'px';
+            viewImg.style.left = startRect.left + 'px';
+            viewImg.style.width = startRect.width + 'px';
+            viewImg.style.height = startRect.height + 'px';
+            viewImg.style.borderRadius = '2px';
+
+            modal.style.display = 'flex';
+            void modal.offsetWidth; // 리플로우 강제 (배경 페이드인 트랜지션 재생 보장)
+            modal.classList.add('open');
+
+            const expandToFull = () => {
+                const naturalW = viewImg.naturalWidth || startRect.width;
+                const naturalH = viewImg.naturalHeight || startRect.height;
+                const maxW = window.innerWidth * 0.88;
+                const maxH = window.innerHeight * 0.84;
+                const ratio = Math.min(maxW / naturalW, maxH / naturalH);
+                const endW = naturalW * ratio;
+                const endH = naturalH * ratio;
+
+                void viewImg.offsetWidth; // 리플로우 강제 후 transition 재활성화
+                viewImg.style.transition = '';
+                viewImg.style.top = ((window.innerHeight - endH) / 2) + 'px';
+                viewImg.style.left = ((window.innerWidth - endW) / 2) + 'px';
+                viewImg.style.width = endW + 'px';
+                viewImg.style.height = endH + 'px';
+                viewImg.style.borderRadius = '12px';
+            };
+
+            if (viewImg.complete && viewImg.naturalWidth) {
+                expandToFull();
+            } else {
+                viewImg.onload = expandToFull;
+            }
+        }
+
+        function closeMainPhotoView() {
+            const modal = document.getElementById('dt-photo-view-modal');
+            const viewImg = document.getElementById('dt-photo-view-img');
+            if (!modal || !viewImg) return;
+
+            const sourceImg = photoViewSourceImg || document.getElementById('dt-main-photo');
+            const rect = sourceImg.getBoundingClientRect();
+
+            modal.classList.remove('open');
+            viewImg.style.top = rect.top + 'px';
+            viewImg.style.left = rect.left + 'px';
+            viewImg.style.width = rect.width + 'px';
+            viewImg.style.height = rect.height + 'px';
+            viewImg.style.borderRadius = '2px';
+
+            clearTimeout(photoViewCloseTimer);
+            photoViewCloseTimer = setTimeout(() => {
+                modal.style.display = 'none';
+            }, 420);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key !== 'Escape') return;
+            const modal = document.getElementById('dt-photo-view-modal');
+            if (modal && modal.classList.contains('open')) closeMainPhotoView();
+        });
+
+        window.openMainPhotoView = openMainPhotoView;
+        window.closeMainPhotoView = closeMainPhotoView;
+
         function updateDashboardPhotos() {
             const currentGroup = groupsData[activeGroup];
             const dtImg = document.getElementById('dt-main-photo');
@@ -1650,25 +1953,177 @@ document.getElementById = function(id) {
             // 사진 설명 제목 업데이트
             const dtTitle = document.getElementById('dt-photo-title');
             const mbTitle = document.getElementById('mb-photo-title');
-            if (dtTitle) dtTitle.innerText = currentGroup.photoTitle;
-            if (mbTitle) mbTitle.innerText = currentGroup.photoTitle;
+            if (dtTitle) {
+                dtTitle.innerText = currentGroup.photoTitle;
+                updateTitleCountDisplay(currentGroup.photoTitle);
+                updateEmptyState(dtTitle);
+            }
+            if (mbTitle) {
+                mbTitle.innerText = currentGroup.photoTitle;
+                updateEmptyState(mbTitle);
+            }
+            setupTitleListeners();
         }
+
+        function getTitleWeight(str) {
+            let weight = 0;
+            for (let i = 0; i < str.length; i++) {
+                weight += (str.charCodeAt(i) > 127) ? 2 : 1;
+            }
+            return weight;
+        }
+
+        function truncateTitleByWeight(str, maxWeight) {
+            let weight = 0;
+            let result = '';
+            for (let i = 0; i < str.length; i++) {
+                const charWeight = (str.charCodeAt(i) > 127) ? 2 : 1;
+                if (weight + charWeight > maxWeight) break;
+                weight += charWeight;
+                result += str[i];
+            }
+            return result;
+        }
+
+        function onTitleKeyDown(event, el) {
+            if (event.keyCode === 13) {
+                event.preventDefault();
+                el.blur();
+                return false;
+            }
+            const currentWeight = getTitleWeight(el.innerText);
+            const sel = window.getSelection();
+            const hasSelection = sel && sel.rangeCount > 0 && sel.toString().length > 0;
+
+            const isAllowedKey = event.keyCode === 8 || event.keyCode === 9 || event.keyCode === 27 || event.keyCode === 46 || 
+                                 (event.keyCode >= 33 && event.keyCode <= 40) || 
+                                 (event.keyCode >= 16 && event.keyCode <= 20) || 
+                                 event.ctrlKey || event.metaKey || event.altKey;
+
+            if (currentWeight >= 40 && !hasSelection && !isAllowedKey) {
+                event.preventDefault();
+                event.stopPropagation();
+                return false;
+            }
+        }
+
+        function setupTitleListeners() {
+            ['dt-photo-title', 'mb-photo-title'].forEach(id => {
+                const el = document.getElementById(id);
+                if (!el || el._hasTitleListener) return;
+                el._hasTitleListener = true;
+                
+                el.addEventListener('keydown', function(e) {
+                    return onTitleKeyDown(e, this);
+                });
+
+                el.addEventListener('compositionstart', function() {
+                    this._isComposing = true;
+                });
+
+                el.addEventListener('compositionend', function() {
+                    this._isComposing = false;
+                    handleTitleInput(this);
+                });
+                
+                el.addEventListener('paste', function(e) {
+                    e.preventDefault();
+                    const pasteData = (e.clipboardData || window.clipboardData).getData('text');
+                    if (!pasteData) return;
+                    const sel = window.getSelection();
+                    if (sel && sel.rangeCount > 0 && sel.toString().length > 0) {
+                        sel.deleteFromDocument();
+                    }
+                    const currentWeight = getTitleWeight(this.innerText);
+                    const allowedWeight = Math.max(0, 40 - currentWeight);
+                    if (allowedWeight > 0) {
+                        const textToInsert = truncateTitleByWeight(pasteData, allowedWeight);
+                        document.execCommand('insertText', false, textToInsert);
+                    }
+                    handleTitleInput(this);
+                });
+                updateEmptyState(el);
+            });
+        }
+
+        function updateEmptyState(el) {
+            if (!el) return;
+            const text = el.innerText.replace(/\u200B/g, '').trim();
+            const parent = el.closest('.title-input-box') || el.parentElement;
+            const placeholder = parent ? parent.querySelector('.title-bg-placeholder') : null;
+            if (text === "" || text === "\n" || text === "제목을 입력하세요") {
+                el.setAttribute("data-empty", "true");
+                if (placeholder) placeholder.style.display = 'block';
+                if (el.innerHTML !== "" && document.activeElement !== el) {
+                    el.innerHTML = "";
+                }
+            } else {
+                el.removeAttribute("data-empty");
+                if (placeholder) placeholder.style.display = 'none';
+            }
+        }
+
+        function handleTitleInput(el) {
+            const maxWeight = 40;
+            let text = el.innerText;
+            if (getTitleWeight(text) > maxWeight) {
+                text = truncateTitleByWeight(text, maxWeight);
+                el.innerText = text;
+                const range = document.createRange();
+                const sel = window.getSelection();
+                range.selectNodeContents(el);
+                range.collapse(false);
+                sel.removeAllRanges();
+                sel.addRange(range);
+                if (document.activeElement === el) {
+                    el.blur();
+                    el.focus();
+                    const r2 = document.createRange();
+                    const s2 = window.getSelection();
+                    r2.selectNodeContents(el);
+                    r2.collapse(false);
+                    s2.removeAllRanges();
+                    s2.addRange(r2);
+                }
+            }
+            updateTitleCountDisplay(el.innerText);
+            updateEmptyState(el);
+        }
+
+        function updateTitleCountDisplay(text) {
+            const el = document.getElementById('dt-title-count');
+            if (!el) return;
+            const weight = getTitleWeight(text);
+            el.innerText = `${weight} / 40`;
+            if (weight >= 40) {
+                el.style.color = '#d90429';
+                el.style.background = 'rgba(217, 4, 41, 0.1)';
+            } else {
+                el.style.color = 'var(--primary-green)';
+                el.style.background = 'rgba(27, 67, 50, 0.1)';
+            }
+        }
+
+        window.handleTitleInput = handleTitleInput;
+        window.onTitleKeyDown = onTitleKeyDown;
+        window.updateTitleCountDisplay = updateTitleCountDisplay;
+        window.updateEmptyState = updateEmptyState;
+        setTimeout(setupTitleListeners, 100);
 
         function savePhotoTitle(viewType) {
             const id = viewType === 'dt' ? 'dt-photo-title' : 'mb-photo-title';
             const el = document.getElementById(id);
             if (el) {
-                const newTitle = el.innerText.trim();
-                if (newTitle !== "") {
-                    groupsData[activeGroup].photoTitle = newTitle;
-                    // 동기화 (데스크톱과 모바일 양쪽 화면의 제목을 동일하게 유지)
-                    const otherId = viewType === 'dt' ? 'mb-photo-title' : 'dt-photo-title';
-                    const otherEl = document.getElementById(otherId);
-                    if (otherEl) otherEl.innerText = newTitle;
-                } else {
-                    // 빈 값이면 기존 저장된 값으로 복원
-                    el.innerText = groupsData[activeGroup].photoTitle;
+                const newTitle = el.innerText.replace(/\u200B/g, '').trim();
+                groupsData[activeGroup].photoTitle = newTitle;
+                const otherId = viewType === 'dt' ? 'mb-photo-title' : 'dt-photo-title';
+                const otherEl = document.getElementById(otherId);
+                if (otherEl) {
+                    otherEl.innerText = newTitle;
+                    updateEmptyState(otherEl);
                 }
+                updateTitleCountDisplay(newTitle);
+                updateEmptyState(el);
             }
         }
 
@@ -1699,16 +2154,20 @@ document.getElementById = function(id) {
             }
 
             function handleFile(file) {
-                if (file && file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onload = function(evt) {
-                        tempPhotoDataUrl = evt.target.result;
-                        dropZone.style.display = 'none';
-                        previewContainer.style.display = 'block';
-                        previewImage.src = tempPhotoDataUrl;
-                    };
-                    reader.readAsDataURL(file);
+                if (!file) return;
+                if (!file.type.startsWith('image/')) {
+                    clovAlert('이미지 파일(JPG, PNG, GIF, WEBP 등)만 업로드할 수 있습니다.', { icon: '⚠️', type: 'warn' });
+                    if (fileInput) fileInput.value = '';
+                    return;
                 }
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    tempPhotoDataUrl = evt.target.result;
+                    dropZone.style.display = 'none';
+                    previewContainer.style.display = 'block';
+                    previewImage.src = tempPhotoDataUrl;
+                };
+                reader.readAsDataURL(file);
             }
 
             dropZone.addEventListener('click', () => fileInput.click());
@@ -1759,6 +2218,49 @@ document.getElementById = function(id) {
             const overlay = document.getElementById('photo-upload-overlay');
             if (overlay) overlay.style.display = 'flex';
         }
+
+        // 참여 멤버 리스트 모달 제어 및 상태메시지 관리
+        function saveMyStatusMsg(text) {
+            localStorage.setItem('clov_my_status_msg', text);
+        }
+
+        function loadMyStatusMsg() {
+            const saved = localStorage.getItem('clov_my_status_msg');
+            const el = document.getElementById('my-status-msg');
+            if (el && saved) {
+                el.innerText = saved;
+            }
+        }
+
+        function openMemberListModal(event) {
+            if (event && (event.target.closest('.photo-edit-overlay') || event.target.closest('#dt-photo-title') || event.target.closest('.editable-title'))) {
+                return;
+            }
+            loadMyStatusMsg();
+            const urlParams = new URLSearchParams(window.location.search);
+            const code = urlParams.get('roomCode') || 'CLOV-2002';
+            const codeEl = document.getElementById('member-modal-room-code');
+            if (codeEl) codeEl.textContent = code;
+            const overlay = document.getElementById('member-list-overlay');
+            if (overlay) overlay.style.display = 'flex';
+        }
+
+        function closeMemberListModal() {
+            const overlay = document.getElementById('member-list-overlay');
+            if (overlay) overlay.style.display = 'none';
+        }
+
+        function copyMemberModalRoomCode() {
+            const el = document.getElementById('member-modal-room-code');
+            const code = el ? el.textContent : 'CLOV-2002';
+            if (navigator.clipboard) navigator.clipboard.writeText(code).then(() => clovToast(`초대 코드 [${code}] 복사되었어요! 📋`, 'success'));
+            else clovToast(`초대 코드 [${code}] 복사되었어요! 📋`, 'success');
+        }
+
+        window.saveMyStatusMsg = saveMyStatusMsg;
+        window.openMemberListModal = openMemberListModal;
+        window.closeMemberListModal = closeMemberListModal;
+        window.copyMemberModalRoomCode = copyMemberModalRoomCode;
 
         // 일정 D-day 계산 및 처리 함수들
         function getDdayDiffDays(targetDateStr) {
@@ -1836,52 +2338,78 @@ document.getElementById = function(id) {
             return closest;
         }
 
-        function openScheduleModal(viewType, scheduleId) {
-            if (scheduleId !== undefined && scheduleId !== null) {
-                window.location.href = `schedule_detail.html?action=edit&groupId=${activeGroup}&id=${scheduleId}&theme=${isDarkMode ? 'dark' : 'light'}`;
-            } else {
-                window.location.href = `schedule_detail.html?action=create&groupId=${activeGroup}&theme=${isDarkMode ? 'dark' : 'light'}`;
-            }
+        // 오늘 날짜를 <input type="date">가 쓰는 yyyy-mm-dd 형식으로 반환
+        function getTodayDateStr() {
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
         }
 
-        // 빠른 선택 칩: 캘린더를 펼쳐보지 않고도 몇 주/몇 개월 뒤로 D-day를 바로 맞출 수 있게 함
-        function applyDatePreset(viewType, daysFromToday) {
-            const prefix = viewType === 'dt' ? 'dt' : 'mb';
+        function openScheduleModal(viewType, scheduleId) {
+            const prefix = viewType === 'mb' ? 'mb' : 'dt';
+            const modalTitle = document.getElementById(`${prefix}-schedule-modal-title`);
+            const titleInput = document.getElementById(`${prefix}-input-schedule-title`);
             const dateInput = document.getElementById(`${prefix}-input-schedule-date`);
-            if (!dateInput) return;
+            const bodyInput = document.getElementById(`${prefix}-input-schedule-body`);
+            const idInput = document.getElementById(`${prefix}-input-schedule-id`);
 
-            const target = new Date();
-            target.setDate(target.getDate() + daysFromToday);
+            const schedule = (scheduleId !== undefined && scheduleId !== null)
+                ? (groupsData[activeGroup].schedules || []).find(s => s.id === scheduleId)
+                : null;
 
-            const yyyy = target.getFullYear();
-            const mm = String(target.getMonth() + 1).padStart(2, '0');
-            const dd = String(target.getDate()).padStart(2, '0');
-            dateInput.value = `${yyyy}-${mm}-${dd}`;
+            if (schedule) {
+                if (modalTitle) modalTitle.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>약속 정보 수정하기';
+                if (titleInput) titleInput.value = schedule.title;
+                // 수정 시에도 오늘 이전 날짜로는 옮길 수 없도록 생성 때와 동일하게 제한
+                if (dateInput) { dateInput.value = schedule.date; dateInput.min = getTodayDateStr(); }
+                if (bodyInput) bodyInput.innerHTML = schedule.content || '';
+                if (idInput) idInput.value = schedule.id;
+            } else {
+                if (modalTitle) modalTitle.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>다가오는 약속, D-day 새로 세기';
+                if (titleInput) titleInput.value = '';
+                // 새 약속은 지난 날짜(어제 이전)로 D-day를 맞출 수 없도록 오늘부터 선택 가능
+                if (dateInput) { dateInput.value = ''; dateInput.min = getTodayDateStr(); }
+                if (bodyInput) bodyInput.innerHTML = '';
+                if (idInput) idInput.value = '';
+            }
+
+            openModal(`${prefix}-schedule-modal`);
         }
 
         function saveSchedule(viewType) {
             const prefix = viewType === 'dt' ? 'dt' : 'mb';
             const titleInput = document.getElementById(`${prefix}-input-schedule-title`);
             const dateInput = document.getElementById(`${prefix}-input-schedule-date`);
+            const bodyInput = document.getElementById(`${prefix}-input-schedule-body`);
             const idInput = document.getElementById(`${prefix}-input-schedule-id`);
 
             if (titleInput && dateInput) {
                 const newTitle = titleInput.value.trim();
                 const newDate = dateInput.value;
+                const newBody = bodyInput ? bodyInput.innerHTML : '';
 
                 if (!newTitle || !newDate) {
-                    alert("일정 제목과 날짜를 입력해주세요.");
+                    clovAlert('일정 제목과 날짜를 입력해주세요.', { icon: '🗓️', type: 'warn' });
                     return;
                 }
 
                 const schId = idInput ? idInput.value : "";
+                const existingSch = schId ? groupsData[activeGroup].schedules.find(s => s.id == schId) : null;
+
+                // 이미 저장돼있던 날짜를 그대로 두는 게 아니라 오늘 이전의 새 날짜로 옮기려는 경우만 막는다
+                if (newDate < getTodayDateStr() && !(existingSch && existingSch.date === newDate)) {
+                    clovAlert(schId ? '일정은 오늘 이후 날짜로만 수정할 수 있어요.' : '새 약속은 오늘 이후 날짜로만 만들 수 있어요.', { icon: '🗓️', type: 'warn' });
+                    return;
+                }
 
                 if (schId) {
                     // 수정 모드
-                    const sch = groupsData[activeGroup].schedules.find(s => s.id == schId);
-                    if (sch) {
-                        sch.title = newTitle;
-                        sch.date = newDate;
+                    if (existingSch) {
+                        existingSch.title = newTitle;
+                        existingSch.date = newDate;
+                        existingSch.content = newBody;
                     }
                 } else {
                     // 추가 모드
@@ -1891,7 +2419,7 @@ document.getElementById = function(id) {
                         id: maxId + 1,
                         title: newTitle,
                         date: newDate,
-                        content: `<h3>📝 ${newTitle} 메모</h3>\n<p>이곳을 클릭해 약속에 대한 메모를 남겨보세요.</p>`
+                        content: newBody || `<h3>📝 ${escapeHtml(newTitle)} 메모</h3>\n<p>이곳을 클릭해 약속에 대한 메모를 남겨보세요.</p>`
                     };
                     schedules.push(newSch);
                     // 새로 만든 약속을 바로 스포트라이트로 펼쳐서 보여줌
@@ -1900,31 +2428,77 @@ document.getElementById = function(id) {
 
                 updateScheduleUI();
                 closeModal(`${prefix}-schedule-modal`);
-                alert("🍀 D-day가 정상적으로 반영되었습니다!");
+                clovToast('🍀 D-day가 저장되었어요!', 'success');
             }
         }
 
         function deleteSchedule(scheduleId) {
-            if (!confirm("정말 이 약속을 삭제하시겠습니까?")) return;
-            const schedules = groupsData[activeGroup].schedules || [];
-            groupsData[activeGroup].schedules = schedules.filter(s => s.id !== scheduleId);
-
-            if (selectedScheduleIds[activeGroup] === scheduleId) {
-                selectedScheduleIds[activeGroup] = null;
-            }
-
-            updateScheduleUI();
-            alert("🗑️ 일정이 성공적으로 삭제되었습니다.");
+            clovConfirm('정말 이 약속을 삭제하시겠습니까?', () => {
+                const schedules = groupsData[activeGroup].schedules || [];
+                groupsData[activeGroup].schedules = schedules.filter(s => s.id !== scheduleId);
+                if (selectedScheduleIds[activeGroup] === scheduleId) selectedScheduleIds[activeGroup] = null;
+                updateScheduleUI();
+                clovToast('🗑️ 일정이 삭제되었어요.', 'info');
+            }, { icon: '🗑️', type: 'error', confirmText: '삭제', cancelText: '취소' });
         }
 
         function updateScheduleUI() {
             const currentGroup = groupsData[activeGroup];
             const closest = getClosestSchedule();
 
-            // 데스크톱 배너 업데이트
-            const dtTitle = document.getElementById('dt-schedule-title');
-            const dtDate = document.getElementById('dt-schedule-date');
-            const dtDday = document.getElementById('dt-schedule-dday');
+            // 데스크톱 다중 배너 업데이트 (최대 3개, 없으면 빈 슬롯 표시)
+            const dtBannerContainer = document.getElementById('dt-schedule-banner-container');
+            if (dtBannerContainer) {
+                const schedules = currentGroup.schedules || [];
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                let futureSchedules = schedules.filter(sch => {
+                    const target = new Date(sch.date);
+                    target.setHours(0, 0, 0, 0);
+                    return (target.getTime() - today.getTime()) >= 0;
+                }).sort((a, b) => new Date(a.date) - new Date(b.date));
+
+                let pastSchedules = schedules.filter(sch => {
+                    const target = new Date(sch.date);
+                    target.setHours(0, 0, 0, 0);
+                    return (target.getTime() - today.getTime()) < 0;
+                }).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                const top3 = [...futureSchedules, ...pastSchedules].slice(0, 3);
+
+                dtBannerContainer.innerHTML = '';
+                for (let i = 0; i < 3; i++) {
+                    const sch = top3[i];
+                    if (sch) {
+                        const ddayText = calculateDday(sch.date);
+                        const diffDays = getDdayDiffDays(sch.date);
+                        const { accent } = getDdayAccent(diffDays);
+                        const badgeStyle = `background-color: ${accent};`;
+                        const formattedDate = sch.date.replace(/-/g, '.');
+                        dtBannerContainer.innerHTML += `
+                            <div class="schedule-banner" onclick="switchDesktopTab('schedule'); selectScheduleChip('dt', ${sch.id})" style="margin-top: 0; cursor: pointer;">
+                                <div class="schedule-info">
+                                    <span class="schedule-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>
+                                    <span class="schedule-title">${escapeHtml(sch.title)}</span>
+                                    <span class="schedule-date">${formattedDate}</span>
+                                </div>
+                                <div class="schedule-dday-badge" style="${badgeStyle}">${ddayText}</div>
+                            </div>
+                        `;
+                    } else {
+                        dtBannerContainer.innerHTML += `
+                            <div class="schedule-banner" onclick="openScheduleModal('dt')" style="margin-top: 0; cursor: pointer; opacity: 0.65; border: 1px dashed rgba(255,255,255,0.3); background: rgba(0,0,0,0.05);">
+                                <div class="schedule-info">
+                                    <span class="schedule-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></span>
+                                    <span class="schedule-title">새로운 약속 만들기</span>
+                                    <span class="schedule-date">클릭하여 일정을 추가해보세요</span>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+            }
 
             // 모바일 배너 업데이트
             const mbTitle = document.getElementById('mb-schedule-title');
@@ -1935,18 +2509,11 @@ document.getElementById = function(id) {
                 const ddayText = calculateDday(closest.date);
                 const formattedDate = closest.date.replace(/-/g, '.');
 
-                if (dtTitle) dtTitle.innerText = closest.title;
-                if (dtDate) dtDate.innerText = formattedDate;
-                if (dtDday) dtDday.innerText = ddayText;
-
                 if (mbTitle) mbTitle.innerText = closest.title;
                 if (mbDate) mbDate.innerText = formattedDate;
                 if (mbDday) mbDday.innerText = ddayText;
             } else {
                 const noScheduleMsg = "등록된 일정이 없습니다.";
-                if (dtTitle) dtTitle.innerText = noScheduleMsg;
-                if (dtDate) dtDate.innerText = "";
-                if (dtDday) dtDday.innerText = "D-Day";
 
                 if (mbTitle) mbTitle.innerText = noScheduleMsg;
                 if (mbDate) mbDate.innerText = "";
@@ -2120,7 +2687,7 @@ document.getElementById = function(id) {
             const primary = document.getElementById('dt-proof-result-primary');
             const secondary = document.getElementById('dt-proof-result-secondary');
             if (!modal || !titleEl || !messageEl || !primary || !secondary) {
-                alert(title);
+                clovAlert(title, { icon: '💬', type: 'info' });
                 return;
             }
 
@@ -2137,6 +2704,20 @@ document.getElementById = function(id) {
         function closeProofResultModal() {
             const modal = document.getElementById('dt-proof-result-modal');
             if (modal) modal.style.display = 'none';
+        }
+
+        // 인생4컷이 막 완성된 순간 — LP 레코드판 클릭 때 쓰던 색종이+음표 폭죽을
+        // "인생 4컷 완성!" 모달의 체크 아이콘 위치에서 재생해 축하해준다.
+        function celebrateFourCutComplete() {
+            const box = document.querySelector('#dt-proof-result-modal .modal-box');
+            const icon = document.getElementById('dt-proof-result-icon');
+            const burst = document.getElementById('dt-proof-burst');
+            if (!box || !icon || !burst || typeof spawnConfettiBurst !== 'function') return;
+            const iconRect = icon.getBoundingClientRect();
+            const boxRect = box.getBoundingClientRect();
+            burst.style.left = (iconRect.left - boxRect.left + iconRect.width / 2) + 'px';
+            burst.style.top = (iconRect.top - boxRect.top + iconRect.height / 2) + 'px';
+            spawnConfettiBurst(burst, { spread: 130 }); // 색상은 spawnConfettiBurst 기본값(여름 팔레트) 사용
         }
 
         function showLockedStagePhotoModal() {
@@ -2182,7 +2763,12 @@ document.getElementById = function(id) {
 
         function uploadStagePhoto(scheduleId, stageKey, input) {
             const file = input.files && input.files[0];
-            if (!file || !file.type.startsWith('image/')) return;
+            if (!file) return;
+            if (!file.type.startsWith('image/')) {
+                clovAlert('이미지 파일(JPG, PNG, GIF, WEBP 등)만 업로드할 수 있습니다.', { icon: '⚠️', type: 'warn' });
+                input.value = '';
+                return;
+            }
 
             const schedule = (groupsData[activeGroup].schedules || []).find(s => s.id === scheduleId);
             if (!schedule) return;
@@ -2219,6 +2805,7 @@ document.getElementById = function(id) {
                         message: '네 단계의 인증샷이 모두 모였어요.<br>이제 인생네컷으로 만들어 볼까요?',
                         complete: true
                     });
+                    celebrateFourCutComplete();
                 } else {
                     showProofResultModal({
                         title: '인증사진 업로드',
@@ -2404,7 +2991,7 @@ document.getElementById = function(id) {
                         : status === 'locked'
                             ? `
                                 <span class="strip-frame-number">${stage.number}</span>
-                                <span class="strip-lock-icon">🔒</span>
+                                <span class="strip-lock-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
                             `
                             : `
                                 <span class="strip-frame-number">${stage.number}</span>
@@ -2453,22 +3040,39 @@ document.getElementById = function(id) {
             const ddayText = calculateDday(selectedSchedule.date);
             const friendlyDate = formatFriendlyDate(selectedSchedule.date);
             const ddayPhrase = diffDays < 0 ? '함께 보낸 그날로부터' : diffDays === 0 ? '바로 오늘, 약속의 날!' : '함께할 그날까지';
+            const stampColor = diffDays < 0 ? '#2e5233' : '#c0392b';  // 지난 약속=초록, 그 외=빨강
 
             zone.innerHTML = `
                 <section class="growth-shell">
-                    <div class="growth-detail" style="--chip-accent:${accent}; --chip-glow:${glow};">
-                        <div class="spotlight-actions">
-                            <button onclick="openScheduleModal('${viewType}', ${selectedSchedule.id})">수정</button>
-                            <button class="danger" onclick="deleteSchedule(${selectedSchedule.id})">삭제</button>
+                    <div class="growth-detail receipt" style="--stamp:${stampColor};">
+                        <div class="receipt-paper">
+                            <div class="receipt-zigzag"></div>
+                            <div class="receipt-head">
+                                <div class="receipt-brand">CLOV. MEMORIES</div>
+                                <div class="receipt-sub">★  약 속 메 모  ★</div>
+                            </div>
+                            <div class="receipt-stamp-wrap">
+                                <div class="receipt-stamp">
+                                    <span class="receipt-stamp-label">${escapeHtml(ddayPhrase)}</span>
+                                    <span class="receipt-stamp-dday">${escapeHtml(ddayText)}</span>
+                                </div>
+                            </div>
+                            <div class="receipt-title">${escapeHtml(selectedSchedule.title)}</div>
+                            <div class="receipt-meta">
+                                <div><span>DATE</span><span>${escapeHtml(friendlyDate)}</span></div>
+                                <div><span>D-DAY</span><span>${escapeHtml(ddayText)}</span></div>
+                            </div>
+                            <div class="receipt-memo-label">— MEMO ————————————</div>
+                            <div class="receipt-memo" contenteditable="true"
+                                 id="${prefix}-schedule-content-${selectedSchedule.id}"
+                                 onblur="saveScheduleContent('${viewType}', ${selectedSchedule.id})"
+                                 placeholder="✎ 메모를 추가해 보세요">${selectedSchedule.content || ''}</div>
+                            <div class="receipt-barcode"></div>
+                            <div class="receipt-actions">
+                                <button onclick="openScheduleModal('${viewType}', ${selectedSchedule.id})">수정</button>
+                                <button class="danger" onclick="deleteSchedule(${selectedSchedule.id})">삭제</button>
+                            </div>
                         </div>
-                        <div class="spotlight-label">${escapeHtml(ddayPhrase)}</div>
-                        <div class="spotlight-dday">${escapeHtml(ddayText)}</div>
-                        <div class="spotlight-title">${escapeHtml(selectedSchedule.title)}</div>
-                        <div class="spotlight-date">${escapeHtml(friendlyDate)}</div>
-                        <div class="spotlight-note" contenteditable="true"
-                             id="${prefix}-schedule-content-${selectedSchedule.id}"
-                             onblur="saveScheduleContent('${viewType}', ${selectedSchedule.id})"
-                             placeholder="이곳을 클릭해 약속에 대한 메모를 남겨보세요.">${selectedSchedule.content || ''}</div>
                     </div>
                     <div class="growth-hero">
                         <div>
@@ -2481,6 +3085,7 @@ document.getElementById = function(id) {
                             <button class="${activeScheduleDensity === 'proof' ? 'active' : ''}" onclick="setScheduleDensity('proof')">인증 가능 <span>${proofCount}</span></button>
                             <button class="${activeScheduleDensity === 'upcoming' ? 'active' : ''}" onclick="setScheduleDensity('upcoming')">다가오는 약속 <span>${upcomingCount}</span></button>
                             <button class="${activeScheduleDensity === 'done' ? 'active' : ''}" onclick="setScheduleDensity('done')">완료된 약속 <span>${doneCount}</span></button>
+                            <button class="fourcut-gallery-btn" type="button" onclick="openFourCutGallery()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px;"><path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2 2 2 0 0 0 0 4 2 2 0 0 1-2 2H5a2 2 0 0 1-2-2 2 2 0 0 0 0-4z"></path><path d="M13 6v1.5M13 16.5V18M13 11v2"></path></svg>입장하기</button>
                         </div>
                     </div>
                     <div class="growth-card-rail">
@@ -2493,6 +3098,342 @@ document.getElementById = function(id) {
                 </section>
             `;
         }
+
+        // 인생4컷 극장 상태 — 완성작 목록과 현재 상영 중인 인덱스, 진행 중인 타이머
+        const fourCutState = { schedules: [], active: 0, posterTimer: null, ticks: [] };
+
+        function fourCutMemories() {
+            return ((groupsData[activeGroup] && groupsData[activeGroup].schedules) || [])
+                .filter(sch => getScheduleProofCount(sch) === 4)
+                .sort((a, b) => new Date(b.date) - new Date(a.date));
+        }
+
+        function fourCutStopPoster() {
+            if (fourCutState.posterTimer) clearInterval(fourCutState.posterTimer);
+            fourCutState.posterTimer = null;
+        }
+
+        // 완성작들의 '만남' 컷으로 로비 포스터 슬라이드쇼를 3600ms 주기로 크로스페이드
+        function fourCutStartPoster(schedules) {
+            fourCutStopPoster();
+            const wrap = document.getElementById('dt-fourcut-poster-slides');
+            const np = document.getElementById('dt-fourcut-nowplaying');
+            if (!wrap || !schedules.length) return;
+            const slides = [...wrap.children];
+            const show = (n) => {
+                slides.forEach((s, k) => { s.style.opacity = k === n ? '1' : '0'; });
+                if (np && schedules[n]) np.textContent = schedules[n].title;
+            };
+            let i = 0;
+            show(0);
+            fourCutState.posterTimer = setInterval(() => {
+                i = (i + 1) % slides.length;
+                show(i);
+            }, 3600);
+        }
+
+        function openFourCutGallery() {
+            fourCutCaptureTheaterTemplate();
+            const schedules = fourCutMemories();
+            fourCutState.schedules = schedules;
+            fourCutState.active = 0;
+
+            const allSchedules = (groupsData[activeGroup] && groupsData[activeGroup].schedules) || [];
+            const upcomingCount = allSchedules.filter(sch => getDdayDiffDays(sch.date) >= 0).length;
+
+            const doneCountEl = document.getElementById('dt-fourcut-done-count');
+            const upcomingCountEl = document.getElementById('dt-fourcut-upcoming-count');
+            const todayCountEl = document.getElementById('dt-fourcut-today-count');
+            if (doneCountEl) doneCountEl.textContent = schedules.length;
+            if (upcomingCountEl) upcomingCountEl.textContent = upcomingCount;
+            if (todayCountEl) todayCountEl.textContent = schedules.length;
+
+            const empty = document.getElementById('dt-fourcut-gallery-empty');
+            const poster = document.getElementById('dt-fourcut-poster');
+            const row = document.getElementById('dt-fourcut-row');
+            if (empty) empty.style.display = schedules.length ? 'none' : 'block';
+            if (poster) poster.style.display = schedules.length ? '' : 'none';
+            if (row) row.style.display = schedules.length ? '' : 'none';
+
+            const slidesWrap = document.getElementById('dt-fourcut-poster-slides');
+            if (slidesWrap) {
+                slidesWrap.innerHTML = schedules.map(sch => {
+                    const photos = getGrowthStagePhotos(sch);
+                    return `<div class="fourcut-poster-slide" style="background-image:url('${photos.meet || ''}')"></div>`;
+                }).join('');
+            }
+
+            // 넷플릭스 "Trending Now" 행처럼, 완성작들을 포스터 카드로 가로 나열 — 클릭하면 그 완성작으로 바로 입장
+            const rowCountEl = document.getElementById('dt-fourcut-row-count');
+            const rowTrack = document.getElementById('dt-fourcut-row-track');
+            if (rowCountEl) rowCountEl.textContent = schedules.length;
+            if (rowTrack) {
+                rowTrack.innerHTML = schedules.map((sch, i) => {
+                    const photos = getGrowthStagePhotos(sch);
+                    return `
+                        <button class="fourcut-row-card" type="button" onclick="fourCutEnterAt(${i})">
+                            <div class="fourcut-row-thumb" style="background-image:url('${photos.meet || ''}')"></div>
+                            <span class="fourcut-row-badge">인생4컷</span>
+                            <div class="fourcut-row-scrim"></div>
+                            <span class="fourcut-row-title">${escapeHtml(sch.title)}</span>
+                        </button>
+                    `;
+                }).join('');
+            }
+
+            // "입장하기" 버튼을 누른 자리에서 모달이 펼쳐져 나오는 FLIP 애니메이션
+            // (First-Last-Invert-Play: 최종 위치/크기를 먼저 구하고, 시작 지점 기준 변환값을
+            // 역산해서 순간이동처럼 보이게 앉힌 뒤, transform을 원상태(none)로 되돌리며 애니메이션한다)
+            const triggerBtn = document.querySelector('.fourcut-gallery-btn');
+            openModal('dt-fourcut-gallery-modal');
+            fourCutStartPoster(schedules);
+            const box = document.querySelector('#dt-fourcut-gallery-modal .modal-box');
+            if (triggerBtn && box) {
+                const startRect = triggerBtn.getBoundingClientRect();
+                const endRect = box.getBoundingClientRect(); // openModal 직후라 이미 최종 레이아웃 반영됨
+                const scaleX = startRect.width / endRect.width;
+                const scaleY = startRect.height / endRect.height;
+                const dx = (startRect.left + startRect.width / 2) - (endRect.left + endRect.width / 2);
+                const dy = (startRect.top + startRect.height / 2) - (endRect.top + endRect.height / 2);
+
+                box.style.transition = 'none';
+                box.style.transformOrigin = 'center center';
+                box.style.opacity = '0.5';
+                box.style.transform = `translate(${dx}px, ${dy}px) scale(${scaleX}, ${scaleY})`;
+
+                void box.offsetWidth; // 강제 리플로우로 시작 상태 커밋
+                box.style.transition = 'transform 0.42s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s ease';
+                box.style.transform = 'translate(0, 0) scale(1, 1)';
+                box.style.opacity = '1';
+
+                const cleanup = () => {
+                    box.style.transition = '';
+                    box.style.transform = '';
+                    box.style.transformOrigin = '';
+                    box.style.opacity = '';
+                    box.removeEventListener('transitionend', cleanup);
+                };
+                box.addEventListener('transitionend', cleanup);
+            }
+        }
+
+        function closeFourCutGallery() {
+            fourCutStopPoster();
+            fourCutResetTheater();
+            closeModal('dt-fourcut-gallery-modal');
+        }
+
+        window.openFourCutGallery = openFourCutGallery;
+        window.closeFourCutGallery = closeFourCutGallery;
+
+        // 같은 요소에 이전 단계(입장/착석/넘기기)의 애니메이션이 아직 남아있으면
+        // 새 애니메이션과 겹쳐 최종 값이 불확실해질 수 있어, 항상 먼저 취소하고 새로 시작한다.
+        function fourCutAnim(id, frames, opts) {
+            const el = document.getElementById(id);
+            if (!el) return null;
+            el.getAnimations().forEach(a => a.cancel());
+            return el.animate(frames, Object.assign({ fill: 'forwards', easing: 'cubic-bezier(.2,.8,.2,1)' }, opts));
+        }
+
+        // 극장을 처음 상태(커튼 닫힘·좌석 숨김·스크린 off·하우스 조명 ON)로 즉시 되돌림
+        // 극장을 입장 전 초기 상태로 강제 복원 — 애니메이션을 취소하는 것만으로는
+        // (특히 '나가기'로 중간에 빠져나온 뒤 재입장할 때) 커튼·스크린 등이 마지막 프레임에
+        // 그대로 멈춰있을 수 있어, 각 요소의 인라인 스타일을 초기값으로 직접 못박아 되돌린다.
+        // 커튼·스크린·조명 등 상영 관련 요소들을 입장 전 초기값으로 즉시 못박는다.
+        // (애니메이션을 cancel()만 하면 되돌아갈 값이 캐스케이드에 의존하게 되므로,
+        // '나가기' 직후·재입장 시 모두 이 함수로 확실하게 하드 리셋한다)
+        // 극장 내부(커튼·스크린·조명 등)의 최초 마크업을 한 번만 캡처해둔다.
+        // 애니메이션 취소/스타일 리셋에 의존하는 대신, 다음 입장 때는 이 원본으로 통째로
+        // 갈아끼워서 이전 상영의 잔여 상태(열린 커튼 등)가 절대 남을 수 없게 한다 —
+        // 새로고침했을 때와 동일한 효과를 컴포넌트 단위로만 재현하는 것.
+        let fourCutTheaterPristineHTML = null;
+        function fourCutCaptureTheaterTemplate() {
+            if (fourCutTheaterPristineHTML !== null) return;
+            const theater = document.getElementById('dt-fourcut-theater');
+            if (theater) fourCutTheaterPristineHTML = theater.innerHTML;
+        }
+
+        function fourCutResetChildren() {
+            const theater = document.getElementById('dt-fourcut-theater');
+            if (theater && fourCutTheaterPristineHTML !== null) {
+                theater.innerHTML = fourCutTheaterPristineHTML;
+            }
+            const sit = document.getElementById('dt-theater-sit');
+            if (sit) sit.style.pointerEvents = 'none';
+        }
+
+        function fourCutResetTheater() {
+            (fourCutState.ticks || []).forEach(clearTimeout);
+            fourCutState.ticks = [];
+            fourCutResetChildren();
+            const theater = document.getElementById('dt-fourcut-theater');
+            if (theater) {
+                theater.getAnimations().forEach(a => a.cancel());
+                theater.style.opacity = '0';
+                theater.style.pointerEvents = 'none';
+            }
+        }
+
+        function fourCutRenderScreen(index) {
+            const sch = fourCutState.schedules[index];
+            if (!sch) return;
+            const stages = buildGrowthStages(sch);
+            const photos = getGrowthStagePhotos(sch);
+
+            const titleEl = document.getElementById('dt-theater-title');
+            const dateEl = document.getElementById('dt-theater-date');
+            const counterEl = document.getElementById('dt-theater-counter');
+            if (titleEl) titleEl.textContent = sch.title;
+            if (dateEl) dateEl.textContent = formatFriendlyDate(sch.date);
+            if (counterEl) counterEl.textContent = (index + 1) + ' / ' + fourCutState.schedules.length;
+
+            const strip = document.getElementById('dt-theater-strip');
+            if (strip) {
+                strip.innerHTML = stages.map(stage => `
+                    <div class="fourcut-frame" style="background-image:url('${photos[stage.key] || ''}')">
+                        <span class="fourcut-frame-label">${escapeHtml(stage.name)}</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function fourCutSpawnDust() {
+            const w = document.getElementById('dt-theater-dustwrap');
+            if (!w) return;
+            w.innerHTML = '';
+            for (let i = 0; i < 10; i++) {
+                const d = document.createElement('div');
+                d.className = 'fourcut-dust';
+                const sz = 2 + Math.random() * 3;
+                d.style.left = (10 + Math.random() * 80) + '%';
+                d.style.bottom = (Math.random() * 40) + '%';
+                d.style.width = sz + 'px';
+                d.style.height = sz + 'px';
+                d.style.setProperty('--dx', (Math.random() * 30 - 15) + 'px');
+                d.style.animationDuration = (4 + Math.random() * 4) + 's';
+                d.style.animationDelay = (Math.random() * 4) + 's';
+                w.appendChild(d);
+            }
+        }
+
+        // STEP 1 — 입장하기: 극장으로 전진, 하우스 조명 켜진 채 착석하기 버튼 등장
+        function fourCutEnter() {
+            fourCutResetTheater();
+            if (!fourCutState.schedules.length) return;
+
+            const theater = document.getElementById('dt-fourcut-theater');
+            if (theater) {
+                theater.style.pointerEvents = 'auto';
+                theater.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 340, fill: 'forwards' });
+            }
+            fourCutRenderScreen(fourCutState.active);
+
+            fourCutAnim('dt-theater-scene', [{ transform: 'scale(.68) translateY(-6px)' }, { transform: 'scale(1) translateY(0)' }], { duration: 1000, easing: 'cubic-bezier(.2,.7,.3,1)' });
+            fourCutAnim('dt-theater-exit', [{ opacity: 0 }, { opacity: 1 }], { duration: 400, delay: 900 });
+
+            const sit = document.getElementById('dt-theater-sit');
+            if (sit) {
+                sit.getAnimations().forEach(a => a.cancel());
+                sit.style.pointerEvents = 'auto';
+                sit.animate([{ opacity: 0, transform: 'translate(-50%,14px)' }, { opacity: 1, transform: 'translate(-50%,0)' }], { duration: 460, delay: 1000, fill: 'forwards' });
+            }
+        }
+
+        // 완성작 행에서 특정 카드를 눌러 그 완성작으로 바로 입장
+        function fourCutEnterAt(index) {
+            if (!fourCutState.schedules[index]) return;
+            fourCutState.active = index;
+            fourCutEnter();
+        }
+
+        // STEP 2 — 착석하기: 앞좌석이 올라오고 소등 → 커튼 → 3·2·1 카운트다운 → 상영
+        function fourCutSit() {
+            const BOUNCE = 'cubic-bezier(.34,1.56,.64,1)';
+            fourCutState.ticks = fourCutState.ticks || [];
+
+            const sit = document.getElementById('dt-theater-sit');
+            if (sit) {
+                sit.getAnimations().forEach(a => a.cancel());
+                sit.style.pointerEvents = 'none';
+                sit.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 240, fill: 'forwards' });
+            }
+
+            fourCutAnim('dt-theater-seats', [{ transform: 'translateY(100%)' }, { transform: 'translateY(-5%)', offset: .8 }, { transform: 'translateY(0)' }], { duration: 680, delay: 80, easing: BOUNCE });
+            fourCutAnim('dt-theater-scene', [{ transform: 'scale(1) translateY(0)' }, { transform: 'scale(1) translateY(1.2%)', offset: .5 }, { transform: 'scale(1) translateY(0)' }], { duration: 320, delay: 360 });
+            fourCutAnim('dt-theater-house', [{ opacity: .5 }, { opacity: 0 }], { duration: 460, delay: 720 });
+            fourCutAnim('dt-theater-curtl', [{ transform: 'translateX(0)' }, { transform: 'translateX(-104%)' }], { duration: 720, delay: 1180, easing: 'cubic-bezier(.5,0,.2,1)' });
+            fourCutAnim('dt-theater-curtr', [{ transform: 'translateX(0)' }, { transform: 'translateX(104%)' }], { duration: 720, delay: 1180, easing: 'cubic-bezier(.5,0,.2,1)' });
+
+            const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            let screenAt = 2020;
+            if (!reducedMotion) {
+                const tick = (n, t) => fourCutState.ticks.push(setTimeout(() => {
+                    const el = document.getElementById('dt-theater-count');
+                    const num = document.getElementById('dt-theater-countnum');
+                    if (!el) return;
+                    if (num) num.textContent = n;
+                    el.getAnimations().forEach(a => a.cancel());
+                    el.animate([
+                        { opacity: 0, transform: 'translate(-50%,-50%) scale(1.5)' },
+                        { opacity: 1, transform: 'translate(-50%,-50%) scale(1)', offset: .35 },
+                        { opacity: 1, transform: 'translate(-50%,-50%) scale(1)', offset: .82 },
+                        { opacity: 0, transform: 'translate(-50%,-50%) scale(.85)' }
+                    ], { duration: 400, fill: 'forwards' });
+                }, t));
+                tick('3', 2060); tick('2', 2480); tick('1', 2900);
+                screenAt = 3420;
+            }
+
+            fourCutAnim('dt-theater-beam', [{ opacity: 0 }, { opacity: 1 }], { duration: 700, delay: 1360 });
+            fourCutSpawnDust();
+            fourCutAnim('dt-theater-scrglow', [{ opacity: 0 }, { opacity: .95, offset: .3 }, { opacity: 0 }], { duration: 560, delay: screenAt });
+            fourCutAnim('dt-theater-grain', [{ opacity: 0 }, { opacity: 1 }], { duration: 400, delay: screenAt + 200 });
+            fourCutAnim('dt-theater-spill', [{ opacity: 0 }, { opacity: 1 }], { duration: 560, delay: screenAt + 40 });
+            fourCutAnim('dt-theater-shot', [{ opacity: 0 }, { opacity: 1, offset: .5 }, { opacity: .82, offset: .62 }, { opacity: 1 }], { duration: 720, delay: screenAt + 60 });
+            fourCutAnim('dt-theater-nav', [{ opacity: 0 }, { opacity: 1 }], { duration: 440, delay: screenAt + 760 });
+        }
+
+        // 완성작 넘기기 — 재렌더 없이 DOM 직접 갱신 + 필름 어드밴스 전환
+        function fourCutFilmAdvance(dir) {
+            const strip = document.getElementById('dt-theater-strip');
+            if (strip) {
+                strip.getAnimations().forEach(a => a.cancel());
+                strip.animate([
+                    { transform: `translateX(${dir * 46}px)`, filter: 'blur(3px)', opacity: .2 },
+                    { transform: 'translateX(0)', filter: 'blur(0)', opacity: 1 }
+                ], { duration: 380, easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'forwards' });
+            }
+            fourCutAnim('dt-theater-scrglow', [{ opacity: 0 }, { opacity: .6, offset: .3 }, { opacity: 0 }], { duration: 300 });
+        }
+
+        function fourCutNav(dir) {
+            const n = fourCutState.schedules.length;
+            if (!n) return;
+            fourCutState.active = (fourCutState.active + dir + n) % n;
+            fourCutRenderScreen(fourCutState.active);
+            fourCutFilmAdvance(dir);
+        }
+
+        // 나가기 — 극장 페이드아웃과 동시에 내부 마크업을 원본으로 통째로 갈아끼운다.
+        // (전체가 어두워지며 사라지는 중이라 안 보이지만, 이렇게 해둬야 다음에 다시 입장했을 때
+        // 직전 상영 상태가 남아있지 않고 항상 닫힌 커튼부터 새로고침한 것처럼 시작한다)
+        function fourCutExit() {
+            (fourCutState.ticks || []).forEach(clearTimeout);
+            fourCutState.ticks = [];
+            const theater = document.getElementById('dt-fourcut-theater');
+            if (theater) {
+                theater.getAnimations().forEach(a => a.cancel());
+                theater.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 320, fill: 'forwards' });
+                theater.style.pointerEvents = 'none';
+            }
+            fourCutResetChildren();
+        }
+
+        window.fourCutEnter = fourCutEnter;
+        window.fourCutEnterAt = fourCutEnterAt;
+        window.fourCutSit = fourCutSit;
+        window.fourCutExit = fourCutExit;
+        window.fourCutNav = fourCutNav;
 
         // 일정 세부 기입 내용 저장 및 양방향 실시간 동기화
         function saveScheduleContent(viewType, scheduleId) {
@@ -2518,6 +3459,29 @@ document.getElementById = function(id) {
             }
         }
 
+        // 일정 생성 모달 "＋ 단계 넣기" — 제안·일정·확정·만남 4단계 스캐폴드를 커서 위치에 삽입
+        function insertScheduleSteps(editorId) {
+            const editor = document.getElementById(editorId);
+            if (!editor) return;
+            editor.focus();
+            const sel = window.getSelection();
+            const range = document.createRange();
+            range.selectNodeContents(editor);
+            range.collapse(false);            // 커서를 에디터 끝으로
+            sel.removeAllRanges();
+            sel.addRange(range);
+            const scaffold =
+                '<h3>약속 준비 4단계</h3>' +
+                '<ul>' +
+                '<li><b>제안하기</b> — </li>' +
+                '<li><b>일정 맞추기</b> — </li>' +
+                '<li><b>약속 확정</b> — </li>' +
+                '<li><b>만남</b> — </li>' +
+                '</ul><p><br></p>';
+            document.execCommand('insertHTML', false, scaffold);
+        }
+        window.insertScheduleSteps = insertScheduleSteps;
+
         // 레벨이 오를수록 맨땅이었던 지면에 클로버가 하나둘 빽빽하게 자라나도록 채워주는 함수 (잡초 X, 전부 클로버)
         function renderGroundGrowth(containerId) {
             const container = document.getElementById(containerId);
@@ -2525,9 +3489,11 @@ document.getElementById = function(id) {
             container.innerHTML = '';
 
             // 레벨이 오를수록 클로버 개수가 훨씬 더 가파르게 늘어나서 들판이 무성해짐
-            const cloverCount = friendshipLevel * 6; // 6 ~ 30개
+            // (최대 777레벨이라 레벨을 그대로 곱하면 폭발하므로, 7단계 티어 인덱스(0~6) 기준으로 계산)
+            const tierIdx = clovLevelTierIndex(friendshipLevel);
+            const cloverCount = 6 + tierIdx * 5; // 6 ~ 36개
             // 레벨이 높을수록 클로버 한 포기 자체도 더 크고 무성하게 자람
-            const baseScale = 0.7 + friendshipLevel * 0.12;
+            const baseScale = 0.7 + tierIdx * 0.12;
 
             for (let i = 0; i < cloverCount; i++) {
                 const sprout = document.createElement('span');
@@ -2566,8 +3532,10 @@ document.getElementById = function(id) {
             friendshipLevel = currentGroup.level;
 
             // D-day 내용 업데이트
-            document.getElementById('dt-dday-label').innerText = currentGroup.ddayLabel;
-            document.getElementById('mb-dday-label').innerText = currentGroup.ddayLabel;
+            const dtLabel = document.getElementById('dt-dday-label') || document.getElementById('dt-v5eyebrow');
+            if (dtLabel) dtLabel.innerText = currentGroup.ddayLabel;
+            const mbLabel = document.getElementById('mb-dday-label') || document.getElementById('mb-v5eyebrow');
+            if (mbLabel) mbLabel.innerText = currentGroup.ddayLabel;
             animateDdayCount(currentGroup.ddayCount);
 
             // UI 일괄 업데이트 (레벨 배지, 게이지 바, 클로버 재생성)
@@ -2580,7 +3548,7 @@ document.getElementById = function(id) {
                 logo.innerHTML = `${currentGroup.icon} ${currentGroup.name}`;
             });
 
-            alert(`👥 [${currentGroup.icon} ${currentGroup.name}] 그룹으로 성공적으로 전환되었습니다.`);
+            clovToast(`👥 [${currentGroup.icon} ${currentGroup.name}] 그룹으로 전환되었습니다.`, 'success');
         }
 
         // 그룹 모달 안의 선택 상태 스타일 제어
@@ -2619,48 +3587,115 @@ document.getElementById = function(id) {
 
         // 행운 편지 즐겨찾기 필터 상태 ('all' | 'favorite')
         let activeLetterFilter = 'all';
+        let activeLetterPage = 0;
+        const LETTERS_PER_PAGE = 3;
+        const EMPTY_LETTER_MESSAGES = [
+            '마음은 먼저 건네는 사람에게 가장 크게 남는대요.<br>오늘, 그 마음을 편지에 담아볼까요?',
+            '누군가에게 전한 진심은 절대 사라지지 않아요.<br>지금 이 순간, 첫 편지를 띄워보세요.',
+            '아직 아무도 열어보지 않은 편지함이지만,<br>당신의 한 마디로 누군가의 하루가 달라질 수 있어요.',
+            '표현하지 않으면 마음은 전해지지 않아요.<br>망설이던 그 말, 편지로 먼저 건네보는 건 어때요?',
+            '오늘 보낸 편지 한 통이,<br>훗날 소중한 추억으로 돌아올지도 몰라요.'
+        ];
+
+        function getFilteredLettersWithIndex() {
+            const currentGroup = groupsData[activeGroup] || {};
+            const letters = currentGroup.letters || [];
+            return letters
+                .map((letter, index) => ({ letter, index }))
+                .filter(({ letter }) => {
+                    if (activeLetterFilter === 'favorite') return !!letter.favorite;
+                    if (activeLetterFilter === 'sent') return !!letter.isMine;
+                    return true;
+                });
+        }
+
+        function renderLetterInboxPage() {
+            const listEl = document.getElementById('dt-letter-inbox-list');
+            const pageLabel = document.getElementById('dt-letter-page-label');
+            const prevBtn = document.getElementById('dt-letter-prev');
+            const nextBtn = document.getElementById('dt-letter-next');
+            if (!listEl) return;
+
+            const filteredLetters = getFilteredLettersWithIndex();
+            const totalPages = Math.max(1, Math.ceil(filteredLetters.length / LETTERS_PER_PAGE));
+            activeLetterPage = Math.min(Math.max(activeLetterPage, 0), totalPages - 1);
+            const start = activeLetterPage * LETTERS_PER_PAGE;
+            const visibleLetters = filteredLetters.slice(start, start + LETTERS_PER_PAGE);
+
+            if (!visibleLetters.length) {
+                listEl.innerHTML = '<div class="letter-inbox-empty">아직 확인할 편지가 없어요.</div>';
+            } else {
+                listEl.innerHTML = visibleLetters.map(({ letter, index }, offset) => {
+                    const activeClass = letter.favorite ? '' : 'inactive';
+                    const delay = offset * 45;
+                    return `
+                        <div class="letter-inbox-card" role="button" tabindex="0" onclick="openLetterDetailModal(${index})" onkeydown="if(event.key==='Enter') openLetterDetailModal(${index})" style="animation-delay:${delay}ms">
+                            <button class="letter-favorite-btn ${activeClass}" type="button" onclick="event.stopPropagation(); toggleLetterFavorite(${index})" title="즐겨찾기 토글">⭐</button>
+                            <strong>To. ${escapeHtml(letter.to || '전체')}</strong>
+                            <p>${escapeHtml(letter.text || '').slice(0, 64)}${(letter.text || '').length > 64 ? '...' : ''}</p>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            if (pageLabel) pageLabel.textContent = `${activeLetterPage + 1} / ${totalPages}`;
+            if (prevBtn) prevBtn.disabled = activeLetterPage === 0;
+            if (nextBtn) nextBtn.disabled = activeLetterPage >= totalPages - 1;
+        }
+
+        function openLetterInboxModal() {
+            const giftBox = document.querySelector('.letter-box-trigger');
+            if (giftBox) giftBox.classList.add('is-opening');
+            activeLetterPage = 0;
+            renderLetterInboxPage();
+            setTimeout(() => {
+                openModal('dt-letter-inbox-modal');
+                if (giftBox) giftBox.classList.remove('is-opening');
+            }, 520);
+        }
+
+        function moveLetterPage(direction) {
+            activeLetterPage += direction;
+            renderLetterInboxPage();
+        }
+
+        function backToLetterInbox() {
+            closeModal('dt-letter-detail-modal');
+            openModal('dt-letter-inbox-modal');
+        }
 
         // 편지함 동적 렌더링 (즐겨찾기 토글 및 필터링 기능 추가)
         function renderLetters() {
             // write 탭이면 편지 목록 렌더링 안 함
             if (activeLetterFilter === 'write') return;
 
-            const currentGroup = groupsData[activeGroup];
-            const mbZone = document.getElementById('mb-letter-zone');
+            const currentGroup = groupsData[activeGroup] || {};
+            const allLetters = currentGroup.letters || [];
+            const filteredLetters = getFilteredLettersWithIndex();
             const dtZone = document.getElementById('dt-letter-zone');
-            const dtWriteZone = document.getElementById('dt-letter-write-zone');
-            const mbWriteZone = document.getElementById('mb-letter-write-zone');
+            const boxTrigger = document.getElementById('dt-letter-box-trigger');
+            if (boxTrigger) boxTrigger.classList.toggle('has-mail', allLetters.length > 0);
+            let profileName = '사용자';
+            try {
+                const savedProfile = JSON.parse(localStorage.getItem('clov_profile') || '{}');
+                profileName = savedProfile.name || profileName;
+            } catch (e) {}
 
-            // 편지 목록 zone 표시 복원, 작성 zone 숨김
-            if (dtZone) dtZone.style.display = 'grid';
-            if (mbZone) mbZone.style.display = 'block';
-            if (dtWriteZone) dtWriteZone.style.display = 'none';
-            if (mbWriteZone) mbWriteZone.style.display = 'none';
+            let summaryText;
+            if (activeLetterFilter === 'favorite') {
+                summaryText = filteredLetters.length
+                    ? `즐겨찾기 ${filteredLetters.length}통의 편지가<br>${escapeHtml(profileName)}님에게 도착했어요!`
+                    : `⭐ 즐겨찾기한 편지가 없어요.`;
+            } else if (activeLetterFilter === 'sent') {
+                summaryText = '';
+            } else {
+                summaryText = allLetters.length
+                    ? `총 ${allLetters.length}통의 편지가<br>${escapeHtml(profileName)}님에게 도착했어요!`
+                    : EMPTY_LETTER_MESSAGES[Math.floor(Math.random() * EMPTY_LETTER_MESSAGES.length)];
+            }
 
-            let mbHtml = '';
-            let dtHtml = '';
-
-            currentGroup.letters.forEach((letter, index) => {
-                if (activeLetterFilter === 'favorite' && !letter.favorite) return;
-                const activeClass = letter.favorite ? '' : 'inactive';
-                const itemHtml = `
-                    <div class="letter-item" style="cursor: pointer;" onclick="openLetterDetailModal(${index})">
-                        <button class="letter-favorite-btn ${activeClass}" onclick="event.stopPropagation(); toggleLetterFavorite(${index})" title="즐겨찾기 토글">
-                            ⭐
-                        </button>
-                        <strong>To. ${letter.to || '전체'}</strong><br>
-                        <strong>From. ${letter.from}</strong><br>
-                        "${letter.text}"
-                    </div>
-                `;
-                mbHtml += itemHtml;
-                dtHtml += itemHtml;
-            });
-
-            const noLettersMsg = '<p style="font-size:15px; color:var(--text-muted); font-weight:500; text-align:center; padding: 30px 0;">💌 아직 편지가 없어요. 첫 번째 행운 편지를 남겨봐요!</p>';
-
-            if (mbZone) mbZone.innerHTML = mbHtml || noLettersMsg;
-            if (dtZone) dtZone.innerHTML = dtHtml || noLettersMsg;
+            if (dtZone) dtZone.innerHTML = summaryText ? `<p>${summaryText}</p>` : '';
+            renderLetterInboxPage();
         }
 
         // 편지 즐겨찾기 상태 토글
@@ -2674,41 +3709,6 @@ document.getElementById = function(id) {
             }
         }
 
-        let activeLetterRecipient = { dt: "모두에게", mb: "모두에게" };
-
-        function selectRecipient(prefix, chipElement) {
-            document.querySelectorAll(`#${prefix}-recipient-selector .recipient-chip`).forEach(c => c.classList.remove('active'));
-            chipElement.classList.add('active');
-            activeLetterRecipient[prefix] = chipElement.getAttribute('data-recipient');
-        }
-
-        function submitInlineLetter(prefix) {
-            const textEl = document.getElementById(`${prefix}-letter-text`);
-            if (!textEl) return;
-            const text = textEl.value.trim();
-            if (!text) {
-                alert("편지 내용을 입력해주세요.");
-                return;
-            }
-
-            const currentGroup = groupsData[activeGroup];
-            if (!currentGroup.letters) currentGroup.letters = [];
-
-            currentGroup.letters.unshift({
-                to: activeLetterRecipient[prefix],
-                from: "나 🍀",
-                text: text,
-                favorite: false,
-                isMine: true
-            });
-
-            localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
-            
-            textEl.value = '';
-            setLetterFilter('all');
-            alert("따뜻한 마음이 성공적으로 전달되었습니다! 💌");
-        }
-
         function setLetterFilter(filterType) {
             activeLetterFilter = filterType;
 
@@ -2720,6 +3720,9 @@ document.getElementById = function(id) {
             const mbAllBtn = document.getElementById('mb-letter-filter-all');
             const mbFavBtn = document.getElementById('mb-letter-filter-favorite');
             const mbWriteBtn = document.getElementById('mb-letter-filter-write');
+            const dtModalAllBtn = document.getElementById('dt-letter-modal-filter-all');
+            const dtModalFavBtn = document.getElementById('dt-letter-modal-filter-favorite');
+            const dtModalSentBtn = document.getElementById('dt-letter-modal-filter-sent');
 
             const dtLetterZone = document.getElementById('dt-letter-zone');
             const dtWriteZone = document.getElementById('dt-letter-write-zone');
@@ -2734,13 +3737,20 @@ document.getElementById = function(id) {
             if (filterType === 'all') {
                 if (dtAllBtn) dtAllBtn.classList.add('active');
                 if (mbAllBtn) mbAllBtn.classList.add('active');
-                if (dtLetterZone) dtLetterZone.style.display = 'grid';
+                if (dtModalAllBtn) dtModalAllBtn.classList.add('active');
+                if (dtLetterZone) dtLetterZone.style.display = 'block';
                 if (mbLetterZone) mbLetterZone.style.display = 'block';
                 renderLetters();
             } else if (filterType === 'favorite') {
                 if (dtFavBtn) dtFavBtn.classList.add('active');
                 if (mbFavBtn) mbFavBtn.classList.add('active');
-                if (dtLetterZone) dtLetterZone.style.display = 'grid';
+                if (dtModalFavBtn) dtModalFavBtn.classList.add('active');
+                if (dtLetterZone) dtLetterZone.style.display = 'block';
+                if (mbLetterZone) mbLetterZone.style.display = 'block';
+                renderLetters();
+            } else if (filterType === 'sent') {
+                if (dtModalSentBtn) dtModalSentBtn.classList.add('active');
+                if (dtLetterZone) dtLetterZone.style.display = 'block';
                 if (mbLetterZone) mbLetterZone.style.display = 'block';
                 renderLetters();
             } else if (filterType === 'write') {
@@ -2751,105 +3761,163 @@ document.getElementById = function(id) {
             }
         }
 
-        // 모두에게 보내기 토글 (버튼 방식)
-        function toggleLetterToAllBtn(prefix) {
-            const btn = document.getElementById(`${prefix}-letter-to-all-btn`);
-            const input = document.getElementById(`${prefix}-letter-to`);
-            if (btn && input) {
-                const isActive = btn.classList.contains('active-pill');
-                if (isActive) {
-                    btn.classList.remove('active-pill');
-                    btn.style.background = 'var(--nav-item-bg-active)';
-                    btn.style.color = 'var(--primary-green)';
-                    input.value = '';
-                    input.disabled = false;
+        // 행운 편지 작성 관련 함수
+        let selectedLetterRecipient = {};
+
+        // 선택되지 않은 받는 사람 버튼(모두에게 + 나머지 멤버 칩)을 회색으로 흐리게 표시
+        function updateLetterRecipientMutedState(prefix) {
+            const picker = document.getElementById(`${prefix}-letter-recipient-picker`);
+            const allBtn = document.getElementById(`${prefix}-letter-to-all-btn`);
+            const hasSelection = !!selectedLetterRecipient[prefix];
+
+            if (picker) {
+                picker.querySelectorAll('.letter-recipient-chip').forEach(chip => {
+                    chip.classList.toggle('muted', hasSelection && !chip.classList.contains('active'));
+                });
+            }
+            if (allBtn) {
+                const isAllSelected = allBtn.classList.contains('active-pill');
+                if (isAllSelected) {
+                    allBtn.style.background = 'var(--primary-green)';
+                    allBtn.style.color = '#fff';
+                } else if (hasSelection) {
+                    allBtn.style.background = '#eef1f4';
+                    allBtn.style.color = '#8c93a3';
                 } else {
-                    btn.classList.add('active-pill');
-                    btn.style.background = 'var(--primary-green)';
-                    btn.style.color = '#fff';
-                    input.value = '모두';
-                    input.disabled = true;
+                    allBtn.style.background = 'var(--nav-item-bg-active)';
+                    allBtn.style.color = 'var(--primary-green)';
                 }
-                updateLetterPreview(prefix);
             }
         }
 
-        // 이모지 칩 선택
-        function selectLetterEmoji(btn, viewType) {
+        // 모두에게 보내기 토글 (버튼 방식) — 누르면 받는 사람 선택 해제됨
+        function toggleLetterToAllBtn(viewType) {
             const prefix = viewType === 'dt' ? 'dt' : 'mb';
-            const modal = document.getElementById(`${prefix}-letter-modal`);
-            if (modal) {
-                modal.querySelectorAll('.letter-emoji-chip').forEach(c => c.classList.remove('active'));
+            const btn = document.getElementById(`${prefix}-letter-to-all-btn`);
+            const picker = document.getElementById(`${prefix}-letter-recipient-picker`);
+            if (!btn) return;
+            const isActive = btn.classList.contains('active-pill');
+            if (isActive) {
+                btn.classList.remove('active-pill');
+                selectedLetterRecipient[prefix] = '';
+            } else {
+                btn.classList.add('active-pill');
+                selectedLetterRecipient[prefix] = '모두';
             }
-            btn.classList.add('active');
-            selectedLetterEmoji[prefix] = btn.dataset.emoji;
-            updateLetterPreview(prefix);
+            if (picker) picker.querySelectorAll('.letter-recipient-chip').forEach(c => c.classList.remove('active'));
+            updateLetterRecipientMutedState(prefix);
         }
 
-        // 편지 미리보기 업데이트
-        function updateLetterPreview(prefix) {
-            const toVal = (document.getElementById(`${prefix}-letter-to`)?.value || '').trim();
-            const fromVal = (document.getElementById(`${prefix}-letter-from`)?.value || '').trim();
-            const contentVal = (document.getElementById(`${prefix}-letter-content`)?.value || '').trim();
-            const previewEl = document.getElementById(`${prefix}-letter-preview`);
-            const previewContent = document.getElementById(`${prefix}-letter-preview-content`);
+        // 받는 사람 선택 (현재 방 멤버 중 한 명) — 선택하면 "모두에게"는 해제됨
+        // 이미 선택된 사람을 다시 누르면 선택 해제되어 처음(아무도 선택 안 한) 상태로 돌아감
+        function selectLetterRecipient(btn, viewType) {
+            const prefix = viewType === 'dt' ? 'dt' : 'mb';
+            const picker = document.getElementById(`${prefix}-letter-recipient-picker`);
+            const wasActive = btn.classList.contains('active');
 
-            if (!contentVal) {
-                if (previewEl) previewEl.style.display = 'none';
-                return;
+            if (picker) picker.querySelectorAll('.letter-recipient-chip').forEach(c => c.classList.remove('active'));
+
+            if (wasActive) {
+                selectedLetterRecipient[prefix] = '';
+            } else {
+                btn.classList.add('active');
+                selectedLetterRecipient[prefix] = btn.dataset.name;
             }
 
-            const emoji = selectedLetterEmoji[prefix] || '💌';
-            const toDisplay = toVal || '모두';
-            const fromDisplay = fromVal || '익명';
+            const allBtn = document.getElementById(`${prefix}-letter-to-all-btn`);
+            if (allBtn) allBtn.classList.remove('active-pill');
+            updateLetterRecipientMutedState(prefix);
+        }
 
-            if (previewContent) {
-                previewContent.innerHTML = `<strong>To. ${toDisplay}</strong><br><strong>From. ${fromDisplay} ${emoji}</strong><br>"${contentVal}"`;
+        // 편지 내용 입력 제한 — 한글(2byte 취급) 기준 500자 / 영어 기준 1000자
+        function handleLetterContentInput(el, viewType) {
+            const prefix = viewType === 'dt' ? 'dt' : 'mb';
+            const maxWeight = 1000;
+            let text = el.value;
+            if (getTitleWeight(text) > maxWeight) {
+                text = truncateTitleByWeight(text, maxWeight);
+                el.value = text;
             }
-            if (previewEl) {
-                previewEl.style.display = 'block';
+            updateLetterContentCountDisplay(prefix, text);
+        }
+
+        function updateLetterContentCountDisplay(prefix, text) {
+            const el = document.getElementById(`${prefix}-letter-content-count`);
+            if (!el) return;
+            const weight = getTitleWeight(text || '');
+            el.innerText = `${weight} / 1000 (한글 500자 / 영어 1000자)`;
+            el.style.color = weight >= 1000 ? '#d90429' : 'var(--text-muted)';
+        }
+
+        function toggleInlineLetterWrite(viewType) {
+            const prefix = viewType === 'dt' ? 'dt' : 'mb';
+            const inlineId = prefix + '-inline-letter-write';
+            const inlineBox = document.getElementById(inlineId);
+            if (!inlineBox) return;
+
+            if (inlineBox.style.display === 'none') {
+                inlineBox.style.display = 'block';
+                // 초기화
+                selectedLetterRecipient[prefix] = '';
+                const contentEl = document.getElementById(prefix + '-letter-content');
+                if (contentEl) contentEl.value = '';
+                updateLetterContentCountDisplay(prefix, '');
+
+                const picker = document.getElementById(prefix + '-letter-recipient-picker');
+                if (picker) picker.querySelectorAll('.letter-recipient-chip').forEach(c => c.classList.remove('active', 'muted'));
+
+                const allBtn = document.getElementById(prefix + '-letter-to-all-btn');
+                if (allBtn) allBtn.classList.remove('active-pill');
+                updateLetterRecipientMutedState(prefix);
+            } else {
+                inlineBox.style.display = 'none';
             }
         }
 
-        // 편지 제출 (데이터에 추가 + 리렌더링)
+        // 편지 제출 (데이터에 추가 + 리렌더링) — 보내는 사람은 항상 작성자 본인
         function submitLetter(viewType) {
             const prefix = viewType === 'dt' ? 'dt' : 'mb';
-            const toVal = (document.getElementById(`${prefix}-letter-to`)?.value || '').trim();
-            const fromVal = (document.getElementById(`${prefix}-letter-from`)?.value || '').trim();
+            const inlineId = prefix + '-inline-letter-write';
+            const toVal = (selectedLetterRecipient[prefix] || '').trim();
             const contentVal = (document.getElementById(`${prefix}-letter-content`)?.value || '').trim();
 
+            if (!toVal) {
+                clovAlert('받는 사람을 선택해주세요! 💌', { icon: '✏️', type: 'warn' });
+                return;
+            }
             if (!contentVal) {
-                alert('편지 내용을 작성해주세요! ✍️');
+                clovAlert('편지 내용을 작성해주세요! ✍️', { icon: '✏️', type: 'warn' });
                 return;
             }
 
-            const emoji = selectedLetterEmoji[prefix] || '💌';
-            const toDisplay = toVal || '모두';
-            const fromDisplay = fromVal ? `${fromVal} ${emoji}` : `익명 ${emoji}`;
+            let myProfile = {};
+            try { myProfile = JSON.parse(localStorage.getItem('clov_profile') || '{}'); } catch (e) {}
+            const fromDisplay = myProfile.name || '나';
 
             // 현재 그룹의 letters 배열에 추가
             const currentGroup = groupsData[activeGroup];
             if (!currentGroup.letters) {
                 currentGroup.letters = [];
             }
-
             currentGroup.letters.unshift({
-                to: toDisplay,
+                to: toVal,
                 from: fromDisplay,
                 text: contentVal,
                 favorite: false,
                 isMine: true
             });
+            localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
 
-            // 모달 닫기
-            closeModal(`${prefix}-letter-modal`);
+            // 인라인 작성창 닫기
+            const inlineBox = document.getElementById(inlineId);
+            if (inlineBox) inlineBox.style.display = 'none';
 
             // 편지함 리렌더링
             renderLetters();
 
             // 성공 알림
-            alert(`${emoji} 행운편지가 성공적으로 보내졌습니다!`);
-            
+            clovToast('💌 행운편지가 성공적으로 보내졌습니다!', 'success');
+
             // 직접 DOM 조작하여 빨간 배지 띄우기
             const dtNavNoti = document.getElementById('dt-nav-noti');
             if (dtNavNoti) {
@@ -2867,7 +3935,15 @@ document.getElementById = function(id) {
 
         // 편지 상세 보기 모달 열기
         function openLetterDetailModal(index) {
-            window.location.href = `letter_detail.html?groupId=${activeGroup}&index=${index}&theme=${isDarkMode ? 'dark' : 'light'}`;
+            const letters = groupsData[activeGroup]?.letters || [];
+            const letter = letters[index];
+            if (!letter) return;
+
+            document.getElementById('dt-detail-letter-to').textContent = `To. ${letter.to || '전체'}`;
+            document.getElementById('dt-detail-letter-from').textContent = `From. ${letter.from || '익명'}`;
+            document.getElementById('dt-detail-letter-content').textContent = `${letter.emoji || '💌'}\n${letter.text || ''}`;
+            closeModal('dt-letter-inbox-modal');
+            openModal('dt-letter-detail-modal');
         }
 
         // 9. 다크모드 제어 기능
@@ -2891,12 +3967,8 @@ document.getElementById = function(id) {
         if (isDarkMode) {
             document.body.classList.add('dark-mode');
         }
-        window.addEventListener('DOMContentLoaded', () => {
-            const icons = document.querySelectorAll('.dt-dark-btn .toggle-icon, .mb-dark-btn .toggle-icon');
-            icons.forEach(icon => {
-                icon.innerText = isDarkMode ? '🌙' : '☀️';
-            });
-        });
+        // 해/달 토글 아이콘은 body.dark-mode 기준 CSS(clov-header.js)가 알아서 전환하므로
+        // 여기서 아이콘 텍스트를 따로 맞춰줄 필요가 없다
         function getFeedMonthCounts(posts) {
             const counts = {};
             getFeedMonths(posts).forEach(month => {
@@ -2919,6 +3991,9 @@ document.getElementById = function(id) {
             const grid = document.getElementById('month-picker-grid');
             if (!popover || !yearLabel || !grid) return;
 
+            const allBtn = document.getElementById('month-picker-all-btn');
+            if (allBtn) allBtn.classList.toggle('active', activeFeedMonth === 'all');
+
             const posts = groupsData[activeGroup].posts || [];
             const counts = getFeedMonthCounts(posts);
             yearLabel.innerText = `${monthPickerYear}년`;
@@ -2933,9 +4008,6 @@ document.getElementById = function(id) {
                     </button>
                 `;
             }).join('');
-
-            const allBtn = document.getElementById('month-picker-popover').querySelector('.month-picker-all-btn');
-            if (allBtn) allBtn.classList.toggle('active', activeFeedMonth === 'all');
         }
 
         function positionMonthPicker(trigger) {
@@ -2993,12 +4065,7 @@ document.getElementById = function(id) {
                 icon.classList.add('slide-animation');
             });
 
-            // 아이콘이 화면 밖으로 사라지는 타이밍(약 200ms)에 텍스트 교체
-            setTimeout(() => {
-                icons.forEach(icon => {
-                    icon.innerText = isDarkMode ? '🌙' : '☀️';
-                });
-            }, 200);
+            // 해/달 아이콘은 body.dark-mode 기준 CSS가 알아서 전환하므로 텍스트 교체가 더 이상 필요 없다
 
             if (isDarkMode) {
                 document.body.classList.add('dark-mode');
@@ -3011,8 +4078,13 @@ document.getElementById = function(id) {
         // 화면 밖 클릭 시 드롭다운 닫기 및 모달 바깥 클릭 시 닫기 이벤트 핸들러
         window.onclick = function (event) {
             if (!event.target.matches('.profile-btn')) {
-                document.getElementById('mb-drop').style.display = 'none';
-                document.getElementById('dt-drop').style.display = 'none';
+                const mbDropOutside = document.getElementById('mb-drop');
+                const dtDropOutside = document.getElementById('dt-drop');
+                if (mbDropOutside) mbDropOutside.style.display = 'none';
+                if (dtDropOutside) dtDropOutside.style.display = 'none';
+            }
+            if (!event.target.closest('.clov-hdr-avatar-wrap')) {
+                document.querySelectorAll('.clov-hdr-dropdown.open').forEach(d => d.classList.remove('open'));
             }
             const monthPicker = document.getElementById('month-picker-popover');
             if (monthPicker && !event.target.closest('.month-picker-popover') && !event.target.closest('.month-picker-trigger')) {
@@ -3054,8 +4126,8 @@ document.getElementById = function(id) {
                     <div class="detail-timeline-content">
                         <div>${escapeHtml(contentInput.value)}</div>
                         <div class="timeline-meta">
-                            <span>👤 나</span>
-                            <span>🔔 알림</span>
+                            <span><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:2px;"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-6.5 8-6.5s8 2.5 8 6.5"/></svg>나</span>
+                            <span><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:2px;"><path d="M6 8a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>알림</span>
                         </div>
                     </div>
                 `;
@@ -3111,7 +4183,7 @@ document.getElementById = function(id) {
             localStorage.removeItem('clov_banner_time');
             localStorage.removeItem('clov_banner_season');
             updateDashboardEnvironment();
-            alert('테마가 현재 시간으로 초기화되었습니다.');
+            clovToast('테마가 현재 시간으로 초기화되었어요.', 'info');
         }
     
 
@@ -3124,13 +4196,8 @@ document.getElementById = function(id) {
   // State
   const v5state = { level: 3, time: 'day', season: 'summer', event: 'none', friendName: '민지' };
 
-  const V5_LVL = {
-    1: { name:'약속의 씨앗',       pct:15,  clovers:2,  sprouts:0, fourLeaf:0 },
-    2: { name:'설렘의 새싹',       pct:38,  clovers:8,  sprouts:0, fourLeaf:0 },
-    3: { name:'초록 클로버 우정',   pct:68,  clovers:15, sprouts:0, fourLeaf:0 },
-    4: { name:'자라나는 클로버 들판', pct:85, clovers:25, sprouts:0, fourLeaf:2 },
-    5: { name:'단단한 네잎 클로버', pct:100, clovers:36, sprouts:0, fourLeaf:7 },
-  };
+  // 레벨-이름/클로버 밀도 매핑은 이제 최대 777레벨까지 지원하는 clovLevelInfo()/
+  // clovLevelTierIndex()(desktop.js 상단, 우정 레벨 시스템 섹션)를 그대로 재사용한다.
 
   const GROUND_COLORS = {
     barren: { top:'#9a7a50', bot:'#664c28' },
@@ -3161,7 +4228,10 @@ document.getElementById = function(id) {
 
   function v5updateGround(p) {
     const el = document.getElementById(p+'-v5ground'); if(!el) return;
-    const t=(v5state.level-1)/4, B=GROUND_COLORS.barren, S=GROUND_COLORS[v5state.season];
+    const tierIdx = clovLevelTierIndex(v5state.level);
+    const grp = (typeof groupsData !== 'undefined' && groupsData[activeGroup]) || {};
+    const withinTier = v5state.level >= CLOV_MAX_LEVEL ? 100 : (typeof grp.levelProgress === 'number' ? grp.levelProgress : 0);
+    const t = (tierIdx + withinTier / 100) / 6, B=GROUND_COLORS.barren, S=GROUND_COLORS[v5state.season];
     el.style.background = `linear-gradient(180deg, ${lerpColor(B.top,S.top,t)} 0%, ${lerpColor(B.bot,S.bot,t)} 100%)`;
   }
 
@@ -3212,7 +4282,9 @@ document.getElementById = function(id) {
   function v5buildClovers(p) {
     const field=document.getElementById(p+'-v5clovers'); if(!field) return;
     field.innerHTML='';
-    const cfg=V5_LVL[v5state.level];
+    // 최대 777레벨을 감당하려고 레벨 그대로가 아니라 7단계 티어 인덱스(0~6) 기준으로 밀도를 정한다.
+    const tierIdx = clovLevelTierIndex(v5state.level);
+    const cfg = { clovers: 6 + tierIdx * 5, fourLeaf: Math.max(0, Math.round((tierIdx - 1) * 1.6)) };
 
     // 모바일은 클로버 수 절반으로 줄임
     const isMobile = (p === 'mb');
@@ -3242,7 +4314,7 @@ document.getElementById = function(id) {
           dMax = Math.min(1, depthMax + jump * (1/DEPTH_BANDS) * 0.5);
         }
         const depth = dMin + Math.random() * (dMax - dMin);
-        const maxSz = v5state.level === 5 ? 40 : 34;
+        const maxSz = tierIdx === 6 ? 40 : 34;
         const sz = maxSz - depth * (maxSz - 16);
         // x: 슬롯 중앙 + ±45% 지터 (랜덤성 강화, 뭉침은 방지)
         const slotCenter = 3 + slotW * (i + 0.5);
@@ -3326,28 +4398,45 @@ document.getElementById = function(id) {
   }
 
   function v5updateHUD(p) {
-    const cfg=V5_LVL[v5state.level];
-    const icon=document.getElementById(p+'-v5lvicon'); if(icon) icon.textContent='Lv.'+v5state.level;
-    const name=document.getElementById(p+'-v5lvname'); if(name) name.textContent=cfg.name;
-    const pillbg=document.getElementById(p+'-v5pillbg'); if(pillbg) pillbg.style.width=cfg.pct+'%';
-    const pct=document.getElementById(p+'-v5lvpct'); if(pct) pct.textContent=cfg.pct+'%';
+    const info = clovLevelInfo(v5state.level);
+    const isMax = v5state.level >= CLOV_MAX_LEVEL;
+    const grp = (typeof groupsData !== 'undefined' && groupsData[activeGroup]) || {};
+    const pct = isMax ? 100 : Math.round((typeof grp.levelProgress === 'number' ? grp.levelProgress : 0));
+    const icon=document.getElementById(p+'-v5lvicon'); if(icon) icon.textContent = isMax ? '+777' : ('Lv.'+v5state.level);
+    const name=document.getElementById(p+'-v5lvname'); if(name) name.textContent=info.name;
+    const pillbg=document.getElementById(p+'-v5pillbg'); if(pillbg) pillbg.style.width=pct+'%';
+    const pctEl=document.getElementById(p+'-v5lvpct'); if(pctEl) pctEl.textContent=pct+'%';
+    const pillWrap = pillbg && pillbg.closest('.lv-pill');
+    if (pillWrap) pillWrap.classList.toggle('is-full', pct >= 100 && !isMax);
     const eyebrow=document.getElementById(p+'-v5eyebrow');
     if(eyebrow){
       if(v5state.event==='my_birthday'||v5state.event==='friend_birthday'){
         eyebrow.textContent=v5state.event==='friend_birthday'?`🎉 ${v5state.friendName}님의 생일입니다!`:'🎂 생일 축하해요!';
         eyebrow.style.color='#ffeba0'; eyebrow.style.fontSize='13px'; eyebrow.style.textShadow='0 1px 6px rgba(255,200,0,0.6)';
       } else {
-        eyebrow.textContent='우리 함께한 지';
+        const labelText = (typeof activeGroup !== 'undefined' && typeof groupsData !== 'undefined' && groupsData[activeGroup]) ? (groupsData[activeGroup].ddayLabel || '우리 함께한 지') : '우리 함께한 지';
+        eyebrow.textContent = labelText;
         eyebrow.style.color='rgba(255,255,255,0.82)'; eyebrow.style.fontSize='11px'; eyebrow.style.textShadow='0 1px 5px rgba(0,0,0,0.45)';
       }
     }
     // sync dday
     const ddayEl = document.getElementById(p+'-v5dday');
     const mainDday = document.getElementById(p === 'dt' ? 'dt-dday' : 'mb-dday');
-    if(ddayEl && mainDday) {
-      const txt = mainDday.innerText || '0';
-      ddayEl.textContent = txt.replace('D+','').replace(' 일째','');
+    if (ddayEl) {
+      if (mainDday && mainDday.innerText) {
+        const txt = mainDday.innerText || '1';
+        ddayEl.textContent = txt.replace('D+','').replace(' 일째','').trim() || '1';
+      } else if (typeof activeGroup !== 'undefined' && typeof groupsData !== 'undefined' && groupsData[activeGroup]) {
+        if (!ddayEl.classList.contains('is-counting')) {
+          ddayEl.textContent = Math.max(1, Number(groupsData[activeGroup].ddayCount) || 1);
+        }
+      }
     }
+    // LP 턴테이블 배경 테마: 계절별 트랙 재생 칩
+    const chipLabelEl = document.getElementById(p+'-v5chiplabel');
+    if (chipLabelEl) chipLabelEl.textContent = V5_SEASON_LABEL[v5state.season] || '';
+    const chipTrackEl = document.getElementById(p+'-v5chiptrack');
+    if (chipTrackEl && ddayEl) chipTrackEl.textContent = ddayEl.textContent;
   }
 
   function v5render() {
@@ -3357,6 +4446,7 @@ document.getElementById = function(id) {
       scene.dataset.level=v5state.level; scene.dataset.event=v5state.event;
       v5updateGround(p); v5updateMountains(p); v5updateCelestial(p);
       v5buildClovers(p); v5buildParticles(p); v5buildBalloons(p); v5updateHUD(p);
+      v5ApplyWallpaperImage(p);
     });
   }
 
@@ -3386,13 +4476,127 @@ document.getElementById = function(id) {
     v5render();
   }
 
+  // 배경 벽지 등록소 — 여기에 항목을 추가하고 계절별 이미지 4장만 넣으면
+  // 사용자설정 배경 목록과 scene-sky 적용이 자동으로 따라온다 (CSS 수정 불필요).
+  // 'field'(클로버 들판, 절차적 배경)는 항상 존재하는 기본값이라 이 목록에 넣지 않는다.
+  const V5_WALLPAPERS = {
+    'lp-turntable': {
+      name: 'LP 턴테이블',
+      icon: '💿',
+      images: {
+        spring: '../assets/ai-style/clov_LP_banner_spring_970x215.png',
+        summer: '../assets/ai-style/clov_LP_banner_970x215.png',
+        fall:   '../assets/ai-style/clov_LP_banner_autumn_970x215.png',
+        winter: '../assets/ai-style/clov_LP_banner_winter_970x215.png',
+      },
+    },
+  };
+  window.V5_WALLPAPERS = V5_WALLPAPERS;
+
+  // 배경 테마 "LP 턴테이블"의 레코드판 위치 계산 (사진은 background-size:cover이므로
+  // 실제 렌더 크기에 맞춰 원본(970x215) 좌표를 스케일/오프셋 변환해야 정확히 겹친다)
+  const V5_PHOTO_SRC = { w: 970, h: 215 };
+  const V5_PHOTO_REC = { x: 619, y: -14, size: 279 };
+  // 색종이 색상: clover-banner.html 원본 SEASON 설정값 그대로 (계절별로 다름)
+  const V5_BURST_COLORS = {
+    spring: ['#e05e8a','#f4a6c6','#ffd6e6','#fff3d6'],
+    summer: ['#ffffff','#a3d5e8','#8ba84f','#c9dd9f'],
+    fall:   ['#c2571e','#e08a3c','#f2c078','#ffe9c2'],
+    winter: ['#3f7cb0','#8ec3e0','#cfe8f5','#ffffff'],
+  };
+  const V5_SEASON_LABEL = { spring: '봄', summer: '여름', fall: '가을', winter: '겨울' };
+
+  // 현재 배경 테마(bgTheme)에 등록된 벽지가 있으면 계절에 맞는 이미지를 scene-sky에 적용
+  function v5ApplyWallpaperImage(p) {
+    const scene = document.getElementById(p+'-v5scene');
+    const sky = scene && scene.querySelector('.scene-sky');
+    if (!sky) return;
+    const wp = V5_WALLPAPERS[scene.dataset.bgTheme];
+    const src = wp && (wp.images[v5state.season] || wp.images.summer);
+    sky.style.backgroundImage = src ? 'url(' + src + ')' : '';
+  }
+  window.v5ApplyWallpaperImage = v5ApplyWallpaperImage;
+
+  function v5PositionPhotoRec(p) {
+    const scene = document.getElementById(p+'-v5scene');
+    const rec = document.getElementById(p+'-v5photorec');
+    if (!scene || !rec) return;
+    const w = scene.clientWidth, h = scene.clientHeight || V5_PHOTO_SRC.h;
+    if (!w) return;
+    const scale = Math.max(w / V5_PHOTO_SRC.w, h / V5_PHOTO_SRC.h);
+    const offsetX = (w - V5_PHOTO_SRC.w * scale) / 2;
+    const offsetY = (h - V5_PHOTO_SRC.h * scale) / 2;
+    rec.style.left = (offsetX + V5_PHOTO_REC.x * scale) + 'px';
+    rec.style.top = (offsetY + V5_PHOTO_REC.y * scale) + 'px';
+    rec.style.width = (V5_PHOTO_REC.size * scale) + 'px';
+    rec.style.height = (V5_PHOTO_REC.size * scale) + 'px';
+  }
+  window.v5PositionPhotoRec = v5PositionPhotoRec;
+
+  // 색종이 + 음표 폭죽 스프라이트 — 원래 레코드판 클릭 전용이었으나, 다른 화면(인생4컷 완성 등)에서도
+  // 재사용할 수 있도록 범용 함수로 분리. burstEl은 position:relative인 조상 안에 있는
+  // .v5-photo-burst 컨테이너(width:0;height:0)면 되고, left/top으로 터지는 중심점을 잡아준다.
+  function spawnConfettiBurst(burstEl, opts) {
+    if (!burstEl) return;
+    opts = opts || {};
+    const colors = opts.colors || V5_BURST_COLORS.summer;
+    const count = opts.count || 32;
+    const spread = opts.spread || 110;
+    for (let i = 0; i < count; i++) {
+      const s = document.createElement('span');
+      s.className = 'v5-photo-confetti';
+      const ang = Math.random() * Math.PI * 2, dist = spread * 0.42 + Math.random() * spread * 0.58, sz = 6 + Math.random() * 6;
+      s.style.width = sz + 'px'; s.style.height = sz + 'px';
+      s.style.borderRadius = Math.random() < 0.5 ? '50%' : '2px';
+      s.style.background = colors[i % colors.length];
+      s.style.setProperty('--dx', Math.cos(ang) * dist + 'px');
+      s.style.setProperty('--dy', Math.sin(ang) * dist + 'px');
+      s.style.setProperty('--dr', (Math.random() * 540 - 270) + 'deg');
+      burstEl.appendChild(s);
+      (function (node) { setTimeout(function () { node.remove(); }, 1000); })(s);
+    }
+    const glyphs = ['♪','♫','♬','♩'];
+    for (let j = 0; j < 3; j++) {
+      const n = document.createElement('span');
+      n.className = 'v5-photo-note';
+      const spreadX = (Math.random() * 2 - 1) * spread * 0.5, rise = -(70 + Math.random() * 60);
+      n.textContent = glyphs[j % glyphs.length];
+      n.style.fontSize = (15 + Math.random() * 11) + 'px';
+      n.style.color = j % 2 ? '#fffdf7' : colors[j % colors.length];
+      n.style.setProperty('--nx0', (spreadX * 0.3) + 'px');
+      n.style.setProperty('--nx', spreadX + 'px');
+      n.style.setProperty('--ny', rise + 'px');
+      n.style.setProperty('--nr', (Math.random() * 50 - 25) + 'deg');
+      n.style.animationDuration = (1.1 + Math.random() * 0.5) + 's';
+      burstEl.appendChild(n);
+      (function (node) { setTimeout(function () { node.remove(); }, 1700); })(n);
+    }
+  }
+  window.spawnConfettiBurst = spawnConfettiBurst;
+
+  // 레코드판 클릭 → 색종이 스프라이트 + 레벨업 (계절별 색상, clover-banner.html 기준)
+  window.v5PhotoRecClick = function(el) {
+    const scene = el.closest('.v5-scene');
+    const season = (scene && scene.dataset.season) || 'summer';
+    const colors = V5_BURST_COLORS[season] || V5_BURST_COLORS.summer;
+    const burst = scene && scene.querySelector('.v5-photo-burst');
+    if (burst) {
+      const recRect = el.getBoundingClientRect(), sceneRect = scene.getBoundingClientRect();
+      burst.style.left = (recRect.left - sceneRect.left + recRect.width / 2) + 'px';
+      burst.style.top = (recRect.top - sceneRect.top + recRect.height / 2) + 'px';
+      spawnConfettiBurst(burst, { colors, spread: Math.max(90, recRect.width * 0.55) });
+    }
+    if (typeof v5LevelUp === 'function') v5LevelUp();
+  };
+
 
   // 테스트 패널 동적 생성 (DOM 타이밍 문제 방지)
   (function() {
     const panel = document.createElement('aside');
     panel.className = 'v5-test-panel';
     panel.innerHTML = `
-      <p class="tp-title">🎛️ 배너 테마 테스트</p>
+      <p class="tp-title" id="tpToggle"><span>🎛️ 배너 테마 테스트</span><span class="tp-chevron">▾</span></p>
+      <div class="tp-body" id="tpBody">
       <div class="tp-row">
         <span class="tp-label">🎉 이벤트</span>
         <div class="tp-btns">
@@ -3422,15 +4626,40 @@ document.getElementById = function(id) {
       <div class="tp-row">
         <span class="tp-label">💚 우정 레벨</span>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-          <input type="range" id="v5lvSlider" min="1" max="5" value="3" step="1" style="flex:1;accent-color:#1b4332;cursor:pointer;">
+          <input type="range" id="v5lvSlider" min="1" max="777" value="3" step="1" style="flex:1;accent-color:#1b4332;cursor:pointer;">
           <span id="v5lvSliderVal" style="font-size:12px;font-weight:900;color:#1b4332;min-width:16px;text-align:center;">3</span>
         </div>
         <div id="v5lvDesc" style="font-size:10px;color:#5c7a6a;font-weight:700;text-align:center;margin-bottom:4px;">초록 클로버 우정</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:10px;color:#5c7a6a;font-weight:700;white-space:nowrap;">진행률</span>
+          <input type="range" id="v5progressSlider" min="0" max="100" value="0" step="1" style="flex:1;accent-color:#1b4332;cursor:pointer;">
+          <span id="v5progressSliderVal" style="font-size:12px;font-weight:900;color:#1b4332;min-width:28px;text-align:center;">0%</span>
+        </div>
+      </div>
+      <div class="tp-divider"></div>
+      <div class="tp-row">
+        <span class="tp-label tp-label-pink">💌 편지함 테스트</span>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <input type="range" id="letterTestSlider" min="0" max="8" value="2" step="1" class="tp-slider-pink" style="flex:1;cursor:pointer;">
+          <span id="letterTestSliderVal" class="tp-pink-val">2</span>
+        </div>
+        <div class="tp-btns">
+          <button class="tp-btn tp-btn-pink" id="letterTestZero" type="button">📭 0개로 비우기</button>
+          <button class="tp-btn tp-btn-pink" id="letterTestFull" type="button">📬 가득 채우기</button>
+          <button class="tp-btn tp-btn-pink" id="letterTestRestore" type="button">↺ 원래대로</button>
+        </div>
       </div>
       <div class="tp-divider"></div>
       <button class="tp-reset" id="v5resetBtn">⏱ 현재 시간으로 복귀</button>
+      </div>
     `;
     document.body.appendChild(panel);
+    const tpToggle = document.getElementById('tpToggle');
+    if (tpToggle) {
+      tpToggle.addEventListener('click', () => {
+        panel.classList.toggle('collapsed');
+      });
+    }
   })();
 
   // 버튼 바인딩 (DOMContentLoaded로 패널 렌더 후 실행)
@@ -3460,8 +4689,80 @@ document.getElementById = function(id) {
         const descEl = document.getElementById('v5lvDesc');
         const valEl  = document.getElementById('v5lvSliderVal');
         if(valEl) valEl.textContent = this.value;
-        if(descEl) descEl.textContent = V5_LVL[v5state.level].name;
+        if(descEl) descEl.textContent = clovLevelInfo(v5state.level).name;
         v5render();
+      });
+    }
+    // 진행률(%) 슬라이더 바인딩 — 레벨과 별개로 게이지 %만 즉시 테스트
+    const progressSlider = document.getElementById('v5progressSlider');
+    if(progressSlider && !progressSlider._v5bound) {
+      progressSlider._v5bound = true;
+      progressSlider.addEventListener('input', function() {
+        const valEl = document.getElementById('v5progressSliderVal');
+        if(valEl) valEl.textContent = this.value + '%';
+        if(typeof groupsData !== 'undefined' && groupsData[activeGroup]) {
+          groupsData[activeGroup].levelProgress = +this.value;
+        }
+        v5render();
+      });
+    }
+    // 편지함 테스트 바인딩
+    const letterFillerPool = [
+      { from: "단짝친구 🍀", text: "오늘 하루도 고생 많았어. 내일은 더 좋은 일만 가득하길!", favorite: false },
+      { from: "단짝친구 🍀", text: "네가 있어서 요즘 하루하루가 든든해. 항상 고마워!", favorite: false },
+      { from: "단짝친구 🍀", text: "다음 주말엔 미뤄뒀던 약속 꼭 잡자, 보고 싶다!", favorite: false },
+      { from: "단짝친구 🍀", text: "힘든 일 있으면 언제든 말해. 내가 옆에 있을게.", favorite: false },
+      { from: "단짝친구 🍀", text: "요즘 부쩍 웃을 일이 많아진 건 다 너 덕분이야.", favorite: false },
+      { from: "단짝친구 🍀", text: "사소한 순간에도 네 생각이 나. 좋은 친구를 둬서 행운이다.", favorite: false }
+    ];
+    function applyLetterTestCount(n) {
+      if (typeof groupsData === 'undefined' || typeof activeGroup === 'undefined') return;
+      const g = groupsData[activeGroup];
+      if (!g) return;
+      if (!window._letterTestBackup) window._letterTestBackup = {};
+      if (!window._letterTestBackup[activeGroup]) {
+        window._letterTestBackup[activeGroup] = JSON.parse(JSON.stringify(g.letters || []));
+      }
+      const backup = window._letterTestBackup[activeGroup];
+      let letters;
+      if (n <= backup.length) {
+        letters = backup.slice(0, n);
+      } else {
+        letters = backup.concat(
+          Array.from({ length: n - backup.length }, (_, i) => letterFillerPool[i % letterFillerPool.length])
+        );
+      }
+      g.letters = letters;
+      const valEl = document.getElementById('letterTestSliderVal');
+      const sliderEl = document.getElementById('letterTestSlider');
+      if (valEl) valEl.textContent = n;
+      if (sliderEl) sliderEl.value = n;
+      if (typeof renderLetters === 'function') renderLetters();
+    }
+    const letterSlider = document.getElementById('letterTestSlider');
+    if (letterSlider && !letterSlider._v5bound) {
+      letterSlider._v5bound = true;
+      letterSlider.addEventListener('input', function() {
+        applyLetterTestCount(+this.value);
+      });
+    }
+    const letterZeroBtn = document.getElementById('letterTestZero');
+    if (letterZeroBtn && !letterZeroBtn._v5bound) {
+      letterZeroBtn._v5bound = true;
+      letterZeroBtn.addEventListener('click', () => applyLetterTestCount(0));
+    }
+    const letterFullBtn = document.getElementById('letterTestFull');
+    if (letterFullBtn && !letterFullBtn._v5bound) {
+      letterFullBtn._v5bound = true;
+      letterFullBtn.addEventListener('click', () => applyLetterTestCount(8));
+    }
+    const letterRestoreBtn = document.getElementById('letterTestRestore');
+    if (letterRestoreBtn && !letterRestoreBtn._v5bound) {
+      letterRestoreBtn._v5bound = true;
+      letterRestoreBtn.addEventListener('click', () => {
+        if (window._letterTestBackup && window._letterTestBackup[activeGroup]) {
+          applyLetterTestCount(window._letterTestBackup[activeGroup].length);
+        }
       });
     }
   }
@@ -3471,6 +4772,8 @@ document.getElementById = function(id) {
   // 초기화 (별 미리 생성)
   PREFIXES.forEach(p=>v5buildStars(p));
   v5detectNow(); v5render();
+  PREFIXES.forEach(p=>v5PositionPhotoRec(p));
+  window.addEventListener('resize', function(){ PREFIXES.forEach(p=>v5PositionPhotoRec(p)); });
 
   // 기존 updateFriendshipUI와 연동
   const _origUpdateFriendshipUI = window.updateFriendshipUI;
@@ -3480,7 +4783,12 @@ document.getElementById = function(id) {
     const sl=document.getElementById('v5lvSlider'), sv=document.getElementById('v5lvSliderVal'), sd=document.getElementById('v5lvDesc');
     if(sl) sl.value=v5state.level;
     if(sv) sv.textContent=v5state.level;
-    if(sd) sd.textContent=V5_LVL[v5state.level].name;
+    if(sd) sd.textContent=clovLevelInfo(v5state.level).name;
+    const grp = (typeof groupsData !== 'undefined' && groupsData[activeGroup]) || {};
+    const pctNow = v5state.level >= CLOV_MAX_LEVEL ? 100 : Math.round(typeof grp.levelProgress === 'number' ? grp.levelProgress : 0);
+    const psl=document.getElementById('v5progressSlider'), psv=document.getElementById('v5progressSliderVal');
+    if(psl) psl.value=pctNow;
+    if(psv) psv.textContent=pctNow + '%';
     v5render();
   };
 })();
@@ -3490,96 +4798,3 @@ document.getElementById = function(id) {
 
 
 
-        // 행운 편지 작성 관련 함수 추가
-        function openLetterModal(viewType) {
-            const prefix = viewType === 'dt' ? 'dt' : 'mb';
-            const modalId = prefix + '-letter-modal';
-            const modal = document.getElementById(modalId);
-            if (modal) {
-                modal.style.display = 'flex';
-                // 초기화
-                document.getElementById(prefix + '-letter-to').value = '';
-                document.getElementById(prefix + '-letter-from').value = '';
-                document.getElementById(prefix + '-letter-content').value = '';
-                const chips = modal.querySelectorAll('.letter-emoji-chip');
-                chips.forEach(c => c.classList.remove('active'));
-                if(chips.length > 0) chips[0].classList.add('active');
-                
-                const preview = document.getElementById(prefix + '-letter-preview');
-                if(preview) preview.style.display = 'none';
-            }
-        }
-
-        function toggleLetterToAllBtn(viewType) {
-            const prefix = viewType === 'dt' ? 'dt' : 'mb';
-            const input = document.getElementById(prefix + '-letter-to');
-            if (input.value === '모두에게') {
-                input.value = '';
-            } else {
-                input.value = '모두에게';
-            }
-        }
-
-        function selectLetterEmoji(btn, viewType) {
-            const modal = btn.closest('.modal-box');
-            modal.querySelectorAll('.letter-emoji-chip').forEach(c => c.classList.remove('active'));
-            btn.classList.add('active');
-        }
-
-        function submitLetter(viewType) {
-            const prefix = viewType === 'dt' ? 'dt' : 'mb';
-            const modal = document.getElementById(prefix + '-letter-modal');
-            const to = document.getElementById(prefix + '-letter-to').value.trim();
-            const from = document.getElementById(prefix + '-letter-from').value.trim();
-            const content = document.getElementById(prefix + '-letter-content').value.trim();
-            const activeEmojiBtn = modal.querySelector('.letter-emoji-chip.active');
-            const emoji = activeEmojiBtn ? activeEmojiBtn.dataset.emoji : '💌';
-
-            if (!to || !from || !content) {
-                alert('받는 사람, 보내는 사람, 내용을 모두 입력해주세요!');
-                return;
-            }
-
-            // 여기서 실제로는 groupsData나 letters 배열에 저장하는 로직이 들어갑니다.
-            // 일단 성공 알림 후 모달 닫기
-            alert('편지가 성공적으로 작성되었습니다! 💌');
-            closeModal(prefix + '-letter-modal');
-        }
-
-        function toggleInlineLetterWrite(viewType) {
-            const prefix = viewType === 'dt' ? 'dt' : 'mb';
-            const inlineId = prefix + '-inline-letter-write';
-            const inlineBox = document.getElementById(inlineId);
-            if (inlineBox) {
-                if (inlineBox.style.display === 'none') {
-                    inlineBox.style.display = 'block';
-                    // 초기화
-                    document.getElementById(prefix + '-letter-to').value = '';
-                    document.getElementById(prefix + '-letter-from').value = '';
-                    document.getElementById(prefix + '-letter-content').value = '';
-                    const chips = inlineBox.querySelectorAll('.letter-emoji-chip');
-                    chips.forEach(c => c.classList.remove('active'));
-                    if(chips.length > 0) chips[0].classList.add('active');
-                } else {
-                    inlineBox.style.display = 'none';
-                }
-            }
-        }
-
-        // submitLetter 수정 (인라인 UI 닫기)
-        function submitLetter(viewType) {
-            const prefix = viewType === 'dt' ? 'dt' : 'mb';
-            const inlineId = prefix + '-inline-letter-write';
-            const to = document.getElementById(prefix + '-letter-to').value.trim();
-            const from = document.getElementById(prefix + '-letter-from').value.trim();
-            const content = document.getElementById(prefix + '-letter-content').value.trim();
-
-            if (!to || !from || !content) {
-                alert('받는 사람, 보내는 사람, 내용을 모두 입력해주세요!');
-                return;
-            }
-
-            alert('편지가 성공적으로 작성되었습니다! 💌');
-            const inlineBox = document.getElementById(inlineId);
-            if(inlineBox) inlineBox.style.display = 'none';
-        }

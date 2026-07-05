@@ -37,8 +37,10 @@
   .feed-back-btn:hover { background: var(--nav-item-bg-active); color: var(--primary-green); }
   .feed-back-btn svg { width: 14px; height: 14px; }
   .feed-logo {
+    display: inline-flex; align-items: center; gap: 6px;
     font-size: 16px; font-weight: 800; color: var(--primary-green); letter-spacing: -.3px;
   }
+  .feed-logo-mark { width: 20px; height: 20px; object-fit: contain; display: block; }
   .feed-header-right { display: flex; align-items: center; gap: 6px; }
   .hdr-icon-btn {
     width: 34px; height: 34px; border-radius: 9px; border: none;
@@ -57,10 +59,14 @@
     position: absolute; top: 2px; left: 2px;
     width: 22px; height: 22px; border-radius: 50%;
     background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25);
-    font-size: 10px; display: flex; align-items: center; justify-content: center;
+    color: #5c7a6a; display: flex; align-items: center; justify-content: center;
     transition: transform .25s cubic-bezier(.2,.9,.2,1.1);
   }
   body.dark-mode .toggle-knob-dot { transform: translateX(18px); }
+  /* 해/달 아이콘 — body.dark-mode 여부로 CSS가 자동 전환, JS는 텍스트를 건드리지 않는다 */
+  .toggle-knob-dot .knob-icon-moon { display: none; }
+  body.dark-mode .toggle-knob-dot .knob-icon-sun { display: none; }
+  body.dark-mode .toggle-knob-dot .knob-icon-moon { display: inline-flex; }
   .avatar-btn {
     width: 30px; height: 30px; border-radius: 50%;
     background: var(--primary-green); color: #fff;
@@ -102,6 +108,7 @@
   body.dark-mode .group-chip.active { color: #0a0f0c; }
   .group-chip:hover:not(.active) { border-color: var(--accent-green); color: var(--primary-green); }
 </style>
+<link rel="stylesheet" href="../02-main/css/global-theme.css">
 </head>
 <body>
 
@@ -114,12 +121,15 @@
       </svg>
       방 목록
     </a>
-    <div class="feed-logo">🍀 Clov.</div>
+    <div class="feed-logo"><img class="feed-logo-mark" src="../assets/ai-style/clov_logo_half_leaf_cartoon_transparent.png" alt="Clov 로고">Clov.</div>
   </div>
   <div class="feed-header-right">
-    <button class="hdr-icon-btn" title="알림">🔔</button>
+    <button class="hdr-icon-btn" title="알림"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 20a2 2 0 0 0 4 0"/></svg></button>
     <button class="dark-toggle-btn" onclick="toggleDarkMode()" title="다크모드">
-      <div class="toggle-knob-dot" id="feed-toggle-knob">☀️</div>
+      <div class="toggle-knob-dot" id="feed-toggle-knob">
+        <svg class="knob-icon-sun" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+        <svg class="knob-icon-moon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </div>
     </button>
     <button class="avatar-btn">김</button>
   </div>
@@ -143,17 +153,14 @@
     </div>
     <div class="feed-hero-meta">
       <div class="feed-month-summary" id="dt-feed-month-summary">전체 추억</div>
-      <button class="btn-action-sm feed-write-btn" onclick="openWriteModal()">✏️ 글쓰기</button>
+      <button class="btn-action-sm feed-write-btn" onclick="openWriteModal()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>글쓰기</button>
     </div>
   </div>
 
   <!-- 월별 필터 + 전체/내기록/친구기록 탭 -->
   <div class="feed-controls">
-    <div class="feed-month-picker-wrap">
-      <div class="feed-month-rail" id="dt-feed-month-rail"></div>
-      <button class="month-picker-trigger" id="dt-month-picker-trigger"
-              type="button" onclick="toggleMonthPicker(event)" title="월 선택">📅</button>
-    </div>
+    <button class="month-picker-trigger" id="dt-month-picker-trigger"
+            type="button" onclick="toggleMonthPicker(event)" title="월 선택"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></button>
     <div class="feed-filter-tabs">
       <button class="feed-tab active" data-filter="all"    onclick="setFeedFilter('all')">전체</button>
       <button class="feed-tab"        data-filter="mine"   onclick="setFeedFilter('mine')">내 기록</button>
@@ -167,22 +174,9 @@
   </div>
 </div>
 
-<!-- ===== 추억 상세 바텀 시트 ===== -->
+<!-- ===== 추억 상세 모달 ===== -->
 <div class="memory-detail-backdrop" id="memory-detail-backdrop" onclick="closeMemoryDetail()"></div>
-<section class="memory-detail-sheet" id="memory-detail-sheet"
-         aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="memory-detail-title">
-  <div class="memory-detail-handle"></div>
-  <div class="memory-detail-head">
-    <div>
-      <div class="memory-detail-kicker" id="memory-detail-author">내 기록</div>
-      <div class="memory-detail-title" id="memory-detail-title">추억 기록</div>
-      <div class="memory-detail-date"  id="memory-detail-date"></div>
-    </div>
-    <button type="button" class="memory-detail-close" onclick="closeMemoryDetail()" aria-label="닫기">×</button>
-  </div>
-  <div class="memory-detail-body" id="memory-detail-body"></div>
-  <div class="memory-detail-tags" id="memory-detail-tags"></div>
-</section>
+<section class="memory-detail-sheet" id="memory-detail-sheet" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="memory-detail-author"></section>
 
 <!-- ===== 월 선택 팝오버 ===== -->
 <div class="month-picker-popover" id="month-picker-popover" role="dialog" aria-label="월 선택">
@@ -191,6 +185,7 @@
     <div class="month-picker-year" id="month-picker-year">2026년</div>
     <button class="month-picker-nav" type="button" onclick="moveMonthPickerYear(1)"  aria-label="다음 년도">❯</button>
   </div>
+  <button class="month-picker-all-btn" id="month-picker-all-btn" type="button" onclick="setFeedMonth('all')">전체보기</button>
   <div class="month-picker-grid" id="month-picker-grid"></div>
 </div>
 
@@ -226,23 +221,24 @@
 }
 .wm-close:hover { background: var(--nav-item-bg-active); color: var(--primary-green); }
 .wm-body { padding: 18px 24px 26px; display: flex; flex-direction: column; gap: 18px; }
-.wm-img-zone {
-  border: 2px dashed var(--border-color); border-radius: 14px;
-  height: 150px; cursor: pointer; overflow: hidden; position: relative;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 6px; background: var(--bg-light); transition: border-color .15s, background .15s;
-}
-.wm-img-zone:hover { border-color: var(--accent-green); background: var(--nav-item-bg-active); }
-.wm-img-zone.filled { border-style: solid; border-color: var(--accent-green); }
-.wm-img-zone .wm-ph-icon { font-size: 26px; pointer-events: none; }
-.wm-img-zone .wm-ph-text { font-size: 12px; color: var(--text-muted); font-weight: 600; pointer-events: none; }
-.wm-img-zone img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .wm-img-remove {
   position: absolute; top: 8px; right: 8px; z-index: 2;
   background: rgba(0,0,0,.6); color: #fff; border: none;
   border-radius: 50%; width: 26px; height: 26px; font-size: 12px;
   cursor: pointer; display: flex; align-items: center; justify-content: center;
 }
+.wm-photo-strip { display: flex; flex-wrap: wrap; gap: 8px; }
+.wm-photo-thumb { position: relative; width: 72px; height: 72px; border-radius: 12px; overflow: hidden; }
+.wm-photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.wm-photo-thumb .wm-img-remove { width: 22px; height: 22px; top: 4px; right: 4px; font-size: 10px; }
+.wm-photo-add {
+  width: 72px; height: 72px; border-radius: 12px;
+  border: 2px dashed var(--border-color); background: var(--bg-light); color: var(--text-muted);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  font-size: 11px; font-weight: 700; cursor: pointer; transition: border-color .15s, background .15s;
+}
+.wm-photo-add span:first-child { font-size: 20px; }
+.wm-photo-add:hover { border-color: var(--accent-green); background: var(--nav-item-bg-active); }
 .wm-field { display: flex; flex-direction: column; gap: 7px; }
 .wm-label { font-size: 11px; font-weight: 700; color: var(--text-muted); letter-spacing: .5px; text-transform: uppercase; }
 .wm-title-wrap { position: relative; }
@@ -293,14 +289,14 @@ body.dark-mode .wm-submit { color: #0a0f0c; }
 <div class="write-modal-backdrop" id="wm-backdrop" onclick="if(event.target===this)closeWriteModal()">
   <div class="write-modal" role="dialog" aria-modal="true" aria-label="추억 기록하기">
     <div class="wm-head">
-      <h2>✏️ 추억 기록하기</h2>
+      <h2><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>추억 기록하기</h2>
       <button class="wm-close" onclick="closeWriteModal()" aria-label="닫기">✕</button>
     </div>
     <div class="wm-body">
-      <div class="wm-img-zone" id="wm-img-zone" onclick="document.getElementById('wm-img-input').click()">
-        <span class="wm-ph-icon">📷</span>
-        <span class="wm-ph-text">클릭해서 대표 사진 추가 (선택)</span>
-        <input type="file" id="wm-img-input" accept="image/*" style="display:none"
+      <div class="wm-field">
+        <span class="wm-label">사진 (선택, 최대 6장)</span>
+        <div class="wm-photo-strip" id="wm-photo-strip"></div>
+        <input type="file" id="wm-img-input" accept="image/*" multiple style="display:none"
                onchange="previewWriteImg(this)">
       </div>
       <div class="wm-field">
@@ -318,10 +314,15 @@ body.dark-mode .wm-submit { color: #0a0f0c; }
                   placeholder="오늘 어떤 추억을 남겼나요?"></textarea>
       </div>
       <div class="wm-field">
+        <span class="wm-label">해시태그</span>
+        <input class="wm-input" id="wm-tags" type="text"
+               placeholder="#한강 #시험끝 처럼 띄어쓰기나 쉼표로 구분해 입력 (선택)">
+      </div>
+      <div class="wm-field">
         <span class="wm-label">함께한 친구</span>
         <div class="wm-chips" id="wm-chips"></div>
       </div>
-      <button class="wm-submit" onclick="saveWritePost()">기록 남기기 🍀</button>
+      <button class="wm-submit" onclick="saveWritePost()">기록 남기기 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><path d="M20 6 9 17l-5-5"/></svg></button>
     </div>
   </div>
 </div>
@@ -331,65 +332,88 @@ body.dark-mode .wm-submit { color: #0a0f0c; }
 <script>
   /* ===== 글쓰기 모달 ===== */
   (function() {
-    var _wmBg = null;
+    var _wmPhotos = [];
+    var WM_PHOTO_LIMIT = 6;
 
     window.openWriteModal = function() {
-      _wmBg = null;
+      _wmPhotos = [];
       document.getElementById('wm-title').value = '';
       document.getElementById('wm-body').value = '';
+      document.getElementById('wm-tags').value = '';
       document.getElementById('wm-char-count').textContent = '0/25';
       document.getElementById('wm-img-input').value = '';
-      _resetZone();
+      _renderPhotoStrip();
       _buildChips();
       document.getElementById('wm-backdrop').classList.add('open');
     };
     window.closeWriteModal = function() {
       document.getElementById('wm-backdrop').classList.remove('open');
     };
-    function _resetZone() {
-      var z = document.getElementById('wm-img-zone');
-      z.classList.remove('filled');
-      z.querySelectorAll('img, .wm-img-remove').forEach(function(el){ el.remove(); });
-      if (!z.querySelector('.wm-ph-icon')) {
-        z.insertAdjacentHTML('afterbegin',
-          '<span class="wm-ph-icon">📷</span>' +
-          '<span class="wm-ph-text">클릭해서 대표 사진 추가 (선택)</span>');
-      }
+    function _renderPhotoStrip() {
+      var strip = document.getElementById('wm-photo-strip');
+      strip.innerHTML = _wmPhotos.map(function(url, index) {
+        return '<div class="wm-photo-thumb">' +
+          '<img src="' + url + '">' +
+          '<button type="button" class="wm-img-remove" onclick="removeWriteImg(' + index + ')">✕</button>' +
+          '</div>';
+      }).join('') + (_wmPhotos.length < WM_PHOTO_LIMIT
+        ? '<button type="button" class="wm-photo-add" onclick="document.getElementById(\'wm-img-input\').click()"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"/><circle cx="12" cy="13" r="3.5"/></svg></span><span>추가</span></button>'
+        : '');
     }
-    window.previewWriteImg = function(input) {
-      if (!input.files[0]) return;
-      var reader = new FileReader();
-      reader.onload = function(e) {
-        _wmBg = e.target.result;
-        var z = document.getElementById('wm-img-zone');
-        z.querySelectorAll('.wm-ph-icon,.wm-ph-text,img,.wm-img-remove').forEach(function(el){ el.remove(); });
-        var img = document.createElement('img'); img.src = _wmBg;
-        var btn = document.createElement('button'); btn.className = 'wm-img-remove'; btn.textContent = '✕';
-        btn.onclick = function(ev) {
-          ev.stopPropagation(); _wmBg = null;
-          document.getElementById('wm-img-input').value = ''; _resetZone();
-        };
-        z.appendChild(img); z.appendChild(btn); z.classList.add('filled');
-      };
-      reader.readAsDataURL(input.files[0]);
+    window.removeWriteImg = function(index) {
+      _wmPhotos.splice(index, 1);
+      _renderPhotoStrip();
     };
+    window.previewWriteImg = function(input) {
+      var files = [].slice.call(input.files || []);
+      if (!files.length) return;
+      var remaining = WM_PHOTO_LIMIT - _wmPhotos.length;
+      if (remaining <= 0) {
+        input.value = '';
+        alert('사진은 최대 ' + WM_PHOTO_LIMIT + '장까지 추가할 수 있어요.');
+        return;
+      }
+      var toLoad = files.slice(0, remaining);
+      var loadedCount = 0;
+      toLoad.forEach(function(file) {
+        if (!file.type.startsWith('image/')) { loadedCount += 1; return; }
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          _wmPhotos.push(e.target.result);
+          loadedCount += 1;
+          if (loadedCount === toLoad.length) {
+            input.value = '';
+            _renderPhotoStrip();
+            if (typeof showProofResultModal === 'function') {
+              showProofResultModal({
+                title: '이미지 업로드 완료',
+                message: toLoad.length + '장의 사진이 추가됐어요.'
+              });
+            }
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    };
+    // 참여자 칩은 "함께한 친구"만 고른다. 게시자(나)는 항상 자동 포함되므로 칩 목록에는 넣지 않는다.
     function _buildChips() {
-      var posts = window._clov ? window._clov.getPosts() : [];
+      var posts = (typeof groupsData !== 'undefined' && groupsData[activeGroup]) ? (groupsData[activeGroup].posts || []) : [];
       var seen = new Map();
       posts.forEach(function(post) {
         (post.participants || []).forEach(function(p) {
+          if (p.type === 'mine' || p.name === '나') return;
           var key = p.name || p.icon;
           if (!seen.has(key)) seen.set(key, p);
         });
       });
       var container = document.getElementById('wm-chips');
-      container.innerHTML = [...seen.values()].map(function(m) {
+      var chips = [...seen.values()];
+      container.innerHTML = chips.length ? chips.map(function(m) {
         var icon = m.icon || (m.name || '?').slice(0, 1);
         var name = m.name || icon;
-        var type = m.type || (name === '나' ? 'mine' : 'friend');
-        return '<label class="wm-chip on" data-name="' + name + '" data-icon="' + icon + '" data-type="' + type + '">' +
+        return '<label class="wm-chip on" data-name="' + name + '" data-icon="' + icon + '">' +
           '<div class="wm-chip-av">' + icon + '</div>' + name + '</label>';
-      }).join('');
+      }).join('') : '<span class="wm-label" style="text-transform:none;letter-spacing:0;">아직 함께 기록한 친구가 없어요. 나 혼자만의 기록으로 남길 수 있어요.</span>';
       container.querySelectorAll('.wm-chip').forEach(function(chip) {
         chip.addEventListener('click', function(){ chip.classList.toggle('on'); });
       });
@@ -400,23 +424,41 @@ body.dark-mode .wm-submit { color: #0a0f0c; }
       if (!title) { document.getElementById('wm-title').focus(); return; }
       if (!body)  { document.getElementById('wm-body').focus(); return; }
       var selected = [...document.querySelectorAll('#wm-chips .wm-chip.on')];
-      if (!selected.length) { alert('함께한 친구를 한 명 이상 선택해주세요.'); return; }
+      var tagsInput = document.getElementById('wm-tags').value.trim();
+      var tags = tagsInput
+        ? [...new Set(
+            tagsInput.split(/[\s,]+/)
+              .map(function(tag) { return tag.trim(); })
+              .filter(Boolean)
+              .map(function(tag) { return tag.startsWith('#') ? tag : '#' + tag; })
+          )].slice(0, 5)
+        : [];
       var today = new Date();
       var pad = function(n){ return String(n).padStart(2,'0'); };
       var dateStr = today.getFullYear() + '.' + pad(today.getMonth()+1) + '.' + pad(today.getDate());
-      var participants = selected.map(function(chip) {
-        return { id: chip.dataset.name+'-new', name: chip.dataset.name,
-                 icon: chip.dataset.icon, text: body, type: chip.dataset.type };
-      });
+      var participants = [
+        { name: '나', icon: '나', type: 'mine' },
+        ...selected.map(function(chip) {
+          return { name: chip.dataset.name, icon: chip.dataset.icon, type: 'friend' };
+        })
+      ];
       var newPost = {
-        date: dateStr, title: title, subtitle: '', text: body,
-        bg: _wmBg ? "url('" + _wmBg + "')" : '',
+        date: dateStr,
+        title: title,
+        subtitle: '',
+        text: body,
+        photos: _wmPhotos.slice(),
+        bg: _wmPhotos[0] || '',
+        authorId: CURRENT_USER_ID,
+        messages: [],
         participants: participants,
-        tags: [selected.length > 1 ? selected.length+'명 기록' : '나만의 기록'],
+        tags: tags,
       };
-      if (window._clov) {
-        window._clov.addPost(newPost);
-        window._clov.refreshFeed();
+      if (typeof groupsData !== 'undefined' && groupsData[activeGroup]) {
+        groupsData[activeGroup].posts.unshift(newPost);
+        activeEvidenceIndexes[activeGroup] = 0;
+        saveGroupsData();
+        renderFeeds();
       }
       window.closeWriteModal();
     };
@@ -441,38 +483,10 @@ body.dark-mode .wm-submit { color: #0a0f0c; }
     document.body.classList.toggle('dark-mode');
     const isDark = document.body.classList.contains('dark-mode');
     localStorage.setItem('darkMode', isDark);
-    const knob = document.getElementById('feed-toggle-knob');
-    if (knob) knob.textContent = isDark ? '🌙' : '☀️';
+    // 해/달 아이콘은 body.dark-mode 기준 CSS가 알아서 전환한다
   }
   if (localStorage.getItem('darkMode') === 'true') {
     document.body.classList.add('dark-mode');
-    const knob = document.getElementById('feed-toggle-knob');
-    if (knob) knob.textContent = '🌙';
-  }
-
-  /* openMemoryDetail: 이 페이지에서는 바텀 시트로 열기 */
-  function openMemoryDetail(postIndex, encodedParticipantId) {
-    const posts = groupsData[activeGroup].posts || [];
-    const post   = posts[postIndex];
-    if (!post) return;
-
-    const participantId = decodeURIComponent(encodedParticipantId);
-    const np = normalizeMemoryPost(post);
-    const participant = np.participants.find(p => p.id === participantId) || np.participants[0];
-    const authorLabel = participant.type === 'mine' ? '내 기록' : `${participant.name}의 기록`;
-
-    document.getElementById('memory-detail-author').textContent = authorLabel;
-    document.getElementById('memory-detail-title').textContent  = np.title;
-    document.getElementById('memory-detail-date').textContent   = `${np.date}${np.subtitle ? ' · ' + np.subtitle : ''}`;
-    document.getElementById('memory-detail-body').textContent   = getMemoryDetailText(np, participant);
-
-    const tags  = getMemoryHashtags(np, participant);
-    const tagsEl = document.getElementById('memory-detail-tags');
-    tagsEl.innerHTML = tags.map(t => `<span class="memory-tag">${t}</span>`).join('');
-
-    document.getElementById('memory-detail-sheet').classList.add('open');
-    document.getElementById('memory-detail-backdrop').classList.add('open');
-    document.getElementById('memory-detail-sheet').setAttribute('aria-hidden', 'false');
   }
 </script>
 </body>

@@ -1,0 +1,102 @@
+/* ══════════════════════════════════════════════
+   크로비(Croby) 마스코트 위젯
+   데스크톱 = 우측 하단 fixed / 모바일 = 하단 내비 위 fixed
+   원본: # 크로비 사이드바 마스코트/handoff/croby-mascot.css
+   ══════════════════════════════════════════════ */
+.croby-mascot {
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  z-index: 9998; /* 테스트 패널(9999)보다 아래, 모달/토스트보다 아래 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none; /* 스프라이트 여백이 UI를 가리지 않게 */
+}
+.croby-hit {
+  pointer-events: auto;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.18s ease;
+}
+.croby-hit:hover  { transform: scale(1.07); }
+.croby-hit:active { transform: scale(0.97); }
+
+.croby-sprite {
+  display: block;
+  height: 180px;
+  width: auto; /* 스프라이트 종횡비가 달라 높이 고정 */
+  transform-origin: 50% 92%; /* 발끝 기준 회전 */
+  animation: croby-float 3.2s ease-in-out infinite;
+  filter: drop-shadow(0 6px 10px rgba(27, 67, 50, 0.18));
+  user-select: none;
+}
+.croby--nudge  .croby-sprite { animation: croby-nudge 0.35s ease-in-out 1; }
+.croby--nudge2 .croby-sprite { animation: croby-nudge-2 0.35s ease-in-out 1; }
+.croby--dizzy  .croby-sprite { animation: croby-dizzy 1.2s ease-in-out 1; }
+.croby--sleepy .croby-sprite { animation: croby-sleepy 4s ease-in-out infinite alternate; }
+
+.croby-bubble {
+  font-size: 13px;
+  background: #fff;
+  border: 1.5px solid #2b2b2b;
+  border-radius: 10px;
+  padding: 3px 10px;
+  max-width: 190px;
+  text-align: center;
+  animation: croby-bubble-pop 0.18s ease;
+}
+
+/* idle: 둥실둥실 */
+@keyframes croby-float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-7px); }
+}
+/* 단일 클릭: 살짝 좌우 흔들 (재시작을 위해 동일 키프레임 2벌) */
+@keyframes croby-nudge {
+  0% { transform: rotate(0); } 25% { transform: rotate(-6deg); }
+  55% { transform: rotate(5deg); } 80% { transform: rotate(-2deg); } 100% { transform: rotate(0); }
+}
+@keyframes croby-nudge-2 {
+  0% { transform: rotate(0); } 25% { transform: rotate(-6deg); }
+  55% { transform: rotate(5deg); } 80% { transform: rotate(-2deg); } 100% { transform: rotate(0); }
+}
+/* dizzy: 1.2초 흔들 + 살짝 튀기 */
+@keyframes croby-dizzy {
+  0%   { transform: rotate(0) translateY(0); }
+  15%  { transform: rotate(-9deg) translateY(-5px); }
+  30%  { transform: rotate(8deg); }
+  45%  { transform: rotate(-7deg) translateY(-4px); }
+  60%  { transform: rotate(6deg); }
+  75%  { transform: rotate(-4deg) translateY(-2px); }
+  90%  { transform: rotate(3deg); }
+  100% { transform: rotate(0); }
+}
+/* sleepy: 천천히 고개가 떨어졌다 살짝 들리는 움직임 */
+@keyframes croby-sleepy {
+  0%   { transform: rotate(0) translateY(0); }
+  55%  { transform: rotate(5.5deg) translateY(3px); }
+  70%  { transform: rotate(4deg) translateY(2px); }
+  100% { transform: rotate(6deg) translateY(3px); }
+}
+@keyframes croby-bubble-pop {
+  from { opacity: 0; transform: translateY(4px) scale(0.9); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* 모바일: 하단 내비(64px 가정) 위로 */
+@media (max-width: 768px) {
+  .croby-mascot {
+    right: 12px;
+    bottom: calc(64px + env(safe-area-inset-bottom) + 12px);
+    z-index: 50;
+  }
+  .croby-sprite { height: 80px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .croby-sprite, .croby-bubble { animation: none !important; }
+}
