@@ -418,11 +418,45 @@ document.getElementById = function(id) {
                     console.error("저장 실패", e);
                 }
 
-                if (typeof clovToast === 'function') {
-                    clovToast('🎉 새 추억 피드가 성공적으로 등록되었습니다!', 'success');
+                // ── 게시글 작성 XP 계산 및 지급
+                if (typeof grantXP === 'function') {
+                    let postXp = typeof CLOV_XP_POST_BASE !== 'undefined' ? CLOV_XP_POST_BASE : 25;
+                    const bonusDetails = [];
+
+                    const pPerPhoto = typeof CLOV_XP_POST_PER_PHOTO !== 'undefined' ? CLOV_XP_POST_PER_PHOTO : 1;
+                    const pMaxPhoto = typeof CLOV_XP_POST_PHOTO_MAX !== 'undefined' ? CLOV_XP_POST_PHOTO_MAX : 10;
+                    const photoCount = Array.isArray(newPost.photos) ? newPost.photos.length : (newPost.bg ? 1 : 0);
+                    const photoBonus = Math.min(photoCount * pPerPhoto, pMaxPhoto);
+                    if (photoBonus > 0) {
+                        postXp += photoBonus;
+                        bonusDetails.push(`사진 ${photoCount}장 +${photoBonus}`);
+                    }
+
+                    const t100 = typeof CLOV_XP_POST_TEXT_100 !== 'undefined' ? CLOV_XP_POST_TEXT_100 : 10;
+                    const t50 = typeof CLOV_XP_POST_TEXT_50 !== 'undefined' ? CLOV_XP_POST_TEXT_50 : 5;
+                    const textLen = (newPost.content || newPost.body || newPost.text || '').replace(/<[^>]*>/g, '').length;
+                    if (textLen >= 100) {
+                        postXp += t100;
+                        bonusDetails.push(`정성 기록 +${t100}`);
+                    } else if (textLen >= 50) {
+                        postXp += t50;
+                        bonusDetails.push(`기록 +${t50}`);
+                    }
+
+                    grantXP(postXp, 'post');
+                    const bonusStr = bonusDetails.length ? ' (' + bonusDetails.join(' · ') + ')' : '';
+                    setTimeout(() => {
+                        if (typeof clovToast === 'function')
+                            clovToast(`추억 기록 +${postXp} XP${bonusStr}`, 'success');
+                    }, 600);
+                } else {
+                    if (typeof clovToast === 'function') {
+                        clovToast('새 추억 피드가 성공적으로 등록되었습니다!', 'success');
+                    }
                 }
+
                 if (typeof addUnreadNotification === 'function') {
-                    addUnreadNotification('✨ 새로운 추억', '새로운 추억 피드가 등록되었어요!');
+                    addUnreadNotification('새로운 추억', '새로운 추억 피드가 등록되었어요!');
                 }
             },
             refreshFeed: function() {

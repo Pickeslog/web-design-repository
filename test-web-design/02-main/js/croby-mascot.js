@@ -131,5 +131,13 @@
   }
   scheduleMutter();
 
+  // 외부(desktop.js 등)에서 경험치 상승 시 말풍선을 띄울 수 있도록 API 노출
+  window.ClovMascot = {
+    say: function(text, ms) {
+      if (mode === 'sleepy') setMode('default'); // 자고 있으면 깨움
+      showSay(text, ms || 2500);
+    }
+  };
+
   render();
 })();

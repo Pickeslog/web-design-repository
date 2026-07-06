@@ -467,6 +467,38 @@ document.getElementById = function(id) {
                     console.error("저장 실패", e);
                 }
 
+                // ── 게시글 작성 XP 계산 및 지급
+                if (typeof grantXP === 'function') {
+                    let postXp = CLOV_XP_POST_BASE; // 기본 +25
+                    const bonusDetails = [];
+
+                    // 사진 보너스: 1장당 +1 XP (최대 +10)
+                    const photoCount = Array.isArray(newPost.photos) ? newPost.photos.length
+                                     : (newPost.bg ? 1 : 0);
+                    const photoBonus = Math.min(photoCount * CLOV_XP_POST_PER_PHOTO, CLOV_XP_POST_PHOTO_MAX);
+                    if (photoBonus > 0) {
+                        postXp += photoBonus;
+                        bonusDetails.push(`사진 ${photoCount}장 +${photoBonus}`);
+                    }
+
+                    // 텍스트 보너스: 50자↑ +5 / 100자↑ +10 (중복 아님, 최대 하나만)
+                    const textLen = (newPost.content || newPost.body || newPost.text || '').replace(/<[^>]*>/g, '').length;
+                    if (textLen >= 100) {
+                        postXp += CLOV_XP_POST_TEXT_100;
+                        bonusDetails.push(`정성 기록 +${CLOV_XP_POST_TEXT_100}`);
+                    } else if (textLen >= 50) {
+                        postXp += CLOV_XP_POST_TEXT_50;
+                        bonusDetails.push(`기록 +${CLOV_XP_POST_TEXT_50}`);
+                    }
+
+                    grantXP(postXp, 'post');
+                    const bonusStr = bonusDetails.length ? ' (' + bonusDetails.join(' · ') + ')' : '';
+                    setTimeout(() => {
+                        if (typeof clovToast === 'function')
+                            clovToast(`추억 기록 +${postXp} XP${bonusStr}`, 'success');
+                    }, 600);
+                }
+
                 if (typeof clovToast === 'function') {
                     clovToast('🎉 새 추억 피드가 성공적으로 등록되었습니다!', 'success');
                 }
@@ -1623,14 +1655,39 @@ document.getElementById = function(id) {
 
         // 7. 우정 레벨 및 클로버 비주얼 인터랙션 제어
         //
-        // 레벨 시스템: 최대 777레벨. 레벨 하나하나에 이름을 붙일 수 없으므로(777개!),
-        // 111레벨씩 7개 티어로 묶어서 이름/아이콘을 부여한다 (777 = 111 × 7).
-        // 클릭 1번 = 12.5%(=1/8), 하루 최대 8번까지만 경험치가 오르고 그 이후 클릭은
-        // 배너 인터랙션(회전+색종이)은 그대로 재생되지만 경험치는 더 늘지 않는다.
-        // 최대 레벨(777)에 도달하면 배지 표기가 "Lv.777"이 아니라 "+777"로 고정된다.
+        // ═══════════════════════════════════════════════════════════════
+        //  새로운 XP 시스템 (활동 기반 + 성장 가속도 + 방치형 보상)
+        // ═══════════════════════════════════════════════════════════════
+        // 최대 777레벨. 111레벨씩 7개 티어. 최대 레벨 도달 시 "+777" 고정.
         const CLOV_MAX_LEVEL = 777;
-        const CLOV_XP_PER_CLICK = 12.5; // 8번 클릭 = 100%
-        const CLOV_MAX_CLICKS_PER_DAY = 8;
+
+        // ── 마스코트 교감 (하루 3회 제한, 1회 +2 XP)
+        const CLOV_XP_PER_CLICK = 2;        // 1회 클릭당 XP
+        const CLOV_MAX_CLICKS_PER_DAY = 3;  // 하루 최대 교감 횟수
+
+        // ── 게시글 작성 XP
+        const CLOV_XP_POST_BASE      = 25;  // 기본 게시글 작성
+        const CLOV_XP_POST_PER_PHOTO = 1;   // 사진 1장당 보너스 (최대 10)
+        const CLOV_XP_POST_PHOTO_MAX = 10;  // 사진 보너스 상한
+        const CLOV_XP_POST_TEXT_50   = 5;   // 50자 이상 텍스트 보너스
+        const CLOV_XP_POST_TEXT_100  = 10;  // 100자 이상 텍스트 보너스
+
+        // ── 일정 XP
+        const CLOV_XP_SCHEDULE_ADD      = 3;   // 일정 등록
+        const CLOV_XP_SCHEDULE_COMPLETE = 15;  // 일정 완료(인생4컷)
+
+        // ── 방치형 자동 보상 계수 (매일 첫 접속 시)
+        const CLOV_PASSIVE_PER_POST     = 0.5; // 누적 게시글 1개당
+        const CLOV_PASSIVE_PER_SCHEDULE = 1.0; // 다가올 일정 1개당
+
+        // ── 성장 가속도 (누적 게시글 수 기준 XP 배율)
+        const CLOV_XP_MULTIPLIERS = [
+            { min: 0,   multiplier: 1.0 },
+            { min: 30,  multiplier: 1.2 },
+            { min: 50,  multiplier: 1.5 },
+            { min: 70,  multiplier: 2.0 },
+            { min: 100, multiplier: 3.0 },
+        ];
         const CLOV_LEVEL_TIERS = [
             { max: 111, name: '씨앗의 우정',         icon: '🌱' },
             { max: 222, name: '새싹의 우정',         icon: '🌿' },
@@ -1656,6 +1713,68 @@ document.getElementById = function(id) {
         }
         window.clovLevelInfo = clovLevelInfo;
         window.CLOV_MAX_LEVEL = CLOV_MAX_LEVEL;
+
+        // ── 현재 그룹의 성장 가속도 배율 계산
+        function getXpMultiplier() {
+            const grp = groupsData[activeGroup] || {};
+            const postCount = (grp.posts || []).length;
+            let mul = 1.0;
+            for (const tier of CLOV_XP_MULTIPLIERS) {
+                if (postCount >= tier.min) mul = tier.multiplier;
+            }
+            return mul;
+        }
+
+        // ── XP를 실제 levelProgress에 더하고 레벨업 판정까지 처리하는 중앙 함수
+        // rawXp: 배율 적용 전 순수 XP값
+        // source: 'click' | 'post' | 'schedule_add' | 'schedule_done' | 'passive'
+        function grantXP(rawXp, source) {
+            const grp = groupsData[activeGroup];
+            if (!grp) return;
+            if (typeof grp.levelProgress !== 'number') grp.levelProgress = 0;
+            if (typeof grp.level !== 'number') grp.level = friendshipLevel || 1;
+            if (grp.level >= CLOV_MAX_LEVEL) return;
+
+            const multiplier = (source === 'click' || source === 'passive') ? 1.0 : getXpMultiplier();
+            const finalXp = rawXp * multiplier;
+
+            // levelProgress는 0~100의 퍼센트 값. 1 XP = 1% (레벨업에 100 XP 필요)
+            // Math.min 제한 없이 더한 뒤 레벨업 판정
+            grp.levelProgress = grp.levelProgress + finalXp;
+
+            // 레벨업 판정 (100% 이상 달성 시)
+            if (grp.levelProgress >= 100 && grp.level < CLOV_MAX_LEVEL) {
+                grp.level = Math.min(CLOV_MAX_LEVEL, grp.level + 1);
+                grp.levelProgress = Math.max(0, grp.levelProgress - 100); // 초과분 이월
+                friendshipLevel = grp.level;
+                const info = clovLevelInfo(grp.level);
+                const badgeText = grp.level >= CLOV_MAX_LEVEL ? '+777' : ('Lv.' + grp.level);
+                clovToast(`${info.icon} ${badgeText} 달성! ${info.name}`, 'success');
+                triggerLevelPulse();
+            } else {
+                // 진행도는 100을 넘지 않도록 표시 목적으로는 클램핑
+                grp.levelProgress = Math.min(99.9, grp.levelProgress);
+                friendshipLevel = grp.level;
+            }
+
+            localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
+            updateFriendshipUI();
+            triggerXpFlash();
+
+            // 마스코트 말풍선 표시
+            if (window.ClovMascot && typeof window.ClovMascot.say === 'function' && finalXp > 0) {
+                let msg = '';
+                if (source === 'click') msg = `교감 완료! +${finalXp} XP`;
+                else if (source === 'post') msg = `추억 고마워! +${finalXp} XP`;
+                else if (source === 'schedule_add') msg = `약속 등록 완료! +${finalXp} XP`;
+                else if (source === 'schedule_done') msg = `인생4컷 달성! +${finalXp} XP`;
+                else if (source === 'passive') msg = `기다리며 자랐어! +${finalXp} XP`;
+                else msg = `+${finalXp} XP 획득!`;
+
+                window.ClovMascot.say(msg, 3500);
+            }
+        }
+        window.grantXP = grantXP;
 
         let friendshipLevel = 3;
 
@@ -1725,35 +1844,43 @@ document.getElementById = function(id) {
             });
         }
 
+        // ── 방치형 '기억의 샘' 자동 보상: 날짜가 바뀐 첫 접속 시 자동 적용
+        function applyPassiveXP(grp) {
+            const posts = (grp.posts || []).length;
+            const today = clovTodayStr();
+            const schedules = grp.schedules || [];
+            const upcomingCount = schedules.filter(s => s.date >= today).length;
+            const rawPassive = Math.floor(posts * CLOV_PASSIVE_PER_POST + upcomingCount * CLOV_PASSIVE_PER_SCHEDULE);
+            if (rawPassive <= 0) return;
+            grantXP(rawPassive, 'passive');
+            clovToast(
+                `클로브가 자라났어요! 추억 ${posts}개·약속 ${upcomingCount}개 → +${rawPassive} XP`,
+                'success'
+            );
+        }
+
         function levelUp() {
-            // 실제 레벨업 여부와 상관없이, 클릭할 때마다 배너가 통통 튀는 느낌을 매번 준다
+            // 클릭할 때마다 배너가 통통 튀는 느낌을 매번 준다
             triggerLevelPulse();
 
             const grp = groupsData[activeGroup];
+            if (!grp) return;
             const today = clovTodayStr();
             if (typeof grp.levelProgress !== 'number') grp.levelProgress = 0;
             if (typeof grp.xpClicksToday !== 'number') grp.xpClicksToday = 0;
             if (typeof grp.level !== 'number') grp.level = friendshipLevel;
             if (!grp.xpDate) grp.xpDate = today;
 
-            // 날짜가 바뀌었으면: 어제 게이지가 100%까지 다 찼었는지 확인해서 그때 비로소 레벨업을 확정한다.
-            // (게이지가 8번째 클릭에 꽉 찬 순간 바로 다음 레벨로 넘어가 버리면 "가득 찬 상태"를 볼 틈이 없어서,
-            //  오늘은 가득 찬 채로 유지하고, 내일 첫 클릭에서 레벨업 + 게이지 리셋이 함께 일어나도록 미룬다.)
-            let leveledUp = false;
+            // 날짜가 바뀌었을 때: 방치형 보상 지급 후 클릭 카운트 리셋
             if (grp.xpDate !== today) {
-                if (grp.levelProgress >= 100 && grp.level < CLOV_MAX_LEVEL) {
-                    grp.level = Math.min(CLOV_MAX_LEVEL, grp.level + 1);
-                    grp.levelProgress = 0;
-                    leveledUp = true;
-                }
                 grp.xpDate = today;
                 grp.xpClicksToday = 0;
+                applyPassiveXP(grp);
             }
             friendshipLevel = grp.level;
 
             if (grp.level >= CLOV_MAX_LEVEL) {
                 grp.level = CLOV_MAX_LEVEL;
-                grp.levelProgress = 0;
                 friendshipLevel = CLOV_MAX_LEVEL;
                 localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
                 updateFriendshipUI();
@@ -1761,26 +1888,17 @@ document.getElementById = function(id) {
                 return;
             }
 
-            if (leveledUp) {
-                const info = clovLevelInfo(grp.level);
-                const badgeText = grp.level >= CLOV_MAX_LEVEL ? '+777' : ('Lv.' + grp.level);
-                clovToast(`${info.icon} ${badgeText} 달성! ${info.name}`, 'success');
-            }
-
             if (grp.xpClicksToday >= CLOV_MAX_CLICKS_PER_DAY) {
                 localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
                 updateFriendshipUI();
-                if (!leveledUp) clovToast('오늘의 우정 경험치를 다 채웠어요! 내일 다시 함께해요 🍀', 'info');
+                clovToast('오늘의 우정 교감을 다 채웠어요! 내일 다시 함께해요', 'info');
                 return;
             }
 
             grp.xpClicksToday += 1;
-            grp.levelProgress = Math.min(100, grp.levelProgress + CLOV_XP_PER_CLICK);
-            localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
-            updateFriendshipUI();
-            triggerXpFlash();
-            if (grp.levelProgress >= 100 && grp.xpClicksToday >= CLOV_MAX_CLICKS_PER_DAY) {
-                clovToast('🎉 오늘의 우정 경험치를 가득 채웠어요! 내일 레벨업 돼요', 'success');
+            grantXP(CLOV_XP_PER_CLICK, 'click');
+            if (grp.xpClicksToday >= CLOV_MAX_CLICKS_PER_DAY) {
+                clovToast('오늘의 교감을 다 채웠어요! 다른 활동으로도 경험치를 얻을 수 있어요', 'info');
             }
         }
 
@@ -2425,6 +2543,14 @@ document.getElementById = function(id) {
                     schedules.push(newSch);
                     // 새로 만든 약속을 바로 스포트라이트로 펼쳐서 보여줌
                     selectedScheduleIds[activeGroup] = newSch.id;
+                    // 새 일정 등록 XP 지급
+                    if (typeof grantXP === 'function') {
+                        grantXP(CLOV_XP_SCHEDULE_ADD, 'schedule_add');
+                        setTimeout(() => {
+                            if (typeof clovToast === 'function')
+                                clovToast(`약속 등록 +${CLOV_XP_SCHEDULE_ADD} XP`, 'success');
+                        }, 500);
+                    }
                 }
 
                 updateScheduleUI();
@@ -2718,7 +2844,16 @@ document.getElementById = function(id) {
             const boxRect = box.getBoundingClientRect();
             burst.style.left = (iconRect.left - boxRect.left + iconRect.width / 2) + 'px';
             burst.style.top = (iconRect.top - boxRect.top + iconRect.height / 2) + 'px';
-            spawnConfettiBurst(burst, { spread: 130 }); // 색상은 spawnConfettiBurst 기본값(여름 팔레트) 사용
+            spawnConfettiBurst(burst, { spread: 130 });
+
+            // 인생4컷 완성 = 일정 완료 → XP 지급
+            if (typeof grantXP === 'function') {
+                grantXP(CLOV_XP_SCHEDULE_COMPLETE, 'schedule_done');
+                setTimeout(() => {
+                    if (typeof clovToast === 'function')
+                        clovToast(`인생4컷 완성! 일정 달성 +${CLOV_XP_SCHEDULE_COMPLETE} XP`, 'success');
+                }, 800);
+            }
         }
 
         function showLockedStagePhotoModal() {
