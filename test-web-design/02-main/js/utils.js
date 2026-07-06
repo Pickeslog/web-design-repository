@@ -151,6 +151,13 @@
             return 'friend';
         }
 
+        // A-8 회원탈퇴: 계정 삭제 시 내가 남긴 기록의 작성자 표기를 '언노운'으로 익명화한다.
+        // (추억·편지·폴라로이드 본문은 그대로 보존, 표기만 익명화)
+        const CLOV_ANON_NAME = '언노운';
+        function isAccountWithdrawn() {
+            try { return localStorage.getItem('clov_withdrawn') === '1'; } catch (e) { return false; }
+        }
+
         function saveGroupsData() {
             localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
         }
@@ -165,12 +172,18 @@
 
             post.participants = participants.map((participant, index) => {
                 const type = getParticipantType(participant, index);
-                const name = participant.name || participant.icon || `참여자${index + 1}`;
+                let name = participant.name || participant.icon || `참여자${index + 1}`;
                 const id = participant.id || (type === 'mine' ? CURRENT_USER_ID : `${name}-${index}`);
+                let icon = participant.icon || name.slice(0, 1);
+                // A-8: 탈퇴한 계정(=나)의 작성자 표기를 익명화
+                if ((type === 'mine' || id === CURRENT_USER_ID) && isAccountWithdrawn()) {
+                    name = CLOV_ANON_NAME;
+                    icon = '?';
+                }
                 return {
                     id,
                     name,
-                    icon: participant.icon || name.slice(0, 1),
+                    icon,
                     type,
                     text: participant.text
                 };

@@ -19,7 +19,9 @@
             const normalizedPost = normalizeMemoryPost(post);
             const isMine = normalizedPost.authorId === CURRENT_USER_ID;
             const author = normalizedPost.participants.find(participant => participant.id === normalizedPost.authorId) || normalizedPost.participants[0];
-            const authorLabel = isMine ? '내 기록' : `${author.name}의 기록`;
+            const authorLabel = isMine
+                ? (isAccountWithdrawn() ? `${CLOV_ANON_NAME}의 기록` : '내 기록')
+                : `${author.name}의 기록`;
             const coverPhoto = normalizedPost.photos[0] || '';
             const styleBg = coverPhoto ? `background-image: url('${escapeHtml(coverPhoto)}');` : '';
             const imageContent = coverPhoto
@@ -120,7 +122,9 @@
             const normalizedPost = normalizeMemoryPost(post);
             const isMine = normalizedPost.authorId === CURRENT_USER_ID;
             const author = normalizedPost.participants.find(participant => participant.id === normalizedPost.authorId) || normalizedPost.participants[0];
-            const authorLabel = isMine ? '내 기록' : `${author.name}의 기록`;
+            const authorLabel = isMine
+                ? (isAccountWithdrawn() ? `${CLOV_ANON_NAME}의 기록` : '내 기록')
+                : `${author.name}의 기록`;
             const metaLine = `${normalizedPost.date}${normalizedPost.subtitle ? ` · ${normalizedPost.subtitle}` : ''}`;
             memoryDetailState.photoIndex = Math.min(Math.max(memoryDetailState.photoIndex || 0, 0), Math.max(normalizedPost.photos.length - 1, 0));
 

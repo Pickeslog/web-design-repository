@@ -666,8 +666,18 @@
   }
 
   function confirmDeleteProfileAccount() {
-    clovConfirm('정말 계정을 탈퇴하시겠습니까?', function () {
+    clovConfirm('정말 탈퇴하시겠어요? 계정은 삭제되지만 남긴 추억·편지·폴라로이드는 그대로 보존돼요. 작성자 표기만 \'언노운\'으로 익명화됩니다.', function () {
+      try { localStorage.setItem('clov_withdrawn', '1'); } catch (e) {}
+      // 저장된 추억 데이터의 내 작성자 표기를 즉시 익명화해 영속화
+      if (typeof groupsData !== 'undefined' && typeof normalizeMemoryPost === 'function') {
+        Object.keys(groupsData).forEach(function (g) {
+          (groupsData[g].posts || []).forEach(function (post) { normalizeMemoryPost(post); });
+        });
+        if (typeof saveGroupsData === 'function') saveGroupsData();
+      }
       closeModal('dt-profile-modal');
+      if (typeof renderFeeds === 'function') renderFeeds();
+      clovToast('계정을 탈퇴했어요 · 남긴 기록은 \'언노운\'으로 보존돼요', 'info');
     }, { icon: '🚪', type: 'error', confirmText: '탈퇴', cancelText: '취소' });
   }
 

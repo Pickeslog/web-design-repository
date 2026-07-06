@@ -209,66 +209,21 @@ body.dark-mode .filter-btn.active { color: #0a0f0c; }
 .room-card.dragging { opacity: .35; transform: scale(.97) !important; border: 2px dashed var(--accent) !important; }
 .room-card.drag-over { border: 2px solid var(--accent) !important; background: var(--active-bg); transform: scale(1.02) !important; }
 
-/* 카드 상단: 아이콘 + 즐겨찾기 */
-.card-top { display: flex; align-items: flex-start; justify-content: space-between; }
-.icon-wrap { position: relative; flex-shrink: 0; }
-.room-icon {
-  width: 60px; height: 60px; border-radius: 16px;
-  background: var(--accent);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 26px; color: #fff; overflow: hidden;
-}
-.room-icon img { width: 100%; height: 100%; object-fit: cover; }
-.new-badge {
-  position: absolute; top: -5px; left: -5px;
-  min-width: 20px; height: 20px; border-radius: 10px;
-  background: #e53e3e; color: #fff;
-  font-size: 10px; font-weight: 700;
-  display: flex; align-items: center; justify-content: center;
-  padding: 0 5px; border: 2px solid var(--card-bg);
-}
-.fav-btn {
-  background: none; border: none; cursor: pointer;
-  font-size: 18px; color: #ccc; padding: 2px; line-height: 1;
-  transition: color .15s, transform .15s;
-}
-.fav-btn.active { color: #f6ad55; }
-.fav-btn:hover { transform: scale(1.2); }
-
-.room-name { font-size: 14px; font-weight: 700; color: var(--text); letter-spacing: -.2px; }
-.room-intro {
-  font-size: 12px; color: var(--muted); line-height: 1.4; margin-top: -4px;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-}
-
-/* D-day 버튼 */
-.dday-btn {
-  width: 100%; padding: 10px 14px;
-  background: var(--primary); color: #fff;
-  border: none; border-radius: 50px; cursor: pointer;
-  display: flex; align-items: center; gap: 10px; transition: opacity .15s;
-}
-.dday-btn:hover { opacity: .85; }
-.dday-btn .dday-icon { font-size: 15px; flex-shrink: 0; }
-.dday-inner { display: flex; flex-direction: column; align-items: flex-start; }
-.dday-count { font-size: 13px; font-weight: 800; line-height: 1.2; }
-.dday-label { font-size: 10px; opacity: .8; line-height: 1.2; }
-
 /* 편집 버튼 (수정/삭제) */
 .edit-controls {
   display: none; position: absolute; top: 10px; right: 10px; gap: 4px; z-index: 4;
 }
 .room-card.edit-mode .edit-controls { display: flex; }
-.edit-del-btn, .edit-mod-btn {
+.edit-del-btn {
   width: 28px; height: 28px; border-radius: 8px;
   border: none; cursor: pointer; font-size: 13px;
   display: flex; align-items: center; justify-content: center;
 }
 .edit-del-btn { background: var(--danger); color: #fff; }
-.edit-mod-btn { background: var(--active-bg); color: var(--primary); }
 
 /* ===== 페이지네이션 ===== */
 .pagination { display: flex; align-items: center; justify-content: center; gap: 6px; }
+.req-pagination { margin-top: 14px; }
 .page-btn {
   width: 36px; height: 36px; border-radius: 10px;
   border: 1.5px solid var(--border); background: var(--card-bg); color: var(--text);
@@ -341,22 +296,6 @@ textarea.text-input { height: 88px; padding: 10px 14px; resize: none; }
   background: var(--primary); color: #fff; border: none;
   border-radius: 8px; padding: 6px 12px; font-size: 12px; font-weight: 700; cursor: pointer;
 }
-
-/* ===== 우정공간 수정 모달 ===== */
-.photo-row {
-  display: flex; align-items: center; gap: 16px; margin-bottom: 22px;
-}
-.photo-preview-box {
-  width: 80px; height: 80px; border-radius: 18px;
-  border: 2px dashed var(--input-bdr); flex-shrink: 0;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  cursor: pointer; color: var(--muted); font-size: 11px; gap: 4px;
-  transition: border-color .15s, background .15s; overflow: hidden;
-}
-.photo-preview-box:hover { border-color: var(--accent); background: var(--active-bg); }
-.photo-preview-box img { width: 100%; height: 100%; object-fit: cover; border-radius: 16px; }
-.photo-hint { font-size: 12px; color: var(--muted); line-height: 1.5; }
-.photo-hint strong { display: block; font-size: 13px; color: var(--text); margin-bottom: 2px; }
 
 /* ===== 헤더 액션 모달 ===== */
 .room-header-modal-backdrop {
@@ -533,27 +472,7 @@ textarea.text-input { height: 88px; padding: 10px 14px; resize: none; }
   .profile-modal-action-group .profile-footer-btn { flex: 1; }
 }
 
-/* ===== 방 미리보기 탭 (정보/편지함/알림) ===== */
-.preview-tab {
-  flex: 1; text-align: center; padding: 10px 0; font-size: 13px; font-weight: 700;
-  color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent;
-  position: relative; margin-bottom: -1px;
-}
-.preview-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
-.preview-tab-dot {
-  display: none; position: absolute; top: 8px; margin-left: 4px;
-  width: 6px; height: 6px; border-radius: 50%; background: var(--danger);
-}
-.preview-tab-dot.show { display: inline-block; }
-.preview-list-item {
-  display: flex; align-items: center; gap: 10px; padding: 10px;
-  border-radius: 12px; background: var(--active-bg); margin-bottom: 8px;
-}
-.preview-list-item:last-child { margin-bottom: 0; }
-.preview-list-item i { font-size: 18px; color: var(--primary); flex-shrink: 0; }
-.preview-list-title { font-size: 13px; font-weight: 700; color: var(--text); margin: 0; }
-.preview-list-desc { font-size: 12px; color: var(--muted); margin: 2px 0 0; }
-.preview-list-time { font-size: 11px; color: var(--muted); flex-shrink: 0; }
+/* ===== 방 미리보기 소식 피드 빈 상태 ===== */
 .preview-empty { text-align: center; padding: 32px 0; color: var(--muted); font-size: 13px; }
 
 /* ==========================================================================
@@ -696,6 +615,17 @@ body.dark-mode #room-preview-modal .share-btn { color: #0a0f0c; }
 #room-preview-modal .rp-mem-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
 #room-preview-modal .rp-mem-item span { position: absolute; left: 0; right: 0; bottom: 0; font-size: 10px; font-weight: 700; color: #fff; background: linear-gradient(transparent, rgba(0,0,0,.55)); padding: 9px 4px 3px; text-align: center; }
 #room-preview-modal .rp-mem-item.sel { outline: 2.5px solid var(--accent); outline-offset: -2px; }
+#room-preview-modal .rp-mem-cell { position: relative; }
+#room-preview-modal .rp-mem-del {
+  position: absolute; top: 3px; right: 3px; width: 18px; height: 18px;
+  border: none; border-radius: 50%; background: rgba(20, 30, 25, .62); color: #fff;
+  font-size: 10px; line-height: 1; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity .15s, background .15s;
+}
+#room-preview-modal .rp-mem-cell:hover .rp-mem-del { opacity: 1; }
+#room-preview-modal .rp-mem-del:hover { background: var(--danger); }
+#room-preview-modal .rp-mem-empty { font-size: 12px; color: var(--muted); padding: 10px 2px; }
 
 /* ==========================================================================
    [개편] 방목록 카드 — 보딩패스(탑승권) 카드 (t18 확정)
@@ -749,7 +679,37 @@ body.dark-mode #room-preview-modal .share-btn { color: #0a0f0c; }
 .tk-cell-val.accent { color: #1b4332; }
 .tk-cell-val.empty { display: flex; align-items: center; gap: 5px; font-weight: 700; color: #8a9a5a; margin-top: 1px; }
 .tk-perf { position: relative; border-top: 2px dashed #e6dfcf; margin: 0 12px; }
-.tk-stub { padding: 9px 15px 12px; display: flex; align-items: center; justify-content: space-between; }
+.tk-stub { padding: 9px 15px 12px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
+.tk-stub:hover .tk-enter { text-decoration: underline; }
+
+/* 입장 순간 "찍히는" 탑승 스탬프 연출 */
+.tk-stamp {
+  position: absolute; top: 50%; left: 50%; z-index: 20; pointer-events: none;
+  width: 108px; height: 108px; border-radius: 50%;
+  border: 3px double #2f7d4f; color: #2f7d4f;
+  background: rgba(226, 242, 234, .28);
+  box-shadow: inset 0 0 0 5px rgba(47, 125, 79, .10);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  opacity: 0; transform: translate(-50%, -50%) rotate(-15deg) scale(2.6);
+}
+.tk-stamp .st-main { font-size: 19px; font-weight: 900; letter-spacing: 1px; }
+.tk-stamp .st-sub  { font-size: 8.5px; font-weight: 800; letter-spacing: 2px; opacity: .85; }
+.tk-stamp.go { animation: tkStampIn .48s cubic-bezier(.2, .85, .25, 1.1) forwards; }
+@keyframes tkStampIn {
+  0%   { opacity: 0;  transform: translate(-50%, -50%) rotate(-15deg) scale(2.6); }
+  55%  { opacity: 1;  transform: translate(-50%, -50%) rotate(-15deg) scale(.88); }
+  70%  { transform: translate(-50%, -50%) rotate(-15deg) scale(1.03); }
+  100% { opacity: 1;  transform: translate(-50%, -50%) rotate(-15deg) scale(1); }
+}
+.room-card.stamping .tk-body { animation: tkStampPress .48s ease; }
+@keyframes tkStampPress {
+  0%, 45% { filter: none; }
+  56% { filter: brightness(.93); }
+  100% { filter: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tk-stamp.go { animation: none; opacity: 1; transform: translate(-50%, -50%) rotate(-15deg) scale(1); }
+}
 .tk-barcode { display: flex; align-items: flex-end; gap: 1.5px; height: 20px; }
 .tk-barcode i { display: block; width: 2px; height: 20px; background: #2a3a32; }
 .tk-enter { font-size: 11px; font-weight: 800; color: #357a58; cursor: pointer; }
@@ -851,7 +811,7 @@ ClovProfileModal.init();
     <!-- 편집 모드 안내 -->
     <div class="edit-banner" id="edit-banner">
       <i class="ti ti-grip-vertical"></i>
-      카드를 길게 누르거나 드래그해서 순서를 바꿀 수 있어요 · 연필 버튼으로 정보를 수정하세요
+      카드를 길게 누르거나 드래그해서 순서를 바꿀 수 있어요 · 방 정보 수정은 카드를 열고 ⚙️에서 할 수 있어요
     </div>
 
     <!-- 요청한 방 (A-1) — 있을 때만 표시 -->
@@ -953,6 +913,14 @@ ClovProfileModal.init();
           <span class="ed-chip" id="rp-ed-chip-upload" onclick="document.getElementById('rp-ed-photo-file').click()"><i class="ti ti-upload"></i> 업로드</span>
         </div>
         <div id="rp-mem-picker" style="display:none"></div>
+
+        <div class="ed-lbl">이동수단 <span class="h mute">보딩패스 카드 아이콘</span></div>
+        <div class="ed-chips" id="rp-ed-vehicles">
+          <span class="ed-chip" data-veh="plane" onclick="rpSelectVehicle('plane')"><i class="ti ti-plane"></i> 비행기</span>
+          <span class="ed-chip" data-veh="bus"   onclick="rpSelectVehicle('bus')"><i class="ti ti-bus"></i> 시외버스</span>
+          <span class="ed-chip" data-veh="ship"  onclick="rpSelectVehicle('ship')"><i class="ti ti-ship"></i> 배</span>
+          <span class="ed-chip" data-veh="train" onclick="rpSelectVehicle('train')"><i class="ti ti-train"></i> 기차</span>
+        </div>
 
         <div class="ed-lbl">우정공간 이름 <span class="h">바꾸면 멤버에게 알림</span></div>
         <input class="ed-in" id="rp-ed-name" maxlength="20" placeholder="방 이름 (2~20자)">
@@ -1117,11 +1085,20 @@ const TICKET_TONES = [
   { grad: 'linear-gradient(150deg,#1f6b6b,#0f3d3d)', kick: '#9ecfcf' }, // 틸
   { grad: 'linear-gradient(150deg,#4a6b3a,#2a4020)', kick: '#c1d3a5' }, // 올리브
 ];
-const TICKET_ICONS = ['ti-plane', 'ti-calendar-heart', 'ti-camera', 'ti-map-pin'];
 const AVATAR_COLORS = ['var(--primary)', '#357a58', '#6a7e73', '#52b788'];
 
+/* 방 설정에서 고르는 이동수단 — 보딩패스 카드 중앙 아이콘 */
+const VEHICLES = [
+  { key: 'plane', icon: 'ti-plane', label: '비행기' },
+  { key: 'bus',   icon: 'ti-bus',   label: '시외버스' },
+  { key: 'ship',  icon: 'ti-ship',  label: '배' },
+  { key: 'train', icon: 'ti-train', label: '기차' },
+];
+function vehicleIcon(key) { const v = VEHICLES.find(x => x.key === key); return v ? v.icon : 'ti-plane'; }
+// 방마다 이동수단 기본값(설정에서 변경 가능) — VEHICLES 정의 뒤에서 시드
+rooms.forEach(r => { if (!r.vehicle) r.vehicle = VEHICLES[r.id % VEHICLES.length].key; });
+
 function ticketTone(id) { return TICKET_TONES[id % TICKET_TONES.length]; }
-function ticketIcon(id) { return TICKET_ICONS[id % TICKET_ICONS.length]; }
 function shortDest(label) { return (label || '').split(/\s+/)[0].slice(0, 6); }
 
 /* 방 id 기반 결정적 스카이라인 막대 (재렌더 시 흔들리지 않도록 seed 고정) */
@@ -1180,6 +1157,8 @@ let requestedRooms = [
   { id:'req4', code:'CLOV-6210', name:'사진 워크숍',    status:'pending',  requestedAt: Date.now()-8*86400000,   invitedBy:'박서준', membersPreview:6 },
 ];
 let reqSeq = 5;
+let reqPage = 1;                 // 요청한 방 섹션 현재 페이지
+const REQ_PER_PAGE = 3;          // 한 줄(데스크톱 3열) 단위로 페이지 넘김
 
 // A-7: 가입 요청 7일 자동 만료 (전원 잠수 시 무한 대기 방지)
 const REQ_EXPIRE_MS = 7 * 24 * 60 * 60 * 1000;
@@ -1194,7 +1173,13 @@ function renderRequestedRooms() {
   if (!requestedRooms.length) { wrap.innerHTML = ''; wrap.style.display = 'none'; return; }
   wrap.style.display = '';
 
-  const cards = requestedRooms.map(q => {
+  const totalPages = Math.max(1, Math.ceil(requestedRooms.length / REQ_PER_PAGE));
+  if (reqPage > totalPages) reqPage = totalPages;
+  if (reqPage < 1) reqPage = 1;
+  const startIdx = (reqPage - 1) * REQ_PER_PAGE;
+  const pageItems = requestedRooms.slice(startIdx, startIdx + REQ_PER_PAGE);
+
+  const cards = pageItems.map(q => {
     const title = q.name || q.code;
     const st = effectiveReqStatus(q);
 
@@ -1243,7 +1228,22 @@ function renderRequestedRooms() {
     </div>`;
   }).join('');
 
-  wrap.innerHTML = `<div class="req-head"><i class="ti ti-mailbox"></i> 요청한 방</div><div class="req-grid">${cards}</div>`;
+  wrap.innerHTML = `<div class="req-head"><i class="ti ti-mailbox"></i> 요청한 방</div><div class="req-grid">${cards}</div>${renderReqPagerHTML(totalPages)}`;
+}
+
+function renderReqPagerHTML(totalPages) {
+  if (totalPages <= 1) return '';
+  let btns = `<button class="page-btn" ${reqPage === 1 ? 'disabled' : ''} onclick="goReqPage(${reqPage - 1})"><i class="ti ti-chevron-left"></i></button>`;
+  for (let i = 1; i <= totalPages; i++) {
+    btns += `<button class="page-btn${i === reqPage ? ' active' : ''}" onclick="goReqPage(${i})">${i}</button>`;
+  }
+  btns += `<button class="page-btn" ${reqPage === totalPages ? 'disabled' : ''} onclick="goReqPage(${reqPage + 1})"><i class="ti ti-chevron-right"></i></button>`;
+  return `<div class="pagination req-pagination">${btns}</div>`;
+}
+
+function goReqPage(p) {
+  reqPage = p;
+  renderRequestedRooms();
 }
 
 function cancelRequest(reqId) {
@@ -1395,7 +1395,7 @@ function renderList() {
     }
 
     const tone   = ticketTone(room.id);
-    const rIcon  = ticketIcon(room.id);
+    const rIcon  = vehicleIcon(room.vehicle);
     const memCnt = room.members ? room.members.length : 1;
     const avMini = `<span class="tk-av" style="background:var(--primary)">나</span>`
       + (memCnt > 1 ? `<span class="tk-av" style="background:#6a7e73">+${memCnt - 1}</span>` : '');
@@ -1422,9 +1422,6 @@ function renderList() {
     card.innerHTML = `
       <div class="drag-handle" title="드래그해서 순서 변경"></div>
       <div class="edit-controls">
-        <button class="edit-mod-btn" onclick="event.stopPropagation();openEditModal(${room.id})" title="방 프로필 편집">
-          <i class="ti ti-pencil"></i>
-        </button>
         <button class="edit-del-btn" onclick="event.stopPropagation();deleteRoom(${room.id})" title="삭제">
           <i class="ti ti-trash"></i>
         </button>
@@ -1438,7 +1435,7 @@ function renderList() {
             <div class="tk-code">CLOV</div>
           </div>
           <div class="tk-mid" style="color:${tone.kick}">┈<i class="ti ${rIcon}" style="color:#fff;font-size:13px"></i>┈</div>
-          <div class="tk-dest" onclick="event.stopPropagation();enterRoom(${room.id})" style="cursor:pointer" title="약속 바로가기">
+          <div class="tk-dest" onclick="enterRoomStamp(${room.id}, event)" style="cursor:pointer" title="약속 바로가기">
             <div class="tk-kick" style="color:${tone.kick}">${destKick}</div>
             <div class="tk-code" style="font-size:${destFs}">${destVal}</div>
           </div>
@@ -1458,9 +1455,9 @@ function renderList() {
       ${detailGrid}
 
       <div class="tk-perf"></div>
-      <div class="tk-stub">
+      <div class="tk-stub" onclick="enterRoomStamp(${room.id}, event)" title="입장하기">
         <div class="tk-barcode">${buildBarcode()}</div>
-        <span class="tk-enter" onclick="event.stopPropagation();enterRoom(${room.id})">입장 ›</span>
+        <span class="tk-enter">입장 ›</span>
       </div>
       </div>
     `;
@@ -1513,6 +1510,8 @@ function closeRoomSuccessModal() {
 let previewRoomId     = null;
 let rpEditPhotoSrc    = null;      // 편집 중 업로드한 새 사진 dataURL
 let rpEditPhotoSource = 'theme';   // theme | memory | upload
+let rpEditPhotoMemId  = null;      // 편집 중 '추억에서' 고른 추억 id (폴백 판정용)
+let rpEditVehicle     = null;      // 편집 중 고른 이동수단 key
 
 function ensureRoomCode(room) {
   if (!room.code) room.code = 'CLOV-' + String(1000 + (room.id * 837) % 9000);
@@ -1613,7 +1612,9 @@ function openRoomEditView() {
   const room = rooms.find(r => r.id === previewRoomId);
   if (!room) return;
   rpEditPhotoSrc    = null;
-  rpEditPhotoSource = !room.photo ? 'theme' : (String(room.photo).indexOf('data:image/svg') === 0 ? 'memory' : 'upload');
+  rpEditPhotoMemId  = room.photoMemId || null;
+  rpEditPhotoSource = room.photoMemId ? 'memory'
+    : (!room.photo ? 'theme' : (String(room.photo).indexOf('data:image/svg') === 0 ? 'memory' : 'upload'));
 
   const box = document.getElementById('rp-ed-photo');
   box.innerHTML = (room.photo ? `<img src="${room.photo}" alt="">` : `<i class="ti ti-photo"></i>`)
@@ -1629,7 +1630,20 @@ function openRoomEditView() {
   document.getElementById('rp-ed-cnt').textContent = intro.length;
   document.getElementById('rp-ed-photo-file').value = '';
 
+  rpEditVehicle = room.vehicle || 'plane';
+  rpHighlightVehicle(rpEditVehicle);
+
   showRpView('edit');
+}
+
+function rpHighlightVehicle(key) {
+  document.querySelectorAll('#rp-ed-vehicles .ed-chip').forEach(chip =>
+    chip.classList.toggle('on', chip.dataset.veh === key));
+}
+
+function rpSelectVehicle(key) {
+  rpEditVehicle = key;
+  rpHighlightVehicle(key);
 }
 
 function rpHighlightPhotoChip(active) {
@@ -1644,32 +1658,86 @@ function memThumb(c1, c2, emoji) {
     "<rect width='160' height='160' fill='url(#g)'/><text x='80' y='98' font-size='62' text-anchor='middle'>" + emoji + "</text></svg>";
   return 'data:image/svg+xml,' + encodeURIComponent(svg);
 }
+/* 추억마다 안정적인 id 부여 → 대표사진과의 연결 고리(삭제 감지에 사용) */
 const MEMORY_PHOTOS = [
-  { src: memThumb('#5aa9e6', '#2c5f8a', '🏝️'), label: '제주 바다' },
-  { src: memThumb('#f6a96b', '#c1502e', '🎂'), label: '생일파티' },
-  { src: memThumb('#8bc34a', '#33691e', '🏕️'), label: '캠핑' },
-  { src: memThumb('#c98bd0', '#6a1b9a', '🌸'), label: '벚꽃놀이' },
-  { src: memThumb('#ff8a65', '#d84315', '🍜'), label: '맛집투어' },
-  { src: memThumb('#4db6ac', '#00695c', '📸'), label: '출사' },
+  { id: 'mem-jeju',    src: memThumb('#5aa9e6', '#2c5f8a', '🏝️'), label: '제주 바다' },
+  { id: 'mem-bday',    src: memThumb('#f6a96b', '#c1502e', '🎂'), label: '생일파티' },
+  { id: 'mem-camp',    src: memThumb('#8bc34a', '#33691e', '🏕️'), label: '캠핑' },
+  { id: 'mem-blossom', src: memThumb('#c98bd0', '#6a1b9a', '🌸'), label: '벚꽃놀이' },
+  { id: 'mem-food',    src: memThumb('#ff8a65', '#d84315', '🍜'), label: '맛집투어' },
+  { id: 'mem-photo',   src: memThumb('#4db6ac', '#00695c', '📸'), label: '출사' },
 ];
 
 function rpRenderMemoryPicker() {
   const box = document.getElementById('rp-mem-picker');
+  if (!MEMORY_PHOTOS.length) {
+    box.innerHTML = '<div class="rp-mem-hd"><i class="ti ti-photo-heart"></i> 추억피드에서 사진 고르기</div>' +
+      '<div class="rp-mem-empty">고를 수 있는 추억 사진이 없어요 · 테마 일러스트를 사용해요</div>';
+    return;
+  }
   box.innerHTML = '<div class="rp-mem-hd"><i class="ti ti-photo-heart"></i> 추억피드에서 사진 고르기</div>' +
     '<div class="rp-mem-grid">' +
-    MEMORY_PHOTOS.map((m, i) =>
-      `<button type="button" class="rp-mem-item${rpEditPhotoSrc === m.src ? ' sel' : ''}" onclick="rpPickMemoryPhoto(${i})" title="${m.label}"><img src="${m.src}" alt="${m.label}"><span>${m.label}</span></button>`
+    MEMORY_PHOTOS.map(m =>
+      `<div class="rp-mem-cell">
+         <button type="button" class="rp-mem-item${rpEditPhotoMemId === m.id ? ' sel' : ''}" data-mid="${m.id}" onclick="rpPickMemoryPhoto('${m.id}')" title="${m.label}"><img src="${m.src}" alt="${m.label}"><span>${m.label}</span></button>
+         <button type="button" class="rp-mem-del" onclick="event.stopPropagation();deleteMemoryPhoto('${m.id}')" title="이 추억 삭제 (대표사진 폴백 확인용)">✕</button>
+       </div>`
     ).join('') + '</div>';
 }
 
-function rpPickMemoryPhoto(i) {
-  const m = MEMORY_PHOTOS[i];
+function rpPickMemoryPhoto(id) {
+  const m = MEMORY_PHOTOS.find(x => x.id === id);
   if (!m) return;
   rpEditPhotoSrc    = m.src;
+  rpEditPhotoMemId  = m.id;
   rpEditPhotoSource = 'memory';
   document.getElementById('rp-ed-photo').innerHTML = `<img src="${m.src}" alt=""><span class="chg"><i class="ti ti-camera"></i> 변경</span>`;
   rpHighlightPhotoChip('memory');
-  document.querySelectorAll('#rp-mem-picker .rp-mem-item').forEach((el, idx) => el.classList.toggle('sel', idx === i));
+  document.querySelectorAll('#rp-mem-picker .rp-mem-item').forEach(el => el.classList.toggle('sel', el.dataset.mid === id));
+}
+
+/* A-8: 대표사진이 '추억에서 고른' 원본인데 그 추억이 삭제되면 → 테마 일러스트로 자동 폴백 */
+function resolveRoomPhoto(room) {
+  if (room.photoMemId && !MEMORY_PHOTOS.some(m => m.id === room.photoMemId)) {
+    room.photo = null;
+    room.photoMemId = null;
+    room.activityExtra = room.activityExtra || [];
+    room.activityExtra.unshift({
+      type: 'edit', title: `<span class="who">대표사진</span>이 원본 추억 삭제로 테마 일러스트로 바뀌었어요`,
+      desc: '', time: '방금', unread: true, ts: Date.now(),
+    });
+    return true;
+  }
+  return false;
+}
+
+/* 데모: 추억피드 사진 삭제 이벤트 시뮬레이션 → 이 사진을 쓰던 방들이 테마로 폴백 */
+function deleteMemoryPhoto(id) {
+  const idx = MEMORY_PHOTOS.findIndex(m => m.id === id);
+  if (idx < 0) return;
+  const label = MEMORY_PHOTOS[idx].label;
+  MEMORY_PHOTOS.splice(idx, 1);
+
+  // 편집 중 이 추억을 고른 상태였다면 미리보기를 테마로 되돌림
+  if (rpEditPhotoMemId === id) {
+    rpEditPhotoSrc = null; rpEditPhotoMemId = null; rpEditPhotoSource = 'theme';
+    const ph = document.getElementById('rp-ed-photo');
+    if (ph) ph.innerHTML = `<i class="ti ti-photo"></i><span class="chg"><i class="ti ti-camera"></i> 변경</span>`;
+    rpHighlightPhotoChip('theme');
+  }
+
+  // 이 추억을 대표사진으로 쓰던 모든 방을 테마로 폴백
+  let affected = 0;
+  rooms.forEach(r => { if (resolveRoomPhoto(r)) affected++; });
+
+  rpRenderMemoryPicker();
+  renderList();
+  clovToast(
+    affected
+      ? `'${label}' 추억을 삭제했어요 · 이 사진을 쓰던 우정공간 ${affected}곳이 테마로 바뀌었어요 🎨`
+      : `'${label}' 추억을 삭제했어요`,
+    'info'
+  );
 }
 
 function rpSelectPhotoSource(src) {
@@ -1682,6 +1750,7 @@ function rpSelectPhotoSource(src) {
   document.getElementById('rp-mem-picker').style.display = 'none';   // 다른 소스 선택 시 피커 숨김
   if (src === 'theme') {
     rpEditPhotoSrc    = null;
+    rpEditPhotoMemId  = null;
     rpEditPhotoSource = 'theme';
     document.getElementById('rp-ed-photo').innerHTML = `<i class="ti ti-photo"></i><span class="chg"><i class="ti ti-camera"></i> 변경</span>`;
     rpHighlightPhotoChip('theme');
@@ -1694,6 +1763,7 @@ function rpEditPhotoUpload(input) {
   const reader = new FileReader();
   reader.onload = e => {
     rpEditPhotoSrc    = e.target.result;
+    rpEditPhotoMemId  = null;
     rpEditPhotoSource = 'upload';
     document.getElementById('rp-mem-picker').style.display = 'none';
     document.getElementById('rp-ed-photo').innerHTML =
@@ -1715,8 +1785,13 @@ function saveRoomProfile() {
   const changes = [];
   if (newName !== room.name) changes.push('이름');
   if (newIntro !== prevIntro) changes.push('소개글');
-  if (rpEditPhotoSource === 'theme' && room.photo) { room.photo = null; changes.push('대표사진'); }
-  if (rpEditPhotoSrc) { room.photo = rpEditPhotoSrc; changes.push('대표사진'); }
+  if (rpEditPhotoSource === 'theme' && room.photo) { room.photo = null; room.photoMemId = null; changes.push('대표사진'); }
+  if (rpEditPhotoSrc) {
+    room.photo = rpEditPhotoSrc;
+    room.photoMemId = (rpEditPhotoSource === 'memory') ? rpEditPhotoMemId : null;
+    changes.push('대표사진');
+  }
+  if (rpEditVehicle && rpEditVehicle !== room.vehicle) { room.vehicle = rpEditVehicle; changes.push('이동수단'); }
 
   room.name  = newName;
   room.intro = newIntro || '소개글을 아직 안 적었어요';
@@ -1795,6 +1870,25 @@ function enterRoom(id) {
   room.newPosts = 0;
   window.location.href = `../02-main/index.html?roomId=${id}&roomName=${encodeURIComponent(room.name)}&roomCode=${encodeURIComponent(room.code || 'CLOV-' + (1000 + (id * 837) % 9000))}`;
 }
+
+/* 입장 영역 클릭 → 티켓이 "찍히는" 탑승 스탬프 연출 후 입장 */
+let _entering = false;
+function enterRoomStamp(id, ev) {
+  if (ev) ev.stopPropagation();
+  if (_entering) return;
+  const card = (ev && ev.currentTarget) ? ev.currentTarget.closest('.room-card') : null;
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!card || reduce) { enterRoom(id); return; }   // 카드 못 찾거나 모션 최소화면 바로 입장
+
+  _entering = true;
+  const stamp = document.createElement('div');
+  stamp.className = 'tk-stamp';
+  stamp.innerHTML = '<span class="st-main">✓ 탑승</span><span class="st-sub">CLOV BOARDING</span>';
+  card.appendChild(stamp);
+  card.classList.add('stamping');
+  requestAnimationFrame(() => stamp.classList.add('go'));   // 리플로우 후 애니메이션 시작
+  setTimeout(() => enterRoom(id), 720);
+}
 /* A-6/A-7: 코드 입력 → 즉시 입장이 아니라 "가입 신청(수락대기)". 예외 규칙 처리. */
 function enterByCode() {
   const code = document.getElementById('room-code-input').value.trim().toUpperCase();
@@ -1833,11 +1927,12 @@ function enterByCode() {
     clovToast('다시 입장 요청을 보냈어요 · 수락을 기다려요 ⏳', 'success');
     return;
   }
-  // 신규 가입 신청 (수락 대기)
+  // 신규 가입 신청 (수락 대기) — 방금 보낸 요청이 보이도록 첫 페이지로
   requestedRooms.unshift({
     id: 'req' + (reqSeq++), code, name: null, status: 'pending',
     requestedAt: Date.now(), invitedBy: null, membersPreview: 2 + (code.length % 5),
   });
+  reqPage = 1;
   renderRequestedRooms();
   clovToast('입장 요청을 보냈어요 · 멤버 1명이 수락하면 들어갈 수 있어요 🙌', 'success');
 }
@@ -2038,6 +2133,7 @@ function createRoom() {
     intro: intro || '소개글을 아직 안 적었어요',
     lastActive: '방금', dday: null, fav: false, newPosts: 0,
     photo: newCreatePhotoSrc || null, createdAt: new Date(),
+    vehicle: 'plane',   // 기본 이동수단(설정에서 변경 가능)
     members: ['나'],   // 생성자가 유일 멤버 → 나가면 30일 잠자기(A-3)
   });
   document.getElementById('success-title').textContent = `"${name}" 이 만들어졌어요!`;
