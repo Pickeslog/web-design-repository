@@ -4,10 +4,10 @@
     <title>Clov. - 디자인 미리보기 &amp; 프로토타입</title>
     <link rel="icon" type="image/png" href="../assets/ai-style/clov_logo_half_leaf_cartoon_transparent.png">
     <link rel="stylesheet" href="styles/base.css?v=1">
-    <link rel="stylesheet" href="styles/space.css?v=1">
-    <link rel="stylesheet" href="styles/feed.css?v=1">
+    <link rel="stylesheet" href="styles/space.css?v=8">
+    <link rel="stylesheet" href="styles/feed.css?v=2">
     <link rel="stylesheet" href="styles/letter.css?v=1">
-    <link rel="stylesheet" href="styles/schedule.css?v=1">
+    <link rel="stylesheet" href="styles/schedule.css?v=2">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Gothic+A1:wght@400;500;700;800;900&display=swap" rel="stylesheet">
@@ -315,7 +315,8 @@ body.dark-mode .member-highlight-card {
                                     <div class="rich-editor-content" id="dt-input-schedule-body" contenteditable="true" placeholder="약속에 대한 계획, 준비물, 메모 등을 자유롭게 적어보세요."></div>
                                 </div>
                             </div>
-                            <div class="modal-buttons">
+                            <div class="modal-buttons" style="display: flex; align-items: center; width: 100%;">
+                                <button type="button" id="dt-schedule-modal-delete-btn" style="display:none; margin-right:auto; padding: 10px 18px; border-radius: 8px; border: 1px solid rgba(214, 48, 49, 0.3); background: #fff5f5; color: #d63031; font-weight: 600; cursor: pointer; transition: all 0.2s;" onclick="deleteScheduleFromModal('dt')">삭제</button>
                                 <button class="btn-sub" onclick="closeModal('dt-schedule-modal')">취소</button>
                                 <button class="btn-main" onclick="saveSchedule('dt')">저장하기</button>
                             </div>
@@ -422,10 +423,10 @@ body.dark-mode .member-highlight-card {
 
 <script src="js/data.js?v=1"></script>
 <script src="js/utils.js?v=1"></script>
-<script src="js/space.js?v=1"></script>
+<script src="js/space.js?v=5"></script>
 <script src="js/feed.js?v=1"></script>
 <script src="js/letter.js?v=1"></script>
-<script src="js/schedule.js?v=1"></script>
+<script src="js/schedule.js?v=5"></script>
 <script src="js/fourcut.js?v=3"></script>
 <script src="js/v5-banner.js?v=1"></script>
 <script src="js/croby-mascot.js?v=1"></script>

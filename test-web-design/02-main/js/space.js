@@ -25,7 +25,7 @@
                         clearInterval(window._coverflowTimer);
                         window._coverflowTimer = null;
                     }
-                }, 45);
+                }, 120);
                 return;
             }
 
@@ -553,11 +553,12 @@
             const filmFrames = [...posts].reverse().map((post, reverseIndex) => {
                 const postIndex = total - 1 - reverseIndex;
                 const isCurrent = postIndex === currentIndex;
-                const thumb = post.bg
+                const hasPhoto = post.bg && String(post.bg).trim();
+                const thumb = hasPhoto
                     ? `<img src="${escapeHtml(post.bg)}" alt="${escapeHtml(post.title)}">`
-                    : '';
+                    : `<div class="cline-film-no-photo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"/><path d="m4 18 4-4 3 2 4-5 5 4"/></svg></div>`;
                 return `
-                    <button class="cline-film-frame ${isCurrent ? 'is-current' : ''}" type="button" onclick="setEvidenceIndex(${postIndex})" aria-label="${escapeHtml(post.title)} 보기">
+                    <button class="cline-film-frame ${isCurrent ? 'is-current' : ''} ${!hasPhoto ? 'is-no-photo' : ''}" type="button" onclick="setEvidenceIndex(${postIndex})" aria-label="${escapeHtml(post.title)} 보기">
                         ${thumb}
                     </button>
                 `;
@@ -642,29 +643,68 @@
                     }
                 }
             }, { passive: false });
+
+            // 3D 공간 원근감 게시물 호버링 (오른쪽/왼쪽 방향에 맞춘 동적 입체 회전)
+            window.addEventListener('pointermove', (e) => {
+                const slotOrCard = e.target.closest('.cline-card-slot, .polaroid-fan-slot, .cline-slot, .cline-polaroid, .polaroid-card');
+                const card = slotOrCard ? (slotOrCard.matches('.cline-polaroid, .polaroid-card') ? slotOrCard : slotOrCard.querySelector('.cline-polaroid, .polaroid-card')) : null;
+                if (window._hovered3DCard && window._hovered3DCard !== card) {
+                    window._hovered3DCard.style.setProperty('--rotateX', '0deg');
+                    window._hovered3DCard.style.setProperty('--rotateY', '0deg');
+                    window._hovered3DCard.classList.remove('is-3d-hovering');
+                    const slot = window._hovered3DCard.closest('.cline-card-slot, .polaroid-fan-slot, .cline-slot');
+                    if (slot) slot.classList.remove('is-3d-hovering');
+                    window._hovered3DCard = null;
+                }
+                if (card) {
+                    window._hovered3DCard = card;
+                    // 회전/이동으로 변형되는 카드 대신 고정된 부모 슬롯을 기준으로 좌표계 계산하여 떨림(Jittering) 방지
+                    const refEl = card.closest('.cline-card-slot, .polaroid-fan-slot, .cline-slot') || card.parentElement || card;
+                    const rect = refEl.getBoundingClientRect();
+                    const centerX = rect.left + rect.width / 2;
+                    const centerY = rect.top + rect.height / 2;
+                    const normX = Math.max(-1, Math.min(1, (e.clientX - centerX) / (rect.width / 2)));
+                    const normY = Math.max(-1, Math.min(1, (e.clientY - centerY) / (rect.height / 2)));
+                    
+                    // 마우스가 오른쪽으로 가면 우측이 기울고 왼쪽으로 가면 좌측이 기울도록 설정 (최대 ±18도 / ±15도)
+                    const rotateY = normX * 18;
+                    const rotateX = -normY * 15;
+                    
+                    card.style.setProperty('--rotateX', `${rotateX.toFixed(2)}deg`);
+                    card.style.setProperty('--rotateY', `${rotateY.toFixed(2)}deg`);
+                    card.classList.add('is-3d-hovering');
+                    const slot = card.closest('.cline-card-slot, .polaroid-fan-slot, .cline-slot');
+                    if (slot) slot.classList.add('is-3d-hovering');
+                }
+            });
+            window.addEventListener('pointerout', (e) => {
+                if (window._hovered3DCard && !e.relatedTarget?.closest?.('.cline-card-slot, .polaroid-fan-slot, .cline-slot, .cline-polaroid, .polaroid-card')) {
+                    window._hovered3DCard.style.setProperty('--rotateX', '0deg');
+                    window._hovered3DCard.style.setProperty('--rotateY', '0deg');
+                    window._hovered3DCard.classList.remove('is-3d-hovering');
+                    const slot = window._hovered3DCard.closest('.cline-card-slot, .polaroid-fan-slot, .cline-slot');
+                    if (slot) slot.classList.remove('is-3d-hovering');
+                    window._hovered3DCard = null;
+                }
+            });
         }
 
         function renderEvidenceViewers() {
             const dtZone = document.getElementById('dt-space-memory-zone');
             const mbZone = document.getElementById('mb-space-memory-zone');
+            const dtFramesOld = document.getElementById('dt-cline-film-frames');
+            const mbFramesOld = document.getElementById('mb-cline-film-frames');
+            const dtScrollLeft = dtFramesOld ? dtFramesOld.scrollLeft : null;
+            const mbScrollLeft = mbFramesOld ? mbFramesOld.scrollLeft : null;
+
             if (dtZone) dtZone.innerHTML = renderEvidenceViewer('desktop');
             if (mbZone) mbZone.innerHTML = renderEvidenceViewer('mobile');
             initEvidenceInteractions();
-            requestAnimationFrame(() => {
-                document.querySelectorAll('.cline-film-frame.is-current').forEach(frame => {
-                    frame.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-                });
-            });
-            if (!window._evidenceResizeBound) {
-                window._evidenceResizeBound = true;
-                window.addEventListener('resize', () => {
-                    requestAnimationFrame(() => {
-                        document.querySelectorAll('.cline-film-frame.is-current').forEach(frame => {
-                            frame.scrollIntoView({ behavior: 'instant', block: 'nearest', inline: 'center' });
-                        });
-                    });
-                });
-            }
+
+            const dtFramesNew = document.getElementById('dt-cline-film-frames');
+            const mbFramesNew = document.getElementById('mb-cline-film-frames');
+            if (dtFramesNew && dtScrollLeft !== null) dtFramesNew.scrollLeft = dtScrollLeft;
+            if (mbFramesNew && mbScrollLeft !== null) mbFramesNew.scrollLeft = mbScrollLeft;
         }
 
         // 4. 피드 리스트 동적 렌더링 함수

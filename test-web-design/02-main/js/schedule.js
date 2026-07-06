@@ -46,8 +46,9 @@
             const bodyInput = document.getElementById(`${prefix}-input-schedule-body`);
             const idInput = document.getElementById(`${prefix}-input-schedule-id`);
 
+            const deleteBtn = document.getElementById(`${prefix}-schedule-modal-delete-btn`) || document.getElementById('dt-schedule-modal-delete-btn');
             const schedule = (scheduleId !== undefined && scheduleId !== null)
-                ? (groupsData[activeGroup].schedules || []).find(s => s.id === scheduleId)
+                ? (groupsData[activeGroup].schedules || []).find(s => s.id == scheduleId)
                 : null;
 
             if (schedule) {
@@ -57,6 +58,7 @@
                 if (dateInput) { dateInput.value = schedule.date; dateInput.min = getTodayDateStr(); }
                 if (bodyInput) bodyInput.innerHTML = schedule.content || '';
                 if (idInput) idInput.value = schedule.id;
+                if (deleteBtn) deleteBtn.style.display = 'inline-block';
             } else {
                 if (modalTitle) modalTitle.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>다가오는 약속, D-day 새로 세기';
                 if (titleInput) titleInput.value = '';
@@ -64,6 +66,7 @@
                 if (dateInput) { dateInput.value = ''; dateInput.min = getTodayDateStr(); }
                 if (bodyInput) bodyInput.innerHTML = '';
                 if (idInput) idInput.value = '';
+                if (deleteBtn) deleteBtn.style.display = 'none';
             }
 
             openModal(`${prefix}-schedule-modal`);
@@ -126,9 +129,11 @@
         function deleteSchedule(scheduleId) {
             clovConfirm('정말 이 약속을 삭제하시겠습니까?', () => {
                 const schedules = groupsData[activeGroup].schedules || [];
-                groupsData[activeGroup].schedules = schedules.filter(s => s.id !== scheduleId);
-                if (selectedScheduleIds[activeGroup] === scheduleId) selectedScheduleIds[activeGroup] = null;
+                groupsData[activeGroup].schedules = schedules.filter(s => s.id != scheduleId);
+                if (selectedScheduleIds[activeGroup] == scheduleId) selectedScheduleIds[activeGroup] = null;
                 updateScheduleUI();
+                closeModal('dt-schedule-modal');
+                closeModal('mb-schedule-modal');
                 clovToast('🗑️ 일정이 삭제되었어요.', 'info');
             }, { icon: '🗑️', type: 'error', confirmText: '삭제', cancelText: '취소' });
         }
@@ -713,7 +718,10 @@
                                 <span class="strip-kicker ${isComplete ? '' : 'is-shooting'}">${isComplete ? '' : '<span class="strip-kicker-dot"></span>'}${isComplete ? 'COMPLETE' : 'NOW SHOOTING'}</span>
                                 <span class="strip-title">${escapeHtml(sch.title)}</span>
                             </div>
-                            <span class="growth-dday-pill">${escapeHtml(ddayText)}</span>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <span class="growth-dday-pill">${escapeHtml(ddayText)}</span>
+                                <button class="strip-card-delete-btn" title="약속 삭제" onclick="event.stopPropagation(); deleteSchedule(${sch.id});"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg></button>
+                            </div>
                         </div>
                         <div class="strip-body">
                             <div class="strip-frames">${stageHtml}</div>
@@ -835,7 +843,24 @@
                 '</ul><p><br></p>';
             document.execCommand('insertHTML', false, scaffold);
         }
+        function deleteScheduleFromModal(viewType) {
+            const prefix = viewType === 'mb' ? 'mb' : 'dt';
+            const idInput = document.getElementById(`${prefix}-input-schedule-id`);
+            if (idInput && idInput.value !== '') {
+                const val = idInput.value;
+                const scheduleId = isNaN(Number(val)) ? val : Number(val);
+                deleteSchedule(scheduleId);
+            }
+        }
+
         window.insertScheduleSteps = insertScheduleSteps;
+        window.deleteSchedule = deleteSchedule;
+        window.deleteScheduleFromModal = deleteScheduleFromModal;
+        window.openScheduleModal = openScheduleModal;
+        window.saveSchedule = saveSchedule;
+        window.selectScheduleChip = selectScheduleChip;
+        window.toggleScheduleSidebar = toggleScheduleSidebar;
+        window.closeScheduleSidebar = closeScheduleSidebar;
 
         // 레벨이 오를수록 맨땅이었던 지면에 클로버가 하나둘 빽빽하게 자라나도록 채워주는 함수 (잡초 X, 전부 클로버)
         // 초기 실행 시 피드 데이터 및 우정 레벨 UI 로드

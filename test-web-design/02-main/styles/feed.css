@@ -176,7 +176,7 @@
 
         .feed-grid > .memory-card:nth-child(even) .polaroid-card:hover,
         .feed-grid > .polaroid-card:nth-child(even):hover {
-            transform: rotate(0deg) scale(1.015);
+            transform: rotate(0deg);
         }
 
         .feed-empty-state {
