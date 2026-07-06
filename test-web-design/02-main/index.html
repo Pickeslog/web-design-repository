@@ -134,6 +134,25 @@ body {
   padding: 14px 18px !important;
   box-shadow: none !important;
 }
+body.dark-mode .cover-summary {
+  background: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-color) !important;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.4) !important;
+}
+body.dark-mode .title-input-box {
+  background: var(--bg-light) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-color) !important;
+}
+body.dark-mode .title-input-box .editable-title {
+  color: var(--text-color) !important;
+}
+body.dark-mode .member-highlight-card {
+  background: var(--bg-light) !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-color) !important;
+}
 </style>
 <link rel="stylesheet" href="css/global-theme.css">
 <link rel="stylesheet" href="css/croby-mascot.css?v=1">
@@ -313,7 +332,7 @@ body {
                                     <span class="letter-stage-kicker">Mailbox</span>
                                     <h3>도착한 행운 편지</h3>
                                 </div>
-                                <button class="letter-modal-close" type="button" onclick="closeModal('dt-letter-inbox-modal')" aria-label="닫기">×</button>
+                                <button class="letter-modal-close" type="button" onclick="closeModal('dt-letter-inbox-modal')" aria-label="닫기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
                             </div>
                             <div class="letter-inbox-tabs">
                                 <button class="letter-filter-btn active" id="dt-letter-modal-filter-all" onclick="setLetterFilter('all')">전체</button>
@@ -333,8 +352,8 @@ body {
                     <div class="modal-overlay" id="dt-letter-detail-modal">
                         <div class="modal-box letter-detail-modal">
                             <div class="letter-preview letter-detail-paper">
-                                <button class="letter-paper-btn letter-paper-back" onclick="backToLetterInbox()" title="편지함으로 돌아가기">←</button>
-                                <button class="letter-paper-btn letter-paper-close" onclick="closeModal('dt-letter-detail-modal')" title="닫기">×</button>
+                                <button class="letter-paper-btn letter-paper-back" onclick="backToLetterInbox()" title="편지함으로 돌아가기"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg></button>
+                                <button class="letter-paper-btn letter-paper-close" onclick="closeModal('dt-letter-detail-modal')" title="닫기"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
                                 <h3 class="letter-detail-heading"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>행운편지</h3>
                                 <div id="dt-detail-letter-to" class="letter-detail-to"></div>
                                 <div id="dt-detail-letter-content" class="letter-detail-content"></div>
@@ -1159,10 +1178,44 @@ body.dark-mode .wm-submit { color: #0a0f0c; }
     var titleEl = document.getElementById('member-list-modal-title');
     if (titleEl) titleEl.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><circle cx="8" cy="8" r="3"/><path d="M2 20c0-3 2.5-5 6-5s6 2 6 5"/><circle cx="17" cy="9" r="2.3"/><path d="M15.2 14.6c2.3.5 3.6 2 3.8 4.4"/></svg>참여 멤버 상태메시지 (' + totalCount + '명)';
 
-    var mainCountEl = document.querySelector('.photo-card .cover-meta-item span');
-    if (mainCountEl && mainCountEl.textContent.indexOf('명 함께하는 중') !== -1) {
-      mainCountEl.textContent = totalCount + '명 함께하는 중';
+    document.querySelectorAll('.member-count-label, .cover-meta-item span').forEach(function(el) {
+      if (el.textContent && (el.textContent.indexOf('명 함께') !== -1 || el.classList.contains('member-count-label'))) {
+        el.textContent = totalCount + '명 함께하는 중';
+      }
+    });
+
+    var baseAvatars = [
+      { label: '나', bg: 'var(--primary-green)' },
+      { label: '솔', bg: '#52b788' },
+      { label: '민', bg: '#74c69d' },
+      { label: '준', bg: '#95d5b2' }
+    ];
+    var colors = ['#40916c', '#2d6a4f', '#52b788', '#74c69d', '#1b4332'];
+    var allAvatars = baseAvatars.concat(members.map(function(name, idx) {
+      return { label: name.charAt(0), bg: colors[idx % colors.length] };
+    }));
+
+    var displayAvatars = allAvatars.slice(0, 4);
+    if (allAvatars.length > 4) {
+      displayAvatars[3] = { label: '+' + (allAvatars.length - 3), bg: '#2b2d42', title: (allAvatars.length - 3) + '명 더 함께하는 중' };
     }
+
+    document.querySelectorAll('.member-avatar-overlap-group').forEach(function(group) {
+      var len = displayAvatars.length;
+      group.innerHTML = displayAvatars.map(function(av, idx) {
+        var zIndex = Math.max(1, len - idx);
+        var margin = idx === 0 ? '' : ' margin-left: -8px;';
+        var title = av.title || av.label;
+        return '<div style="width: 30px; height: 30px; border-radius: 50%; background: ' + av.bg + '; color: white; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; border: 1.5px solid white; z-index: ' + zIndex + ';' + margin + '" title="' + title + '">' + av.label + '</div>';
+      }).join('');
+    });
+
+    document.querySelectorAll('.cover-avatar-stack').forEach(function(stack) {
+      stack.innerHTML = displayAvatars.map(function(av) {
+        var title = av.title || av.label;
+        return '<span class="cover-avatar" title="' + title + '">' + av.label + '</span>';
+      }).join('');
+    });
 
     var container = document.getElementById('dynamic-members-container');
     if (!container) return;

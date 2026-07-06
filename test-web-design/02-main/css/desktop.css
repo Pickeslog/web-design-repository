@@ -2159,14 +2159,14 @@
             gap: 18px;
             align-items: center;
             margin-bottom: 16px;
-            padding: 16px;
+            padding: 18px 22px;
             border-radius: 24px;
             background:
-                radial-gradient(circle at 100% 0%, rgba(82, 183, 136, 0.24), transparent 36%),
-                linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.08));
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            box-shadow: 0 18px 38px rgba(8, 28, 22, 0.18);
-            backdrop-filter: blur(14px);
+                radial-gradient(circle at 100% 0%, rgba(82, 183, 136, 0.15), transparent 36%),
+                linear-gradient(135deg, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.82)) !important;
+            border: 1.5px solid rgba(255, 255, 255, 0.95);
+            box-shadow: 0 18px 38px rgba(8, 28, 22, 0.12);
+            backdrop-filter: blur(16px);
         }
 
         .feed-hero .section-title {
@@ -2178,7 +2178,7 @@
             display: block;
             font-size: 17px;
             font-weight: 900;
-            color: var(--text-color);
+            color: #1a1a1a !important;
             margin-bottom: 4px;
         }
 
@@ -2187,7 +2187,7 @@
             font-size: 12px;
             font-weight: 700;
             line-height: 1.45;
-            color: var(--text-muted);
+            color: #333333 !important;
         }
 
         .feed-hero-meta {
@@ -3149,6 +3149,22 @@
             visibility: hidden !important;
         }
 
+        /* ── 겹침 카드(coverflow) 방향성 슬라이드 전환 애니메이션 (@keyframes) ── */
+        .cline-viewer.theme-coverflow .cline-cards.slide-past {
+            animation: cf-deck-left 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .cline-viewer.theme-coverflow .cline-cards.slide-current {
+            animation: cf-deck-right 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes cf-deck-left {
+            0% { transform: translateX(38px); }
+            100% { transform: translateX(0); }
+        }
+        @keyframes cf-deck-right {
+            0% { transform: translateX(-38px); }
+            100% { transform: translateX(0); }
+        }
+
         /* ── 집게 SVG (빈티지 암실 필름 집게) ── */
         .cline-clip-svg {
             width: 28px;
@@ -3427,8 +3443,15 @@
         }
 
         .space-memory-preview .section-title {
-            justify-content: flex-start;
+            justify-content: space-between;
             gap: 14px;
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 12px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+            border: 1px solid rgba(82, 183, 136, 0.2);
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .space-memory-preview .section-actions {
@@ -3607,6 +3630,17 @@
             padding: 18px 0 14px;
             background: transparent;
             border-bottom: 1px solid rgba(82, 183, 136, 0.2);
+        }
+
+        .growth-hero > div:first-child {
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 14px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+            border: 1px solid rgba(82, 183, 136, 0.25);
+            width: fit-content;
+            max-width: 100%;
+            margin-bottom: 4px;
         }
 
         .growth-kicker {
@@ -5181,7 +5215,10 @@
         }
 
         body.dark-mode .journey-page-kicker {
-            color: #9ccc65;
+            color: #2e5233;
+        }
+        body.dark-mode .journey-page-title {
+            color: #1b4332;
         }
 
         /* 약속 여정 상세 카드 — 세이지 앨범 마운트에 붙인 포토부스 영수증 (인생4컷 레일과 톤 통일) */
@@ -7489,7 +7526,11 @@
             border-radius: 50%;
             background: var(--nav-item-bg-active);
             color: var(--primary-green);
-            font-size: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            line-height: 0;
             cursor: pointer;
         }
 
@@ -7501,6 +7542,8 @@
 
         .letter-inbox-list {
             display: grid;
+            grid-auto-rows: max-content;
+            align-content: start;
             gap: 10px;
             min-height: 278px;
         }
@@ -7508,10 +7551,12 @@
         .letter-inbox-card {
             position: relative;
             width: 100%;
+            height: 76px;
+            box-sizing: border-box;
             border: 1px solid rgba(255, 143, 179, 0.32);
             border-radius: 14px;
             background:
-                linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 240, 247, 0.92));
+                linear-gradient(-135deg, rgba(255, 255, 255, 0.95), rgba(255, 240, 247, 0.92));
             color: var(--text-color);
             padding: 16px 48px 16px 56px;
             text-align: left;
@@ -7567,6 +7612,9 @@
             font-size: 13px;
             line-height: 1.55;
             margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .letter-inbox-card .letter-favorite-btn {
@@ -7635,7 +7683,7 @@
             border-radius: 10px;
             background:
                 repeating-linear-gradient(180deg, transparent 0 30px, rgba(224, 86, 127, 0.08) 30px 31px),
-                linear-gradient(175deg, #fffaf2, #fff3e4);
+                linear-gradient(-175deg, #fffaf2, #fff3e4);
             box-shadow:
                 0 24px 48px rgba(224, 86, 127, 0.22),
                 inset 0 0 0 1px rgba(224, 86, 127, 0.14);
@@ -7662,11 +7710,11 @@
             border: 1px solid rgba(224, 86, 127, 0.3);
             background: rgba(255, 255, 255, 0.75);
             color: #b83f66;
-            font-size: 14px;
-            font-weight: 700;
             display: flex;
             align-items: center;
             justify-content: center;
+            padding: 0;
+            line-height: 0;
             cursor: pointer;
             z-index: 2;
             transition: background 0.15s ease, transform 0.15s ease;
@@ -7756,15 +7804,15 @@
         body.dark-mode .main-photo-card,
         body.dark-mode .letter-item,
         body.dark-mode .growth-card {
-            background: rgba(249, 253, 250, 0.96);
-            border-color: rgba(205, 228, 216, 0.82);
-            color: #24382f;
+            background: var(--card-bg);
+            border-color: var(--border-color);
+            color: var(--text-color);
         }
 
         /* 폴라로이드 카드: 다크모드에서도 크림빛 흰 종이 느낌 유지 */
         body.dark-mode .polaroid-card {
-            background: #f7f9f7;
-            color: #24382f;
+            background: var(--card-bg);
+            color: var(--text-color);
             box-shadow:
                 0 2px 4px rgba(0, 0, 0, 0.22),
                 0 12px 34px rgba(0, 0, 0, 0.36),
@@ -7775,13 +7823,29 @@
         body.dark-mode .polaroid-card .memory-date,
         body.dark-mode .polaroid-card .memory-subtitle,
         body.dark-mode .polaroid-card .presence-name-label {
-            color: #24382f;
+            color: var(--text-color);
         }
 
         body.dark-mode .cover-summary {
             background:
                 radial-gradient(circle at 100% 0%, rgba(82, 183, 136, 0.1), transparent 36%),
-                rgba(249, 253, 250, 0.94);
+                var(--card-bg);
+            border: 1px solid var(--border-color);
+        }
+        body.dark-mode .title-input-box {
+            background: var(--bg-light) !important;
+            border-color: var(--border-color) !important;
+            color: var(--text-color) !important;
+        }
+        body.dark-mode .cover-meta-item {
+            background: var(--bg-light) !important;
+            border-color: var(--border-color) !important;
+            color: var(--text-color) !important;
+        }
+        body.dark-mode .cover-avatar-stack .cover-avatar {
+            background: var(--bg-light) !important;
+            border-color: var(--border-color) !important;
+            color: var(--text-color) !important;
         }
 
         body.dark-mode .mobile-window .main-photo-card {
@@ -7806,13 +7870,73 @@
             color: #ffffff;
         }
 
-        body.dark-mode .section-title,
-        body.dark-mode .feed-title {
+        body.dark-mode .section-title {
             color: rgba(255, 255, 255, 0.96);
+        }
+        body.dark-mode .feed-title {
+            color: #1a1a1a !important;
         }
 
         body.dark-mode .feed-subtitle {
-            color: rgba(255, 255, 255, 0.66);
+            color: #333333 !important;
+        }
+
+        body.dark-mode .letter-stage {
+            background:
+                radial-gradient(circle at 50% 28%, rgba(214, 139, 68, 0.15), transparent 34%),
+                linear-gradient(180deg, rgba(20, 38, 29, 0.96), rgba(13, 28, 22, 0.9));
+            border-color: rgba(255, 255, 255, 0.14);
+            box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45);
+        }
+        body.dark-mode .letter-stage-kicker {
+            color: #9ccc65;
+        }
+        body.dark-mode .letter-stage-copy h2 {
+            color: #ffffff;
+        }
+        body.dark-mode .letter-stage-copy p {
+            color: rgba(235, 245, 240, 0.88);
+        }
+        body.dark-mode .letter-box-summary {
+            color: #ffffff;
+        }
+
+        /* 행운 편지 보관함 모달, 상세 편지지, 작성 카드 등 다크모드 텍스트 배경 어둡게 반전 */
+        body.dark-mode .letter-inbox-modal,
+        body.dark-mode .letter-detail-modal,
+        body.dark-mode .letter-write-card {
+            background: var(--card-bg) !important;
+            border-color: var(--border-color) !important;
+            color: var(--text-color) !important;
+        }
+        body.dark-mode .letter-inbox-card {
+            background:
+                linear-gradient(-135deg, rgba(28, 48, 38, 0.95), rgba(35, 25, 30, 0.92)) !important;
+            border-color: rgba(255, 143, 179, 0.22) !important;
+            color: var(--text-color) !important;
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35) !important;
+        }
+        body.dark-mode .letter-detail-paper {
+            background:
+                repeating-linear-gradient(180deg, transparent 0 30px, rgba(255, 143, 179, 0.08) 30px 31px),
+                linear-gradient(-175deg, #182820, #1f221e) !important;
+            border-color: rgba(255, 143, 179, 0.2) !important;
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 143, 179, 0.15) !important;
+            color: #f0f4f1 !important;
+        }
+        body.dark-mode .letter-detail-heading {
+            color: #ff9eba !important;
+            border-bottom-color: rgba(255, 143, 179, 0.3) !important;
+        }
+        body.dark-mode .letter-paper-btn {
+            background: rgba(30, 48, 38, 0.85) !important;
+            border-color: rgba(255, 143, 179, 0.3) !important;
+            color: #ff9eba !important;
+        }
+        body.dark-mode .letter-write-textarea {
+            background: var(--bg-light) !important;
+            border-color: var(--border-color) !important;
+            color: var(--text-color) !important;
         }
 
         body.dark-mode .growth-kicker {
@@ -7826,6 +7950,18 @@
 
         body.dark-mode .growth-subtitle {
             color: rgba(255, 255, 255, 0.66);
+        }
+
+        body.dark-mode .growth-hero > div:first-child {
+            background-color: rgba(30, 32, 22, 0.95);
+            border-color: rgba(156, 204, 101, 0.25);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        body.dark-mode .space-memory-preview .section-title {
+            background-color: rgba(30, 32, 22, 0.95);
+            border-color: var(--border-color);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         }
 
         body.dark-mode .cover-title-row .editable-title,
@@ -8564,9 +8700,12 @@
     .v5-scene[data-bg-theme]:not([data-bg-theme="field"]) .scene-mountains,
     .v5-scene[data-bg-theme]:not([data-bg-theme="field"]) .scene-ground,
     .v5-scene[data-bg-theme]:not([data-bg-theme="field"]) .scene-clover-field,
-    .v5-scene[data-bg-theme]:not([data-bg-theme="field"]) .scene-haze,
-    .v5-scene[data-bg-theme]:not([data-bg-theme="field"]) .v5-lp-loop {
+    .v5-scene[data-bg-theme]:not([data-bg-theme="field"]) .scene-haze {
       display: none;
+    }
+    /* 오른쪽 아래의 미니 LP 레코드 테이블(.v5-lp-loop)은 배경 사진에 턴테이블이 포함되어 있으므로 모든 테마에서 숨김 처리 */
+    .v5-scene .v5-lp-loop {
+      display: none !important;
     }
     /* 아래부터는 LP 턴테이블 벽지 전용 장식(레코드판, 트랙 칩) — 다른 벽지를 추가할 때
        이 장식까지 같이 나오길 원치 않으면 data-bg-theme="lp-turntable"로 계속 한정한다 */

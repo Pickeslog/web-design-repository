@@ -7,6 +7,7 @@
   position: fixed;
   right: 18px;
   bottom: 18px;
+  width: 140px; /* 말풍선 생성 시 캐릭터 위치가 좌우로 이동하는 현상 방지를 위한 고정 너비 */
   z-index: 9998; /* 테스트 패널(9999)보다 아래, 모달/토스트보다 아래 */
   display: flex;
   flex-direction: column;
@@ -40,13 +41,22 @@
 .croby--sleepy .croby-sprite { animation: croby-sleepy 4s ease-in-out infinite alternate; }
 
 .croby-bubble {
+  position: absolute;
+  bottom: 100%;
+  right: 12px;
+  margin-bottom: 6px;
+  width: max-content;
+  max-width: none;
+  white-space: nowrap;
   font-size: 13px;
-  background: #fff;
+  font-weight: 700;
+  background: #fff !important;
+  color: #2b2b2b !important;
   border: 1.5px solid #2b2b2b;
   border-radius: 10px;
-  padding: 3px 10px;
-  max-width: 190px;
+  padding: 4px 12px;
   text-align: center;
+  transform-origin: 80% 100%;
   animation: croby-bubble-pop 0.18s ease;
 }
 
@@ -92,6 +102,7 @@
   .croby-mascot {
     right: 12px;
     bottom: calc(64px + env(safe-area-inset-bottom) + 12px);
+    width: 80px;
     z-index: 50;
   }
   .croby-sprite { height: 80px; }

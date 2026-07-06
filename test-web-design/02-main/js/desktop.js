@@ -802,7 +802,30 @@ document.getElementById = function(id) {
             if (posts.length === 0) return;
             const previousIndex = getEvidenceIndex();
             const nextIndex = Math.min(Math.max(index, 0), posts.length - 1);
-            evidenceSlideDirection = nextIndex > previousIndex ? 'past' : nextIndex < previousIndex ? 'current' : 'idle';
+            if (previousIndex === nextIndex) return;
+
+            if (getEvidenceCardTheme() === 'coverflow' && Math.abs(nextIndex - previousIndex) > 1) {
+                if (window._coverflowTimer) clearInterval(window._coverflowTimer);
+                let currentStep = previousIndex;
+                const stepDir = nextIndex > previousIndex ? 1 : -1;
+                window._coverflowTimer = setInterval(() => {
+                    currentStep += stepDir;
+                    evidenceSlideDirection = stepDir > 0 ? 'past' : 'current';
+                    activeEvidenceIndexes[activeGroup] = currentStep;
+                    renderEvidenceViewers();
+                    if (currentStep === nextIndex) {
+                        clearInterval(window._coverflowTimer);
+                        window._coverflowTimer = null;
+                    }
+                }, 45);
+                return;
+            }
+
+            if (window._coverflowTimer) {
+                clearInterval(window._coverflowTimer);
+                window._coverflowTimer = null;
+            }
+            evidenceSlideDirection = nextIndex > previousIndex ? 'past' : 'current';
             activeEvidenceIndexes[activeGroup] = nextIndex;
             renderEvidenceViewers();
         }
@@ -1337,7 +1360,7 @@ document.getElementById = function(id) {
                     <div class="cline-stage">
                         <div class="cline-wire-area">
                             <div class="cline-wire"></div>
-                            <div class="cline-cards">
+                            <div class="cline-cards ${cardTheme === 'coverflow' && evidenceSlideDirection !== 'idle' ? 'slide-' + evidenceSlideDirection : ''}">
                                 ${viewType === 'desktop' && cardTheme === 'coverflow' ? makeSlot(+3, 'far-far-past') : ''}
                                 ${viewType === 'desktop' ? makeSlot(+2, 'far-past') : ''}
                                 ${makeSlot(+1, 'past')}

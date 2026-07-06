@@ -104,6 +104,11 @@
             text-align: center;
             margin-bottom: 8px;
             transition: color 0.3s ease;
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 12px 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px var(--shadow-color);
+            display: inline-block;
         }
 
         .preview-title p {
@@ -592,15 +597,15 @@
         body.dark-mode .main-photo-card,
         body.dark-mode .letter-item,
         body.dark-mode .growth-card {
-            background: rgba(249, 253, 250, 0.96);
-            border-color: rgba(205, 228, 216, 0.82);
-            color: #24382f;
+            background: var(--card-bg);
+            border-color: var(--border-color);
+            color: var(--text-color);
         }
 
         /* 폴라로이드 카드: 다크모드에서도 크림빛 흰 종이 느낌 유지 */
         body.dark-mode .polaroid-card {
-            background: #f7f9f7;
-            color: #24382f;
+            background: var(--card-bg);
+            color: var(--text-color);
             box-shadow:
                 0 2px 4px rgba(0, 0, 0, 0.22),
                 0 12px 34px rgba(0, 0, 0, 0.36),
@@ -611,13 +616,13 @@
         body.dark-mode .polaroid-card .memory-date,
         body.dark-mode .polaroid-card .memory-subtitle,
         body.dark-mode .polaroid-card .presence-name-label {
-            color: #24382f;
+            color: var(--text-color);
         }
 
         body.dark-mode .cover-summary {
             background:
                 radial-gradient(circle at 100% 0%, rgba(82, 183, 136, 0.1), transparent 36%),
-                rgba(249, 253, 250, 0.94);
+                var(--card-bg);
         }
 
         body.dark-mode .mobile-window .main-photo-card {
@@ -642,13 +647,15 @@
             color: #ffffff;
         }
 
-        body.dark-mode .section-title,
-        body.dark-mode .feed-title {
+        body.dark-mode .section-title {
             color: rgba(255, 255, 255, 0.96);
+        }
+        body.dark-mode .feed-title {
+            color: #1a1a1a !important;
         }
 
         body.dark-mode .feed-subtitle {
-            color: rgba(255, 255, 255, 0.66);
+            color: #333333 !important;
         }
 
         body.dark-mode .growth-kicker {
@@ -672,7 +679,7 @@
         body.dark-mode .letter-item,
         body.dark-mode .letter-item strong,
         body.dark-mode .growth-card-title {
-            color: #24382f;
+            color: var(--text-color);
             text-shadow: none;
         }
 
@@ -714,9 +721,9 @@
         body.dark-mode .my-record-box,
         body.dark-mode .participant-record,
         body.dark-mode .presence-tile {
-            background: rgba(255, 255, 255, 0.84);
-            border-color: rgba(198, 224, 211, 0.86);
-            color: #24382f;
+            background: var(--bg-light);
+            border-color: var(--border-color);
+            color: var(--text-color);
         }
 
         body.dark-mode .mobile-window .cover-meta-item {
@@ -747,21 +754,21 @@
 
         body.dark-mode .record-more-btn,
         body.dark-mode .memory-detail-close {
-            background: rgba(232, 243, 237, 0.96);
-            color: #1b4332;
+            background: var(--bg-light);
+            color: var(--text-color);
         }
 
         body.dark-mode .month-picker-trigger {
-            background: rgba(255, 255, 255, 0.86);
-            color: #1b4332;
-            border-color: rgba(198, 224, 211, 0.72);
+            background: var(--card-bg);
+            color: var(--text-color);
+            border-color: var(--border-color);
         }
 
         body.dark-mode .month-picker-trigger:hover,
         body.dark-mode .month-picker-trigger.active {
-            background: #e8f3ed;
-            color: #1b4332;
-            border-color: rgba(82, 183, 136, 0.7);
+            background: var(--nav-item-bg-active);
+            color: var(--primary-green);
+            border-color: var(--accent-green);
         }
 
         body.dark-mode .btn-lucky-write {
@@ -771,14 +778,14 @@
         }
 
         body.dark-mode .month-picker-popover {
-            background: rgba(247, 252, 249, 0.82);
-            border-color: rgba(255, 255, 255, 0.5);
+            background: var(--bg-light);
+            border-color: var(--border-color);
             box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
         }
 
         body.dark-mode .memory-detail-sheet {
-            background: linear-gradient(180deg, #ffffff 0%, #f4faf7 100%);
-            border-color: rgba(198, 224, 211, 0.95);
+            background: var(--card-bg);
+            border-color: var(--border-color);
         }
 
         body.dark-mode .memory-detail-title-lg,
@@ -789,7 +796,7 @@
         body.dark-mode .memory-message-text,
         body.dark-mode .memory-message-compose-input,
         body.dark-mode .memory-message-edit-input {
-            color: #24382f;
+            color: var(--text-color);
         }
 
         body.dark-mode .memory-detail-date,
@@ -804,19 +811,19 @@
         }
 
         body.dark-mode .schedule-banner {
-            background: rgba(241, 248, 244, 0.96);
-            border-color: rgba(198, 224, 211, 0.88);
+            background: var(--card-bg);
+            border-color: var(--border-color);
             box-shadow: 0 14px 34px rgba(0, 0, 0, 0.34);
         }
 
         body.dark-mode .schedule-banner:hover {
-            background: #ffffff;
-            border-color: rgba(82, 183, 136, 0.62);
+            background: var(--bg-light);
+            border-color: var(--accent-green);
         }
 
         body.dark-mode .schedule-info,
         body.dark-mode .schedule-title {
-            color: #24382f;
+            color: var(--text-color);
         }
 
         body.dark-mode .schedule-date {
@@ -843,9 +850,9 @@
 
         body.dark-mode .growth-stage.complete .growth-stage-dot,
         body.dark-mode .growth-stage-dot {
-            background: #f1f7f4;
-            color: #1b4332;
-            border-color: rgba(82, 183, 136, 0.22);
+            background: var(--bg-light);
+            color: var(--text-color);
+            border-color: var(--border-color);
         }
 
         body.dark-mode .growth-stage.future .growth-stage-dot {
@@ -973,6 +980,11 @@
             background: #444;
             border-color: #666;
             color: #fff;
+        }
+
+        body.dark-mode .preview-title {
+            background-color: rgba(30, 32, 22, 0.95);
+            border: 1px solid var(--border-color);
         }
 
         .theme-test-panel h4 {
