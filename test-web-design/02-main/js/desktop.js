@@ -722,7 +722,7 @@ document.getElementById = function(id) {
             return post;
         }
 
-        const MEMORY_PHOTO_LIMIT = 6;
+        const MEMORY_PHOTO_LIMIT = 30;
 
         function setFeedFilter(filterName) {
             activeFeedFilter = filterName;
@@ -932,12 +932,13 @@ document.getElementById = function(id) {
                 </div>
                 <input type="file" id="memory-edit-photo-input" accept="image/*" multiple style="display:none" onchange="handleMemoryEditPhotoUpload(this)">
             ` : normalizedPost.photos.length ? `
-                <img class="memory-detail-photo" src="${escapeHtml(normalizedPost.photos[memoryDetailState.photoIndex] || normalizedPost.photos[0])}" alt="${escapeHtml(normalizedPost.title)}">
+                <img class="memory-detail-photo" data-photos='${escapeHtml(JSON.stringify(normalizedPost.photos))}' src="${escapeHtml(normalizedPost.photos[memoryDetailState.photoIndex] || normalizedPost.photos[0])}" alt="${escapeHtml(normalizedPost.title)}" onclick="openMainPhotoView(this)" style="cursor: zoom-in;">
                 ${normalizedPost.photos.length > 1 ? `
                     <div class="memory-detail-photo-strip">
-                        ${normalizedPost.photos.map((url, index) => `
-                            <button type="button" class="memory-detail-photo-thumb ${index === memoryDetailState.photoIndex ? 'is-active' : ''}" onclick="setMemoryDetailPhotoIndex(${index})">
+                        ${normalizedPost.photos.slice(0, 5).map((url, index) => `
+                            <button type="button" class="memory-detail-photo-thumb ${index === memoryDetailState.photoIndex ? 'is-active' : ''}" onclick="setMemoryDetailPhotoIndex(${index})" style="position:relative;">
                                 <img src="${escapeHtml(url)}" alt="사진 ${index + 1}">
+                                ${index === 4 && normalizedPost.photos.length > 5 ? `<div style="position:absolute; inset:0; background:rgba(0,0,0,0.6); border-radius:8px; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:bold; font-size:14px;">+${normalizedPost.photos.length - 5}</div>` : ''}
                             </button>
                         `).join('')}
                     </div>

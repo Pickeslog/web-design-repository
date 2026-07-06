@@ -140,12 +140,13 @@
                 </div>
                 <input type="file" id="memory-edit-photo-input" accept="image/*" multiple style="display:none" onchange="handleMemoryEditPhotoUpload(this)">
             ` : normalizedPost.photos.length ? `
-                <img class="memory-detail-photo" src="${escapeHtml(normalizedPost.photos[memoryDetailState.photoIndex] || normalizedPost.photos[0])}" alt="${escapeHtml(normalizedPost.title)}">
+                <img class="memory-detail-photo" data-photos='${escapeHtml(JSON.stringify(normalizedPost.photos))}' src="${escapeHtml(normalizedPost.photos[memoryDetailState.photoIndex] || normalizedPost.photos[0])}" alt="${escapeHtml(normalizedPost.title)}" onclick="window.openPhotoViewer(this.src)" style="cursor: zoom-in;">
                 ${normalizedPost.photos.length > 1 ? `
                     <div class="memory-detail-photo-strip">
-                        ${normalizedPost.photos.map((url, index) => `
-                            <button type="button" class="memory-detail-photo-thumb ${index === memoryDetailState.photoIndex ? 'is-active' : ''}" onclick="setMemoryDetailPhotoIndex(${index})">
+                        ${normalizedPost.photos.slice(0, 5).map((url, index) => `
+                            <button type="button" class="memory-detail-photo-thumb ${index === memoryDetailState.photoIndex ? 'is-active' : ''}" onclick="setMemoryDetailPhotoIndex(${index})" style="position:relative;">
                                 <img src="${escapeHtml(url)}" alt="사진 ${index + 1}">
+                                ${index === 4 && normalizedPost.photos.length > 5 ? `<div style="position:absolute; inset:0; background:rgba(0,0,0,0.6); border-radius:8px; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:bold; font-size:14px;">+${normalizedPost.photos.length - 5}</div>` : ''}
                             </button>
                         `).join('')}
                     </div>
@@ -270,7 +271,6 @@
             memoryDetailState.photoDraft = null;
             renderMemoryDetailModal();
         }
-
         // 수정 중 사진 추가: 파일을 선택하면 미리보기로 바로 반영하고,
         // 모두 불러오기가 끝나면 "이미지 업로드 완료" 안내 모달을 띄운다.
         function handleMemoryEditPhotoUpload(input) {
@@ -288,20 +288,35 @@
             const toLoad = files.slice(0, remaining);
             let loadedCount = 0;
             toLoad.forEach(file => {
-                const reader = new FileReader();
-                reader.onload = event => {
-                    memoryDetailState.photoDraft.push(event.target.result);
-                    loadedCount += 1;
-                    if (loadedCount === toLoad.length) {
-                        input.value = '';
-                        renderMemoryDetailModal();
-                        showProofResultModal({
-                            title: '이미지 업로드 완료',
-                            message: `${toLoad.length}장의 사진이 추가됐어요.<br>저장을 눌러야 게시글에 반영됩니다.`
-                        });
-                    }
-                };
-                reader.readAsDataURL(file);
+                if (typeof window.compressImage === 'function') {
+                    window.compressImage(file, 800, 800, 0.6).then(dataUrl => {
+                        memoryDetailState.photoDraft.push(dataUrl);
+                        loadedCount += 1;
+                        if (loadedCount === toLoad.length) {
+                            input.value = '';
+                            renderMemoryDetailModal();
+                            showProofResultModal({
+                                title: '이미지 업로드 완료',
+                                message: `${toLoad.length}장의 사진이 추가됐어요.<br>저장을 눌러야 게시글에 반영됩니다.`
+                            });
+                        }
+                    });
+                } else {
+                    const reader = new FileReader();
+                    reader.onload = event => {
+                        memoryDetailState.photoDraft.push(event.target.result);
+                        loadedCount += 1;
+                        if (loadedCount === toLoad.length) {
+                            input.value = '';
+                            renderMemoryDetailModal();
+                            showProofResultModal({
+                                title: '이미지 업로드 완료',
+                                message: `${toLoad.length}장의 사진이 추가됐어요.<br>저장을 눌러야 게시글에 반영됩니다.`
+                            });
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                }
             });
         }
 
@@ -484,16 +499,18 @@
                 `;
             }
 
-            function renderClinePolaroid(post, postIndex, isActive) {
+            function renderClinePolaroid(post, postIndex, isActive, isClickableDetail) {
+                if (typeof isClickableDetail === 'undefined') isClickableDetail = isActive;
                 const normalizedPost = normalizeMemoryPost(post);
                 const tags = getMemoryHashtags(normalizedPost, normalizedPost.participants[0]).slice(0, 3);
                 const dateText = String(normalizedPost.date || '').replace(/^2026\./, '');
+                
                 const photo = normalizedPost.bg
                     ? `<img src="${escapeHtml(normalizedPost.bg)}" alt="${escapeHtml(normalizedPost.title)}">`
                     : `<div class="cline-no-photo"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"/><path d="m4 18 4-4 3 2 4-5 5 4"/></svg></span><span class="cline-no-photo-text">사진 없음</span></div>`;
 
                 return `
-                    <article class="cline-polaroid ${isActive ? 'is-active' : ''}" onclick="event.stopPropagation(); ${isActive ? `openMemoryDetail(${postIndex})` : `setEvidenceIndex(${postIndex})`}">
+                    <article class="cline-polaroid ${isActive ? 'is-active' : ''}" onclick="event.stopPropagation(); ${isClickableDetail ? `openMemoryDetail(${postIndex})` : `setEvidenceIndex(${postIndex})`}">
                         <div class="cline-card-header">
                             ${renderAvatars(normalizedPost)}
                             <span class="cline-header-date">${escapeHtml(dateText)}</span>
@@ -513,16 +530,18 @@
             function makeSlot(delta, slotCls) {
                 const postIndex = currentIndex + delta;
                 if (postIndex < 0 || postIndex >= total) {
-                    return cardTheme === 'coverflow'
+                    return (cardTheme === 'coverflow' || cardTheme === 'diary')
                         ? `<div class="cline-card-slot cline-slot--empty cline-slot--${slotCls} is-empty"></div>`
                         : `<div class="cline-card-slot cline-slot--empty"></div>`;
                 }
                 const isActive = delta === 0;
+                const isDiaryInner = cardTheme === 'diary' && (delta === 0 || delta === 1);
+                const isClickableDetail = isActive || isDiaryInner;
                 return `
                     <div class="cline-card-slot cline-slot--${slotCls} ${isActive ? 'is-active' : ''}"
-                         ${!isActive ? `onclick="event.stopPropagation(); setEvidenceIndex(${postIndex})"` : ''}>
-                        ${cardTheme === 'coverflow' ? '' : clothespinSvg}
-                        ${renderClinePolaroid(posts[postIndex], postIndex, isActive)}
+                         ${!isClickableDetail ? `onclick="event.stopPropagation(); setEvidenceIndex(${postIndex})"` : ''}>
+                        ${(cardTheme === 'coverflow' || cardTheme === 'diary') ? '' : clothespinSvg}
+                        ${renderClinePolaroid(posts[postIndex], postIndex, isActive, isClickableDetail)}
                     </div>
                 `;
             }
@@ -540,19 +559,41 @@
                 `;
             }).join('');
 
+            const themeClass = cardTheme === 'coverflow' ? 'theme-coverflow' : (cardTheme === 'diary' ? 'theme-diary' : '');
+            const diaryMarkup = cardTheme === 'diary' ? `
+                <!-- Diary structure injected for scrapbook styling -->
+                <div class="diary-page-stack left"></div>
+                <div class="diary-page-stack right"></div>
+                
+                <div class="diary-page-text left-page"></div>
+                <div class="diary-spine"></div>
+                <div class="diary-page-text right-page"></div>
+                
+                <div class="diary-memo"></div>
+                
+                <div class="diary-sticker clover" style="top: 8%; left: 6%; transform: rotate(-15deg) scale(1.15);"></div>
+                <div class="diary-sticker flower" style="top: 55%; left: 12%; transform: rotate(18deg) scale(1.05);"></div>
+                <div class="diary-sticker clover" style="bottom: 10%; left: 4%; transform: rotate(-8deg) scale(1.2);"></div>
+                
+                <div class="diary-sticker flower" style="top: 12%; right: 5%; transform: rotate(12deg) scale(1.2);"></div>
+                <div class="diary-sticker clover" style="top: 45%; right: 8%; transform: rotate(-5deg) scale(1.8);"></div>
+                <div class="diary-sticker flower" style="bottom: 8%; right: 8%; transform: rotate(22deg) scale(1.15);"></div>
+            ` : '';
+
             return `
-                <div class="memory-evidence-viewer cline-viewer ${viewType === 'mobile' ? 'mobile-evidence' : 'desktop-evidence'} ${cardTheme === 'coverflow' ? 'theme-coverflow' : ''}">
+                <div class="memory-evidence-viewer cline-viewer ${viewType === 'mobile' ? 'mobile-evidence' : 'desktop-evidence'} ${themeClass}">
                     <div class="cline-stage">
+                        ${diaryMarkup}
                         <div class="cline-wire-area">
                             <div class="cline-wire"></div>
                             <div class="cline-cards">
-                                ${viewType === 'desktop' && cardTheme === 'coverflow' ? makeSlot(+3, 'far-far-past') : ''}
+                                ${viewType === 'desktop' && (cardTheme === 'coverflow' || cardTheme === 'diary') ? makeSlot(+3, 'far-far-past') : ''}
                                 ${viewType === 'desktop' ? makeSlot(+2, 'far-past') : ''}
                                 ${makeSlot(+1, 'past')}
                                 ${makeSlot(0, 'current')}
                                 ${makeSlot(-1, 'newer')}
                                 ${viewType === 'desktop' ? makeSlot(-2, 'far-newer') : ''}
-                                ${viewType === 'desktop' && cardTheme === 'coverflow' ? makeSlot(-3, 'far-far-newer') : ''}
+                                ${viewType === 'desktop' && (cardTheme === 'coverflow' || cardTheme === 'diary') ? makeSlot(-3, 'far-far-newer') : ''}
                             </div>
                         </div>
                     </div>
@@ -643,6 +684,33 @@
                 });
             }
         }
+
+        // 사진 모달 뷰어 스크립트
+        window.openPhotoViewer = function(src) {
+            let modal = document.getElementById('photo-viewer-modal');
+            if (!modal) {
+                modal = document.createElement('div');
+                modal.id = 'photo-viewer-modal';
+                modal.className = 'photo-viewer-modal';
+                modal.innerHTML = `
+                    <span class="photo-viewer-close" onclick="window.closePhotoViewer()">&times;</span>
+                    <img id="photo-viewer-img" class="photo-viewer-img" src="" alt="Photo" onclick="event.stopPropagation()">
+                `;
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) window.closePhotoViewer();
+                });
+                document.body.appendChild(modal);
+            }
+            const img = modal.querySelector('#photo-viewer-img') || modal.querySelector('.photo-viewer-img');
+            if (img) img.src = src;
+            void modal.offsetWidth; // reflow
+            modal.classList.add('is-visible');
+        };
+
+        window.closePhotoViewer = function() {
+            const modal = document.getElementById('photo-viewer-modal');
+            if (modal) modal.classList.remove('is-visible');
+        };
 
         // 4. 피드 리스트 동적 렌더링 함수
         // 6. 친구 코드 연동 기능 시뮬레이션 - 모바일
@@ -1316,6 +1384,7 @@
         window.openMemberListModal = openMemberListModal;
         window.closeMemberListModal = closeMemberListModal;
         window.copyMemberModalRoomCode = copyMemberModalRoomCode;
+        window.renderEvidenceViewers = renderEvidenceViewers;
 
         function renderGroundGrowth(containerId) {
             const container = document.getElementById(containerId);

@@ -198,7 +198,33 @@
             return post;
         }
 
-        const MEMORY_PHOTO_LIMIT = 6;
+    window.compressImage = function(file, maxWidth, maxHeight, quality) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = function(event) {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = function() {
+                    let width = img.width;
+                    let height = img.height;
+                    if (width > maxWidth || height > maxHeight) {
+                        const ratio = Math.min(maxWidth / width, maxHeight / height);
+                        width *= ratio;
+                        height *= ratio;
+                    }
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+                    resolve(canvas.toDataURL('image/jpeg', quality));
+                };
+            };
+        });
+    };
+
+        const MEMORY_PHOTO_LIMIT = 30;
         function getRecordPreviewText(value, maxLength = 16) {
             const cleanText = String(value || '').replace(/\s+/g, ' ').trim();
             if (cleanText.length <= maxLength) return cleanText;

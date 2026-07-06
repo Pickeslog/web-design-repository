@@ -202,6 +202,9 @@
                                 <li class="theme-option" data-evidence-theme="coverflow" onclick="setEvidenceCardTheme('coverflow')">
                                     <span class="settings-list-label">겹침 카드</span>
                                 </li>
+                                <li class="theme-option" data-evidence-theme="diary" onclick="setEvidenceCardTheme('diary')">
+                                    <span class="settings-list-label">일기장</span>
+                                </li>
                             </ul>
                         </div>
                     </div>
@@ -569,7 +572,8 @@
     localStorage.setItem('clov_evidenceCardTheme', theme);
     updateEvidenceCardThemeUI();
     if (typeof renderEvidenceViewers === 'function') renderEvidenceViewers();
-    clovToast(theme === 'coverflow' ? '📸 겹침 카드 테마로 바꿨어요!' : '🧷 빨랫줄 테마로 바꿨어요!', 'success');
+    else if (typeof window.renderEvidenceViewers === 'function') window.renderEvidenceViewers();
+    clovToast(theme === 'coverflow' ? '📸 겹침 카드 테마로 바꿨어요!' : (theme === 'diary' ? '📔 일기장 테마로 바꿨어요!' : '🧷 빨랫줄 테마로 바꿨어요!'), 'success');
   }
 
   /* ── 계정 탭 ── */
