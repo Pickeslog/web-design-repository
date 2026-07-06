@@ -256,7 +256,7 @@ body.dark-mode .filter-btn.active { color: #0a0f0c; }
 
 /* 편집 버튼 (수정/삭제) */
 .edit-controls {
-  display: none; position: absolute; top: 10px; right: 10px; gap: 4px;
+  display: none; position: absolute; top: 10px; right: 10px; gap: 4px; z-index: 4;
 }
 .room-card.edit-mode .edit-controls { display: flex; }
 .edit-del-btn, .edit-mod-btn {
@@ -555,6 +555,259 @@ textarea.text-input { height: 88px; padding: 10px 14px; resize: none; }
 .preview-list-desc { font-size: 12px; color: var(--muted); margin: 2px 0 0; }
 .preview-list-time { font-size: 11px; color: var(--muted); flex-shrink: 0; }
 .preview-empty { text-align: center; padding: 32px 0; color: var(--muted); font-size: 13px; }
+
+/* ==========================================================================
+   [개편] 방 미리보기 — 무탭 소식 피드 + 방 프로필 편집 + 친구 초대 시트
+   (design_handoff_room_invite_flow · t10 / t11 · #room-preview-modal 스코프)
+   ========================================================================== */
+#room-preview-modal .room-header-modal { width: min(430px, calc(100vw - 32px)); }
+#room-preview-modal .rp-view { display: none; }
+#room-preview-modal .rp-view.active { display: block; }
+
+/* 방 요약 행 */
+#room-preview-modal .rp-inforow {
+  display: flex; gap: 14px; align-items: center; padding: 13px;
+  background: var(--active-bg); border-radius: 16px; margin-bottom: 16px;
+}
+#room-preview-modal .rp-ico {
+  width: 52px; height: 52px; border-radius: 15px; background: var(--primary); color: #fff;
+  display: flex; align-items: center; justify-content: center; font-size: 24px; flex: none; overflow: hidden;
+}
+#room-preview-modal .rp-ico img { width: 100%; height: 100%; object-fit: cover; }
+#room-preview-modal .rp-intro { font-size: 14px; font-weight: 800; color: var(--text); }
+#room-preview-modal .rp-lvrow { display: flex; gap: 8px; align-items: center; margin-top: 5px; }
+#room-preview-modal .rp-lv { font-size: 11px; font-weight: 800; color: #fff; background: var(--primary); padding: 2px 8px; border-radius: 8px; }
+body.dark-mode #room-preview-modal .rp-lv { color: #0a0f0c; }
+#room-preview-modal .rp-lvsub { font-size: 12px; color: var(--muted); }
+
+/* 멤버 아바타 줄 */
+#room-preview-modal .rp-mrow { display: flex; align-items: center; gap: 6px; margin: -2px 2px 16px; flex-wrap: wrap; }
+#room-preview-modal .rp-av {
+  width: 22px; height: 22px; border-radius: 50%; color: #fff; font-size: 10px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; flex: none;
+}
+#room-preview-modal .rp-mrow-n { font-size: 12px; color: var(--muted); font-weight: 600; margin-left: 3px; }
+
+/* 소식 헤더 */
+#room-preview-modal .rp-sechd { display: flex; align-items: center; justify-content: space-between; margin: 2px 2px 10px; }
+#room-preview-modal .rp-sechd .l { font-size: 13px; font-weight: 800; color: var(--text); display: flex; align-items: center; gap: 6px; }
+#room-preview-modal .rp-sechd .r { font-size: 12px; color: var(--danger); font-weight: 800; }
+
+/* 소식 피드 */
+#room-preview-modal .rp-feed { display: flex; flex-direction: column; gap: 7px; }
+#room-preview-modal .rp-fi {
+  display: flex; gap: 11px; align-items: flex-start; padding: 11px 12px;
+  border-radius: 13px; border: 1px solid var(--border); background: var(--card-bg);
+}
+#room-preview-modal .rp-fi.unread { background: var(--active-bg); border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
+#room-preview-modal .rp-fi-ic { width: 34px; height: 34px; border-radius: 10px; flex: none; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+#room-preview-modal .rp-fi-ic.letter { background: #e2f2ea; color: #2f7d4f; }
+#room-preview-modal .rp-fi-ic.sched  { background: #fbeecf; color: #b5851f; }
+#room-preview-modal .rp-fi-ic.member { background: #dfecee; color: #b45274; }
+#room-preview-modal .rp-fi-ic.join   { background: #dfeef0; color: #2f7a86; }
+#room-preview-modal .rp-fi-ic.edit   { background: #eceae2; color: #8a7f66; }
+body.dark-mode #room-preview-modal .rp-fi-ic.letter { background: #243a2e; color: #9ccc65; }
+body.dark-mode #room-preview-modal .rp-fi-ic.sched  { background: #3a331e; color: #e0c169; }
+body.dark-mode #room-preview-modal .rp-fi-ic.member { background: #3a2630; color: #e79bb5; }
+body.dark-mode #room-preview-modal .rp-fi-ic.join   { background: #213338; color: #7fc4cf; }
+body.dark-mode #room-preview-modal .rp-fi-ic.edit   { background: #2e2c22; color: #c3b98a; }
+#room-preview-modal .rp-fi-tx { flex: 1; min-width: 0; }
+#room-preview-modal .rp-fi-t { font-size: 13.5px; font-weight: 700; color: var(--text); line-height: 1.3; }
+#room-preview-modal .rp-fi-t .who { color: #2f7d4f; }
+body.dark-mode #room-preview-modal .rp-fi-t .who { color: var(--accent); }
+#room-preview-modal .rp-fi-d { font-size: 12.5px; color: var(--muted); line-height: 1.4; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#room-preview-modal .rp-fi-time { font-size: 11px; color: var(--muted); font-weight: 600; flex: none; margin-top: 2px; }
+#room-preview-modal .rp-more { font-size: 12.5px; color: var(--btn-bg); font-weight: 700; text-align: center; padding: 9px; border-radius: 10px; background: var(--active-bg); margin-top: 2px; cursor: pointer; }
+
+/* 초대/입장 버튼 */
+#room-preview-modal .rp-invite-btn {
+  display: flex; align-items: center; justify-content: center; gap: 7px; width: 100%; padding: 11px;
+  border: 1px dashed var(--accent); background: var(--active-bg); border-radius: 13px;
+  color: var(--primary); font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 16px;
+}
+#room-preview-modal .rp-enter {
+  display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 50px; margin-top: 12px;
+  background: var(--primary); color: #fff; border: none; border-radius: 14px; font-size: 15.5px; font-weight: 800; cursor: pointer;
+}
+body.dark-mode #room-preview-modal .rp-enter { color: #0a0f0c; }
+
+/* ⚙️ 톱니바퀴 / ← 뒤로 */
+#room-preview-modal .rp-gear {
+  width: auto; height: auto; background: none; border: none; color: var(--btn-bg); font-size: 20px;
+  display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 5px;
+}
+
+/* 방 프로필 편집 서브뷰 */
+#room-preview-modal .ed-lbl { font-size: 12px; font-weight: 800; color: var(--text); margin: 15px 2px 6px; display: flex; gap: 7px; align-items: baseline; }
+#room-preview-modal .ed-lbl .h { font-size: 10.5px; font-weight: 600; color: #c98a2e; }
+#room-preview-modal .ed-lbl .h.mute { color: var(--muted); }
+#room-preview-modal .ed-in {
+  width: 100%; border: 1.5px solid var(--input-bdr); border-radius: 11px; padding: 10px 12px;
+  font-size: 14px; color: var(--text); background: var(--input-bg); font-family: inherit; box-sizing: border-box; outline: none;
+}
+#room-preview-modal .ed-in:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(82,183,136,.15); }
+#room-preview-modal textarea.ed-in { min-height: 56px; resize: none; }
+#room-preview-modal .ed-photo {
+  position: relative; border-radius: 14px; overflow: hidden; height: 118px; background: var(--primary);
+  display: flex; align-items: center; justify-content: center; color: #9fc0ad; font-size: 30px; cursor: pointer;
+}
+#room-preview-modal .ed-photo img { width: 100%; height: 100%; object-fit: cover; }
+#room-preview-modal .ed-photo .chg {
+  position: absolute; right: 10px; bottom: 10px; background: rgba(255,255,255,.94); border-radius: 9px;
+  padding: 5px 10px; font-size: 12px; font-weight: 700; color: #1b4332; display: flex; gap: 5px; align-items: center;
+}
+#room-preview-modal .ed-chips { display: flex; gap: 7px; margin-top: 9px; flex-wrap: wrap; }
+#room-preview-modal .ed-chip {
+  font-size: 12px; font-weight: 600; color: var(--text); background: var(--active-bg); border: 1px solid var(--border);
+  border-radius: 9px; padding: 7px 11px; display: flex; gap: 5px; align-items: center; cursor: pointer;
+}
+#room-preview-modal .ed-chip.on { background: #e2f2ea; border-color: var(--accent); color: var(--primary); font-weight: 700; }
+body.dark-mode #room-preview-modal .ed-chip.on { background: var(--active-bg); color: var(--accent); }
+#room-preview-modal .ed-actions { display: flex; gap: 9px; margin-top: 18px; }
+#room-preview-modal .ed-cancel { flex: 1; height: 48px; border: 1px solid var(--border); background: var(--card-bg); border-radius: 13px; font-size: 14.5px; font-weight: 700; color: var(--muted); cursor: pointer; }
+#room-preview-modal .ed-save { flex: 1.6; height: 48px; border: none; background: var(--primary); color: #fff; border-radius: 13px; font-size: 14.5px; font-weight: 800; cursor: pointer; }
+body.dark-mode #room-preview-modal .ed-save { color: #0a0f0c; }
+#room-preview-modal .notify-b {
+  display: flex; gap: 8px; align-items: flex-start; background: var(--active-bg); border: 1px solid #d7e6dd;
+  border-radius: 11px; padding: 10px 12px; margin-top: 16px; font-size: 12px; line-height: 1.45; color: #2f6b45;
+}
+body.dark-mode #room-preview-modal .notify-b { border-color: var(--border); color: var(--accent); }
+#room-preview-modal .notify-b b { color: var(--primary); }
+#room-preview-modal .cnt { text-align: right; font-size: 11px; color: var(--muted); margin-top: 5px; }
+
+/* 친구 초대하기 시트 */
+#room-preview-modal .rp-invite-desc { font-size: 13px; color: var(--muted); line-height: 1.5; margin: 0 2px 14px; }
+#room-preview-modal .rp-invite-desc b { color: var(--primary); }
+#room-preview-modal .link-box { display: flex; align-items: center; gap: 8px; background: var(--active-bg); border: 1px solid var(--border); border-radius: 12px; padding: 11px 13px; }
+#room-preview-modal .link-url { flex: 1; min-width: 0; font-size: 13px; color: var(--primary); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+#room-preview-modal .code-big { font-size: 19px; font-weight: 850; color: var(--primary); letter-spacing: 2px; }
+#room-preview-modal .mini-copy { flex: none; font-size: 12px; font-weight: 700; color: var(--text); background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 6px 11px; cursor: pointer; }
+#room-preview-modal .share-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 48px; margin-top: 12px; background: var(--primary); color: #fff; border: none; border-radius: 13px; font-size: 15px; font-weight: 800; cursor: pointer; }
+body.dark-mode #room-preview-modal .share-btn { color: #0a0f0c; }
+#room-preview-modal .or-div { display: flex; align-items: center; gap: 10px; margin: 18px 0 12px; color: var(--muted); font-size: 11.5px; font-weight: 700; }
+#room-preview-modal .or-div::before, #room-preview-modal .or-div::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+#room-preview-modal .regen { display: flex; align-items: center; justify-content: center; gap: 5px; margin-top: 12px; font-size: 12px; color: var(--muted); font-weight: 600; cursor: pointer; }
+
+/* A-4: 추억에서 고르기 — 대표사진을 추억피드 사진에서 선택 */
+#room-preview-modal #rp-mem-picker { margin-top: 10px; }
+#room-preview-modal .rp-mem-hd { font-size: 11.5px; font-weight: 700; color: var(--muted); margin-bottom: 7px; }
+#room-preview-modal .rp-mem-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+#room-preview-modal .rp-mem-item { position: relative; border: none; padding: 0; background: none; cursor: pointer; border-radius: 10px; overflow: hidden; aspect-ratio: 1; }
+#room-preview-modal .rp-mem-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+#room-preview-modal .rp-mem-item span { position: absolute; left: 0; right: 0; bottom: 0; font-size: 10px; font-weight: 700; color: #fff; background: linear-gradient(transparent, rgba(0,0,0,.55)); padding: 9px 4px 3px; text-align: center; }
+#room-preview-modal .rp-mem-item.sel { outline: 2.5px solid var(--accent); outline-offset: -2px; }
+
+/* ==========================================================================
+   [개편] 방목록 카드 — 보딩패스(탑승권) 카드 (t18 확정)
+   아이보리 페이퍼 티켓: 어떤 배경 테마 위에서도 뜨도록 라이트/다크 공통 고정색.
+   ========================================================================== */
+/* 티켓 = [그림자 래퍼(.room-card.ticket)] > [마스크 본체(.tk-body)] 2단 구조.
+   그림자는 마스크 없는 래퍼가 담당(마스크가 그림자를 잘라먹지 않게) → 어떤 배경에서도 확실히 뜸. */
+.room-card.ticket {
+  padding: 0; border: none; gap: 0; background: transparent; border-radius: 16px; overflow: visible;
+  box-shadow: 0 12px 22px rgba(20,40,30,.22);
+}
+.room-card.ticket:hover { border: none; box-shadow: 0 16px 28px rgba(20,40,30,.3); transform: translateY(-2px); }
+.room-card.ticket.selected { outline: 2.5px solid #52b788; outline-offset: 0; }
+.room-card.ticket.edit-mode { padding-left: 0; }
+.room-card.ticket.edit-mode:hover { transform: none; box-shadow: 0 12px 22px rgba(20,40,30,.22); }
+.room-card.ticket.dragging, .room-card.ticket.drag-over { transform: none !important; }
+
+.tk-body {
+  background: #fffdf7; border-radius: 16px; overflow: hidden;
+  /* 좌우 절취 노치: mask로 투명 구멍을 뚫어 배경이 비치게 (README D 권장) */
+  -webkit-mask:
+    radial-gradient(circle 9px at left  calc(100% - 40px), transparent 96%, #000 100%) left  / 50.2% 100% no-repeat,
+    radial-gradient(circle 9px at right calc(100% - 40px), transparent 96%, #000 100%) right / 50.2% 100% no-repeat;
+  mask:
+    radial-gradient(circle 9px at left  calc(100% - 40px), transparent 96%, #000 100%) left  / 50.2% 100% no-repeat,
+    radial-gradient(circle 9px at right calc(100% - 40px), transparent 96%, #000 100%) right / 50.2% 100% no-repeat;
+}
+
+.tk-head { padding: 14px 15px 0; position: relative; }
+.tk-route { display: flex; align-items: center; justify-content: space-between; color: #fff; }
+.tk-kick { font-size: 9px; letter-spacing: 1px; font-weight: 700; }
+.tk-code { font-size: 15px; font-weight: 800; }
+.tk-mid { flex: 1; text-align: center; font-size: 11px; }
+.tk-dest { text-align: right; }
+.tk-skyline { display: flex; align-items: flex-end; gap: 2.5px; height: 26px; margin-top: 8px; opacity: .9; }
+.tk-skyline i { display: block; background: #fffdf7; }
+.tk-pax { padding: 12px 15px 4px; display: flex; align-items: flex-start; justify-content: space-between; }
+.tk-pax-kick { font-size: 9px; color: #9aa89f; font-weight: 700; }
+.tk-name { font-size: 15px; font-weight: 800; color: #1e2e26; word-break: keep-all; }
+.tk-avs { display: flex; margin-top: 6px; }
+.tk-av { width: 22px; height: 22px; border-radius: 50%; color: #fff; font-size: 9px; font-weight: 800; display: flex; align-items: center; justify-content: center; border: 1.5px solid #fff; flex: none; }
+.tk-av + .tk-av { margin-left: -7px; }
+.tk-corner { display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
+.tk-badge { background: #d95f5f; color: #fff; font-size: 10px; font-weight: 800; border-radius: 9px; padding: 1px 7px; }
+.tk-star { font-size: 17px; cursor: pointer; background: none; border: none; padding: 0; line-height: 1; }
+.tk-star:hover { transform: scale(1.15); }
+.tk-grid { padding: 4px 15px 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 7px 10px; }
+.tk-grid.single { display: block; }
+.tk-cell-lbl { font-size: 9px; color: #9aa89f; font-weight: 700; }
+.tk-cell-val { font-size: 12px; font-weight: 800; color: #1e2e26; }
+.tk-cell-val.accent { color: #1b4332; }
+.tk-cell-val.empty { display: flex; align-items: center; gap: 5px; font-weight: 700; color: #8a9a5a; margin-top: 1px; }
+.tk-perf { position: relative; border-top: 2px dashed #e6dfcf; margin: 0 12px; }
+.tk-stub { padding: 9px 15px 12px; display: flex; align-items: center; justify-content: space-between; }
+.tk-barcode { display: flex; align-items: flex-end; gap: 1.5px; height: 20px; }
+.tk-barcode i { display: block; width: 2px; height: 20px; background: #2a3a32; }
+.tk-enter { font-size: 11px; font-weight: 800; color: #357a58; cursor: pointer; }
+
+/* ==========================================================================
+   [개편] A-1 "요청한 방" 섹션 — 가입 신청(수락대기)·거절 카드
+   아직 멤버가 아니므로 티켓이 아닌 점선 카드로 구분. 정렬/즐겨찾기/드래그 제외.
+   ========================================================================== */
+.req-section { margin-bottom: 26px; }
+.req-head { font-size: 13px; font-weight: 800; color: var(--primary); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+.req-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+@media (max-width: 760px) { .req-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px) { .req-grid { grid-template-columns: 1fr; } }
+.req-card {
+  background: var(--card-bg); border: 1.5px dashed var(--border); border-radius: 16px;
+  padding: 15px; display: flex; flex-direction: column; gap: 8px;
+}
+.req-card.rejected { border-color: color-mix(in srgb, var(--danger) 45%, var(--border)); }
+.req-status { font-size: 11px; font-weight: 800; padding: 3px 9px; border-radius: 9px; width: fit-content; display: flex; align-items: center; gap: 4px; }
+.req-status.pending { background: #fbeecf; color: #b5851f; }
+.req-status.rejected { background: #fdeaea; color: #d95f5f; }
+.req-status.expired { background: #eceae2; color: #8a7f66; }
+.req-status.vanished { background: #e4edf0; color: #557a86; }
+body.dark-mode .req-status.pending { background: #3a331e; color: #e0c169; }
+body.dark-mode .req-status.rejected { background: #3a2222; color: #f59a9a; }
+body.dark-mode .req-status.expired { background: #2e2c22; color: #c3b98a; }
+body.dark-mode .req-status.vanished { background: #213338; color: #9cc4cf; }
+.req-card.expired, .req-card.vanished { opacity: .92; }
+.req-note { font-size: 11.5px; color: var(--muted); margin-top: -2px; line-height: 1.45; }
+.req-name { font-size: 15px; font-weight: 800; color: var(--text); word-break: keep-all; }
+.req-meta { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 4px; }
+.req-actions { display: flex; gap: 8px; margin-top: 4px; }
+.req-btn {
+  flex: 1; height: 36px; border-radius: 10px; font-size: 12.5px; font-weight: 700; cursor: pointer;
+  border: 1.5px solid var(--border); background: var(--card-bg); color: var(--text); transition: background .15s, border-color .15s;
+}
+.req-btn:hover { background: var(--active-bg); border-color: var(--accent); }
+.req-btn.primary { background: var(--primary); color: #fff; border: none; }
+body.dark-mode .req-btn.primary { color: #0a0f0c; }
+.req-btn.primary:hover { opacity: .88; background: var(--primary); }
+
+/* ==========================================================================
+   [개편] A-3 "잠자는 방" 섹션 — 마지막 멤버가 나간 30일 보관 방(소프트 삭제)
+   ========================================================================== */
+.dormant-section { margin-top: 30px; padding-top: 22px; border-top: 1px dashed var(--border); }
+.dormant-head { font-size: 12px; font-weight: 800; color: var(--muted); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+.dormant-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+@media (max-width: 760px) { .dormant-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 520px) { .dormant-grid { grid-template-columns: 1fr; } }
+.dormant-card { background: var(--body-bg); border: 1.5px dashed var(--border); border-radius: 14px; padding: 13px 14px; opacity: .9; }
+.dormant-name { font-size: 14px; font-weight: 800; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.dormant-meta { font-size: 11.5px; color: var(--muted); margin: 5px 0 11px; line-height: 1.45; }
+.dormant-revive {
+  width: 100%; height: 34px; border-radius: 9px; border: 1.5px solid var(--accent);
+  background: var(--active-bg); color: var(--primary); font-size: 12.5px; font-weight: 700; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 5px; transition: opacity .15s;
+}
+.dormant-revive:hover { opacity: .82; }
 </style>
 <link rel="stylesheet" href="../02-main/css/global-theme.css">
 </head>
@@ -601,6 +854,9 @@ ClovProfileModal.init();
       카드를 길게 누르거나 드래그해서 순서를 바꿀 수 있어요 · 연필 버튼으로 정보를 수정하세요
     </div>
 
+    <!-- 요청한 방 (A-1) — 있을 때만 표시 -->
+    <div class="req-section" id="requested-section" style="display:none"></div>
+
     <!-- 필터 -->
     <div class="filter-row" id="filter-row">
       <button class="filter-btn active" data-filter="recent" onclick="setFilter('recent', this)">
@@ -623,50 +879,14 @@ ClovProfileModal.init();
     <!-- 페이지네이션 -->
     <div class="pagination" id="pagination"></div>
 
+    <!-- 잠자는 방 (A-3) — 있을 때만 표시 -->
+    <div class="dormant-section" id="dormant-section" style="display:none"></div>
+
   </div>
 
 </main>
 
-<!-- ===== 우정공간 수정 모달 ===== -->
-<div class="room-header-modal-backdrop" id="edit-modal" onclick="closeRoomHeaderModalOnBackdrop(event, 'edit-modal')">
-  <section class="room-header-modal" role="dialog" aria-modal="true" aria-labelledby="edit-modal-title" style="width: min(430px, calc(100vw - 32px));">
-    <div class="room-header-modal-head" style="justify-content: space-between; padding: 18px 20px;">
-      <div class="room-header-modal-title" id="edit-modal-title" style="font-size: 17px;">우정공간 수정</div>
-      <button class="room-header-modal-close" onclick="closeEditModal()" aria-label="닫기">
-        <i class="ti ti-x"></i>
-      </button>
-    </div>
-    <div class="room-header-modal-body" style="padding: 20px;">
-      <div class="photo-row">
-        <div class="photo-preview-box" id="edit-photo-box" onclick="document.getElementById('edit-photo-file').click()">
-          <i class="ti ti-camera" style="font-size:22px"></i>
-          <span>변경</span>
-        </div>
-        <input type="file" id="edit-photo-file" accept="image/*" style="display:none" onchange="previewEditPhoto(this)">
-        <div class="photo-hint">
-          <strong>대표 사진</strong>
-          사진을 클릭하면 변경할 수 있어요.<br>파일 업로드 방식으로 선택해주세요.
-        </div>
-      </div>
-
-      <div class="field-wrap">
-        <div class="field-label">우정공간 이름 <span style="color:var(--danger)">*</span></div>
-        <input class="text-input" id="edit-name-input" placeholder="방 이름 (2~20자)" maxlength="20"
-               oninput="validateName(this,'edit-name-err')" onblur="validateName(this,'edit-name-err')">
-        <div class="err-msg" id="edit-name-err"></div>
-      </div>
-
-      <div class="field-wrap">
-        <div class="field-label">소개글 (60자 이내)</div>
-        <textarea class="text-input" id="edit-intro-input" placeholder="소개글을 입력하세요"
-                  maxlength="60" oninput="updateCharCount(this,'edit-intro-count')"></textarea>
-        <div class="char-count"><span id="edit-intro-count">0</span>/60</div>
-      </div>
-
-      <button class="btn-submit" onclick="saveRoomEdit()">저장하기</button>
-    </div>
-  </section>
-</div>
+<!-- (구) 우정공간 수정 모달 → 방 미리보기 ⚙️ 편집 서브뷰(#rp-view-edit)로 이관됨 -->
 
 <!-- 방 코드 미입력 알림 모달 -->
 <div class="room-header-modal-backdrop" id="room-alert-modal" onclick="closeRoomHeaderModalOnBackdrop(event, 'room-alert-modal')">
@@ -688,77 +908,87 @@ ClovProfileModal.init();
   </section>
 </div>
 
-<!-- 우정공간 미리보기 모달 -->
+<!-- 우정공간 미리보기 모달 — 무탭 소식 피드 / 방 프로필 편집 / 친구 초대 (view swap) -->
 <div class="room-header-modal-backdrop" id="room-preview-modal" onclick="closeRoomHeaderModalOnBackdrop(event, 'room-preview-modal')">
-  <section class="room-header-modal" role="dialog" aria-modal="true" aria-labelledby="preview-room-name" style="width: min(450px, calc(100vw - 32px));">
-    <div class="room-header-modal-head" style="justify-content: space-between; padding: 18px 20px;">
-      <div class="room-header-modal-title" id="preview-room-name" style="font-size: 18px; color: var(--text);"></div>
-      <button class="room-header-modal-close" onclick="closeRoomHeaderModal('room-preview-modal')" aria-label="닫기">
-        <i class="ti ti-x"></i>
-      </button>
+  <section class="room-header-modal" role="dialog" aria-modal="true" aria-labelledby="preview-room-name">
+    <!-- 헤더 (뷰에 따라 JS가 내용 갱신) -->
+    <div class="room-header-modal-head" id="rp-head" style="padding: 18px 20px 14px;">
+      <div class="room-header-modal-title" id="preview-room-name" style="font-size: 18px;"></div>
+      <div id="rp-head-actions" style="display: flex; gap: 6px; align-items: center;"></div>
     </div>
 
-    <div style="display: flex; gap: 4px; padding: 0 20px; border-bottom: 1px solid var(--border);">
-      <div class="preview-tab active" data-tab="info" onclick="switchPreviewTab('info')">정보</div>
-      <div class="preview-tab" data-tab="letters" onclick="switchPreviewTab('letters')">
-        편지함<span class="preview-tab-dot" id="preview-tab-dot-letters"></span>
-      </div>
-      <div class="preview-tab" data-tab="notices" onclick="switchPreviewTab('notices')">
-        알림<span class="preview-tab-dot" id="preview-tab-dot-notices"></span>
-      </div>
-    </div>
+    <div class="room-header-modal-body" style="padding: 4px 20px 20px;">
 
-    <div class="room-header-modal-body" style="padding: 20px;">
-      <div class="preview-pane" id="preview-pane-info">
-        <!-- 방 기본 정보 (아이콘, 소개글, 레벨) -->
-        <div style="display: flex; gap: 16px; align-items: center; margin-bottom: 20px; padding: 14px; background: var(--active-bg); border-radius: 16px; border: 1px solid var(--border);">
-          <div id="preview-room-icon" style="width: 54px; height: 54px; border-radius: 16px; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 26px; color: #fff; flex-shrink: 0; overflow: hidden;"></div>
-          <div style="min-width: 0; flex: 1;">
-            <div id="preview-room-intro" style="font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; word-break: keep-all;"></div>
-            <div style="display: flex; gap: 8px; align-items: center;">
-              <span id="preview-room-level" style="font-size: 12px; font-weight: 800; color: #fff; background: var(--primary); padding: 2px 8px; border-radius: 8px;"></span>
-              <span id="preview-room-active" style="font-size: 12px; color: var(--text-sub);"></span>
-            </div>
+      <!-- 뷰1: 소식 피드 -->
+      <div class="rp-view active" id="rp-view-main">
+        <div class="rp-inforow">
+          <div class="rp-ico" id="rp-ico"></div>
+          <div style="min-width: 0;">
+            <div class="rp-intro" id="rp-intro"></div>
+            <div class="rp-lvrow"><span class="rp-lv" id="rp-lv"></span><span class="rp-lvsub" id="rp-active"></span></div>
           </div>
         </div>
-
-        <!-- 주요 알람 -->
-        <div style="margin-bottom: 20px; padding: 12px 14px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 14px; display: flex; align-items: center; justify-content: space-between;">
-          <div>
-            <div style="font-size: 11px; color: var(--text-sub); font-weight: 700; margin-bottom: 4px;"><i class="ti ti-bell-ringing"></i> 주요 알람</div>
-            <div id="preview-room-noti" style="font-size: 13px; font-weight: 800; color: #fb7185;"></div>
-          </div>
-          <span style="font-size: 12px; color: var(--text-sub); font-weight: 600;">실시간 연동 중 🟢</span>
+        <div class="rp-mrow" id="rp-members"></div>
+        <div class="rp-sechd">
+          <span class="l"><i class="ti ti-history"></i> 새 소식</span>
+          <span class="r" id="rp-unread"></span>
         </div>
-
-        <!-- 멤버 정보 -->
-        <div style="margin-bottom: 20px;">
-          <div style="font-size: 13px; font-weight: 800; color: var(--text); margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
-            <span><i class="ti ti-users"></i> 참여 멤버 정보</span>
-            <span style="font-size: 11px; color: var(--text-sub); font-weight: 600;">총 4명 참여 중</span>
-          </div>
-          <div id="preview-room-members" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
-        </div>
-
-        <!-- 방 코드 (복사 가능) -->
-        <div style="margin-bottom: 4px; padding: 12px 14px; background: var(--active-bg); border-radius: 14px; border: 1px dashed var(--primary); display: flex; align-items: center; justify-content: space-between;">
-          <div>
-            <div style="font-size: 11px; color: var(--text-sub); font-weight: 700;">우정공간 초대 코드</div>
-            <div id="preview-room-code" style="font-size: 15px; font-weight: 850; color: var(--primary); letter-spacing: 1px; margin-top: 2px;"></div>
-          </div>
-          <button onclick="copyPreviewRoomCode()" style="padding: 6px 12px; font-size: 12px; font-weight: 700; background: var(--card-bg); color: var(--text); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 4px;">
-            <i class="ti ti-copy"></i> 복사
-          </button>
-        </div>
+        <div class="rp-feed" id="rp-feed"></div>
+        <div class="rp-more" id="rp-more" onclick="rpShowMore()">소식 더 보기</div>
+        <button class="rp-invite-btn" onclick="openRoomInviteView()"><i class="ti ti-link"></i> 친구 초대하기</button>
+        <button class="rp-enter" id="rp-enter-btn"><i class="ti ti-rocket"></i> 우정공간 입장하기</button>
       </div>
 
-      <div class="preview-pane" id="preview-pane-letters" style="display:none;"></div>
-      <div class="preview-pane" id="preview-pane-notices" style="display:none;"></div>
+      <!-- 뷰2: 방 프로필 편집 (⚙️) -->
+      <div class="rp-view" id="rp-view-edit">
+        <div class="ed-lbl">대표 사진</div>
+        <div class="ed-photo" id="rp-ed-photo" onclick="document.getElementById('rp-ed-photo-file').click()">
+          <i class="ti ti-photo"></i>
+          <span class="chg"><i class="ti ti-camera"></i> 변경</span>
+        </div>
+        <input type="file" id="rp-ed-photo-file" accept="image/*" style="display:none" onchange="rpEditPhotoUpload(this)">
+        <div class="ed-chips">
+          <span class="ed-chip on" id="rp-ed-chip-theme" onclick="rpSelectPhotoSource('theme')"><i class="ti ti-palette"></i> 테마 일러스트</span>
+          <span class="ed-chip" id="rp-ed-chip-memory" onclick="rpSelectPhotoSource('memory')"><i class="ti ti-photo-heart"></i> 추억에서</span>
+          <span class="ed-chip" id="rp-ed-chip-upload" onclick="document.getElementById('rp-ed-photo-file').click()"><i class="ti ti-upload"></i> 업로드</span>
+        </div>
+        <div id="rp-mem-picker" style="display:none"></div>
 
-      <!-- 입장하기 버튼 -->
-      <button id="preview-enter-btn" class="btn-enter" style="width: 100%; height: 48px; justify-content: center; font-size: 16px; font-weight: 800; border-radius: 14px; cursor: pointer; margin-top: 20px;">
-        🚀 우정공간 입장하기
-      </button>
+        <div class="ed-lbl">우정공간 이름 <span class="h">바꾸면 멤버에게 알림</span></div>
+        <input class="ed-in" id="rp-ed-name" maxlength="20" placeholder="방 이름 (2~20자)">
+        <div class="err-msg" id="rp-ed-name-err" style="min-height: 14px;"></div>
+
+        <div class="ed-lbl">소개글 <span class="h mute">공용 메모 · 60자</span></div>
+        <textarea class="ed-in" id="rp-ed-intro" maxlength="60" oninput="document.getElementById('rp-ed-cnt').textContent = this.value.length"></textarea>
+        <div class="cnt"><span id="rp-ed-cnt">0</span> / 60</div>
+
+        <div class="notify-b">
+          <i class="ti ti-bell-ringing"></i>
+          <span>여기서 바꾼 내용은 <b>모든 멤버에게 알림</b>으로 남아요. 방장이 없으니 몰래 바뀌지 않게요.</span>
+        </div>
+
+        <div class="ed-actions">
+          <button class="ed-cancel" onclick="showRpView('main')">취소</button>
+          <button class="ed-save" onclick="saveRoomProfile()">저장하기</button>
+        </div>
+      </div>
+
+      <!-- 뷰3: 친구 초대하기 시트 -->
+      <div class="rp-view" id="rp-view-invite">
+        <p class="rp-invite-desc">링크를 보내면 친구가 탭 한 번으로 <b>가입 신청</b>할 수 있어요. 참여 멤버 1명이 수락하면 바로 입장해요.</p>
+        <div class="link-box">
+          <span class="link-url" id="rp-inv-link"></span>
+          <span class="mini-copy" onclick="rpCopyInvite('link')"><i class="ti ti-copy"></i> 복사</span>
+        </div>
+        <button class="share-btn" onclick="rpShareInvite()"><i class="ti ti-send"></i> 링크 공유하기</button>
+        <div class="or-div">또는 코드로</div>
+        <div class="link-box">
+          <span class="code-big" id="rp-inv-code"></span>
+          <span class="mini-copy" style="margin-left: auto;" onclick="rpCopyInvite('code')"><i class="ti ti-copy"></i> 복사</span>
+        </div>
+        <div class="regen" onclick="rpRegenCode()"><i class="ti ti-refresh"></i> 코드 재발급 · 유출되면 옛 코드가 무효화돼요</div>
+      </div>
+
     </div>
   </section>
 </div>
@@ -869,6 +1099,256 @@ let rooms = [
     notices:[{ icon:'ti-calendar-heart', title:'D-30 가을 캠핑', desc:'예약 인원 확정 필요해요.', time:'12시간 전', unread:false }] },
 ];
 
+/* ===== 멤버 데이터 보강 (프로토타입: 방마다 결정적으로 2~6명 배정) ===== */
+const MEMBER_POOL = ['김다정','이서준','박지훈','최유진','정하늘','한소미','오지호','문서연'];
+rooms.forEach(r => {
+  if (!r.members) {
+    const n = 2 + (r.id % 5);                 // 2~6명
+    r.members = ['나', ...MEMBER_POOL.slice(0, n - 1)];
+  }
+});
+// 데모용: 독서 모임(id9)을 1인 방으로 → 나가면 30일 잠자기(A-3)를 바로 체험 가능
+const _soloDemo = rooms.find(r => r.id === 9);
+if (_soloDemo) _soloDemo.members = ['나'];
+
+/* ===== 보딩패스 카드 헬퍼 ===== */
+const TICKET_TONES = [
+  { grad: 'linear-gradient(150deg,#22705a,#123f31)', kick: '#a7d3bf' }, // 포레스트
+  { grad: 'linear-gradient(150deg,#1f6b6b,#0f3d3d)', kick: '#9ecfcf' }, // 틸
+  { grad: 'linear-gradient(150deg,#4a6b3a,#2a4020)', kick: '#c1d3a5' }, // 올리브
+];
+const TICKET_ICONS = ['ti-plane', 'ti-calendar-heart', 'ti-camera', 'ti-map-pin'];
+const AVATAR_COLORS = ['var(--primary)', '#357a58', '#6a7e73', '#52b788'];
+
+function ticketTone(id) { return TICKET_TONES[id % TICKET_TONES.length]; }
+function ticketIcon(id) { return TICKET_ICONS[id % TICKET_ICONS.length]; }
+function shortDest(label) { return (label || '').split(/\s+/)[0].slice(0, 6); }
+
+/* 방 id 기반 결정적 스카이라인 막대 (재렌더 시 흔들리지 않도록 seed 고정) */
+function buildSkyline(seed) {
+  let s = seed * 9301 + 49297;
+  const rnd = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+  const n = 6 + (seed % 2);
+  let out = '';
+  for (let i = 0; i < n; i++) {
+    const w = 7 + Math.floor(rnd() * 5);
+    const h = 12 + Math.floor(rnd() * 15);
+    out += `<i style="width:${w}px;height:${h}px"></i>`;
+  }
+  out += `<i style="flex:1;background:none"></i>`;
+  return out;
+}
+function buildBarcode() {
+  return [2,1,3,1,2,1,3,1,2].map(w => `<i style="width:${w}px"></i>`).join('');
+}
+
+/* ===== 소식(activity) 헬퍼 — 편지 + 알림 + 가입/수정 하나의 시간순 피드 ===== */
+function parseRelTs(t) {
+  const now = Date.now();
+  if (!t) return now - 1e10;
+  if (t.includes('방금')) return now - 60 * 1000;
+  let m = t.match(/(\d+)\s*분/);   if (m) return now - (+m[1]) * 60000;
+  m = t.match(/(\d+)\s*시간/);     if (m) return now - (+m[1]) * 3600000;
+  if (t.includes('어제')) return now - 24 * 3600000;
+  m = t.match(/(\d+)\s*일/);       if (m) return now - (+m[1]) * 86400000;
+  return now - 2e9;
+}
+function buildActivity(room) {
+  const items = [];
+  (room.letters || []).forEach(l => items.push({
+    type: 'letter', title: `<span class="who">${l.from}</span>님의 행운편지`,
+    desc: l.text, time: l.time, unread: !!l.unread, ts: parseRelTs(l.time),
+  }));
+  (room.notices || []).forEach(n => items.push({
+    type: 'sched', title: n.title, desc: n.desc, time: n.time, unread: !!n.unread, ts: parseRelTs(n.time),
+  }));
+  // 최근 합류 멤버 1명 → 가입 소식
+  if (room.members && room.members.length > 1) {
+    const last = room.members[room.members.length - 1];
+    items.push({ type: 'join', title: `<span class="who">${last}</span>님이 합류했어요`, desc: '', time: '3일 전', unread: false, ts: parseRelTs('3일 전') });
+  }
+  // 사용자가 이 세션에서 편집한 내역
+  (room.activityExtra || []).forEach(e => items.push(e));
+  return items.sort((a, b) => b.ts - a.ts);
+}
+
+/* ===== A-1 요청한 방 (내가 보낸 가입 신청 · 수락대기/거절) ===== */
+let requestedRooms = [
+  { id:'req1', code:'CLOV-7788', name:'주말 등산 모임', status:'pending',  requestedAt: Date.now()-3600000,      invitedBy:'강한나', membersPreview:5 },
+  { id:'req2', code:'CLOV-3321', name:'보드게임 크루',  status:'rejected', requestedAt: Date.now()-86400000,     invitedBy:null,     membersPreview:4 },
+  { id:'req3', code:'CLOV-4102', name:'플리마켓 모임',  status:'vanished', requestedAt: Date.now()-2*86400000,   invitedBy:null,     membersPreview:0 },
+  { id:'req4', code:'CLOV-6210', name:'사진 워크숍',    status:'pending',  requestedAt: Date.now()-8*86400000,   invitedBy:'박서준', membersPreview:6 },
+];
+let reqSeq = 5;
+
+// A-7: 가입 요청 7일 자동 만료 (전원 잠수 시 무한 대기 방지)
+const REQ_EXPIRE_MS = 7 * 24 * 60 * 60 * 1000;
+function effectiveReqStatus(q) {
+  if (q.status === 'pending' && q.requestedAt && (Date.now() - q.requestedAt > REQ_EXPIRE_MS)) return 'expired';
+  return q.status;
+}
+
+function renderRequestedRooms() {
+  const wrap = document.getElementById('requested-section');
+  if (!wrap) return;
+  if (!requestedRooms.length) { wrap.innerHTML = ''; wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+
+  const cards = requestedRooms.map(q => {
+    const title = q.name || q.code;
+    const st = effectiveReqStatus(q);
+
+    if (st === 'pending') {
+      const via = q.invitedBy
+        ? `<div class="req-meta"><i class="ti ti-link"></i> ${q.invitedBy}님 초대로 신청</div>`
+        : `<div class="req-meta"><i class="ti ti-key"></i> ${q.code}</div>`;
+      return `<div class="req-card">
+        <span class="req-status pending"><i class="ti ti-clock"></i> 수락 대기 중</span>
+        <div class="req-name">${title}</div>
+        ${via}
+        <div class="req-actions">
+          <button class="req-btn" onclick="cancelRequest('${q.id}')">요청 취소</button>
+        </div>
+      </div>`;
+    }
+    if (st === 'expired') {
+      return `<div class="req-card expired">
+        <span class="req-status expired"><i class="ti ti-clock"></i> 요청 만료됨</span>
+        <div class="req-name">${title}</div>
+        <div class="req-note">7일간 응답이 없어 만료됐어요. 다시 신청할 수 있어요.</div>
+        <div class="req-actions">
+          <button class="req-btn primary" onclick="reRequest('${q.id}')">재요청</button>
+          <button class="req-btn" onclick="clearRejectedCard('${q.id}')">지우기</button>
+        </div>
+      </div>`;
+    }
+    if (st === 'vanished') {
+      return `<div class="req-card vanished">
+        <span class="req-status vanished"><i class="ti ti-bubble"></i> 사라진 방</span>
+        <div class="req-name">${title}</div>
+        <div class="req-note">모든 멤버가 나가 방이 사라졌어요. 신청도 취소됐어요.</div>
+        <div class="req-actions">
+          <button class="req-btn" onclick="clearRejectedCard('${q.id}')">지우기</button>
+        </div>
+      </div>`;
+    }
+    return `<div class="req-card rejected">
+      <span class="req-status rejected"><i class="ti ti-x"></i> 거절됨</span>
+      <div class="req-name">${title}</div>
+      <div class="req-meta"><i class="ti ti-key"></i> ${q.code}</div>
+      <div class="req-actions">
+        <button class="req-btn primary" onclick="reRequest('${q.id}')">재요청</button>
+        <button class="req-btn" onclick="clearRejectedCard('${q.id}')">지우기</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  wrap.innerHTML = `<div class="req-head"><i class="ti ti-mailbox"></i> 요청한 방</div><div class="req-grid">${cards}</div>`;
+}
+
+function cancelRequest(reqId) {
+  clovConfirm("입장 요청을 취소할까요? 아직 멤버가 아니라 '나가기'가 아니에요.", () => {
+    requestedRooms = requestedRooms.filter(q => q.id !== reqId);
+    renderRequestedRooms();
+    clovToast('입장 요청을 취소했어요', 'info');
+  }, { icon: '↩️', type: 'warn', confirmText: '요청 취소', cancelText: '유지' });
+}
+
+function clearRejectedCard(reqId) {
+  clovConfirm('이 카드를 지울까요? 원하면 같은 코드로 다시 요청할 수 있어요.', () => {
+    requestedRooms = requestedRooms.filter(q => q.id !== reqId);
+    renderRequestedRooms();
+    clovToast('카드를 지웠어요', 'info');
+  }, { icon: '🗑️', type: 'warn', confirmText: '지우기', cancelText: '취소' });
+}
+
+function reRequest(reqId) {
+  const q = requestedRooms.find(x => x.id === reqId);
+  if (!q) return;
+  q.status = 'pending';
+  q.requestedAt = Date.now();
+  renderRequestedRooms();
+  clovToast('다시 입장 요청을 보냈어요 · 수락을 기다려요 ⏳', 'success');
+}
+
+/* ===== A-3 잠자는 방 (30일 소프트 삭제) — localStorage 영속 =====
+   마지막 멤버가 나가면 방을 즉시 파괴하지 않고 30일 보관(dormant). 30일 내 코드로
+   재입장하면 추억 그대로 부활, 30일 지나면 완전 삭제. 리로드를 넘어 유지된다. */
+const DORMANT_KEY = 'clov_dormantRooms';
+const DORMANT_MS  = 30 * 24 * 60 * 60 * 1000;
+
+function loadDormant() {
+  let d = [];
+  try { d = JSON.parse(localStorage.getItem(DORMANT_KEY)) || []; } catch (e) {}
+  const now = Date.now();
+  const alive = d.filter(x => x.dormantUntil > now);   // 30일 경과분 자동 완전삭제
+  if (alive.length !== d.length) saveDormant(alive);
+  return alive;
+}
+function saveDormant(d) {
+  try { localStorage.setItem(DORMANT_KEY, JSON.stringify(d)); } catch (e) {}
+}
+
+/* 나가기 커밋 시점에 dormant 처리 (렌더 시점 아님 → 동시 나가기여도 유령 방 없음) */
+function sleepRoom(room) {
+  const dormant = loadDormant();
+  if (!dormant.some(d => (d.code || '') === (room.code || ''))) {
+    dormant.unshift(Object.assign({}, room, {
+      dormantUntil: Date.now() + DORMANT_MS,
+      sleptAt: Date.now(),
+    }));
+    saveDormant(dormant);
+  }
+  rooms = rooms.filter(r => r.id !== room.id);
+  // A-7: 이 방에 남아있던 대기 신청은 자동 취소 → "사라진 방"
+  requestedRooms.forEach(q => {
+    if ((q.code || '').toUpperCase() === (room.code || '').toUpperCase() && effectiveReqStatus(q) === 'pending') {
+      q.status = 'vanished';
+    }
+  });
+}
+
+/* 코드로 재입장 → 부활 (추억 그대로) */
+function reviveDormant(code) {
+  const dormant = loadDormant();
+  const idx = dormant.findIndex(d => (d.code || '').toUpperCase() === code.toUpperCase());
+  if (idx === -1) return false;
+  const room = dormant[idx];
+  dormant.splice(idx, 1);
+  saveDormant(dormant);
+
+  delete room.dormantUntil; delete room.sleptAt;
+  room.createdAt = new Date();   // 부활 = 방금 돌아옴 → 최신순 최상단에 표시 (추억 내용은 그대로)
+  if (!Array.isArray(room.members) || !room.members.length) room.members = ['나'];
+  else if (!room.members.includes('나')) room.members.unshift('나');
+  room.lastActive = '방금';
+  if (rooms.some(r => r.id === room.id)) room.id = nextId++;   // id 충돌 방지
+  rooms.unshift(room);
+  renderList();
+  return true;
+}
+function reviveDormantById(code) {
+  if (reviveDormant(code)) clovToast('잠자던 우정공간이 추억 그대로 되살아났어요! 🌱', 'success');
+}
+
+function renderDormantRooms() {
+  const wrap = document.getElementById('dormant-section');
+  if (!wrap) return;
+  const dormant = loadDormant();
+  if (!dormant.length) { wrap.innerHTML = ''; wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+  const now = Date.now();
+  const cards = dormant.map(d => {
+    const daysLeft = Math.max(0, Math.ceil((d.dormantUntil - now) / (24 * 3600 * 1000)));
+    return `<div class="dormant-card">
+      <div class="dormant-name"><i class="ti ti-zzz"></i> ${d.name}</div>
+      <div class="dormant-meta"><b>${daysLeft}일</b> 후 완전히 사라져요 · 코드로 되살릴 수 있어요</div>
+      <button class="dormant-revive" onclick="reviveDormantById('${d.code}')"><i class="ti ti-refresh"></i> 되살리기</button>
+    </div>`;
+  }).join('');
+  wrap.innerHTML = `<div class="dormant-head"><i class="ti ti-moon"></i> 잠자는 방 · 30일간 보관 중</div><div class="dormant-grid">${cards}</div>`;
+}
+
 /* ===== 필터/정렬 ===== */
 function setFilter(filter, btn) {
   currentFilter = filter; currentPage = 1;
@@ -890,6 +1370,8 @@ function getFilteredRooms() {
 
 /* ===== 렌더링 ===== */
 function renderList() {
+  renderRequestedRooms();
+  renderDormantRooms();
   const filtered   = getFilteredRooms();
   const total      = filtered.length;
   const totalPages = Math.max(1, Math.ceil(total / ITEMS_PER_PAGE));
@@ -903,7 +1385,7 @@ function renderList() {
 
   pageItems.forEach(room => {
     const card = document.createElement('div');
-    card.className = 'room-card' + (isEditMode ? ' edit-mode' : '');
+    card.className = 'room-card ticket' + (isEditMode ? ' edit-mode' : '');
     card.dataset.id = room.id;
 
     if (!isEditMode) {
@@ -912,46 +1394,75 @@ function renderList() {
       setupDrag(card, room.id);
     }
 
-    const iconInner = room.photo
-      ? `<img src="${room.photo}" alt="">`
-      : `<i class="ti ti-photo" style="font-size:26px;color:#fff"></i>`;
+    const tone   = ticketTone(room.id);
+    const rIcon  = ticketIcon(room.id);
+    const memCnt = room.members ? room.members.length : 1;
+    const avMini = `<span class="tk-av" style="background:var(--primary)">나</span>`
+      + (memCnt > 1 ? `<span class="tk-av" style="background:#6a7e73">+${memCnt - 1}</span>` : '');
+    const badge  = room.newPosts > 0
+      ? `<span class="tk-badge">${room.newPosts > 99 ? '99+' : room.newPosts}</span>` : '';
+    const star   = `<button class="tk-star" onclick="event.stopPropagation();toggleFav(${room.id})" title="즐겨찾기">`
+      + (room.fav ? `<i class="ti ti-star-filled" style="color:#e6a23c"></i>` : `<i class="ti ti-star" style="color:#c8c2b4"></i>`)
+      + `</button>`;
 
-    const badgeHtml = room.newPosts > 0
-      ? `<span class="new-badge">${room.newPosts > 99 ? '99+' : room.newPosts}</span>` : '';
+    const destKick = room.dday ? `D-${room.dday.count}` : '약속 없음';
+    const destVal  = room.dday ? shortDest(room.dday.label) : '자유';
+    const destFs   = room.dday ? '15px' : '13px';
 
-    const ddayHtml = room.dday
-      ? `<button class="dday-btn" onclick="event.stopPropagation()">
-           <span class="dday-icon"><i class="ti ti-calendar-event"></i></span>
-           <div class="dday-inner">
-             <span class="dday-count">D-${room.dday.count}</span>
-             <span class="dday-label">${room.dday.label}</span>
-           </div>
-         </button>` : '';
+    const detailGrid = room.dday
+      ? `<div class="tk-grid">
+           <div><div class="tk-cell-lbl">다음 약속</div><div class="tk-cell-val">${room.dday.label}</div></div>
+           <div><div class="tk-cell-lbl">D-DAY</div><div class="tk-cell-val accent">D-${room.dday.count}</div></div>
+         </div>`
+      : `<div class="tk-grid single">
+           <div class="tk-cell-lbl">다음 약속</div>
+           <div class="tk-cell-val empty"><i class="ti ti-plus" style="font-size:13px"></i> 약속을 정해보세요</div>
+         </div>`;
 
     card.innerHTML = `
       <div class="drag-handle" title="드래그해서 순서 변경"></div>
       <div class="edit-controls">
-        <button class="edit-mod-btn" onclick="event.stopPropagation();openEditModal(${room.id})" title="수정">
+        <button class="edit-mod-btn" onclick="event.stopPropagation();openEditModal(${room.id})" title="방 프로필 편집">
           <i class="ti ti-pencil"></i>
         </button>
         <button class="edit-del-btn" onclick="event.stopPropagation();deleteRoom(${room.id})" title="삭제">
           <i class="ti ti-trash"></i>
         </button>
       </div>
-      <div class="card-top">
-        <div class="icon-wrap">
-          <div class="room-icon">${iconInner}</div>
-          ${badgeHtml}
+
+      <div class="tk-body">
+      <div class="tk-head" style="background:${tone.grad}">
+        <div class="tk-route">
+          <div>
+            <div class="tk-kick" style="color:${tone.kick}">오늘</div>
+            <div class="tk-code">CLOV</div>
+          </div>
+          <div class="tk-mid" style="color:${tone.kick}">┈<i class="ti ${rIcon}" style="color:#fff;font-size:13px"></i>┈</div>
+          <div class="tk-dest" onclick="event.stopPropagation();enterRoom(${room.id})" style="cursor:pointer" title="약속 바로가기">
+            <div class="tk-kick" style="color:${tone.kick}">${destKick}</div>
+            <div class="tk-code" style="font-size:${destFs}">${destVal}</div>
+          </div>
         </div>
-        <button class="fav-btn${room.fav ? ' active' : ''}"
-                onclick="event.stopPropagation();toggleFav(${room.id})">
-          ${room.fav ? '★' : '☆'}
-        </button>
+        <div class="tk-skyline">${buildSkyline(room.id)}</div>
       </div>
-      <div class="room-name">${room.name} · Lv.${room.level}</div>
-      <div class="room-intro">${room.intro} · ${room.lastActive} 활동</div>
-      <div style="font-size: 12px; font-weight: 750; color: var(--primary); margin-top: 6px; display: flex; align-items: center; gap: 4px;"><i class="ti ti-key"></i> 초대 코드: ${room.code || 'CLOV-' + (1000 + (room.id * 837) % 9000)}</div>
-      ${ddayHtml}
+
+      <div class="tk-pax">
+        <div style="min-width:0">
+          <div class="tk-pax-kick">우정공간</div>
+          <div class="tk-name">${room.name}</div>
+          <div class="tk-avs">${avMini}</div>
+        </div>
+        <div class="tk-corner">${badge}${star}</div>
+      </div>
+
+      ${detailGrid}
+
+      <div class="tk-perf"></div>
+      <div class="tk-stub">
+        <div class="tk-barcode">${buildBarcode()}</div>
+        <span class="tk-enter" onclick="event.stopPropagation();enterRoom(${room.id})">입장 ›</span>
+      </div>
+      </div>
     `;
     grid.appendChild(card);
   });
@@ -998,123 +1509,283 @@ function closeRoomSuccessModal() {
   document.getElementById('room-success-modal')?.classList.remove('show');
 }
 
-/* ===== 방 미리보기 모달 ===== */
+/* ===== 방 미리보기 모달 (무탭 소식 피드 · 프로필 편집 · 친구 초대) ===== */
+let previewRoomId     = null;
+let rpEditPhotoSrc    = null;      // 편집 중 업로드한 새 사진 dataURL
+let rpEditPhotoSource = 'theme';   // theme | memory | upload
+
+function ensureRoomCode(room) {
+  if (!room.code) room.code = 'CLOV-' + String(1000 + (room.id * 837) % 9000);
+  return room.code;
+}
+
 function showRoomPreviewModal(id) {
   const room = rooms.find(r => r.id === id);
   if (!room) return;
+  previewRoomId = id;
+  ensureRoomCode(room);
 
-  document.getElementById('preview-room-name').innerHTML = `<i class="ti ti-home-heart" style="color: var(--primary)"></i> ${room.name}`;
-  document.getElementById('preview-room-intro').textContent = room.intro || '등록된 소개글이 없습니다.';
-  document.getElementById('preview-room-level').textContent = `Lv.${room.level}`;
-  document.getElementById('preview-room-active').textContent = `· 활동: ${room.lastActive}`;
+  const iconEl = document.getElementById('rp-ico');
+  iconEl.innerHTML = room.photo ? `<img src="${room.photo}" alt="">` : `<i class="ti ti-photo"></i>`;
+  document.getElementById('rp-intro').textContent = room.intro || '등록된 소개글이 없어요';
+  document.getElementById('rp-lv').textContent = `Lv.${room.level}`;
+  document.getElementById('rp-active').textContent = `· 활동 ${room.lastActive}`;
 
-  const iconEl = document.getElementById('preview-room-icon');
-  if (room.photo) {
-    iconEl.innerHTML = `<img src="${room.photo}" alt="" style="width: 100%; height: 100%; object-fit: cover;">`;
-  } else {
-    iconEl.innerHTML = `<i class="ti ti-photo" style="font-size:28px;color:#fff"></i>`;
-  }
+  renderRoomPreviewMembers(room);
+  renderRoomActivity(room);
 
-  const notiEl = document.getElementById('preview-room-noti');
-  if (room.newPosts > 0) {
-    notiEl.innerHTML = `<i class="ti ti-bell"></i> 새 게시글/사진 <span style="color:#fff;background:#fb7185;padding:1px 6px;border-radius:10px;font-size:11px;">+${room.newPosts}</span>`;
-    notiEl.style.color = '#fb7185';
-  } else {
-    notiEl.innerHTML = '<i class="ti ti-check"></i> 읽지 않은 알림 없음';
-    notiEl.style.color = 'var(--text)';
-  }
-
-  const memberNames = ['🍀 나', '🌸 김다정', '📸 이서준', '🎸 박지훈'];
-  const membersContainer = document.getElementById('preview-room-members');
-  membersContainer.innerHTML = memberNames.map(name => `
-    <span style="display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; background: var(--card-bg); border: 1px solid var(--border); border-radius: 20px; font-size: 12px; font-weight: 700; color: var(--text);">
-      ${name}
-    </span>
-  `).join('');
-
-  if (!room.code) {
-    const codeNum = String(1000 + (room.id * 837) % 9000);
-    room.code = `CLOV-${codeNum}`;
-  }
-  document.getElementById('preview-room-code').textContent = room.code;
-
-  const enterBtn = document.getElementById('preview-enter-btn');
-  enterBtn.onclick = () => {
+  document.getElementById('rp-enter-btn').onclick = () => {
     closeRoomHeaderModal('room-preview-modal');
     enterRoom(room.id);
   };
 
-  renderRoomPreviewLetters(room);
-  renderRoomPreviewNotices(room);
-  switchPreviewTab('info');
-
+  showRpView('main');
   document.getElementById('room-preview-modal').classList.add('show');
 }
 
-function switchPreviewTab(tab) {
-  document.querySelectorAll('.preview-tab').forEach(el => {
-    el.classList.toggle('active', el.dataset.tab === tab);
-  });
-  ['info', 'letters', 'notices'].forEach(name => {
-    document.getElementById('preview-pane-' + name).style.display = name === tab ? '' : 'none';
-  });
+function renderRoomPreviewMembers(room) {
+  const members = room.members || ['나'];
+  const avs = members.slice(0, 6).map((name, i) => {
+    const initial = name === '나' ? '나' : (name.slice(-2, -1) || name.slice(0, 1));
+    return `<span class="rp-av" style="background:${AVATAR_COLORS[i % AVATAR_COLORS.length]}">${initial}</span>`;
+  }).join('');
+  document.getElementById('rp-members').innerHTML = avs + `<span class="rp-mrow-n">${members.length}명 참여 중</span>`;
 }
 
-function renderRoomPreviewLetters(room) {
-  const letters = room.letters || [];
-  const dot = document.getElementById('preview-tab-dot-letters');
-  dot.classList.toggle('show', letters.some(l => l.unread));
+function activityIcon(type) {
+  return { letter: 'ti-mail', sched: 'ti-calendar-heart', join: 'ti-user-plus', member: 'ti-door-exit', edit: 'ti-pencil' }[type] || 'ti-bell';
+}
 
-  const pane = document.getElementById('preview-pane-letters');
-  if (!letters.length) {
-    pane.innerHTML = `<div class="preview-empty"><i class="ti ti-mail" style="font-size:28px;display:block;margin-bottom:8px;"></i>아직 도착한 편지가 없어요.</div>`;
+function renderRoomActivity(room) {
+  const items  = buildActivity(room);
+  const unread = items.filter(i => i.unread).length;
+  document.getElementById('rp-unread').textContent = unread > 0 ? unread : '';
+
+  const feed = document.getElementById('rp-feed');
+  if (!items.length) {
+    feed.innerHTML = `<div class="preview-empty"><i class="ti ti-history" style="font-size:28px;display:block;margin-bottom:8px;"></i>아직 소식이 없어요.</div>`;
+    document.getElementById('rp-more').style.display = 'none';
     return;
   }
-  pane.innerHTML = letters.map(l => `
-    <div class="preview-list-item">
-      <i class="ti ti-mail"></i>
-      <div style="flex:1;min-width:0;">
-        <p class="preview-list-title">${l.from}님이 보낸 행운편지</p>
-        <p class="preview-list-desc">${l.text}</p>
+  feed.innerHTML = items.slice(0, 3).map(it => `
+    <div class="rp-fi${it.unread ? ' unread' : ''}">
+      <div class="rp-fi-ic ${it.type}"><i class="ti ${activityIcon(it.type)}"></i></div>
+      <div class="rp-fi-tx">
+        <div class="rp-fi-t">${it.title}</div>
+        ${it.desc ? `<div class="rp-fi-d">${it.desc}</div>` : ''}
       </div>
-      <span class="preview-list-time">${l.time}</span>
+      <span class="rp-fi-time">${it.time}</span>
     </div>
   `).join('');
+  document.getElementById('rp-more').style.display = items.length > 3 ? '' : 'none';
 }
 
-function renderRoomPreviewNotices(room) {
-  const notices = room.notices || [];
-  const dot = document.getElementById('preview-tab-dot-notices');
-  dot.classList.toggle('show', notices.some(n => n.unread));
+function rpShowMore() {
+  clovToast('전체 소식은 우정공간 안에서 볼 수 있어요 📜', 'info');
+}
 
-  const pane = document.getElementById('preview-pane-notices');
-  if (!notices.length) {
-    pane.innerHTML = `<div class="preview-empty"><i class="ti ti-bell" style="font-size:28px;display:block;margin-bottom:8px;"></i>새 알림이 없어요.</div>`;
+/* ----- 뷰 전환 (소식 / 편집 / 초대) + 헤더 갱신 ----- */
+function showRpView(name) {
+  ['main', 'edit', 'invite'].forEach(v =>
+    document.getElementById('rp-view-' + v).classList.toggle('active', v === name));
+
+  const titleEl   = document.getElementById('preview-room-name');
+  const actionsEl = document.getElementById('rp-head-actions');
+  const room      = rooms.find(r => r.id === previewRoomId);
+  const roomName  = room ? room.name : '';
+  const closeBtn  = `<button class="room-header-modal-close" onclick="closeRoomHeaderModal('room-preview-modal')" aria-label="닫기"><i class="ti ti-x"></i></button>`;
+  const backBtn   = `<button class="rp-gear" style="color:var(--primary)" onclick="showRpView('main')" title="뒤로"><i class="ti ti-arrow-left"></i></button>`;
+
+  if (name === 'main') {
+    titleEl.innerHTML = `<i class="ti ti-home-heart" style="color:var(--primary)"></i> ${roomName}`;
+    actionsEl.innerHTML = `<button class="rp-gear" onclick="openRoomEditView()" title="방 프로필 편집"><i class="ti ti-settings"></i></button>` + closeBtn;
+  } else if (name === 'edit') {
+    titleEl.innerHTML = `${backBtn} 방 프로필 편집`;
+    actionsEl.innerHTML = closeBtn;
+  } else if (name === 'invite') {
+    titleEl.innerHTML = `${backBtn} <i class="ti ti-link" style="color:var(--primary)"></i> 친구 초대하기`;
+    actionsEl.innerHTML = closeBtn;
+  }
+}
+
+/* ----- ⚙️ 방 프로필 편집 ----- */
+function openRoomEditView() {
+  const room = rooms.find(r => r.id === previewRoomId);
+  if (!room) return;
+  rpEditPhotoSrc    = null;
+  rpEditPhotoSource = !room.photo ? 'theme' : (String(room.photo).indexOf('data:image/svg') === 0 ? 'memory' : 'upload');
+
+  const box = document.getElementById('rp-ed-photo');
+  box.innerHTML = (room.photo ? `<img src="${room.photo}" alt="">` : `<i class="ti ti-photo"></i>`)
+    + `<span class="chg"><i class="ti ti-camera"></i> 변경</span>`;
+  rpHighlightPhotoChip(rpEditPhotoSource);
+  document.getElementById('rp-mem-picker').style.display = 'none';
+
+  document.getElementById('rp-ed-name').value = room.name;
+  document.getElementById('rp-ed-name-err').textContent = '';
+  document.getElementById('rp-ed-name').classList.remove('invalid');
+  const intro = (room.intro && room.intro !== '소개글을 아직 안 적었어요') ? room.intro : '';
+  document.getElementById('rp-ed-intro').value = intro;
+  document.getElementById('rp-ed-cnt').textContent = intro.length;
+  document.getElementById('rp-ed-photo-file').value = '';
+
+  showRpView('edit');
+}
+
+function rpHighlightPhotoChip(active) {
+  ['theme', 'memory', 'upload'].forEach(s =>
+    document.getElementById('rp-ed-chip-' + s).classList.toggle('on', s === active));
+}
+
+/* A-4: 추억피드 샘플 사진 (외부 에셋 없이 data-URI 썸네일로 표현) */
+function memThumb(c1, c2, emoji) {
+  const svg = "<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'>" +
+    "<defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='" + c1 + "'/><stop offset='1' stop-color='" + c2 + "'/></linearGradient></defs>" +
+    "<rect width='160' height='160' fill='url(#g)'/><text x='80' y='98' font-size='62' text-anchor='middle'>" + emoji + "</text></svg>";
+  return 'data:image/svg+xml,' + encodeURIComponent(svg);
+}
+const MEMORY_PHOTOS = [
+  { src: memThumb('#5aa9e6', '#2c5f8a', '🏝️'), label: '제주 바다' },
+  { src: memThumb('#f6a96b', '#c1502e', '🎂'), label: '생일파티' },
+  { src: memThumb('#8bc34a', '#33691e', '🏕️'), label: '캠핑' },
+  { src: memThumb('#c98bd0', '#6a1b9a', '🌸'), label: '벚꽃놀이' },
+  { src: memThumb('#ff8a65', '#d84315', '🍜'), label: '맛집투어' },
+  { src: memThumb('#4db6ac', '#00695c', '📸'), label: '출사' },
+];
+
+function rpRenderMemoryPicker() {
+  const box = document.getElementById('rp-mem-picker');
+  box.innerHTML = '<div class="rp-mem-hd"><i class="ti ti-photo-heart"></i> 추억피드에서 사진 고르기</div>' +
+    '<div class="rp-mem-grid">' +
+    MEMORY_PHOTOS.map((m, i) =>
+      `<button type="button" class="rp-mem-item${rpEditPhotoSrc === m.src ? ' sel' : ''}" onclick="rpPickMemoryPhoto(${i})" title="${m.label}"><img src="${m.src}" alt="${m.label}"><span>${m.label}</span></button>`
+    ).join('') + '</div>';
+}
+
+function rpPickMemoryPhoto(i) {
+  const m = MEMORY_PHOTOS[i];
+  if (!m) return;
+  rpEditPhotoSrc    = m.src;
+  rpEditPhotoSource = 'memory';
+  document.getElementById('rp-ed-photo').innerHTML = `<img src="${m.src}" alt=""><span class="chg"><i class="ti ti-camera"></i> 변경</span>`;
+  rpHighlightPhotoChip('memory');
+  document.querySelectorAll('#rp-mem-picker .rp-mem-item').forEach((el, idx) => el.classList.toggle('sel', idx === i));
+}
+
+function rpSelectPhotoSource(src) {
+  if (src === 'memory') {
+    rpRenderMemoryPicker();
+    document.getElementById('rp-mem-picker').style.display = '';
+    rpHighlightPhotoChip('memory');
     return;
   }
-  pane.innerHTML = notices.map(n => `
-    <div class="preview-list-item">
-      <i class="ti ${n.icon}"></i>
-      <div style="flex:1;min-width:0;">
-        <p class="preview-list-title">${n.title}</p>
-        <p class="preview-list-desc">${n.desc}</p>
-      </div>
-      <span class="preview-list-time">${n.time}</span>
-    </div>
-  `).join('');
+  document.getElementById('rp-mem-picker').style.display = 'none';   // 다른 소스 선택 시 피커 숨김
+  if (src === 'theme') {
+    rpEditPhotoSrc    = null;
+    rpEditPhotoSource = 'theme';
+    document.getElementById('rp-ed-photo').innerHTML = `<i class="ti ti-photo"></i><span class="chg"><i class="ti ti-camera"></i> 변경</span>`;
+    rpHighlightPhotoChip('theme');
+  }
+  /* 'upload'는 파일 input onchange(rpEditPhotoUpload)에서 처리 */
 }
 
-function copyPreviewRoomCode() {
-  const code = document.getElementById('preview-room-code').textContent;
-  if (!code) return;
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(code).then(() => clovToast(`초대 코드 [${code}] 복사되었어요! 📋`, 'success'));
+function rpEditPhotoUpload(input) {
+  if (!input.files || !input.files[0]) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    rpEditPhotoSrc    = e.target.result;
+    rpEditPhotoSource = 'upload';
+    document.getElementById('rp-mem-picker').style.display = 'none';
+    document.getElementById('rp-ed-photo').innerHTML =
+      `<img src="${e.target.result}" alt=""><span class="chg"><i class="ti ti-camera"></i> 변경</span>`;
+    rpHighlightPhotoChip('upload');
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function saveRoomProfile() {
+  const room   = rooms.find(r => r.id === previewRoomId);
+  if (!room) return;
+  const nameEl = document.getElementById('rp-ed-name');
+  if (!validateName(nameEl, 'rp-ed-name-err')) { nameEl.focus(); return; }
+
+  const newName  = nameEl.value.trim();
+  const newIntro = document.getElementById('rp-ed-intro').value.trim();
+  const prevIntro = (room.intro === '소개글을 아직 안 적었어요') ? '' : (room.intro || '');
+  const changes = [];
+  if (newName !== room.name) changes.push('이름');
+  if (newIntro !== prevIntro) changes.push('소개글');
+  if (rpEditPhotoSource === 'theme' && room.photo) { room.photo = null; changes.push('대표사진'); }
+  if (rpEditPhotoSrc) { room.photo = rpEditPhotoSrc; changes.push('대표사진'); }
+
+  room.name  = newName;
+  room.intro = newIntro || '소개글을 아직 안 적었어요';
+
+  if (changes.length) {
+    room.activityExtra = room.activityExtra || [];
+    room.activityExtra.unshift({
+      type: 'edit', title: `<span class="who">나</span>님이 ${[...new Set(changes)].join('·')}을(를) 수정했어요`,
+      desc: '', time: '방금', unread: false, ts: Date.now(),
+    });
+  }
+
+  renderList();
+  showRoomPreviewModal(room.id);   // 소식 갱신된 미리보기로 복귀
+  clovToast('방 프로필을 저장했어요 · 멤버에게 알림이 갔어요 🔔', 'success');
+}
+
+/* ----- 친구 초대하기 시트 ----- */
+function openRoomInviteView() {
+  const room = rooms.find(r => r.id === previewRoomId);
+  if (!room) return;
+  ensureRoomCode(room);
+  document.getElementById('rp-inv-link').textContent = `clov.app/join/${room.code}`;
+  document.getElementById('rp-inv-code').textContent = room.code;
+  showRpView('invite');
+}
+
+function rpCopyInvite(kind) {
+  const room = rooms.find(r => r.id === previewRoomId);
+  if (!room) return;
+  const text = kind === 'link' ? `clov.app/join/${room.code}` : room.code;
+  copyText(text, `${kind === 'link' ? '초대 링크' : '초대 코드'}를 복사했어요! 📋`);
+}
+
+function rpShareInvite() {
+  const room = rooms.find(r => r.id === previewRoomId);
+  if (!room) return;
+  const url = `https://clov.app/join/${room.code}`;
+  if (navigator.share) {
+    navigator.share({ title: `${room.name} 우정공간 초대`, text: `${room.name}에 초대합니다!`, url }).catch(() => {});
   } else {
-    const ta = document.createElement('textarea');
-    ta.value = code; document.body.appendChild(ta); ta.select();
-    document.execCommand('copy'); document.body.removeChild(ta);
-    clovToast(`초대 코드 [${code}] 복사되었어요! 📋`, 'success');
+    copyText(url, '초대 링크를 복사했어요! 친구에게 붙여넣어 보내보세요 📨');
   }
+}
+
+function rpRegenCode() {
+  const room = rooms.find(r => r.id === previewRoomId);
+  if (!room) return;
+  clovConfirm('초대 코드를 새로 발급할까요? 이전 코드는 더 이상 쓸 수 없어요.', () => {
+    room.code = 'CLOV-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+    document.getElementById('rp-inv-link').textContent = `clov.app/join/${room.code}`;
+    document.getElementById('rp-inv-code').textContent = room.code;
+    clovToast('새 초대 코드를 발급했어요 🔄', 'success');
+  }, { icon: '🔄', confirmText: '재발급', cancelText: '취소' });
+}
+
+function copyText(text, msg) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => clovToast(msg, 'success')).catch(() => fallbackCopy(text, msg));
+  } else {
+    fallbackCopy(text, msg);
+  }
+}
+function fallbackCopy(text, msg) {
+  const ta = document.createElement('textarea');
+  ta.value = text; document.body.appendChild(ta); ta.select();
+  try { document.execCommand('copy'); } catch (e) {}
+  document.body.removeChild(ta);
+  clovToast(msg, 'success');
 }
 
 /* ===== 방 입장 ===== */
@@ -1124,6 +1795,7 @@ function enterRoom(id) {
   room.newPosts = 0;
   window.location.href = `../02-main/index.html?roomId=${id}&roomName=${encodeURIComponent(room.name)}&roomCode=${encodeURIComponent(room.code || 'CLOV-' + (1000 + (id * 837) % 9000))}`;
 }
+/* A-6/A-7: 코드 입력 → 즉시 입장이 아니라 "가입 신청(수락대기)". 예외 규칙 처리. */
 function enterByCode() {
   const code = document.getElementById('room-code-input').value.trim().toUpperCase();
   if (!code) {
@@ -1133,7 +1805,41 @@ function enterByCode() {
     return;
   }
   document.getElementById('room-code-input').value = '';
-  window.location.href = `../02-main/index.html?roomCode=${encodeURIComponent(code)}`;
+
+  // 잠자는 방 코드 → 추억 그대로 부활 (A-3)
+  if (reviveDormant(code)) {
+    clovToast('잠자던 우정공간이 추억 그대로 되살아났어요! 🌱', 'success');
+    return;
+  }
+
+  // 이미 멤버인 방 → 신청 안 만들고 바로 이동
+  const mine = rooms.find(r => (r.code || '').toUpperCase() === code);
+  if (mine) {
+    clovToast('이미 참여 중인 방이에요 — 바로 이동할게요 ✅', 'success');
+    setTimeout(() => enterRoom(mine.id), 600);
+    return;
+  }
+  // 이미 신청한(수락대기) 방 → 중복 신청 차단
+  if (requestedRooms.some(q => q.code.toUpperCase() === code && q.status === 'pending')) {
+    clovToast('이미 신청했어요 · 수락을 기다리는 중이에요 ⏳', 'info');
+    return;
+  }
+  // 거절됐던 코드 → 같은 카드를 재요청으로 되살림 (제한 없음)
+  const prev = requestedRooms.find(q => q.code.toUpperCase() === code && q.status === 'rejected');
+  if (prev) {
+    prev.status = 'pending';
+    prev.requestedAt = Date.now();
+    renderRequestedRooms();
+    clovToast('다시 입장 요청을 보냈어요 · 수락을 기다려요 ⏳', 'success');
+    return;
+  }
+  // 신규 가입 신청 (수락 대기)
+  requestedRooms.unshift({
+    id: 'req' + (reqSeq++), code, name: null, status: 'pending',
+    requestedAt: Date.now(), invitedBy: null, membersPreview: 2 + (code.length % 5),
+  });
+  renderRequestedRooms();
+  clovToast('입장 요청을 보냈어요 · 멤버 1명이 수락하면 들어갈 수 있어요 🙌', 'success');
 }
 
 /* ===== 즐겨찾기 ===== */
@@ -1163,66 +1869,43 @@ function toggleEditMode() {
   renderList();
 }
 
+/* A-2/A-3: 방장이 없으므로 "삭제"가 아니라 "나가기". 내가 마지막 멤버면 30일 잠자기. */
 function deleteRoom(id) {
   const room = rooms.find(r => r.id === id);
   if (!room) return;
-  clovConfirm(`"${room.name}" 을 삭제할까요?`, () => {
+  const memberCount = room.members ? room.members.length : 1;
+  const leave = (msg) => {
     rooms = rooms.filter(r => r.id !== id);
     renderList();
-    clovToast('우정공간이 삭제되었어요.', 'info');
-  }, { icon: '🗑️', type: 'error', confirmText: '삭제', cancelText: '취소' });
-}
-
-/* ===== 수정 모달 ===== */
-function openEditModal(id) {
-  const room = rooms.find(r => r.id === id);
-  if (!room) return;
-  editingRoomId = id;
-  editPhotoSrc  = null;
-
-  // 현재 방 정보 채우기
-  const photoBox = document.getElementById('edit-photo-box');
-  if (room.photo) {
-    photoBox.innerHTML = `<img src="${room.photo}" alt="">`;
-  } else {
-    photoBox.innerHTML = `<i class="ti ti-camera" style="font-size:22px"></i><span>변경</span>`;
-  }
-  document.getElementById('edit-name-input').value  = room.name;
-  document.getElementById('edit-intro-input').value = room.intro || '';
-  document.getElementById('edit-intro-count').textContent = (room.intro || '').length;
-  document.getElementById('edit-name-err').textContent = '';
-  document.getElementById('edit-name-input').classList.remove('invalid');
-  document.getElementById('edit-photo-file').value = '';
-
-  document.getElementById('edit-modal').classList.add('show');
-}
-
-function closeEditModal() {
-  closeRoomHeaderModal('edit-modal');
-  editingRoomId = null; editPhotoSrc = null;
-}
-
-function previewEditPhoto(input) {
-  if (!input.files || !input.files[0]) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    editPhotoSrc = e.target.result;
-    const box = document.getElementById('edit-photo-box');
-    box.innerHTML = `<img src="${e.target.result}" alt="">`;
+    clovToast(msg, 'info');
   };
-  reader.readAsDataURL(input.files[0]);
+  if (memberCount <= 1) {
+    // 내가 마지막 멤버 → 30일 소프트 삭제(잠자기, localStorage 보관)
+    clovConfirm(
+      '지금 마지막 멤버예요. 나가도 바로 사라지지 않고 30일간 보관돼요. 그 안에 누구든 코드로 다시 들어오면 추억 그대로 되살아나요. 30일 아무도 안 오면 완전히 사라져요.',
+      () => {
+        sleepRoom(room);
+        renderList();
+        clovToast('우정공간이 30일간 잠자기에 들어갔어요 💤 코드로 되살릴 수 있어요', 'info');
+      },
+      { icon: '💤', type: 'warn', confirmText: '나가기 (30일 보관)', cancelText: '취소' }
+    );
+  } else {
+    // 다른 멤버가 남음 → 나가기
+    clovConfirm(
+      `이 방에서 나갈까요? 남은 ${memberCount - 1}명에게 회원님이 나갔다고 알려져요.`,
+      () => leave('방에서 나왔어요 · 남은 멤버에게 알림이 갔어요'),
+      { icon: '🚪', type: 'warn', confirmText: '나가기', cancelText: '취소' }
+    );
+  }
 }
 
-function saveRoomEdit() {
-  const nameEl = document.getElementById('edit-name-input');
-  if (!validateName(nameEl, 'edit-name-err')) { nameEl.focus(); return; }
-  const room = rooms.find(r => r.id === editingRoomId);
-  if (!room) return;
-  room.name  = nameEl.value.trim();
-  room.intro = document.getElementById('edit-intro-input').value.trim() || '소개글을 아직 안 적었어요';
-  if (editPhotoSrc) room.photo = editPhotoSrc;
-  closeEditModal();
-  renderList();
+/* ===== 방 수정 = 미리보기 ⚙️ 편집으로 일원화 (C-11c) =====
+   방목록 연필 → 해당 방 미리보기를 열고 곧바로 프로필 편집 서브뷰로 진입.
+   (구 previewEditPhoto 업로드 버그 경로는 제거됨) */
+function openEditModal(id) {
+  showRoomPreviewModal(id);
+  openRoomEditView();
 }
 
 /* ===== 드래그 앤 드롭 (순서 변경) ===== */
@@ -1355,6 +2038,7 @@ function createRoom() {
     intro: intro || '소개글을 아직 안 적었어요',
     lastActive: '방금', dday: null, fav: false, newPosts: 0,
     photo: newCreatePhotoSrc || null, createdAt: new Date(),
+    members: ['나'],   // 생성자가 유일 멤버 → 나가면 30일 잠자기(A-3)
   });
   document.getElementById('success-title').textContent = `"${name}" 이 만들어졌어요!`;
   document.getElementById('invite-code-text').value = code;
@@ -1392,7 +2076,6 @@ document.addEventListener('keydown', e => {
   closeRoomHeaderModal('room-preview-modal');
   closeRoomHeaderModal('room-create-modal');
   closeRoomHeaderModal('room-success-modal');
-  closeEditModal();
   closeModal('dt-profile-modal');
 });
 
@@ -1408,6 +2091,11 @@ function closeModal(id) {
 }
 
 /* ===== 초기 렌더링 ===== */
+// 리로드 일관성: 지금 잠자는(dormant) 방은 활성 목록에서 제외 — 코드/되살리기로만 부활
+(function () {
+  const dormant = loadDormant();
+  if (dormant.length) rooms = rooms.filter(r => !dormant.some(d => (d.code || '') === (r.code || '')));
+})();
 renderList();
 </script>
 </body>

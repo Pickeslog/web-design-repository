@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Gamja+Flower&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;background:#f0eee9;font-family:'Gaegu',system-ui,sans-serif}
+  .dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(0,0,0,.08);scroll-margin-top:16px}
+  .dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 6px}
+  .dv-tid{font:700 11px 'Gaegu',monospace;padding:3px 9px;background:#1a1a1a;color:#fff;border-radius:4px;text-decoration:none}
+  .dv-tname{font:700 15px/1.2 'Gaegu',sans-serif;color:#1a1a1a}
+  .dv-sub{margin:0 0 22px;font:400 14px/1.5 'Gaegu',sans-serif;color:rgba(0,0,0,.5);max-width:900px}
+  .dv-opts{display:flex;flex-wrap:wrap;gap:30px;align-items:flex-start}
+  .dv-opt{flex:none;display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px}
+  .dv-oid{font:700 12px 'Gaegu',monospace;padding:3px 8px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none}
+  .dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 15px/1.3 'Gaegu',sans-serif;color:rgba(0,0,0,.6)}
+  .dv-olabel b{color:#1a1a1a;font-weight:700}
+  .dv-opt:target .dv-oid{background:#2f7d4f;color:#fff}
+  .dv-next{margin:24px 0 0;font:400 15px/1.6 'Gaegu',sans-serif;color:rgba(0,0,0,.55)}
+  .dv-next a{color:#2f7d4f}
+
+  /* ---- wireframe sheet ---- */
+  .wf{width:520px;max-width:100%;background:#fdfcf9;border:2px solid #2a2a2a;border-radius:14px;padding:18px 18px 22px;box-shadow:5px 6px 0 rgba(0,0,0,.12)}
+  .wf-toolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}
+  .wf-h{font:700 17px 'Gaegu';color:#1f1f1f}
+  .wf-ctrls{display:flex;gap:6px;align-items:center}
+  .wf-chip{border:1.6px solid #2a2a2a;border-radius:8px;padding:3px 9px;font:400 12.5px 'Gaegu';background:#fff}
+  .wf-chip.g{background:#cfe6d6;border-color:#2f7d4f}
+  .wf-tabs{display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap}
+  .wf-tab{border:1.6px solid #2a2a2a;border-radius:16px;padding:3px 12px;font:400 12.5px 'Gaegu';background:#fff}
+  .wf-tab.on{background:#2f7d4f;color:#fff;border-color:#2f7d4f}
+  .wf-tab.alert{background:#fbe3c2;border-color:#c98a2e;position:relative}
+  .wf-tab .cnt{display:inline-block;margin-left:4px;background:#d95f5f;color:#fff;border-radius:9px;font-size:10px;padding:0 5px;font-weight:700}
+
+  .wf-sec{font:700 13px 'Gaegu';color:#7a5a1e;display:flex;align-items:center;gap:6px;margin:4px 2px 9px}
+  .wf-sec .n{background:#d95f5f;color:#fff;border-radius:9px;font-size:10px;padding:0 6px;font-weight:700}
+  .wf-sec.join{color:#2f6b45}
+  .wf-divider{border:none;border-top:2px dashed #c9c4b8;margin:16px 0}
+
+  .wf-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+  .wf-card{border:1.8px solid #2a2a2a;border-radius:11px;padding:11px;background:#fff;display:flex;flex-direction:column;gap:7px;position:relative}
+  .wf-card .thumb{width:38px;height:38px;border-radius:9px;background:#dfe7e0;border:1.5px solid #2a2a2a;display:flex;align-items:center;justify-content:center;font-size:15px}
+  .wf-top{display:flex;align-items:flex-start;justify-content:space-between}
+  .wf-name{font:700 14px 'Gaegu';color:#1f1f1f;line-height:1.1}
+  .wf-meta{font:400 11.5px 'Gaegu';color:#8a8a82;line-height:1.25}
+  .wf-code{font:400 11px 'Gaegu';color:#a09a8c;border-top:1.3px dotted #d8d3c6;padding-top:5px}
+  .wf-star{font-size:14px;color:#c8c2b4}
+  .wf-star.on{color:#e6a23c}
+  .wf-badge{position:absolute;top:-8px;left:-8px;background:#d95f5f;color:#fff;font:700 10px 'Gaegu';border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;border:1.5px solid #fff}
+  .wf-dday{border:1.5px solid #2f7d4f;background:#e4f0e8;border-radius:8px;padding:4px 8px;font:400 11.5px 'Gaegu';color:#2f6b45}
+
+  /* state cards */
+  .wf-card.waiting{border-style:dashed;border-color:#c98a2e;background:#fffaf0}
+  .wf-card.rejected{border-color:#d95f5f;background:#fdf0f0}
+  .wf-state{display:inline-flex;align-items:center;gap:4px;font:700 11.5px 'Gaegu';padding:2px 8px;border-radius:12px;align-self:flex-start}
+  .wf-state.wait{background:#fbe3c2;color:#8a5a12}
+  .wf-state.rej{background:#f6cccc;color:#a12b2b}
+  .wf-actions{display:flex;gap:6px;margin-top:1px}
+  .wf-btn{flex:1;border:1.5px solid #2a2a2a;border-radius:8px;padding:5px 0;text-align:center;font:400 12px 'Gaegu';background:#fff}
+  .wf-btn.pri{background:#2f7d4f;color:#fff;border-color:#2f7d4f}
+  .wf-btn.warn{background:#fff;color:#a12b2b;border-color:#d95f5f}
+  .wf-dim{opacity:.62}
+  .wf-note{font:400 12px 'Gaegu';color:#9a7a3a;background:#fff7e8;border:1.4px dashed #d9b878;border-radius:8px;padding:7px 10px;margin-top:10px}
+  .wf-callout{font:400 12.5px 'Gaegu';color:#3a3a3a;background:#eef4ef;border:1.4px solid #cfe0d4;border-radius:8px;padding:8px 11px}
+
+  /* ---- spec summary sheet ---- */
+  .spec{width:720px;max-width:100%;background:#fff;border:2px solid #2a2a2a;border-radius:16px;box-shadow:5px 6px 0 rgba(0,0,0,.12);overflow:hidden}
+  .spec-hd{background:#1f3d2b;color:#fff;padding:16px 22px}
+  .spec-hd .t{font:700 20px 'Gaegu'}
+  .spec-hd .s{font:400 13px 'Gaegu';color:#bcd8c6;margin-top:2px}
+  .spec-principle{background:#e4f0e8;border-bottom:1.6px solid #cfe0d4;padding:12px 22px;font:400 14px 'Gaegu';color:#2f6b45}
+  .spec-principle b{font-weight:700}
+  .spec-bd{padding:6px 22px 20px}
+  .spec-block{padding:15px 0;border-bottom:1.4px dashed #e0dccf}
+  .spec-block:last-child{border-bottom:none}
+  .spec-bt{display:flex;align-items:center;gap:8px;font:700 15px 'Gaegu';color:#1f3d2b;margin-bottom:8px}
+  .spec-bt .tag{font:700 11px 'Gaegu';background:#1f3d2b;color:#fff;border-radius:5px;padding:2px 7px}
+  .spec-row{display:flex;gap:9px;font:400 13.5px 'Gaegu';color:#333;line-height:1.5;padding:2px 0}
+  .spec-row .k{flex:none;color:#2f7d4f;font-weight:700}
+  .spec-row .k.red{color:#a12b2b}
+  .spec-grid2{display:grid;grid-template-columns:1fr 1fr;gap:4px 22px}
+
+  /* ---- modal / dialog wireframe ---- */
+  .wf-modal{width:380px;max-width:100%;background:#fdfcf9;border:2px solid #2a2a2a;border-radius:16px;box-shadow:5px 6px 0 rgba(0,0,0,.12);overflow:hidden}
+  .wf-modal-hd{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:1.6px solid #ece7dc}
+  .wf-modal-hd b{font:700 15px 'Gaegu'}
+  .wf-modal-hd .x{font-size:15px;color:#999}
+  .wf-modal-bd{padding:15px 16px;display:flex;flex-direction:column;gap:13px}
+  .wf-field{display:flex;flex-direction:column;gap:6px}
+  .wf-field-l{font:700 13px 'Gaegu';color:#333;display:flex;gap:6px;align-items:baseline;flex-wrap:wrap}
+  .wf-input{border:1.6px solid #2a2a2a;border-radius:9px;padding:8px 10px;font:400 13px 'Gaegu';background:#fff;color:#555}
+  .wf-ta{min-height:46px}
+  .wf-hint{font:400 11px 'Gaegu';color:#c98a2e}
+  .wf-cover-row{display:flex;gap:11px;align-items:center}
+  .wf-cover{width:54px;height:54px;border-radius:12px;border:1.8px solid #2a2a2a;background:#e4f0e8;display:flex;align-items:center;justify-content:center;font-size:22px;flex:none}
+  .wf-src{display:flex;gap:6px;flex-wrap:wrap}
+  .wf-src .s{border:1.5px solid #2a2a2a;border-radius:8px;padding:3px 8px;font:400 11.5px 'Gaegu';background:#fff}
+  .wf-src .s.on{background:#cfe6d6;border-color:#2f7d4f}
+  .wf-mdiv{border:none;border-top:1.6px dashed #d8d3c6;margin:3px 0}
+  .wf-mlabel{font:700 12px 'Gaegu';color:#8a8a82;margin-bottom:-4px}
+  .wf-menu-item{display:flex;align-items:center;gap:8px;border:1.5px solid #2a2a2a;border-radius:9px;padding:8px 10px;font:400 13px 'Gaegu';background:#fff}
+  .wf-menu-item.danger{color:#a12b2b;border-color:#d95f5f;background:#fdf3f3}
+  .wf-notify-banner{background:#eef4ef;border:1.4px solid #cfe0d4;border-radius:9px;padding:8px 11px;font:400 12px 'Gaegu';color:#2f6b45;display:flex;gap:7px;align-items:flex-start;line-height:1.35}
+  .wf-save{background:#2f7d4f;color:#fff;border-radius:10px;padding:10px;text-align:center;font:700 14px 'Gaegu'}
+  .wf-dialog{width:300px;max-width:100%;background:#fff;border:2px solid #2a2a2a;border-radius:14px;padding:18px 16px;text-align:center;box-shadow:5px 6px 0 rgba(0,0,0,.12);display:flex;flex-direction:column;gap:9px;align-items:center}
+  .wf-dialog.danger{border-color:#d95f5f}
+  .wf-dialog .ic{font-size:26px}
+  .wf-dialog .q{font:700 15px 'Gaegu';color:#1f1f1f}
+  .wf-dialog .q.warn{color:#a12b2b}
+  .wf-dialog .d{font:400 12.5px 'Gaegu';color:#777;line-height:1.4}
+  .wf-dialog-actions{display:flex;gap:8px;width:100%;margin-top:4px}
+</style>
+</helmet>
+
+<section class="dv-turn" id="t8">
+  <div class="dv-thd"><a class="dv-tid" href="#t8">8</a><span class="dv-tname">P6·P7 마무리 — 무한 대기 &amp; 거절 실효</span></div>
+  <p class="dv-sub">마지막 두 구멍. 요청자가 하염없이 기다리는 문제(P7), 거절해도 무제한 재요청되는 문제(P6). 둘 다 가볍게 막고 끝냅니다.</p>
+
+  <div class="dv-opts">
+
+    <!-- 8a P7 expiry -->
+    <div class="dv-opt" id="8a">
+      <div class="dv-olabel"><a class="dv-oid" href="#8a">8a</a><b>P7 · 대기 만료</b> — 무한 대기 방지</div>
+      <div class="wf" style="width:340px">
+        <div class="wf-sec">요청자의 "수락대기" 카드에</div>
+        <div class="wf-card waiting">
+          <div class="wf-top"><div class="thumb">🖼</div></div>
+          <div class="wf-name">제주 여행단</div>
+          <span class="wf-state wait">⏳ 수락 대기중 · 6일 남음</span>
+          <div class="wf-actions"><span class="wf-btn warn">요청 취소</span></div>
+        </div>
+        <div style="margin-top:10px;background:#2a2a2a;color:#fff;border-radius:10px;padding:9px 12px;font:400 12.5px 'Gaegu'">⌛ 요청이 만료됐어요 · 원하면 다시 신청할 수 있어요</div>
+        <div class="wf-src" style="margin-top:11px"><span class="s">3일</span><span class="s on">7일(추천)</span><span class="s">만료 없음</span></div>
+      </div>
+      <div class="wf-callout" style="width:340px;max-width:100%">👍 전원 잠수여도 요청자가 방치되지 않음. 만료되면 요청자·방 양쪽에서 조용히 정리. 추천 <b>7일</b>.</div>
+    </div>
+
+    <!-- 8b P6 reject teeth -->
+    <div class="dv-opt" id="8b">
+      <div class="dv-olabel"><a class="dv-oid" href="#8b">8b</a><b>P6 · 거절 실효</b> — 무제한 재요청 완화</div>
+      <div class="wf" style="width:340px">
+        <div class="wf-sec">거절 후 재요청을</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="border:1.6px solid #2f7d4f;background:#eef6f0;border-radius:9px;padding:9px 11px">
+            <b style="font:700 13px 'Gaegu';color:#2f6b45">그대로 허용 (MVP 추천)</b>
+            <div class="wf-meta">코드 재발급(6a)이 생겨서, 정 곤란하면 코드를 바꿔 원천 차단 가능 → 재요청 제한은 아직 불필요</div>
+          </div>
+          <div style="border:1.5px solid #d8d3c6;border-radius:9px;padding:9px 11px">
+            <b style="font:700 13px 'Gaegu';color:#8a8a82">거절 후 24시간 쿨타임</b>
+            <div class="wf-meta">연타 재요청만 막음</div>
+          </div>
+          <div style="border:1.5px solid #d8d3c6;border-radius:9px;padding:9px 11px">
+            <b style="font:700 13px 'Gaegu';color:#8a8a82">3회 거절 시 자동 차단</b>
+            <div class="wf-meta">확실하지만 "차단" 개념·화면이 새로 필요</div>
+          </div>
+        </div>
+      </div>
+      <div class="wf-callout" style="width:340px;max-width:100%">추천 <b>그대로(MVP)</b> — 재발급이 이미 방어선. 스팸이 실제로 문제 되면 그때 쿨타임 추가.</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">추천: <b><a class="dv-oid" href="#8a">8a</a> 7일 만료</b> + <b><a class="dv-oid" href="#8b">8b</a> 그대로(MVP)</b>. 골라주세요: "추천대로 둘 다" · "만료는 3일로" · "거절 쿨타임 넣자" · "이제 스펙 최종본 정리"</p>
+</section>
+
+<section class="dv-turn" id="t7">
+  <div class="dv-thd"><a class="dv-tid" href="#t7">7</a><span class="dv-tname">🚨 P2·P3 해결 — 삭제 경합 &amp; 추억 영구증발</span></div>
+  <p class="dv-sub">두 문제: ① 2명이 동시에 나가면 아무도 "마지막" 판정을 못 받아 <b>0명짜리 유령 방</b>이 남음. ② 마지막 1인이 실수로 삭제하면 <b>여러 명·옛 멤버의 추억까지 영구증발</b>, 되돌리기 없음. 삭제의 무게를 어떻게 다룰지.</p>
+
+  <div class="dv-opts">
+
+    <!-- 7a soft delete -->
+    <div class="dv-opt" id="7a">
+      <div class="dv-olabel"><a class="dv-oid" href="#7a">7a</a><b>잠자는 방(30일 보관)</b> — 즉시 파괴 대신 보관</div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="wf-dialog" style="border-color:#c98a2e">
+          <div class="ic">🌙</div>
+          <div class="q">이 방에서 나가면 방이 잠들어요</div>
+          <div class="d">지금 마지막 멤버예요. 나가도 <b>바로 사라지지 않고 30일간 보관</b>돼요.<br>그 안에 누구든 코드로 다시 들어오면 <b>추억 그대로 되살아나요.</b><br>30일 아무도 안 오면 그때 완전히 사라져요.</div>
+          <div class="wf-dialog-actions"><span class="wf-btn">취소</span><span class="wf-btn warn">나가기</span></div>
+        </div>
+        <div class="wf-note">🛡 동시 나가기 경합 해결: "마지막인지"를 버튼 뜰 때가 아니라 <b>나가는 순간에 판정</b> → 0명이 되면 시스템이 자동으로 잠자기 처리(유령 방 없음).</div>
+      </div>
+      <div class="wf-callout" style="width:300px;max-width:100%">👍 영구증발·경합·옛멤버 동의문제를 한 번에 해결. 무서운 경고가 부드러워짐. clov 추억 앱에 제일 맞음. ⚠ 30일 보관 저장공간 필요(경미).</div>
+    </div>
+
+    <!-- 7b permanent + race fix -->
+    <div class="dv-opt" id="7b">
+      <div class="dv-olabel"><a class="dv-oid" href="#7b">7b</a><b>즉시 완전삭제 유지</b> — 경합만 수정</div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="wf-dialog danger">
+          <div class="ic">🗑️</div>
+          <div class="q warn">마지막 멤버예요</div>
+          <div class="d">나가면 방과 <b>모든 추억·편지·일정이 지금 바로 영구 삭제</b>돼요. 되돌릴 수 없어요.</div>
+          <div class="wf-dialog-actions"><span class="wf-btn">취소</span><span class="wf-btn warn">나가고 삭제</span></div>
+        </div>
+        <div class="wf-note">경합만 고침: 나가는 순간 인원 재확인 → 마지막이면 삭제. 유령 방은 안 생김.</div>
+      </div>
+      <div class="wf-callout" style="width:300px;max-width:100%">가장 단순·저장공간 안 씀. ❌ 실수 복구 불가, 옛 멤버 추억이 동의 없이 증발 — P3가 그대로 남음.</div>
+    </div>
+
+    <!-- 7c never auto delete -->
+    <div class="dv-opt" id="7c">
+      <div class="dv-olabel"><a class="dv-oid" href="#7c">7c</a><b>자동 삭제 안 함</b> — 보관만, 완전삭제는 수동</div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="wf-dialog" style="border-color:#c98a2e">
+          <div class="ic">📦</div>
+          <div class="q">방을 보관할까요?</div>
+          <div class="d">나가면 방은 <b>계속 보관</b>돼요. 완전 삭제는 따로 "영구삭제"를 눌러야 해요.</div>
+          <div class="wf-dialog-actions"><span class="wf-btn">취소</span><span class="wf-btn warn">나가고 보관</span></div>
+        </div>
+        <div class="wf-note">데이터 안전 최우선 — 절대 자동으로 안 사라짐</div>
+      </div>
+      <div class="wf-callout" style="width:300px;max-width:100%">추억 보존 최강. ❌ 방이 무한정 쌓임(청소 안 됨), "영구삭제"를 아무도 안 눌러 유령 방 누적.</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">추천: <b><a class="dv-oid" href="#7a">7a</a> 잠자는 방(30일)</b> — 경합·영구증발·옛멤버 문제를 한 번에. 골라주세요: "7a로" · "보관 기간 30일 말고 다르게" · "다음 P4~P7 남은 것들 한 번에 정리"</p>
+</section>
+
+<section class="dv-turn" id="t6">
+  <div class="dv-thd"><a class="dv-tid" href="#t6">6</a><span class="dv-tname">🚨 P1 해결 — "1명 수락 + 강퇴·재발급 없음"의 사생활 구멍 막기</span></div>
+  <p class="dv-sub">방장 없는 채로 사생활을 지키는 방향 3가지. 두 개의 위험(① 코드 유출로 낯선 사람 신청 ② 멤버 1명이 실수로 수락 → 뺄 방법 없음)을 각각 어떻게 막을지.</p>
+
+  <div class="dv-opts">
+
+    <!-- 6a code hygiene -->
+    <div class="dv-opt" id="6a">
+      <div class="dv-olabel"><a class="dv-oid" href="#6a">6a</a><b>코드 위생</b> — 코드 숨기고 + 재발급 부활</div>
+      <div class="wf" style="width:340px">
+        <div class="wf-sec">지금: 카드에 코드가 대놓고 노출</div>
+        <div class="wf-card">
+          <div class="wf-top"><div class="thumb">🖼</div></div>
+          <div class="wf-name">여행 계획단 · Lv.3</div>
+          <div class="wf-meta">제주도 함께 · 30분 전</div>
+          <div style="border:1.5px solid #2f7d4f;background:#e4f0e8;border-radius:8px;padding:6px 9px;font:400 12.5px 'Gaegu';color:#2f6b45;display:flex;align-items:center;gap:6px">🔗 초대하기</div>
+        </div>
+        <div class="wf-note" style="margin-top:10px">"초대하기" 누르면 ↓</div>
+        <div style="margin-top:8px;border:1.8px solid #2a2a2a;border-radius:11px;padding:11px;background:#fff">
+          <div style="font:700 13px 'Gaegu'">초대 코드</div>
+          <div style="font:700 16px 'Gaegu';letter-spacing:2px;color:#2f6b45;margin:3px 0 8px">CLOV-1001</div>
+          <div class="wf-actions"><span class="wf-btn pri">복사</span><span class="wf-btn">🔁 재발급</span></div>
+          <div class="wf-hint" style="margin-top:6px">유출되면 재발급 → 옛 코드 즉시 무효화</div>
+        </div>
+      </div>
+      <div class="wf-callout" style="width:340px;max-width:100%">👍 유출 경로를 막음. 방장 없이도 누구나 재발급 가능(+알림). ⚠️ 이미 잘못 "수락"된 사람은 여전히 못 뺌 → 6b/6c 필요.</div>
+    </div>
+
+    <!-- 6b careful accept -->
+    <div class="dv-opt" id="6b">
+      <div class="dv-olabel"><a class="dv-oid" href="#6b">6b</a><b>수락 신중화</b> — 누군지 보여주고 + 되돌리기</div>
+      <div class="wf" style="width:360px">
+        <div class="wf-card" style="border-color:#c98a2e;background:#fffaf0">
+          <div class="wf-top"><div style="display:flex;gap:9px;align-items:center">
+            <div class="thumb" style="background:#e0d4b8">🙂</div>
+            <div><div class="wf-name">박서준 <span style="font-weight:400;color:#a09a8c;font-size:11px">@seojun</span></div>
+            <div class="wf-meta">🔗 강한나님 초대로 신청 · 방금</div></div>
+          </div></div>
+          <div style="font:400 12px 'Gaegu';color:#8a5a12;background:#fff;border:1.3px dashed #d9b878;border-radius:7px;padding:6px 8px">⚠ 수락하면 모든 추억·편지를 볼 수 있어요. 아는 분이 맞나요?</div>
+          <div class="wf-actions"><span class="wf-btn pri">수락하고 입장</span><span class="wf-btn warn">거절</span></div>
+        </div>
+        <div style="margin-top:10px;background:#2a2a2a;color:#fff;border-radius:10px;padding:9px 12px;font:400 12.5px 'Gaegu';display:flex;align-items:center;gap:8px">✅ 박서준님 수락함 <span style="margin-left:auto;text-decoration:underline">되돌리기 4:58</span></div>
+      </div>
+      <div class="wf-callout" style="width:360px;max-width:100%">👍 요청자 정체·초대 경로를 보여주고, 수락 직후 짧은 <b>되돌리기 창</b>으로 실수 복구. 강퇴 없이도 "방금 실수"는 잡음.</div>
+    </div>
+
+    <!-- 6c communal remove -->
+    <div class="dv-opt" id="6c">
+      <div class="dv-olabel"><a class="dv-oid" href="#6c">6c</a><b>공동 내보내기</b> — 강퇴를 "합의"로 최소 도입</div>
+      <div class="wf" style="width:340px">
+        <div class="wf-sec">멤버 정보에서</div>
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <div style="display:flex;align-items:center;gap:9px;border:1.6px solid #2a2a2a;border-radius:9px;padding:8px 10px;background:#fff">
+            <div class="thumb" style="width:28px;height:28px;font-size:12px;background:#e0d4b8">🙂</div>
+            <span style="font:400 13px 'Gaegu'">박서준</span>
+            <span class="wf-btn warn" style="margin-left:auto;flex:none;padding:4px 10px">내보내기</span>
+          </div>
+          <div style="background:#fff7e8;border:1.4px dashed #d9b878;border-radius:8px;padding:7px 10px;font:400 12px 'Gaegu';color:#9a7a3a">🗳 내보내기는 방장이 없어서 <b>다른 멤버 1명이 더 동의</b>해야 완료돼요 (1/2)</div>
+        </div>
+      </div>
+      <div class="wf-callout" style="width:340px;max-width:100%">👍 이미 들어온 사람도 뺄 수 있음. ⚠️ "합의 강퇴"는 친구방에 갈등·정치 소지 + 구현 복잡. 오래된 멤버 왕따 악용 가능.</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">추천: <b><a class="dv-oid" href="#6a">6a</a> + <a class="dv-oid" href="#6b">6b</a></b> (유출은 재발급으로, 실수는 되돌리기로 — 강퇴 없이 "무소유" 유지). 골라주세요: "6a+6b로" · "6c까지 넣자" · "되돌리기 시간 더 길게" · "다음 P2로"</p>
+</section>
+
+<section class="dv-turn" id="t5">
+  <div class="dv-thd"><a class="dv-tid" href="#t5">5</a><span class="dv-tname">✅ 확정 스펙 — 방 초대 &amp; 입장 플로우</span></div>
+  <p class="dv-sub">#1~#4에서 정한 결정 전부. 이 한 장이 결론이에요. 위 턴들은 근거(옵션 비교)로 남겨둠.</p>
+
+  <div class="dv-opts">
+    <div class="dv-opt" id="5a">
+      <div class="spec">
+        <div class="spec-hd">
+          <div class="t">🍀 방 초대 &amp; 입장 플로우 — 확정 스펙</div>
+          <div class="s">clov 우정공간 · 방장 없음(수평 구조)</div>
+        </div>
+        <div class="spec-principle">🔑 관통 원칙 — <b>모든 방 행동은 "멤버 누구나 가능하되, 하면 방 알림에 흔적이 남는다"</b> (권한 대신 투명성)</div>
+
+        <div class="spec-bd">
+
+          <div class="spec-block">
+            <div class="spec-bt"><span class="tag">1</span> 방목록 · 요청 카드 배치</div>
+            <div class="spec-row"><span class="k">구조</span><span>요청이 있을 때만 목록 <b>맨 위 "요청한 방" 섹션</b> 표시(수락대기·거절됨). 없으면 통째로 숨김 → 참여방 목록은 그대로.</span></div>
+            <div class="spec-row"><span class="k">예외</span><span>대기·거절 카드는 정렬·즐겨찾기·드래그 대상에서 제외.</span></div>
+          </div>
+
+          <div class="spec-block">
+            <div class="spec-bt"><span class="tag">2</span> "삭제" = 상태별 4갈래</div>
+            <div class="spec-grid2">
+              <div class="spec-row"><span class="k">참여방·멤버남음</span><span>→ 나가기 (퇴장 알림)</span></div>
+              <div class="spec-row"><span class="k red">참여방·마지막1명</span><span>→ 나가면 30일 "잠자기" · 재입장 시 부활</span></div>
+              <div class="spec-row"><span class="k">수락대기 카드</span><span>→ 요청 취소</span></div>
+              <div class="spec-row"><span class="k">거절 카드</span><span>→ 카드 지우기(+재요청)</span></div>
+            </div>
+          </div>
+
+          <div class="spec-block">
+            <div class="spec-bt"><span class="tag">3</span> 방 정보 수정 (공동편집)</div>
+            <div class="spec-row"><span class="k">이름·소개글</span><span>누구나 수정 → 방에 알림 기록. 소개글=공용 메모.</span></div>
+            <div class="spec-row"><span class="k">대표사진</span><span>기본 = 테마 일러스트(소유자 없음) · "추억에서 고르기" · 업로드. 바꾸면 알림.</span></div>
+            <div class="spec-row"><span class="k">개인설정</span><span>이 방 알림 끄기(나만 적용).</span></div>
+            <div class="spec-row"><span class="k">초대코드</span><span>카드엔 숨김 → "초대하기"에서 복사·재발급(유출 시 옛 코드 무효화).</span></div>
+            <div class="spec-row"><span class="k red">강퇴 없음</span><span>대신 수락 직후 "되돌리기(5분)"로 실수만 복구.</span></div>
+          </div>
+
+          <div class="spec-block">
+            <div class="spec-bt"><span class="tag">4</span> 수락 / 거절 <span style="font:400 11px 'Gaegu';color:#2f7d4f">· 이미 구현됨</span></div>
+            <div class="spec-row"><span class="k">위치</span><span>알림 &gt; "가입 신청" 탭 (건수 배지) + 친구들 알림에 대기 배너.</span></div>
+            <div class="spec-row"><span class="k">규칙</span><span><b>참여 멤버 1명이 수락하면 즉시 입장.</b> 누구나 수락/거절. 처리 시 "OO님이 수락했어요" 알림.</span></div>
+            <div class="spec-row"><span class="k">안전장치</span><span>요청자 정체·초대 경로 표시 + 수락 직후 되돌리기 5분.</span></div>
+          </div>
+
+          <div class="spec-block">
+            <div class="spec-bt"><span class="tag">5</span> 예외 규칙 (전부 채택)</div>
+            <div class="spec-row"><span class="k">✔</span><span>중복 신청 차단 · 이미 멤버면 바로 이동 · 동시 수락/거절은 먼저 처리한 쪽 확정 · 거절 후 재요청 허용 · 방 잠자기 시 대기신청 자동취소.</span></div>
+            <div class="spec-row"><span class="k">정원</span><span><b>상한 없음.</b></span></div>
+            <div class="spec-row"><span class="k">재요청</span><span><b>제한 없음</b> (스팸 실제 문제 시 그때 쿨타임 추가).</span></div>
+            <div class="spec-row"><span class="k">대기 만료</span><span>가입 요청은 <b>7일 뒤 자동 만료</b> · 요청자에게 알림, 재신청 가능.</span></div>
+          </div>
+
+          <div class="spec-block">
+            <div class="spec-bt"><span class="tag">6</span> 나간 멤버 · 탈퇴 · 자료</div>
+            <div class="spec-row"><span class="k">방 나가기</span><span>계정 유지 → 남긴 자료 그대로. 코드로 재입장하면 다시 멤버.</span></div>
+            <div class="spec-row"><span class="k">회원탈퇴</span><span>작성자 표기가 <b>"언노운"</b>으로 익명화 · 남긴 추억·편지·폴라로이드는 <b>그대로 보존.</b></span></div>
+            <div class="spec-row"><span class="k">대표사진</span><span>"추억에서 고른" 원본이 삭제되면 테마 일러스트로 자동 폴백.</span></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="dv-next">이걸로 방 초대/입장 플로우는 완결이에요. 필요하면: "이 스펙을 <b>인쇄용 문서</b>로 뽑아줘" · "확정안대로 <b>방목록 화면 하이파이 목업</b> 만들어줘" · "요청자(신규사용자2) 쪽 <b>수락대기→입장/거절 화면</b> 그려줘"</p>
+</section>
+
+<section class="dv-turn" id="t4">
+  <div class="dv-thd"><a class="dv-tid" href="#t4">4</a><span class="dv-tname">예외 규칙 시트 — "1명만 수락" 위에 얹는 엣지 케이스</span></div>
+  <p class="dv-sub">이미 구현된 "참여 멤버 1명 수락 → 즉시 입장" 흐름에서 실제로 부딪히는 상황들. 초록=추천 기본값(그냥 채택), 주황=사장님 결정 필요. (<a class="dv-oid" href="#3a">3a</a> 확정 위)</p>
+
+  <div class="dv-opts">
+
+    <!-- 4a rules sheet -->
+    <div class="dv-opt" id="4a">
+      <div class="dv-olabel"><a class="dv-oid" href="#4a">4a</a><b>추천 기본 규칙</b></div>
+      <div class="wf" style="width:460px;display:flex;flex-direction:column;gap:0">
+        <div style="display:flex;flex-direction:column;gap:9px">
+
+          <div style="display:flex;gap:9px;padding:9px 10px;background:#eef6f0;border:1.4px solid #cfe0d4;border-radius:9px">
+            <span style="font-weight:700;color:#2f7d4f">✔</span>
+            <div><b style="font:700 13px 'Gaegu'">이미 신청한 방에 또 신청</b><div class="wf-meta">차단 → "이미 신청했어요, 수락 기다리는 중" 안내. 중복 카드 안 생김</div></div>
+          </div>
+
+          <div style="display:flex;gap:9px;padding:9px 10px;background:#eef6f0;border:1.4px solid #cfe0d4;border-radius:9px">
+            <span style="font-weight:700;color:#2f7d4f">✔</span>
+            <div><b style="font:700 13px 'Gaegu'">이미 멤버인 방 코드 입력</b><div class="wf-meta">신청 안 만들고 그 방으로 바로 이동. "이미 참여 중인 방이에요"</div></div>
+          </div>
+
+          <div style="display:flex;gap:9px;padding:9px 10px;background:#eef6f0;border:1.4px solid #cfe0d4;border-radius:9px">
+            <span style="font-weight:700;color:#2f7d4f">✔</span>
+            <div><b style="font:700 13px 'Gaegu'">한 명이 수락 vs 다른 명이 거절 동시</b><div class="wf-meta">먼저 처리된 액션이 확정 · 늦은 클릭엔 "이미 처리된 신청이에요"</div></div>
+          </div>
+
+          <div style="display:flex;gap:9px;padding:9px 10px;background:#eef6f0;border:1.4px solid #cfe0d4;border-radius:9px">
+            <span style="font-weight:700;color:#2f7d4f">✔</span>
+            <div><b style="font:700 13px 'Gaegu'">거절당한 뒤 재요청</b><div class="wf-meta">허용 (거절 카드의 [재요청]) · 새 가입신청으로 다시 뜸</div></div>
+          </div>
+
+          <div style="display:flex;gap:9px;padding:9px 10px;background:#eef6f0;border:1.4px solid #cfe0d4;border-radius:9px">
+            <span style="font-weight:700;color:#2f7d4f">✔</span>
+            <div><b style="font:700 13px 'Gaegu'">마지막 멤버가 나가 방 삭제</b><div class="wf-meta">그 방에 남은 대기 신청 자동 취소 → 요청자 카드는 "사라진 방" 처리</div></div>
+          </div>
+
+          <div style="display:flex;gap:9px;padding:9px 10px;background:#eef6f0;border:1.4px solid #cfe0d4;border-radius:9px">
+            <span style="font-weight:700;color:#2f7d4f">✔</span>
+            <div><b style="font:700 13px 'Gaegu'">초대코드 수명</b><div class="wf-meta">방마다 고정·영구. 삭제된 방 코드는 폐기(재사용·재발급 없음, MVP)</div></div>
+          </div>
+
+        </div>
+      </div>
+      <div class="wf-callout" style="width:460px;max-width:100%">이 6개는 그냥 "네 좋아요" 하면 채택. 전부 방장 없는 "누구나+투명" 원칙과 일관돼요.</div>
+    </div>
+
+    <!-- 4b needs decision -->
+    <div class="dv-opt" id="4b">
+      <div class="dv-olabel"><a class="dv-oid" href="#4b">4b</a><b>사장님 결정 필요 2가지</b></div>
+      <div class="wf" style="width:360px;display:flex;flex-direction:column;gap:11px">
+
+        <div style="padding:11px;background:#fffaf0;border:1.5px solid #d9b878;border-radius:10px">
+          <b style="font:700 14px 'Gaegu';color:#8a5a12">❓ 방 최대 인원(정원)</b>
+          <div class="wf-meta" style="margin:5px 0 8px">지금 화면엔 "총 4명"만 표시. 상한이 있나요?</div>
+          <div class="wf-src">
+            <span class="s on">상한 없음(추천·MVP)</span>
+            <span class="s">예: 20명</span>
+            <span class="s">직접 지정</span>
+          </div>
+          <div class="wf-hint" style="margin-top:6px">상한 두면: 꽉 찬 방은 수락 버튼 비활성 + "정원이 찼어요"</div>
+        </div>
+
+        <div style="padding:11px;background:#fffaf0;border:1.5px solid #d9b878;border-radius:10px">
+          <b style="font:700 14px 'Gaegu';color:#8a5a12">❓ 재요청 스팸 제한</b>
+          <div class="wf-meta" style="margin:5px 0 8px">거절당해도 계속 재요청하면?</div>
+          <div class="wf-src">
+            <span class="s on">제한 없음(추천·MVP)</span>
+            <span class="s">거절 후 쿨타임</span>
+            <span class="s">N회 후 차단</span>
+          </div>
+          <div class="wf-hint" style="margin-top:6px">MVP는 제한 없이, 스팸이 실제 문제 되면 그때 추가</div>
+        </div>
+
+      </div>
+      <div class="wf-callout" style="width:360px;max-width:100%">둘 다 "추천대로(상한 없음·제한 없음)" 가면 MVP 완결. 정원만 나중에 성장카드/레벨이랑 엮을 여지 있음.</div>
+    </div>
+
+    <!-- 4c toasts -->
+    <div class="dv-opt" id="4c">
+      <div class="dv-olabel"><a class="dv-oid" href="#4c">4c</a><b>안내 토스트 문구</b></div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="background:#2a2a2a;color:#fff;border-radius:10px;padding:10px 13px;font:400 13px 'Gaegu';width:300px">⏳ 이미 신청했어요 · 수락을 기다리는 중이에요</div>
+        <div style="background:#2a2a2a;color:#fff;border-radius:10px;padding:10px 13px;font:400 13px 'Gaegu';width:300px">✅ 이미 참여 중인 방이에요 — 바로 이동할게요</div>
+        <div style="background:#2a2a2a;color:#fff;border-radius:10px;padding:10px 13px;font:400 13px 'Gaegu';width:300px">🙌 이미 처리된 신청이에요 (다른 멤버가 먼저 처리)</div>
+        <div style="background:#7a2b2b;color:#fff;border-radius:10px;padding:10px 13px;font:400 13px 'Gaegu';width:300px">🫧 이 방은 사라졌어요 — 신청이 취소됐어요</div>
+      </div>
+      <div class="wf-callout" style="width:300px;max-width:100%">4a 규칙들이 실제로 뜰 때 쓰는 문구. 톤은 clov 친구공간 말투로.</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">마무리: "<a class="dv-oid" href="#4a">4a</a> 다 채택" · "정원은 20명으로 / 스팸은 쿨타임" · "토스트 문구 고칠래" · "전체를 한 장 요약 문서로 만들어줘"</p>
+</section>
+
+<section class="dv-turn" id="t3">
+  <div class="dv-thd"><a class="dv-tid" href="#t3">3</a><span class="dv-tname">수락 / 거절을 누가 · 어디서 처리하나 (방장 없음)</span></div>
+  <p class="dv-sub">신규사용자2가 코드로 요청하면 → 기존 멤버들에게 "입장 요청"이 뜬다. 방장이 없으니 "누가 처리하나"가 열린 질문. 요청이 멤버 쪽에 어떻게 보이고 누가 수락/거절하는지 3가지. (요청자 쪽 "수락대기"는 <a class="dv-oid" href="#1a">1a</a> 그대로)</p>
+
+  <div class="dv-opts">
+
+    <!-- 3a first-responder -->
+    <div class="dv-opt" id="3a">
+      <div class="dv-olabel"><a class="dv-oid" href="#3a">3a</a><b>먼저 본 멤버 누구나 처리</b> — 공동편집 원칙 그대로</div>
+      <div class="wf" style="width:400px">
+        <div class="wf-sec">🔔 방 카드 · 알림 탭에 뜸</div>
+        <div class="wf-card" style="border-color:#c98a2e;background:#fffaf0">
+          <div class="wf-badge" style="background:#c98a2e">1</div>
+          <div class="wf-top">
+            <div style="display:flex;gap:9px;align-items:center">
+              <div class="thumb" style="background:#e0d4b8">🙂</div>
+              <div><div class="wf-name">박서준님이 입장을 요청했어요</div><div class="wf-meta">CLOV-1001 · 방금</div></div>
+            </div>
+          </div>
+          <div class="wf-actions"><span class="wf-btn pri">수락</span><span class="wf-btn warn">거절</span></div>
+        </div>
+        <div class="wf-note" style="margin-top:11px">✔ 멤버 <b>누구나</b> 수락/거절 가능 · 한 명이 처리하면 <b>다른 멤버 화면에선 사라짐</b> · "김다정님이 박서준님을 수락했어요" 알림으로 남음</div>
+      </div>
+      <div class="wf-callout" style="width:400px;max-width:100%">👍 2a 원칙과 동일("누구나+투명"). 빠르고 안 막힘. ⚠️ 두 명이 동시에 누르면 먼저 처리한 쪽만 적용(뒤늦은 클릭은 "이미 처리됨").</div>
+    </div>
+
+    <!-- 3b vote -->
+    <div class="dv-opt" id="3b">
+      <div class="dv-olabel"><a class="dv-oid" href="#3b">3b</a><b>과반 동의</b> — 여러 명이 찬성해야 입장</div>
+      <div class="wf" style="width:400px">
+        <div class="wf-sec">🗳 요청 카드에 진행률</div>
+        <div class="wf-card" style="border-color:#c98a2e;background:#fffaf0">
+          <div class="wf-top">
+            <div style="display:flex;gap:9px;align-items:center">
+              <div class="thumb" style="background:#e0d4b8">🙂</div>
+              <div><div class="wf-name">박서준님 입장 요청</div><div class="wf-meta">찬성 1 / 3명 · 과반 필요</div></div>
+            </div>
+          </div>
+          <div style="height:7px;background:#eee;border-radius:4px;overflow:hidden"><div style="width:33%;height:100%;background:#c98a2e"></div></div>
+          <div class="wf-actions"><span class="wf-btn pri">찬성</span><span class="wf-btn warn">반대</span></div>
+        </div>
+        <div class="wf-note" style="margin-top:11px">과반이 찬성해야 입장 확정. 정해진 시간 지나면 자동 만료</div>
+      </div>
+      <div class="wf-callout" style="width:400px;max-width:100%">👍 "다 같이 결정"하는 공정함. ⚠️ 방장 없는 캐주얼 친구방엔 과해요 — 멤버가 잠수면 요청이 계속 대기, 요청자도 오래 기다림.</div>
+    </div>
+
+    <!-- 3c auto -->
+    <div class="dv-opt" id="3c">
+      <div class="dv-olabel"><a class="dv-oid" href="#3c">3c</a><b>자동 수락</b> — 코드만 맞으면 바로 입장</div>
+      <div class="wf" style="width:400px">
+        <div class="wf-sec join">✅ 승인 단계 없음</div>
+        <div class="wf-card">
+          <div class="wf-top"><div style="display:flex;gap:9px;align-items:center"><div class="thumb" style="background:#dfe7e0">🎉</div><div><div class="wf-name">박서준님이 들어왔어요</div><div class="wf-meta">코드 입력 즉시 · 방금</div></div></div></div>
+        </div>
+        <div class="wf-note" style="margin-top:11px">코드=열쇠. 맞으면 대기 없이 입장, 멤버에겐 "들어왔어요" 알림만</div>
+      </div>
+      <div class="wf-callout" style="width:400px;max-width:100%">가장 단순·빠름. ❌ 근데 <b>"수락대기" 분기 자체가 사라져요</b> — 기획했던 수락/거절 흐름과 충돌. 코드가 새면 아무나 입장.</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">추천은 <a class="dv-oid" href="#3a">3a</a>예요. 골라주세요: "<a class="dv-oid" href="#3a">3a</a>로 확정" · "거절하면 요청자에게 뭐라고 뜨는지 보여줘" · "동시 클릭 충돌 처리 자세히" · "이제 #4 예외 케이스"</p>
+</section>
+
+<section class="dv-turn" id="t2">
+  <div class="dv-thd"><a class="dv-tid" href="#t2">2</a><span class="dv-tname">공동편집+알림 반영 — 수정모달 &amp; 나가기 문구</span></div>
+  <p class="dv-sub">방장이 없다는 전제로, 방 정보 수정을 "누구나 가능하되 하면 방에 알림이 남는" 공동 행동으로 재설계. 그리고 "삭제=나가기"로 문구를 바꾼 확인창. (<a class="dv-oid" href="#1a">1a</a> 방향 위에 얹는 세부 UI)</p>
+
+  <div class="dv-opts">
+
+    <!-- 2a 수정모달 -->
+    <div class="dv-opt" id="2a">
+      <div class="dv-olabel"><a class="dv-oid" href="#2a">2a</a><b>우정공간 수정 모달 (재설계)</b></div>
+      <div class="wf-modal">
+        <div class="wf-modal-hd"><b>🏡 우정공간 수정</b><span class="x">✕</span></div>
+        <div class="wf-modal-bd">
+
+          <div class="wf-field">
+            <div class="wf-field-l">대표 사진</div>
+            <div class="wf-cover-row">
+              <div class="wf-cover">🍀</div>
+              <div class="wf-src">
+                <span class="s on">테마 일러스트</span>
+                <span class="s">추억에서 고르기</span>
+                <span class="s">＋ 업로드</span>
+              </div>
+            </div>
+            <span class="wf-hint">기본은 소유자 없는 테마 커버 · 추억피드 사진에서 골라도 돼요</span>
+          </div>
+
+          <div class="wf-field">
+            <div class="wf-field-l">우정공간 이름 <span class="wf-hint">바꾸면 멤버에게 알림 가요</span></div>
+            <div class="wf-input">여행 계획단</div>
+          </div>
+
+          <div class="wf-field">
+            <div class="wf-field-l">소개글 <span style="font-weight:400;color:#a09a8c;font-size:11px">공용 메모 · 60자</span></div>
+            <div class="wf-input wf-ta">제주도 함께 가요!</div>
+          </div>
+
+          <div class="wf-notify-banner">🔔 <span>여기서 바꾼 내용은 <b>모든 멤버에게 알림</b>으로 남아요. 방장이 없으니 몰래 바뀌지 않게요.</span></div>
+
+          <hr class="wf-mdiv">
+          <div class="wf-mlabel">그 외</div>
+          <div class="wf-menu-item">🔕 이 방 알림 끄기 <span style="margin-left:auto;color:#a09a8c;font-size:11px">나만 적용</span></div>
+          <div class="wf-menu-item danger">🚪 이 방에서 나가기</div>
+
+          <div class="wf-save">저장하기</div>
+        </div>
+      </div>
+      <div class="wf-callout" style="width:380px;max-width:100%">이름/사진/소개글=공동 편집(→알림). 알림끄기=개인. 나가기=옛 "삭제" 자리. 재발급·강퇴는 없음(MVP).</div>
+    </div>
+
+    <!-- 2b 나가기 확인창 -->
+    <div class="dv-opt" id="2b">
+      <div class="dv-olabel"><a class="dv-oid" href="#2b">2b</a><b>"삭제 → 나가기" 확인창 · 두 분기</b></div>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div>
+          <div style="font:400 12px 'Gaegu';color:#8a8a82;margin-bottom:6px">① 나 말고 멤버가 남아있을 때</div>
+          <div class="wf-dialog">
+            <div class="ic">🚪</div>
+            <div class="q">이 방에서 나갈까요?</div>
+            <div class="d">남은 멤버에게 <b>"OO님이 나갔어요"</b>라고 알려져요.<br>방과 추억은 그대로 남아요.</div>
+            <div class="wf-dialog-actions"><span class="wf-btn">취소</span><span class="wf-btn warn">나가기</span></div>
+          </div>
+        </div>
+        <div>
+          <div style="font:400 12px 'Gaegu';color:#8a8a82;margin-bottom:6px">② 내가 마지막 멤버일 때</div>
+          <div class="wf-dialog danger">
+            <div class="ic">🗑️</div>
+            <div class="q warn">마지막 멤버예요</div>
+            <div class="d">나가면 이 방과 <b>모든 추억·편지·일정이 사라져요.</b><br>되돌릴 수 없어요.</div>
+            <div class="wf-dialog-actions"><span class="wf-btn">취소</span><span class="wf-btn warn">나가고 삭제</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="wf-callout" style="width:300px;max-width:100%">같은 버튼이 상황 따라 "나가기" ↔ "나가고 삭제"로 바뀜. 대기·거절 카드의 삭제는 또 달라서 → 아래 2c.</div>
+    </div>
+
+    <!-- 2c 대기/거절 카드의 '삭제' -->
+    <div class="dv-opt" id="2c">
+      <div class="dv-olabel"><a class="dv-oid" href="#2c">2c</a><b>대기·거절 카드의 "삭제"는 요청취소</b></div>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div>
+          <div style="font:400 12px 'Gaegu';color:#8a8a82;margin-bottom:6px">수락대기 카드에서</div>
+          <div class="wf-dialog">
+            <div class="ic">⏳</div>
+            <div class="q">입장 요청을 취소할까요?</div>
+            <div class="d">아직 멤버가 아니라 <b>"나가기"가 아니에요.</b><br>보낸 요청만 없어져요.</div>
+            <div class="wf-dialog-actions"><span class="wf-btn">닫기</span><span class="wf-btn warn">요청 취소</span></div>
+          </div>
+        </div>
+        <div>
+          <div style="font:400 12px 'Gaegu';color:#8a8a82;margin-bottom:6px">거절된 카드에서</div>
+          <div class="wf-dialog">
+            <div class="ic">✕</div>
+            <div class="q">이 카드를 지울까요?</div>
+            <div class="d">목록에서만 사라져요. 원하면<br>같은 코드로 <b>다시 요청</b>할 수 있어요.</div>
+            <div class="wf-dialog-actions"><span class="wf-btn pri">재요청</span><span class="wf-btn warn">지우기</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="wf-callout" style="width:300px;max-width:100%">👉 #2 결론: "삭제"라는 한 단어가 상태별로 <b>나가기 / 나가고삭제 / 요청취소 / 카드지우기</b> 4갈래. 버튼 라벨을 상태별로 다르게.</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">골라주세요: "<a class="dv-oid" href="#2a">2a</a> 좋아, 근데 재발급은 빼자" · "나가기 문구는 <a class="dv-oid" href="#2b">2b</a>로 확정" · "이제 #3 권한(수락/거절 누가) 그려줘" · "추억에서 고르기 흐름도 보여줘"</p>
+</section>
+
+<section class="dv-turn" id="t1">
+  <div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">대기 / 거절 카드를 방목록 어디에 둘까</span></div>
+  <p class="dv-sub">신규사용자2가 방코드로 입장 요청하면 생기는 "수락대기" · "거절됨" 카드를, 기존 방목록 그리드와 어떻게 섞을지 3가지 구조. 노란 점선=대기, 빨간=거절, 실선=참여중. 구조만 비교하는 로우파이 스케치예요.</p>
+
+  <div class="dv-opts">
+
+    <!-- 1a 섹션 분리 -->
+    <div class="dv-opt" id="1a">
+      <div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a><b>요청한 방 · 별도 섹션</b> — 맨 위에 모아두기</div>
+      <div class="wf">
+        <div class="wf-toolbar">
+          <span class="wf-h">🍀 우리 우정공간들</span>
+          <div class="wf-ctrls"><span class="wf-chip">방 코드</span><span class="wf-chip g">입장</span><span class="wf-chip">＋만들기</span></div>
+        </div>
+
+        <div class="wf-sec">🔔 요청한 방 <span class="n">2</span></div>
+        <div class="wf-grid">
+          <div class="wf-card waiting">
+            <div class="wf-top"><div class="thumb">🖼</div></div>
+            <div class="wf-name">제주 여행단</div>
+            <span class="wf-state wait">⏳ 수락 대기중</span>
+            <div class="wf-actions"><span class="wf-btn warn">요청 취소</span></div>
+          </div>
+          <div class="wf-card rejected">
+            <div class="wf-top"><div class="thumb">🖼</div></div>
+            <div class="wf-name">헬스 메이트</div>
+            <span class="wf-state rej">✕ 거절됨</span>
+            <div class="wf-actions"><span class="wf-btn pri">재요청</span><span class="wf-btn warn">삭제</span></div>
+          </div>
+        </div>
+
+        <hr class="wf-divider">
+        <div class="wf-sec join">✅ 참여 중인 방</div>
+        <div class="wf-grid">
+          <div class="wf-card">
+            <div class="wf-badge">3</div>
+            <div class="wf-top"><div class="thumb">🖼</div><span class="wf-star on">★</span></div>
+            <div class="wf-name">단짝 모임 · Lv.4</div>
+            <div class="wf-meta">토요일마다 · 2시간 전</div>
+            <div class="wf-dday">📅 D-3</div>
+          </div>
+          <div class="wf-card">
+            <div class="wf-top"><div class="thumb">🖼</div><span class="wf-star">☆</span></div>
+            <div class="wf-name">여행 계획단 · Lv.3</div>
+            <div class="wf-meta">제주도 함께 · 30분 전</div>
+            <div class="wf-dday">📅 D-21</div>
+          </div>
+        </div>
+      </div>
+      <div class="wf-callout" style="width:520px;max-width:100%">👍 상태가 섞이지 않아 제일 명확. 요청이 없으면 섹션 통째로 숨김 → 기존 목록 그대로. 다만 세로 공간을 더 씀.</div>
+    </div>
+
+    <!-- 1b 인라인 혼합 -->
+    <div class="dv-opt" id="1b">
+      <div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a><b>인라인 혼합 · 최상단 고정</b> — 한 그리드에 섞되 위로</div>
+      <div class="wf">
+        <div class="wf-toolbar">
+          <span class="wf-h">🍀 우리 우정공간들</span>
+          <div class="wf-ctrls"><span class="wf-chip">방 코드</span><span class="wf-chip g">입장</span><span class="wf-chip">＋만들기</span></div>
+        </div>
+        <div class="wf-tabs"><span class="wf-tab on">최신순</span><span class="wf-tab">즐겨찾기</span><span class="wf-tab">내 순서</span></div>
+        <div class="wf-grid">
+          <div class="wf-card waiting">
+            <div class="wf-top"><div class="thumb">🖼</div></div>
+            <div class="wf-name">제주 여행단</div>
+            <span class="wf-state wait">⏳ 수락 대기중</span>
+            <div class="wf-actions"><span class="wf-btn warn">요청 취소</span></div>
+          </div>
+          <div class="wf-card rejected">
+            <div class="wf-top"><div class="thumb">🖼</div></div>
+            <div class="wf-name">헬스 메이트</div>
+            <span class="wf-state rej">✕ 거절됨</span>
+            <div class="wf-actions"><span class="wf-btn pri">재요청</span><span class="wf-btn warn">삭제</span></div>
+          </div>
+          <div class="wf-card">
+            <div class="wf-badge">3</div>
+            <div class="wf-top"><div class="thumb">🖼</div><span class="wf-star on">★</span></div>
+            <div class="wf-name">단짝 모임 · Lv.4</div>
+            <div class="wf-meta">토요일마다 · 2시간 전</div>
+            <div class="wf-dday">📅 D-3</div>
+          </div>
+          <div class="wf-card">
+            <div class="wf-top"><div class="thumb">🖼</div><span class="wf-star">☆</span></div>
+            <div class="wf-name">여행 계획단 · Lv.3</div>
+            <div class="wf-meta">제주도 함께 · 30분 전</div>
+            <div class="wf-dday">📅 D-21</div>
+          </div>
+        </div>
+      </div>
+      <div class="wf-callout" style="width:520px;max-width:100%">👍 구현 최소·스크롤 짧음. ⚠️ 정렬/필터(즐겨찾기·내 순서)와 "항상 위 고정"이 충돌 → 대기카드는 정렬·드래그·별에서 제외한다는 예외 규칙 필요.</div>
+    </div>
+
+    <!-- 1c 필터 탭 -->
+    <div class="dv-opt" id="1c">
+      <div class="dv-olabel"><a class="dv-oid" href="#1c">1c</a><b>"요청중" 필터 탭</b> — 목록은 참여방만, 요청은 탭에서</div>
+      <div class="wf">
+        <div class="wf-toolbar">
+          <span class="wf-h">🍀 우리 우정공간들</span>
+          <div class="wf-ctrls"><span class="wf-chip">방 코드</span><span class="wf-chip g">입장</span><span class="wf-chip">＋만들기</span></div>
+        </div>
+        <div class="wf-tabs"><span class="wf-tab on">최신순</span><span class="wf-tab">즐겨찾기</span><span class="wf-tab">내 순서</span><span class="wf-tab alert">🔔 요청중<span class="cnt">2</span></span></div>
+        <div class="wf-grid">
+          <div class="wf-card">
+            <div class="wf-badge">3</div>
+            <div class="wf-top"><div class="thumb">🖼</div><span class="wf-star on">★</span></div>
+            <div class="wf-name">단짝 모임 · Lv.4</div>
+            <div class="wf-meta">토요일마다 · 2시간 전</div>
+            <div class="wf-dday">📅 D-3</div>
+          </div>
+          <div class="wf-card">
+            <div class="wf-top"><div class="thumb">🖼</div><span class="wf-star">☆</span></div>
+            <div class="wf-name">여행 계획단 · Lv.3</div>
+            <div class="wf-meta">제주도 함께 · 30분 전</div>
+            <div class="wf-dday">📅 D-21</div>
+          </div>
+        </div>
+        <div class="wf-note">🔔 "요청중" 탭을 누르면 → 아래처럼 대기·거절 카드만 모여 보임</div>
+        <div class="wf-grid" style="margin-top:9px">
+          <div class="wf-card waiting wf-dim">
+            <div class="wf-name">제주 여행단</div>
+            <span class="wf-state wait">⏳ 대기중</span>
+            <div class="wf-actions"><span class="wf-btn warn">요청 취소</span></div>
+          </div>
+          <div class="wf-card rejected wf-dim">
+            <div class="wf-name">헬스 메이트</div>
+            <span class="wf-state rej">✕ 거절됨</span>
+            <div class="wf-actions"><span class="wf-btn pri">재요청</span><span class="wf-btn warn">삭제</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="wf-callout" style="width:520px;max-width:100%">👍 기본 목록이 깔끔하게 참여방만. 배지로 요청 수 알림. ⚠️ 대기·거절이 탭 뒤로 숨어 눈에 덜 띔 → 신규사용자2가 자기 요청 상태를 놓칠 수 있음.</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">다음 중 골라 말해줘요: "<a class="dv-oid" href="#1a">1a</a>로 가자" · "<a class="dv-oid" href="#1b">1b</a>인데 대기카드 정렬 예외 규칙 보여줘" · "<a class="dv-oid" href="#1a">1a</a>랑 <a class="dv-oid" href="#1c">1c</a> 섞어서 요청 있을 때만 탭+섹션 둘 다" · "다른 방향 더"</p>
+</section>
+
+</x-dc>
+</body>
+</html>

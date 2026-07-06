@@ -985,6 +985,31 @@ body.dark-mode .wm-submit { color: #0a0f0c; }
   // (새로고침하면 다시 pending으로 리셋됨 — localStorage에는 절대 쓰지 않음)
   var notiSessionOverrides = {};
 
+  // A-5 P1: 수락 후 5분 되돌리기 창 (강퇴가 없으므로 "방금 실수"를 되돌리는 유일한 안전장치)
+  var UNDO_WINDOW_MS = 5 * 60 * 1000;
+  function fmtCountdown(ms) {
+    if (ms < 0) ms = 0;
+    var s = Math.ceil(ms / 1000), m = Math.floor(s / 60);
+    s = s % 60;
+    return m + ':' + (s < 10 ? '0' : '') + s;
+  }
+  var __undoTicker = null;
+  function ensureUndoTicker() {
+    if (__undoTicker) return;
+    __undoTicker = setInterval(function() {
+      var spans = document.querySelectorAll('.undo-countdown');
+      if (!spans.length) { clearInterval(__undoTicker); __undoTicker = null; return; }
+      var anyLive = false, expired = false;
+      spans.forEach(function(sp) {
+        var left = (+sp.getAttribute('data-until')) - Date.now();
+        if (left <= 0) { sp.textContent = '0:00'; expired = true; }
+        else { sp.textContent = fmtCountdown(left); anyLive = true; }
+      });
+      if (expired && typeof renderJoinRequestsNoti === 'function') renderJoinRequestsNoti();
+      if (!anyLive) { clearInterval(__undoTicker); __undoTicker = null; }
+    }, 1000);
+  }
+
   window.renderJoinRequestsNoti = function() {
     var el = document.getElementById('noti-join');
     if (!el) return;
@@ -1007,6 +1032,18 @@ body.dark-mode .wm-submit { color: #0a0f0c; }
     el.innerHTML = list.map(function(req) {
       var effectiveStatus = notiSessionOverrides[req.id] || req.status;
       if (effectiveStatus === 'accepted') {
+        // 수락 후 5분 이내 → 되돌리기 창 카드
+        if (req.acceptedAt && (Date.now() - req.acceptedAt < UNDO_WINDOW_MS)) {
+          var until = req.acceptedAt + UNDO_WINDOW_MS;
+          return '<div class="noti-friend-card" style="border:1.5px solid var(--primary-green); background:rgba(82,183,136,.07);">' +
+            '<div style="font-size:13px; font-weight:800; color:var(--primary-green); display:flex; align-items:center; justify-content:space-between;">' +
+              '<span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px;"><path d="M20 6 9 17l-5-5"/></svg><b>' + req.name + '</b>님 수락함</span>' +
+              '<span style="font-size:11px; color:var(--text-muted); font-weight:700;">되돌리기 <span class="undo-countdown" data-until="' + until + '">' + fmtCountdown(until - Date.now()) + '</span></span>' +
+            '</div>' +
+            '<div style="font-size:12px; color:var(--text-muted); margin:7px 0 10px; line-height:1.5;">실수로 수락했다면 5분 안에 되돌릴 수 있어요. 방장이 없으니 강퇴 대신 <b>되돌리기</b>로만 취소해요.</div>' +
+            '<button type="button" onclick="undoAcceptJoinRequest(\'' + req.id + '\', \'' + req.name + '\')" style="width:100%; padding:9px; background:var(--bg-light); color:var(--text-color); border:1px solid var(--border-color); border-radius:10px; font-weight:700; cursor:pointer; font-size:13px;">되돌리기</button>' +
+          '</div>';
+        }
         return '<div class="noti-friend-card" style="border: 1px solid var(--border-color); background: var(--bg-light); opacity: 0.85;">' +
           '<div style="font-size:13px; font-weight:700; color:var(--text-muted); display:flex; align-items:center; justify-content:space-between;">' +
             '<span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:3px;"><path d="M20 6 9 17l-5-5"/></svg>가입 수락 완료</span>' +
@@ -1037,6 +1074,11 @@ body.dark-mode .wm-submit { color: #0a0f0c; }
         '</div>' +
         '<div style="font-size:13px; color:var(--text-color); margin:8px 0 12px; line-height:1.5;">' +
           '<strong style="font-size:15px; color:var(--text-color);">' + req.name + '</strong> 님이 우정공간(<strong>' + req.code + '</strong>) 입장을 신청했습니다.<br>' +
+          '<span style="display:inline-flex; align-items:center; gap:5px; margin-top:5px; font-size:12px; color:var(--text-muted);">' +
+            (req.invitedBy
+              ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg><strong style="color:var(--primary-green)">' + req.invitedBy + '</strong>님 초대로 신청'
+              : '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="15.5" r="4.5"/><path d="M10.5 12.5 20 3l1.5 1.5-2 2 1.5 1.5-2 2-1.5-1.5"/></svg>코드로 직접 신청') +
+          '</span>' +
           '<div style="margin-top:6px; padding:8px 12px; background:rgba(27,67,50,.06); border-radius:8px; font-size:11px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">' +
             '<span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg></span> <span><strong>방장 권한 없음:</strong> 참여 멤버 중 1명만 수락해도 즉시 방에 입장할 수 있습니다.</span>' +
           '</div>' +
@@ -1051,12 +1093,21 @@ body.dark-mode .wm-submit { color: #0a0f0c; }
         '</div>' +
       '</div>';
     }).join('');
+    if (document.querySelector('.undo-countdown')) ensureUndoTicker();
   };
 
   window.acceptJoinRequest = function(id, name) {
     var list = [];
     try { list = JSON.parse(localStorage.getItem('clov_joinRequests')) || []; } catch(e){}
-    list.forEach(function(r) { if (r.id === id) r.status = 'accepted'; });
+    // A-7 경합: 이미 다른 멤버가 수락/거절한 신청이면 늦은 클릭은 무효
+    var reqA = null; for (var k = 0; k < list.length; k++) { if (list[k].id === id) { reqA = list[k]; break; } }
+    var effA = reqA ? (notiSessionOverrides[id] || reqA.status) : null;
+    if (!reqA || effA !== 'pending') {
+      if (typeof clovToast === 'function') clovToast('이미 처리된 신청이에요 (다른 멤버가 먼저 처리했어요) 🙌', 'info');
+      renderJoinRequestsNoti();
+      return;
+    }
+    list.forEach(function(r) { if (r.id === id) { r.status = 'accepted'; r.acceptedAt = Date.now(); } });
     localStorage.setItem('clov_joinRequests', JSON.stringify(list));
 
     var members = [];
@@ -1068,13 +1119,49 @@ body.dark-mode .wm-submit { color: #0a0f0c; }
 
     renderJoinRequestsNoti();
     updateDynamicMembersDisplay();
+    ensureUndoTicker();   // 5분 되돌리기 카운트다운 시작
 
-    if (typeof clovAlert === 'function') {
-      clovAlert('🎉 [' + name + '] 님의 가입 신청을 수락했습니다!\n이제 참여 멤버로 우정공간에 접속하여 함께 활동할 수 있습니다.\n(방장이 없으므로 참여 멤버 누구나 수락 권한을 가집니다)', { icon: '🤝', type: 'success' });
+    // 큰 alert 대신 가벼운 토스트 — 되돌리기 안내는 카드에 카운트다운으로 표시됨
+    if (typeof clovToast === 'function') {
+      clovToast('[' + name + '] 님을 수락했어요 · 5분 안에 되돌릴 수 있어요 🤝', 'success');
+    } else if (typeof clovAlert === 'function') {
+      clovAlert('🎉 [' + name + '] 님의 가입 신청을 수락했습니다! (5분 안에 되돌리기 가능)', { icon: '🤝', type: 'success' });
+    }
+  };
+
+  // A-5 P1: 수락 5분 이내 되돌리기 — pending으로 복원 + 멤버에서 제거
+  window.undoAcceptJoinRequest = function(id, name) {
+    var list = [];
+    try { list = JSON.parse(localStorage.getItem('clov_joinRequests')) || []; } catch(e){}
+    list.forEach(function(r) { if (r.id === id) { r.status = 'pending'; delete r.acceptedAt; } });
+    localStorage.setItem('clov_joinRequests', JSON.stringify(list));
+
+    var members = [];
+    try { members = JSON.parse(localStorage.getItem('clov_acceptedMembers')) || []; } catch(e){}
+    var i = members.indexOf(name);
+    if (i !== -1) { members.splice(i, 1); localStorage.setItem('clov_acceptedMembers', JSON.stringify(members)); }
+
+    renderJoinRequestsNoti();
+    updateDynamicMembersDisplay();
+
+    if (typeof clovToast === 'function') {
+      clovToast('[' + name + '] 수락을 되돌렸어요 · 다시 대기 상태예요 ↩️', 'info');
+    } else if (typeof clovAlert === 'function') {
+      clovAlert('[' + name + '] 수락을 되돌렸습니다. 다시 대기 상태로 돌아갔어요.', { icon: '↩️', type: 'info' });
     }
   };
 
   window.rejectJoinRequest = function(id, name) {
+    // A-7 경합: 이미 다른 멤버가 수락/거절한 신청이면 늦은 클릭은 무효
+    var reqR = [];
+    try { reqR = JSON.parse(localStorage.getItem('clov_joinRequests')) || []; } catch(e){}
+    var rr = null; for (var k = 0; k < reqR.length; k++) { if (reqR[k].id === id) { rr = reqR[k]; break; } }
+    var effR = rr ? (notiSessionOverrides[id] || rr.status) : null;
+    if (!rr || effR !== 'pending') {
+      if (typeof clovToast === 'function') clovToast('이미 처리된 신청이에요 (다른 멤버가 먼저 처리했어요) 🙌', 'info');
+      renderJoinRequestsNoti();
+      return;
+    }
     // localStorage에는 쓰지 않고 세션 메모리에만 '거절됨'으로 표시 — 새로고침하면 다시 대기중으로 돌아온다
     notiSessionOverrides[id] = 'rejected';
     renderJoinRequestsNoti();
@@ -1095,6 +1182,10 @@ body.dark-mode .wm-submit { color: #0a0f0c; }
   window.simulateJoinRequest = function() {
     var sampleNames = ['김도현', '이서연', '박지훈', '최유진', '정우진', '강한나', '조민수'];
     var name = sampleNames[Math.floor(Math.random() * sampleNames.length)];
+    // P1: 초대 경로 — 기존 멤버의 초대(링크)로 왔는지 / 코드로 직접 왔는지
+    var inviterPool = ['강한나', '박서준', '이서연', null, null];
+    var invitedBy = inviterPool[Math.floor(Math.random() * inviterPool.length)];
+    if (invitedBy === name) invitedBy = null;
     var list = [];
     try { list = JSON.parse(localStorage.getItem('clov_joinRequests')) || []; } catch(e){}
     var codeEl = document.getElementById('member-modal-room-code');
@@ -1104,7 +1195,8 @@ body.dark-mode .wm-submit { color: #0a0f0c; }
       name: name,
       code: code,
       date: '방금 전',
-      status: 'pending'
+      status: 'pending',
+      invitedBy: invitedBy
     });
     localStorage.setItem('clov_joinRequests', JSON.stringify(list));
     updateHeaderNotiBadge();

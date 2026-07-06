@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" rel="stylesheet">
+<style>
+  body{margin:0;background:#e6e4de;font-family:'Pretendard','Apple SD Gothic Neo',-apple-system,BlinkMacSystemFont,sans-serif;color:#1e2e26}
+  .dv-turn{padding:40px 44px 40px}
+  .dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 6px}
+  .dv-tid{font:700 11px ui-monospace,Menlo,monospace;padding:3px 9px;background:#1b4332;color:#fff;border-radius:4px;text-decoration:none}
+  .dv-tname{font-size:16px;font-weight:800;color:#1b4332}
+  .dv-sub{margin:0 0 26px;font-size:13.5px;line-height:1.6;color:#5c6b62;max-width:940px}
+  .dv-opts{display:flex;flex-wrap:wrap;gap:34px;align-items:flex-start}
+  .dv-opt{flex:none;display:flex;flex-direction:column;gap:12px;scroll-margin-top:16px;width:410px;max-width:100%}
+  .dv-oid{font:700 11px ui-monospace,Menlo,monospace;padding:3px 8px;background:rgba(0,0,0,.08);color:#1b4332;border-radius:5px;text-decoration:none}
+  .dv-olabel{display:flex;align-items:baseline;gap:9px;font-size:14px;color:#5c6b62}
+  .dv-olabel b{color:#1b4332;font-weight:800}
+  .dv-opt:target .dv-oid{background:#357a58;color:#fff}
+  .dv-next{margin:28px 0 0;font-size:13.5px;line-height:1.7;color:#5c6b62}
+  .dv-next a{color:#357a58;font-weight:600}
+  .dv-callout{font-size:12.5px;line-height:1.55;color:#4a5a51;background:#f1efe9;border:1px solid #d9d5cc;border-radius:10px;padding:10px 13px}
+  .dv-callout b{color:#1b4332}
+
+  /* ---- real clov modal atoms ---- */
+  .m{width:100%;background:#fff;border-radius:22px;box-shadow:0 18px 50px rgba(20,40,30,.22);overflow:hidden}
+  .m-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px}
+  .m-title{display:flex;align-items:center;gap:8px;font-size:18px;font-weight:800;color:#1b4332}
+  .m-x{width:30px;height:30px;border-radius:50%;background:#eef1ee;border:none;color:#6a7e73;font-size:15px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .m-tabs{display:flex;gap:22px;padding:0 22px;border-bottom:1px solid #e4ede8}
+  .m-tab{padding:11px 2px;font-size:14px;font-weight:700;color:#9aa89f;border-bottom:2px solid transparent;position:relative}
+  .m-tab.on{color:#1b4332;border-bottom-color:#1b4332}
+  .m-tab .dot{position:absolute;top:9px;right:-9px;width:6px;height:6px;border-radius:50%;background:#d95f5f}
+  .m-body{padding:16px 20px 20px}
+  .m-sechd{display:flex;align-items:center;justify-content:space-between;margin:2px 2px 10px}
+  .m-sechd .l{font-size:13px;font-weight:800;color:#1e2e26;display:flex;align-items:center;gap:6px}
+  .m-sechd .r{font-size:12px;color:#6a7e73;font-weight:600}
+  .m-more{font-size:12.5px;color:#357a58;font-weight:700;text-align:center;padding:9px;border-radius:10px;background:#f2f7f4;margin-top:2px}
+
+  .feed{display:flex;flex-direction:column;gap:7px}
+  .fi{display:flex;gap:11px;align-items:flex-start;padding:11px 12px;border-radius:13px;border:1px solid #eef1ee;background:#fff}
+  .fi.unread{background:#f3f8f4;border-color:#dcebe1;box-shadow:inset 3px 0 0 #52b788}
+  .fi-ic{width:34px;height:34px;border-radius:10px;flex:none;display:flex;align-items:center;justify-content:center;font-size:16px}
+  .fi-ic.letter{background:#e2f2ea;color:#2f7d4f}
+  .fi-ic.sched{background:#fbeecf;color:#b5851f}
+  .fi-ic.member{background:#dfecee;color:#b45274}
+  .fi-ic.join{background:#dfeef0;color:#2f7a86}
+  .fi-ic.edit{background:#eceae2;color:#8a7f66}
+  .fi-tx{flex:1;min-width:0}
+  .fi-t{font-size:13.5px;font-weight:700;color:#1e2e26;line-height:1.3}
+  .fi-t .who{color:#2f7d4f}
+  .fi-d{font-size:12.5px;color:#6a7e73;line-height:1.4;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .fi-time{font-size:11px;color:#9aa89f;font-weight:600;flex:none;margin-top:2px}
+  .fi .newdot{width:7px;height:7px;border-radius:50%;background:#d95f5f;flex:none;margin-top:6px}
+
+  .m-inforow{display:flex;gap:14px;align-items:center;padding:13px;background:#eef4f0;border-radius:16px;margin-bottom:16px}
+  .m-ico{width:52px;height:52px;border-radius:15px;background:#1b4332;color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;flex:none}
+  .m-intro{font-size:14px;font-weight:800;color:#1e2e26}
+  .m-lvrow{display:flex;gap:8px;align-items:center;margin-top:5px}
+  .m-lv{font-size:11px;font-weight:800;color:#fff;background:#1b4332;padding:2px 8px;border-radius:8px}
+  .m-lvsub{font-size:12px;color:#6a7e73}
+  .members{display:flex;flex-wrap:wrap;gap:7px}
+  .mem{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;color:#1e2e26;background:#f2f5f3;border:1px solid #e4ede8;border-radius:20px;padding:4px 11px 4px 5px}
+  .mem-av{width:22px;height:22px;border-radius:50%;background:#1b4332;color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex:none}
+  .mem-av.a2{background:#357a58}.mem-av.a3{background:#6a7e73}.mem-av.a4{background:#52b788}
+  .invite-btn{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:11px;border:1px dashed #52b788;background:#eef4f0;border-radius:13px;color:#1b4332;font-size:13px;font-weight:700}
+  .enter{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:50px;margin-top:16px;background:#1b4332;color:#fff;border:none;border-radius:14px;font-size:15.5px;font-weight:800;cursor:pointer}
+  .lbl{font-size:12.5px;font-weight:800;color:#1e2e26;margin:2px 2px 9px;display:flex;align-items:center;gap:6px}
+  .mrow{display:flex;align-items:center;gap:6px;margin:-2px 2px 16px}
+  .mrow-n{font-size:12px;color:#6a7e73;font-weight:600;margin-left:3px}
+  /* invite sheet */
+  .link-box{display:flex;align-items:center;gap:8px;background:#f2f7f4;border:1px solid #e4ede8;border-radius:12px;padding:11px 13px}
+  .link-url{flex:1;min-width:0;font-size:13px;color:#1b4332;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .mini-copy{flex:none;font-size:12px;font-weight:700;color:#1e2e26;background:#fff;border:1px solid #e4ede8;border-radius:8px;padding:6px 11px;cursor:pointer}
+  .share-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:48px;margin-top:12px;background:#1b4332;color:#fff;border:none;border-radius:13px;font-size:15px;font-weight:800;cursor:pointer}
+  .or-div{display:flex;align-items:center;gap:10px;margin:18px 0 12px;color:#9aa89f;font-size:11.5px;font-weight:700}
+  .or-div::before,.or-div::after{content:"";flex:1;height:1px;background:#e4ede8}
+  .code-big{font-size:19px;font-weight:850;color:#1b4332;letter-spacing:2px}
+  .regen{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:12px;font-size:12px;color:#6a7e73;font-weight:600}
+  /* dark mode variants */
+  .dark .m{background:#1e2016}
+  .dark .m-title{color:#9ccc65}
+  .dark .m-x{background:#2a2c1e;color:#b7c99a}
+  .dark .m-inforow{background:#242618}
+  .dark .m-ico{background:#5a7a3e}
+  .dark .m-intro{color:#eef0e2}
+  .dark .m-lvsub{color:#b7c99a}
+  .dark .m-lv{background:#5a7a3e}
+  .dark .m-sechd .l{color:#eef0e2}
+  .dark .m-sechd .r{color:#b7c99a}
+  .dark .fi{background:#242618;border-color:#2f3220}
+  .dark .fi.unread{background:#2b3020;border-color:#3a4028;box-shadow:inset 3px 0 0 #9ccc65}
+  .dark .fi-t{color:#eef0e2}
+  .dark .fi-t .who{color:#9ccc65}
+  .dark .fi-d{color:#b7c99a}
+  .dark .fi-time{color:#8a9678}
+  .dark .fi-ic.letter{background:#243a2e;color:#9ccc65}
+  .dark .fi-ic.sched{background:#3a331e;color:#e0c169}
+  .dark .fi-ic.join{background:#213338;color:#7fc4cf}
+  .dark .fi-ic.edit{background:#2e2c22;color:#c3b98a}
+  .dark .m-more{background:#242618;color:#9ccc65}
+  .dark .invite-btn{background:#242618;border-color:#5a7a3e;color:#9ccc65}
+  .dark .enter{background:#5a7a3e}
+  .dark .mrow-n{color:#b7c99a}
+  /* profile edit */
+  .ed-lbl{font-size:12px;font-weight:800;color:#1e2e26;margin:15px 2px 6px;display:flex;gap:7px;align-items:baseline}
+  .ed-lbl .h{font-size:10.5px;font-weight:600;color:#c98a2e}
+  .ed-in{width:100%;border:1.5px solid #d0e4d8;border-radius:11px;padding:10px 12px;font-size:14px;color:#1e2e26;background:#fff;font-family:inherit;box-sizing:border-box}
+  .ed-photo{position:relative;border-radius:14px;overflow:hidden;height:118px;background:#1b4332;display:flex;align-items:center;justify-content:center;color:#9fc0ad;font-size:30px}
+  .ed-photo .chg{position:absolute;right:10px;bottom:10px;background:rgba(255,255,255,.94);border-radius:9px;padding:5px 10px;font-size:12px;font-weight:700;color:#1b4332;display:flex;gap:5px;align-items:center}
+  .ed-chips{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap}
+  .ed-chip{font-size:12px;font-weight:600;color:#3a4a42;background:#f2f7f4;border:1px solid #e4ede8;border-radius:9px;padding:7px 11px;display:flex;gap:5px;align-items:center}
+  .ed-chip.on{background:#e2f2ea;border-color:#52b788;color:#1b4332;font-weight:700}
+  .ed-actions{display:flex;gap:9px;margin-top:18px}
+  .ed-cancel{flex:1;height:48px;border:1px solid #e4ede8;background:#fff;border-radius:13px;font-size:14.5px;font-weight:700;color:#5c6b62}
+  .ed-save{flex:1.6;height:48px;border:none;background:#1b4332;color:#fff;border-radius:13px;font-size:14.5px;font-weight:800}
+  .save-full{width:100%;height:50px;border:none;background:#1b4332;color:#fff;border-radius:14px;font-size:15.5px;font-weight:800;margin-top:18px}
+  .notify-b{display:flex;gap:8px;align-items:flex-start;background:#eef4f0;border:1px solid #d7e6dd;border-radius:11px;padding:10px 12px;margin-top:16px;font-size:12px;line-height:1.45;color:#2f6b45}
+  .notify-b b{color:#1b4332}
+  .pen{width:auto;height:auto;background:none;border:none;color:#357a58;font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:5px}
+  .cnt{text-align:right;font-size:11px;color:#9aa89f;margin-top:5px}
+</style>
+</helmet>
+
+<section class="dv-turn" id="t18">
+  <div class="dv-thd"><a class="dv-tid" href="#t18">18</a><span class="dv-tname">방목록 전체 — 보딩패스 카드 (확정)</span></div>
+  <p class="dv-sub">확정된 티켓 카드를 그리드로. 반복감 방지 위해 방마다 <b>헤더 톤을 초록/틸/올리브 계열</b>로 달리함. 즐겨찾기·새글 배지·멤버·D-day 바로가기 유지. <b>약속 없는 방</b>은 "약속 정하기" 폴백. 코드 노출 없음(<a class="dv-oid" href="#6a">6a</a>).</p>
+
+  <div class="dv-opts">
+    <div class="dv-opt" id="18a" style="width:820px;max-width:100%">
+      <div style="border-radius:20px;overflow:hidden;background:linear-gradient(135deg,#e7dcc6,#cdba95);padding:26px">
+
+        <!-- toolbar -->
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:16px">
+          <div style="font-size:16px;font-weight:800;color:#1b4332"><i class="ti ti-users"></i> 우리 우정공간들이에요</div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="background:#fffdf7;border:1px solid rgba(27,67,50,.12);border-radius:10px;padding:8px 12px;font-size:12.5px;color:#9aa89f">방 코드 입력</div>
+            <button style="background:#1b4332;color:#fff;border:none;border-radius:10px;padding:9px 15px;font-size:13px;font-weight:700">입장</button>
+            <button style="background:#357a58;color:#fff;border:none;border-radius:10px;padding:9px 14px;font-size:13px;font-weight:700"><i class="ti ti-plus"></i> 방 만들기</button>
+            <button style="background:#fffdf7;color:#5c6b62;border:1px solid rgba(27,67,50,.12);border-radius:10px;padding:9px 13px;font-size:13px;font-weight:700">편집</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:22px;flex-wrap:wrap">
+          <span style="background:#1b4332;color:#fff;border-radius:16px;padding:7px 14px;font-size:12.5px;font-weight:700"><i class="ti ti-clock"></i> 최신순</span>
+          <span style="background:#fffdf7;color:#5c6b62;border:1px solid rgba(27,67,50,.1);border-radius:16px;padding:7px 14px;font-size:12.5px;font-weight:600">오래된 순</span>
+          <span style="background:#fffdf7;color:#5c6b62;border:1px solid rgba(27,67,50,.1);border-radius:16px;padding:7px 14px;font-size:12.5px;font-weight:600">즐겨찾기</span>
+          <span style="background:#fffdf7;color:#5c6b62;border:1px solid rgba(27,67,50,.1);border-radius:16px;padding:7px 14px;font-size:12.5px;font-weight:600">내 순서</span>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:18px">
+
+          <!-- ticket 1: 여행 계획단 (선택됨, forest) -->
+          <div style="position:relative;background:#fffdf7;border-radius:16px;box-shadow:0 12px 26px rgba(20,40,30,.2);overflow:hidden;outline:2.5px solid #52b788;outline-offset:0">
+            <div style="background:linear-gradient(150deg,#22705a,#123f31);padding:14px 15px 0;position:relative">
+              <div style="display:flex;align-items:center;justify-content:space-between;color:#fff">
+                <div><div style="font-size:9px;letter-spacing:1px;color:#a7d3bf;font-weight:700">오늘</div><div style="font-size:15px;font-weight:800">CLOV</div></div>
+                <div style="flex:1;text-align:center;color:#a7d3bf;font-size:11px">┈<i class="ti ti-plane" style="color:#fff;font-size:13px"></i>┈</div>
+                <div style="text-align:right"><div style="font-size:9px;letter-spacing:1px;color:#a7d3bf;font-weight:700">D-21</div><div style="font-size:15px;font-weight:800">제주</div></div>
+              </div>
+              <div style="display:flex;align-items:flex-end;gap:2.5px;height:26px;margin-top:8px;opacity:.9"><div style="width:8px;height:12px;background:#fffdf7"></div><div style="width:7px;height:20px;background:#fffdf7"></div><div style="width:10px;height:24px;background:#fffdf7"></div><div style="width:7px;height:15px;background:#fffdf7"></div><div style="width:11px;height:26px;background:#fffdf7"></div><div style="width:7px;height:17px;background:#fffdf7"></div><div style="width:9px;height:22px;background:#fffdf7"></div><div style="flex:1"></div></div>
+            </div>
+            <div style="padding:12px 15px 4px;display:flex;align-items:flex-start;justify-content:space-between">
+              <div><div style="font-size:9px;color:#9aa89f;font-weight:700">우정공간</div><div style="font-size:15px;font-weight:800;color:#1e2e26">여행 계획단</div><div style="display:flex;margin-top:6px"><span style="width:22px;height:22px;border-radius:50%;background:#1b4332;color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;border:1.5px solid #fff">나</span><span style="width:22px;height:22px;border-radius:50%;background:#6a7e73;color:#fff;font-size:8px;font-weight:800;display:flex;align-items:center;justify-content:center;border:1.5px solid #fff;margin-left:-7px">+3</span></div></div>
+              <i class="ti ti-star" style="color:#c8c2b4;font-size:17px"></i>
+            </div>
+            <div style="padding:4px 15px 12px;display:grid;grid-template-columns:1fr 1fr;gap:7px 10px">
+              <div><div style="font-size:9px;color:#9aa89f;font-weight:700">다음 약속</div><div style="font-size:12px;font-weight:800;color:#1e2e26">제주 여행</div></div>
+              <div><div style="font-size:9px;color:#9aa89f;font-weight:700">D-DAY</div><div style="font-size:12px;font-weight:800;color:#1b4332">D-21</div></div>
+            </div>
+            <div style="position:relative;border-top:2px dashed #e6dfcf;margin:0 12px"></div>
+            <div style="position:absolute;left:-9px;bottom:34px;width:18px;height:18px;border-radius:50%;background:#ddca9f"></div><div style="position:absolute;right:-9px;bottom:34px;width:18px;height:18px;border-radius:50%;background:#ddca9f"></div>
+            <div style="padding:9px 15px 12px;display:flex;align-items:center;justify-content:space-between">
+              <div style="display:flex;align-items:flex-end;gap:1.5px;height:20px"><div style="width:2px;height:20px;background:#2a3a32"></div><div style="width:1px;height:20px;background:#2a3a32"></div><div style="width:3px;height:20px;background:#2a3a32"></div><div style="width:1px;height:20px;background:#2a3a32"></div><div style="width:2px;height:20px;background:#2a3a32"></div><div style="width:1px;height:20px;background:#2a3a32"></div><div style="width:3px;height:20px;background:#2a3a32"></div><div style="width:1px;height:20px;background:#2a3a32"></div><div style="width:2px;height:20px;background:#2a3a32"></div></div>
+              <span style="font-size:11px;font-weight:800;color:#357a58">입장 ›</span>
+            </div>
+          </div>
+
+          <!-- ticket 2: 단짝 모임 (teal, fav, badge) -->
+          <div style="position:relative;background:#fffdf7;border-radius:16px;box-shadow:0 12px 26px rgba(20,40,30,.2);overflow:hidden">
+            <div style="background:linear-gradient(150deg,#1f6b6b,#0f3d3d);padding:14px 15px 0;position:relative">
+              <div style="display:flex;align-items:center;justify-content:space-between;color:#fff">
+                <div><div style="font-size:9px;letter-spacing:1px;color:#9ecfcf;font-weight:700">오늘</div><div style="font-size:15px;font-weight:800">CLOV</div></div>
+                <div style="flex:1;text-align:center;color:#9ecfcf;font-size:11px">┈<i class="ti ti-calendar-heart" style="color:#fff;font-size:13px"></i>┈</div>
+                <div style="text-align:right"><div style="font-size:9px;letter-spacing:1px;color:#9ecfcf;font-weight:700">D-3</div><div style="font-size:15px;font-weight:800">약속</div></div>
+              </div>
+              <div style="display:flex;align-items:flex-end;gap:2.5px;height:26px;margin-top:8px;opacity:.9"><div style="width:9px;height:18px;background:#fffdf7"></div><div style="width:7px;height:24px;background:#fffdf7"></div><div style="width:11px;height:14px;background:#fffdf7"></div><div style="width:7px;height:22px;background:#fffdf7"></div><div style="width:10px;height:26px;background:#fffdf7"></div><div style="width:7px;height:16px;background:#fffdf7"></div><div style="flex:1"></div></div>
+            </div>
+            <div style="padding:12px 15px 4px;display:flex;align-items:flex-start;justify-content:space-between">
+              <div><div style="font-size:9px;color:#9aa89f;font-weight:700">우정공간</div><div style="font-size:15px;font-weight:800;color:#1e2e26">단짝 모임</div><div style="display:flex;margin-top:6px"><span style="width:22px;height:22px;border-radius:50%;background:#1b4332;color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;border:1.5px solid #fff">나</span><span style="width:22px;height:22px;border-radius:50%;background:#6a7e73;color:#fff;font-size:8px;font-weight:800;display:flex;align-items:center;justify-content:center;border:1.5px solid #fff;margin-left:-7px">+3</span></div></div>
+              <div style="display:flex;align-items:center;gap:7px"><span style="background:#d95f5f;color:#fff;font-size:10px;font-weight:800;border-radius:9px;padding:1px 7px">3</span><i class="ti ti-star-filled" style="color:#e6a23c;font-size:17px"></i></div>
+            </div>
+            <div style="padding:4px 15px 12px;display:grid;grid-template-columns:1fr 1fr;gap:7px 10px">
+              <div><div style="font-size:9px;color:#9aa89f;font-weight:700">다음 약속</div><div style="font-size:12px;font-weight:800;color:#1e2e26">토요일 약속</div></div>
+              <div><div style="font-size:9px;color:#9aa89f;font-weight:700">레벨</div><div style="font-size:12px;font-weight:800;color:#1e2e26">Lv.4</div></div>
+            </div>
+            <div style="position:relative;border-top:2px dashed #e6dfcf;margin:0 12px"></div>
+            <div style="position:absolute;left:-9px;bottom:34px;width:18px;height:18px;border-radius:50%;background:#ddca9f"></div><div style="position:absolute;right:-9px;bottom:34px;width:18px;height:18px;border-radius:50%;background:#ddca9f"></div>
+            <div style="padding:9px 15px 12px;display:flex;align-items:center;justify-content:space-between">
+              <div style="display:flex;align-items:flex-end;gap:1.5px;height:20px"><div style="width:3px;height:20px;background:#2a3a32"></div><div style="width:1px;height:20px;background:#2a3a32"></div><div style="width:2px;height:20px;background:#2a3a32"></div><div style="width:1px;height:20px;background:#2a3a32"></div><div style="width:3px;height:20px;background:#2a3a32"></div><div style="width:1px;height:20px;background:#2a3a32"></div><div style="width:2px;height:20px;background:#2a3a32"></div><div style="width:1px;height:20px;background:#2a3a32"></div><div style="width:2px;height:20px;background:#2a3a32"></div></div>
+              <span style="font-size:11px;font-weight:800;color:#357a58">입장 ›</span>
+            </div>
+          </div>
+
+          <!-- ticket 3: 사진 동아리 (olive, no upcoming 약속 fallback) -->
+          <div style="position:relative;background:#fffdf7;border-radius:16px;box-shadow:0 12px 26px rgba(20,40,30,.2);overflow:hidden">
+            <div style="background:linear-gradient(150deg,#4a6b3a,#2a4020);padding:14px 15px 0;position:relative">
+              <div style="display:flex;align-items:center;justify-content:space-between;color:#fff">
+                <div><div style="font-size:9px;letter-spacing:1px;color:#c1d3a5;font-weight:700">오늘</div><div style="font-size:15px;font-weight:800">CLOV</div></div>
+                <div style="flex:1;text-align:center;color:#c1d3a5;font-size:11px">┈<i class="ti ti-camera" style="color:#fff;font-size:13px"></i>┈</div>
+                <div style="text-align:right"><div style="font-size:9px;letter-spacing:1px;color:#c1d3a5;font-weight:700">약속 없음</div><div style="font-size:13px;font-weight:800">자유</div></div>
+              </div>
+              <div style="display:flex;align-items:flex-end;gap:2.5px;height:26px;margin-top:8px;opacity:.9"><div style="width:8px;height:14px;background:#fffdf7"></div><div style="width:7px;height:22px;background:#fffdf7"></div><div style="width:10px;height:18px;background:#fffdf7"></div><div style="width:7px;height:26px;background:#fffdf7"></div><div style="width:11px;height:20px;background:#fffdf7"></div><div style="width:7px;height:15px;background:#fffdf7"></div><div style="flex:1"></div></div>
+            </div>
+            <div style="padding:12px 15px 4px;display:flex;align-items:flex-start;justify-content:space-between">
+              <div><div style="font-size:9px;color:#9aa89f;font-weight:700">우정공간</div><div style="font-size:15px;font-weight:800;color:#1e2e26">사진 동아리</div><div style="display:flex;margin-top:6px"><span style="width:22px;height:22px;border-radius:50%;background:#1b4332;color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;border:1.5px solid #fff">나</span><span style="width:22px;height:22px;border-radius:50%;background:#6a7e73;color:#fff;font-size:8px;font-weight:800;display:flex;align-items:center;justify-content:center;border:1.5px solid #fff;margin-left:-7px">+2</span></div></div>
+              <i class="ti ti-star" style="color:#c8c2b4;font-size:17px"></i>
+            </div>
+            <div style="padding:4px 15px 12px">
+              <div style="font-size:9px;color:#9aa89f;font-weight:700">다음 약속</div>
+              <div style="display:flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:#8a9a5a;margin-top:1px"><i class="ti ti-plus" style="font-size:13px"></i> 약속을 정해보세요</div>
+            </div>
+            <div style="position:relative;border-top:2px dashed #e6dfcf;margin:0 12px"></div>
+            <div style="position:absolute;left:-9px;bottom:34px;width:18px;height:18px;border-radius:50%;background:#ddca9f"></div><div style="position:absolute;right:-9px;bottom:34px;width:18px;height:18px;border-radius:50%;background:#ddca9f"></div>
+            <div style="padding:9px 15px 12px;display:flex;align-items:center;justify-content:space-between">
+              <div style="display:flex;align-items:flex-end;gap:1.5px;height:20px"><div style="width:2px;height:20px;background:#2a3a32"></div><div style="width:1px;height:20px;background:#2a3a32"></div><div style="width:3px;height:20px;background:#2a3a32"></div><div style="width:1px;height:20px;background:#2a3a32"></div><div style="width:2px;height:20px;background:#2a3a32"></div><div style="width:1px;height:20px;background:#2a3a32"></div><div style="width:3px;height:20px;background:#2a3a32"></div><div style="width:2px;height:20px;background:#2a3a32"></div></div>
+              <span style="font-size:11px;font-weight:800;color:#357a58">입장 ›</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <div class="dv-callout" style="width:820px;max-width:100%">헤더 톤을 방마다(포레스트/틸/올리브) 달리해 반복감 방지. 즐겨찾기=헤더 ★, 새글=헤더 빨강 배지, 멤버=아바타 스택, D-day=목적지+"입장 ›"(탭 시 그 약속으로 직행). <b>약속 없는 방</b>은 "약속을 정해보세요" 폴백. 현재 방은 초록 아웃라인.</div>
+    </div>
+  </div>
+
+  <p class="dv-next">조정: "헤더 톤 종류 더/덜" · "약속 없는 방은 목적지 자리를 방 소개로" · "바코드 대신 다른 스텁" · "이 카드로 핸드오프 README·스크린샷 업데이트"</p>
+</section>
+
+<section class="dv-turn" id="t17">
+  <div class="dv-thd"><a class="dv-tid" href="#t17">17</a><span class="dv-tname">보딩패스(탑승권) 컨셉 — "약속으로 떠나는 티켓"</span></div>
+  <p class="dv-sub">방마다 D-day 약속이 있으니 "그 약속으로 향하는 탑승권"으로 은유. 상단=목적지(약속), 절취선+바코드=티켓 감성. 배경 위에 얹어봄. (컨셉 1장)</p>
+
+  <div class="dv-opts">
+
+    <!-- 17a boarding pass -->
+    <div class="dv-opt" id="17a" style="width:270px">
+      <div class="dv-olabel"><a class="dv-oid" href="#17a">17a</a><b>보딩패스 카드</b></div>
+      <div style="background:linear-gradient(135deg,#d9c9a6,#c6b083);border-radius:14px;padding:24px 20px">
+        <div style="position:relative;width:230px;background:#fffdf7;border-radius:16px;box-shadow:0 14px 30px rgba(20,40,30,.25);overflow:hidden">
+          <!-- teal top -->
+          <div style="background:linear-gradient(150deg,#22705a,#123f31);padding:15px 16px 0;position:relative">
+            <div style="display:flex;align-items:center;justify-content:space-between;color:#fff">
+              <div><div style="font-size:10px;letter-spacing:1px;color:#a7d3bf;font-weight:700">오늘</div><div style="font-size:17px;font-weight:800">CLOV</div></div>
+              <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:5px;color:#a7d3bf;font-size:12px">┈┈<i class="ti ti-plane" style="color:#fff;font-size:15px"></i>┈┈</div>
+              <div style="text-align:right"><div style="font-size:10px;letter-spacing:1px;color:#a7d3bf;font-weight:700">D-21</div><div style="font-size:17px;font-weight:800">제주</div></div>
+            </div>
+            <!-- skyline -->
+            <div style="display:flex;align-items:flex-end;gap:3px;height:34px;margin-top:10px;opacity:.9">
+              <div style="width:10px;height:16px;background:#fffdf7"></div><div style="width:8px;height:24px;background:#fffdf7"></div><div style="width:12px;height:30px;background:#fffdf7"></div><div style="width:9px;height:20px;background:#fffdf7"></div><div style="width:14px;height:34px;background:#fffdf7"></div><div style="width:8px;height:22px;background:#fffdf7"></div><div style="width:11px;height:28px;background:#fffdf7"></div><div style="width:9px;height:18px;background:#fffdf7"></div><div style="width:13px;height:26px;background:#fffdf7"></div><div style="flex:1"></div>
+            </div>
+          </div>
+          <!-- passenger / room block -->
+          <div style="padding:14px 16px 6px;display:flex;align-items:center;justify-content:space-between">
+            <div><div style="font-size:10px;color:#9aa89f;font-weight:700">우정공간</div><div style="font-size:16px;font-weight:800;color:#1e2e26">여행 계획단</div></div>
+            <div style="display:flex;margin-right:2px"><span style="width:24px;height:24px;border-radius:50%;background:#1b4332;color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;border:1.5px solid #fff">나</span><span style="width:24px;height:24px;border-radius:50%;background:#357a58;color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;border:1.5px solid #fff;margin-left:-8px">김</span><span style="width:24px;height:24px;border-radius:50%;background:#6a7e73;color:#fff;font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;border:1.5px solid #fff;margin-left:-8px">+2</span></div>
+          </div>
+          <!-- detail grid -->
+          <div style="padding:6px 16px 14px;display:grid;grid-template-columns:1fr 1fr;gap:9px 12px">
+            <div><div style="font-size:9.5px;color:#9aa89f;font-weight:700">다음 약속</div><div style="font-size:12.5px;font-weight:800;color:#1e2e26">제주 여행</div></div>
+            <div><div style="font-size:9.5px;color:#9aa89f;font-weight:700">D-DAY</div><div style="font-size:12.5px;font-weight:800;color:#1b4332">D-21</div></div>
+            <div><div style="font-size:9.5px;color:#9aa89f;font-weight:700">멤버</div><div style="font-size:12.5px;font-weight:800;color:#1e2e26">4명</div></div>
+            <div><div style="font-size:9.5px;color:#9aa89f;font-weight:700">레벨</div><div style="font-size:12.5px;font-weight:800;color:#1e2e26">Lv.3</div></div>
+          </div>
+          <!-- perforation -->
+          <div style="position:relative;height:1px;border-top:2px dashed #e0dccf;margin:0 12px"></div>
+          <div style="position:absolute;left:-9px;width:18px;height:18px;border-radius:50%;background:#cfba8b;bottom:52px"></div>
+          <div style="position:absolute;right:-9px;width:18px;height:18px;border-radius:50%;background:#cfba8b;bottom:52px"></div>
+          <!-- stub barcode -->
+          <div style="padding:11px 16px 14px;display:flex;align-items:center;justify-content:space-between">
+            <div style="display:flex;align-items:flex-end;gap:1.5px;height:26px">
+              <div style="width:2px;height:26px;background:#1e2e26"></div><div style="width:1px;height:26px;background:#1e2e26"></div><div style="width:3px;height:26px;background:#1e2e26"></div><div style="width:1px;height:26px;background:#1e2e26"></div><div style="width:2px;height:26px;background:#1e2e26"></div><div style="width:1px;height:26px;background:#1e2e26"></div><div style="width:2px;height:26px;background:#1e2e26"></div><div style="width:3px;height:26px;background:#1e2e26"></div><div style="width:1px;height:26px;background:#1e2e26"></div><div style="width:2px;height:26px;background:#1e2e26"></div><div style="width:1px;height:26px;background:#1e2e26"></div><div style="width:3px;height:26px;background:#1e2e26"></div>
+            </div>
+            <span style="font-size:11px;font-weight:800;color:#357a58">입장 ›</span>
+          </div>
+        </div>
+      </div>
+      <div class="dv-callout" style="width:270px">👍 "약속行 티켓" 은유가 D-day와 딱 맞고 확실히 특별해 보여요. ⚠ 세로로 길어 그리드가 커지고, <b>약속(D-day) 없는 방</b>이나 여행 아닌 방엔 비행기·바코드 은유가 어색. 정보 위계도 티켓 관습(작은 라벨들)이라 스캔은 느림.</div>
+    </div>
+
+    <div class="dv-opt" style="width:300px">
+      <div class="dv-olabel"><b style="color:#5c6b62">이걸 어디에 쓰면 좋을까</b></div>
+      <div style="background:#fffdf7;border-radius:14px;box-shadow:0 6px 18px rgba(20,40,30,.1);padding:16px;font-size:13px;line-height:1.65;color:#3a4a42">
+        방목록 <b>모든 카드</b>에 쓰기엔 세로가 길고 은유가 안 맞는 방이 생겨요. 대신 이렇게 쓰면 티켓 감성이 살아요:
+        <div style="margin-top:11px;display:flex;flex-direction:column;gap:9px">
+          <div style="background:#eef4f0;border-radius:9px;padding:9px 11px"><b style="color:#1b4332">A. 입장 순간 연출</b><br><span style="color:#5c6b62;font-size:12px">방 들어갈 때 티켓이 "찍히는" 트랜지션 (특별한 순간)</span></div>
+          <div style="background:#eef4f0;border-radius:9px;padding:9px 11px"><b style="color:#1b4332">B. D-day 약속 상세</b><br><span style="color:#5c6b62;font-size:12px">일정 카드 = 티켓. 여행/약속 컨셉과 자연스러움</span></div>
+          <div style="background:#eef4f0;border-radius:9px;padding:9px 11px"><b style="color:#1b4332">C. 초대장</b><br><span style="color:#5c6b62;font-size:12px">"친구 초대하기"를 탑승권 초대장으로</span></div>
+        </div>
+      </div>
+      <div class="dv-callout" style="width:300px">일상 목록엔 <a class="dv-oid" href="#16a">16a 폴라로이드</a>, 티켓은 <b>특별한 순간(입장·약속·초대)</b>에 쓰는 조합을 추천해요.</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">어떻게 할까요: "티켓을 <b>방목록 카드로</b> 밀고 가자" · "티켓은 <b>입장 연출/약속 상세</b>에만 쓰자" · "티켓 색을 clov 초록 말고 다르게" · "폴라로이드(<a class="dv-oid" href="#16a">16a</a>)로 최종"</p>
+</section>
+
+<section class="dv-turn" id="t16">
+  <div class="dv-thd"><a class="dv-tid" href="#t16">16</a><span class="dv-tname">더 나은 방향 탐색 — 카드 컨셉 3안</span></div>
+  <p class="dv-sub"><a class="dv-oid" href="#15a">15a</a>는 안전하지만 "평범한 카드"예요. clov의 스크랩북·폴라로이드·추억 정체성을 살리거나, 밀도를 바꾼 3가지 다른 방향. 배경(우드) 위에 얹어 비교.</p>
+
+  <div class="dv-opts">
+
+    <!-- 16a polaroid scrapbook -->
+    <div class="dv-opt" id="16a" style="width:250px">
+      <div class="dv-olabel"><a class="dv-oid" href="#16a">16a</a><b>폴라로이드/스크랩북</b> — 제일 clov다움</div>
+      <div style="background:linear-gradient(135deg,#d9c9a6,#c6b083);border-radius:14px;padding:22px 18px">
+        <div style="position:relative;background:#fff;border-radius:5px;box-shadow:0 10px 24px rgba(20,40,30,.22);padding:9px 9px 0;transform:rotate(-1.5deg)">
+          <div style="position:absolute;top:-9px;left:34px;width:56px;height:19px;background:rgba(210,180,120,.6);border:1px solid rgba(255,255,255,.4);transform:rotate(-4deg)"></div>
+          <div style="position:relative;height:132px;border-radius:3px;background:linear-gradient(135deg,#8fb08f,#5f8a5f);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.7);font-size:30px"><i class="ti ti-plane"></i>
+            <span style="position:absolute;top:8px;left:8px;background:#d95f5f;color:#fff;font-size:10px;font-weight:800;border-radius:50%;width:19px;height:19px;display:flex;align-items:center;justify-content:center">3</span>
+            <span style="position:absolute;top:8px;right:8px;color:#fff;font-size:15px">★</span>
+            <span style="position:absolute;bottom:8px;left:8px;background:rgba(255,255,255,.94);border-radius:6px;padding:3px 8px;font-size:11px;font-weight:800;color:#1b4332"><i class="ti ti-calendar-heart" style="font-size:12px"></i> D-21 ›</span>
+          </div>
+          <div style="padding:11px 4px 14px"><div style="font-size:15px;font-weight:800;color:#1e2e26">여행 계획단 <span style="font-size:11px;color:#52b788">Lv.3</span></div><div style="font-size:12px;color:#8a988e;margin-top:3px">제주도 함께 가요! · 30분 전</div></div>
+        </div>
+      </div>
+      <div class="dv-callout" style="width:250px">사진이 폴라로이드로 → 추억 앱 정체성 그대로. 워시테이프·살짝 기울임으로 스크랩북 감성. 인생4컷/폴라로이드 UI와도 통일. ⚠ 기울임은 과하면 산만 — ±1.5° 정도.</div>
+    </div>
+
+    <!-- 16b magazine band -->
+    <div class="dv-opt" id="16b" style="width:250px">
+      <div class="dv-olabel"><a class="dv-oid" href="#16b">16b</a><b>매거진 커버 밴드</b> — 제목을 이미지 위로</div>
+      <div style="background:linear-gradient(135deg,#d9c9a6,#c6b083);border-radius:14px;padding:22px 18px">
+        <div style="background:#fffdf7;border-radius:16px;box-shadow:0 8px 22px rgba(20,40,30,.18);overflow:hidden">
+          <div style="position:relative;height:104px;background:linear-gradient(135deg,#5f8a5f,#2f5d3f)">
+            <span style="position:absolute;top:9px;left:9px;background:#d95f5f;color:#fff;font-size:10px;font-weight:800;border-radius:50%;width:19px;height:19px;display:flex;align-items:center;justify-content:center">3</span>
+            <span style="position:absolute;top:9px;right:10px;color:#fff;font-size:15px">★</span>
+            <div style="position:absolute;left:12px;bottom:10px;color:#fff"><div style="font-size:15.5px;font-weight:800;text-shadow:0 1px 4px rgba(0,0,0,.3)">여행 계획단</div><div style="font-size:11px;opacity:.9">Lv.3 · 30분 전</div></div>
+          </div>
+          <div style="padding:11px 13px 13px;display:flex;align-items:center;gap:8px">
+            <i class="ti ti-calendar-heart" style="color:#357a58;font-size:15px"></i><span style="font-size:13px;font-weight:800;color:#1b4332">D-21</span><span style="font-size:11.5px;color:#8a988e;flex:1">제주 여행</span><i class="ti ti-chevron-right" style="color:#9fb4a6;font-size:15px"></i>
+          </div>
+        </div>
+      </div>
+      <div class="dv-callout" style="width:250px">이미지 밴드 + 제목 오버레이로 에디토리얼한 느낌. 사진 있는 방이 화려해짐. ⚠ 사진 없는 방은 단색 밴드라 <a class="dv-oid" href="#16a">16a</a>보다 덜 특색.</div>
+    </div>
+
+    <!-- 16c compact list -->
+    <div class="dv-opt" id="16c" style="width:250px">
+      <div class="dv-olabel"><a class="dv-oid" href="#16c">16c</a><b>컴팩트 리스트</b> — 밀도↑, 스캔 쉬움</div>
+      <div style="background:linear-gradient(135deg,#d9c9a6,#c6b083);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:10px">
+        <div style="background:#fffdf7;border-radius:14px;box-shadow:0 5px 16px rgba(20,40,30,.14);padding:11px 13px;display:flex;align-items:center;gap:11px">
+          <div style="width:42px;height:42px;border-radius:12px;background:#e6f1ea;display:flex;align-items:center;justify-content:center;color:#52b788;font-size:18px;flex:none"><i class="ti ti-plane"></i></div>
+          <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:800;color:#1e2e26">여행 계획단 <span style="font-size:10.5px;color:#52b788">Lv.3</span></div><div style="font-size:11.5px;color:#8a988e;margin-top:1px">제주도 함께 가요! · 30분 전</div></div>
+          <div style="text-align:right;flex:none"><div style="font-size:13px;font-weight:800;color:#1b4332">D-21 ›</div><div style="font-size:10px;color:#9aa89f">제주 여행</div></div>
+        </div>
+        <div style="background:#fffdf7;border-radius:14px;box-shadow:0 5px 16px rgba(20,40,30,.14);padding:11px 13px;display:flex;align-items:center;gap:11px">
+          <div style="width:42px;height:42px;border-radius:12px;background:#eef0e6;display:flex;align-items:center;justify-content:center;color:#8a9a5a;font-size:18px;flex:none"><i class="ti ti-book"></i></div>
+          <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:800;color:#1e2e26">스터디 그룹 <span style="font-size:10.5px;color:#52b788">Lv.1</span></div><div style="font-size:11.5px;color:#8a988e;margin-top:1px">같이 공부해요 · 4시간 전</div></div>
+          <div style="text-align:right;flex:none"><div style="font-size:13px;font-weight:800;color:#1b4332">D-5 ›</div><div style="font-size:10px;color:#9aa89f">중간고사</div></div>
+        </div>
+      </div>
+      <div class="dv-callout" style="width:250px">한 줄 = 한 방. 방이 많을 때 스캔·관리 편함. ⚠ 사진/추억 감성은 약해짐 — clov엔 살짝 사무적일 수 있음.</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">제 추천은 <b><a class="dv-oid" href="#16a">16a</a> 폴라로이드</b> — clov의 추억·스크랩북 정체성과 가장 잘 맞고 다른 앱과 확 달라 보여요. 15a(안전) vs 16a(정체성) 중 고르거나, "16a로 전체 그리드 그려줘" · "16a + 16b 섞어봐" 라고 해주세요.</p>
+</section>
+
+<section class="dv-turn" id="t15">
+  <div class="dv-thd"><a class="dv-tid" href="#t15">15</a><span class="dv-tname">방목록 전체 리디자인 (확정안 합본)</span></div>
+  <p class="dv-sub">표면=<a class="dv-oid" href="#14a">14a</a> 따뜻한 아이보리 · 내부=<a class="dv-oid" href="#13a">13a</a> 차분 · 코드 제거(<a class="dv-oid" href="#6a">6a</a>) · D-day=가벼운 칩+바로가기 · 상단 "요청한 방" 섹션(<a class="dv-oid" href="#1a">1a</a>). 반복감↓·무게↓, 배경 위에서 카드가 뜸. 기능 동일.</p>
+
+  <div class="dv-opts">
+    <div class="dv-opt" id="15a" style="width:880px;max-width:100%">
+      <div style="border-radius:20px;overflow:hidden;background:linear-gradient(135deg,#e7dcc6 0%,#d9c9a6 55%,#cdba95 100%);padding:26px 26px 30px">
+
+        <!-- toolbar -->
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:16px">
+          <div style="font-size:16px;font-weight:800;color:#1b4332"><i class="ti ti-users"></i> 우리 우정공간들이에요</div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="background:#fffdf7;border:1px solid rgba(27,67,50,.12);border-radius:10px;padding:8px 12px;font-size:12.5px;color:#9aa89f;box-shadow:0 2px 8px rgba(20,40,30,.08)">방 코드 입력</div>
+            <button style="background:#1b4332;color:#fff;border:none;border-radius:10px;padding:9px 15px;font-size:13px;font-weight:700">입장</button>
+            <button style="background:#357a58;color:#fff;border:none;border-radius:10px;padding:9px 14px;font-size:13px;font-weight:700"><i class="ti ti-plus"></i> 방 만들기</button>
+            <button style="background:#fffdf7;color:#5c6b62;border:1px solid rgba(27,67,50,.12);border-radius:10px;padding:9px 13px;font-size:13px;font-weight:700">편집</button>
+          </div>
+        </div>
+
+        <!-- filter chips -->
+        <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
+          <span style="background:#1b4332;color:#fff;border-radius:16px;padding:7px 14px;font-size:12.5px;font-weight:700"><i class="ti ti-clock"></i> 최신순</span>
+          <span style="background:#fffdf7;color:#5c6b62;border:1px solid rgba(27,67,50,.1);border-radius:16px;padding:7px 14px;font-size:12.5px;font-weight:600">오래된 순</span>
+          <span style="background:#fffdf7;color:#5c6b62;border:1px solid rgba(27,67,50,.1);border-radius:16px;padding:7px 14px;font-size:12.5px;font-weight:600">즐겨찾기</span>
+          <span style="background:#fffdf7;color:#5c6b62;border:1px solid rgba(27,67,50,.1);border-radius:16px;padding:7px 14px;font-size:12.5px;font-weight:600">내 순서</span>
+        </div>
+
+        <!-- 요청한 방 -->
+        <div style="display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:800;color:#8a5a12;margin-bottom:10px"><i class="ti ti-bell-ringing"></i> 요청한 방 <span style="background:#d95f5f;color:#fff;border-radius:9px;font-size:10px;padding:0 6px">2</span></div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:22px">
+          <div style="background:#fffdf7;border:1px dashed #d9b878;border-radius:16px;box-shadow:0 6px 18px rgba(20,40,30,.12);padding:14px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:9px"><div style="width:42px;height:42px;border-radius:12px;background:#f2e9db;display:flex;align-items:center;justify-content:center;color:#b5851f;font-size:18px"><i class="ti ti-plane"></i></div></div>
+            <div style="font-size:14px;font-weight:800;color:#1e2e26">제주 여행단</div>
+            <div style="display:inline-flex;align-items:center;gap:5px;background:#fbe3c2;color:#8a5a12;border-radius:12px;padding:3px 9px;font-size:11.5px;font-weight:700;margin:7px 0 10px"><i class="ti ti-clock-hour-4"></i> 수락 대기중</div>
+            <div style="border-top:1px solid #f0e9db;padding-top:9px"><span style="font-size:12px;font-weight:700;color:#a12b2b">요청 취소</span></div>
+          </div>
+          <div style="background:#fffdf7;border:1px solid #f0cccc;border-radius:16px;box-shadow:0 6px 18px rgba(20,40,30,.12);padding:14px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:9px"><div style="width:42px;height:42px;border-radius:12px;background:#e6f1ea;display:flex;align-items:center;justify-content:center;color:#52b788;font-size:18px"><i class="ti ti-barbell"></i></div></div>
+            <div style="font-size:14px;font-weight:800;color:#1e2e26">헬스 메이트</div>
+            <div style="display:inline-flex;align-items:center;gap:5px;background:#f6cccc;color:#a12b2b;border-radius:12px;padding:3px 9px;font-size:11.5px;font-weight:700;margin:7px 0 10px"><i class="ti ti-x"></i> 거절됨</div>
+            <div style="border-top:1px solid #f0e9db;padding-top:9px;display:flex;gap:12px"><span style="font-size:12px;font-weight:800;color:#1b4332">재요청</span><span style="font-size:12px;font-weight:700;color:#a12b2b">지우기</span></div>
+          </div>
+        </div>
+
+        <!-- 참여 중 그리드 -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+
+          <!-- card: 여행 계획단 (logo photo) -->
+          <div style="background:#fffdf7;border:1px solid rgba(27,67,50,.06);border-radius:18px;box-shadow:0 6px 20px rgba(20,40,30,.14);padding:15px;border-top:2.5px solid #52b788">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px"><div style="width:46px;height:46px;border-radius:13px;background:#eef2f0;display:flex;align-items:center;justify-content:center;color:#5c6b62;font-size:12px;font-weight:800;overflow:hidden">KOREA</div><i class="ti ti-star" style="color:#d5d0c4;font-size:16px"></i></div>
+            <div style="font-size:15px;font-weight:800;color:#1e2e26">여행 계획단 <span style="font-size:11px;font-weight:700;color:#52b788;background:#eef6f0;border-radius:6px;padding:1px 6px">Lv.3</span></div>
+            <div style="font-size:12.5px;color:#8a988e;margin:4px 0 12px">제주도 함께 가요! · 30분 전</div>
+            <button style="display:flex;align-items:center;gap:8px;width:100%;background:#eef4f0;border:1px solid #dbe8e0;border-radius:11px;padding:9px 12px;cursor:pointer"><i class="ti ti-calendar-heart" style="color:#357a58;font-size:16px"></i><span style="font-size:13.5px;font-weight:800;color:#1b4332">D-21</span><span style="font-size:11.5px;color:#6a7e73;flex:1;text-align:left">제주 여행</span><i class="ti ti-chevron-right" style="color:#9fb4a6;font-size:15px"></i></button>
+          </div>
+
+          <!-- card: 헬스 메이트 -->
+          <div style="background:#fffdf7;border:1px solid rgba(27,67,50,.06);border-radius:18px;box-shadow:0 6px 20px rgba(20,40,30,.14);padding:15px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px"><div style="width:46px;height:46px;border-radius:13px;background:#e6f1ea;display:flex;align-items:center;justify-content:center;color:#52b788;font-size:20px"><i class="ti ti-barbell"></i></div><i class="ti ti-star" style="color:#d5d0c4;font-size:16px"></i></div>
+            <div style="font-size:15px;font-weight:800;color:#1e2e26">헬스 메이트 <span style="font-size:11px;font-weight:700;color:#52b788;background:#eef6f0;border-radius:6px;padding:1px 6px">Lv.3</span></div>
+            <div style="font-size:12.5px;color:#8a988e;margin:4px 0 12px">같이 운동해요 💪 · 1시간 전</div>
+            <button style="display:flex;align-items:center;gap:8px;width:100%;background:#eef4f0;border:1px solid #dbe8e0;border-radius:11px;padding:9px 12px;cursor:pointer"><i class="ti ti-calendar-heart" style="color:#357a58;font-size:16px"></i><span style="font-size:13.5px;font-weight:800;color:#1b4332">D-1</span><span style="font-size:11.5px;color:#6a7e73;flex:1;text-align:left">헬스장 모임</span><i class="ti ti-chevron-right" style="color:#9fb4a6;font-size:15px"></i></button>
+          </div>
+
+          <!-- card: 단짝 모임 (photo + badge + fav) -->
+          <div style="background:#fffdf7;border:1px solid rgba(27,67,50,.06);border-radius:18px;box-shadow:0 6px 20px rgba(20,40,30,.14);padding:15px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px"><div style="position:relative;width:46px;height:46px"><div style="width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,#8a9a5a,#5f7a3c);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.7);font-size:18px"><i class="ti ti-photo"></i></div><span style="position:absolute;top:-6px;left:-6px;background:#d95f5f;color:#fff;font-size:10px;font-weight:800;border-radius:50%;width:19px;height:19px;display:flex;align-items:center;justify-content:center;border:1.5px solid #fffdf7">3</span></div><i class="ti ti-star-filled" style="color:#e6a23c;font-size:16px"></i></div>
+            <div style="font-size:15px;font-weight:800;color:#1e2e26">단짝 모임 <span style="font-size:11px;font-weight:700;color:#52b788;background:#eef6f0;border-radius:6px;padding:1px 6px">Lv.4</span></div>
+            <div style="font-size:12.5px;color:#8a988e;margin:4px 0 12px">토요일마다 만나요 · 2시간 전</div>
+            <button style="display:flex;align-items:center;gap:8px;width:100%;background:#eef4f0;border:1px solid #dbe8e0;border-radius:11px;padding:9px 12px;cursor:pointer"><i class="ti ti-calendar-heart" style="color:#357a58;font-size:16px"></i><span style="font-size:13.5px;font-weight:800;color:#1b4332">D-3</span><span style="font-size:11.5px;color:#6a7e73;flex:1;text-align:left">토요일 약속</span><i class="ti ti-chevron-right" style="color:#9fb4a6;font-size:15px"></i></button>
+          </div>
+
+          <!-- card: 대학 동기들 -->
+          <div style="background:#fffdf7;border:1px solid rgba(27,67,50,.06);border-radius:18px;box-shadow:0 6px 20px rgba(20,40,30,.14);padding:15px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px"><div style="position:relative;width:46px;height:46px"><div style="width:46px;height:46px;border-radius:13px;background:#f2e9db;display:flex;align-items:center;justify-content:center;color:#b5851f;font-size:20px"><i class="ti ti-school"></i></div><span style="position:absolute;top:-6px;left:-6px;background:#d95f5f;color:#fff;font-size:10px;font-weight:800;border-radius:50%;width:19px;height:19px;display:flex;align-items:center;justify-content:center;border:1.5px solid #fffdf7">12</span></div><i class="ti ti-star" style="color:#d5d0c4;font-size:16px"></i></div>
+            <div style="font-size:15px;font-weight:800;color:#1e2e26">대학 동기들 <span style="font-size:11px;font-weight:700;color:#52b788;background:#eef6f0;border-radius:6px;padding:1px 6px">Lv.5</span></div>
+            <div style="font-size:12.5px;color:#8a988e;margin:4px 0 12px">졸업 후에도 계속되는 인연 · 3시간 전</div>
+            <button style="display:flex;align-items:center;gap:8px;width:100%;background:#eef4f0;border:1px solid #dbe8e0;border-radius:11px;padding:9px 12px;cursor:pointer"><i class="ti ti-calendar-heart" style="color:#357a58;font-size:16px"></i><span style="font-size:13.5px;font-weight:800;color:#1b4332">D-14</span><span style="font-size:11.5px;color:#6a7e73;flex:1;text-align:left">졸업 파티</span><i class="ti ti-chevron-right" style="color:#9fb4a6;font-size:15px"></i></button>
+          </div>
+
+          <!-- card: 스터디 그룹 -->
+          <div style="background:#fffdf7;border:1px solid rgba(27,67,50,.06);border-radius:18px;box-shadow:0 6px 20px rgba(20,40,30,.14);padding:15px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px"><div style="position:relative;width:46px;height:46px"><div style="width:46px;height:46px;border-radius:13px;background:#eef0e6;display:flex;align-items:center;justify-content:center;color:#8a9a5a;font-size:20px"><i class="ti ti-book"></i></div><span style="position:absolute;top:-6px;left:-6px;background:#d95f5f;color:#fff;font-size:10px;font-weight:800;border-radius:50%;width:19px;height:19px;display:flex;align-items:center;justify-content:center;border:1.5px solid #fffdf7">7</span></div><i class="ti ti-star" style="color:#d5d0c4;font-size:16px"></i></div>
+            <div style="font-size:15px;font-weight:800;color:#1e2e26">스터디 그룹 <span style="font-size:11px;font-weight:700;color:#52b788;background:#eef6f0;border-radius:6px;padding:1px 6px">Lv.1</span></div>
+            <div style="font-size:12.5px;color:#8a988e;margin:4px 0 12px">같이 공부해요 · 4시간 전</div>
+            <button style="display:flex;align-items:center;gap:8px;width:100%;background:#eef4f0;border:1px solid #dbe8e0;border-radius:11px;padding:9px 12px;cursor:pointer"><i class="ti ti-calendar-heart" style="color:#357a58;font-size:16px"></i><span style="font-size:13.5px;font-weight:800;color:#1b4332">D-5</span><span style="font-size:11.5px;color:#6a7e73;flex:1;text-align:left">중간고사 스터디</span><i class="ti ti-chevron-right" style="color:#9fb4a6;font-size:15px"></i></button>
+          </div>
+
+          <!-- card: 사진 동아리 -->
+          <div style="background:#fffdf7;border:1px solid rgba(27,67,50,.06);border-radius:18px;box-shadow:0 6px 20px rgba(20,40,30,.14);padding:15px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px"><div style="position:relative;width:46px;height:46px"><div style="width:46px;height:46px;border-radius:13px;background:#f0e6ec;display:flex;align-items:center;justify-content:center;color:#b45274;font-size:20px"><i class="ti ti-camera"></i></div><span style="position:absolute;top:-6px;left:-6px;background:#d95f5f;color:#fff;font-size:10px;font-weight:800;border-radius:50%;width:19px;height:19px;display:flex;align-items:center;justify-content:center;border:1.5px solid #fffdf7">2</span></div><i class="ti ti-star-filled" style="color:#e6a23c;font-size:16px"></i></div>
+            <div style="font-size:15px;font-weight:800;color:#1e2e26">사진 동아리 <span style="font-size:11px;font-weight:700;color:#52b788;background:#eef6f0;border-radius:6px;padding:1px 6px">Lv.2</span></div>
+            <div style="font-size:12.5px;color:#8a988e;margin:4px 0 12px">함께 찍고 함께 기억해요 · 5시간 전</div>
+            <button style="display:flex;align-items:center;gap:8px;width:100%;background:#eef4f0;border:1px solid #dbe8e0;border-radius:11px;padding:9px 12px;cursor:pointer"><i class="ti ti-calendar-heart" style="color:#357a58;font-size:16px"></i><span style="font-size:13.5px;font-weight:800;color:#1b4332">D-7</span><span style="font-size:11.5px;color:#6a7e73;flex:1;text-align:left">출사 여행</span><i class="ti ti-chevron-right" style="color:#9fb4a6;font-size:15px"></i></button>
+          </div>
+
+        </div>
+      </div>
+      <div class="dv-callout" style="width:880px;max-width:100%">달라진 것: ① 진한 D-day 버튼 → <b>연한 칩 + › 바로가기</b> ② 카드마다 <b>다른 톤·성격 아이콘</b>으로 반복감↓ ③ <b>코드 줄 삭제</b> ④ 아이보리 페이퍼 + 그림자로 <b>어느 배경에서도 뜸</b> ⑤ 상단 <b>요청한 방</b> 섹션. 현재 카드(첫 방)는 좌상단 초록 라인으로 표시.</div>
+    </div>
+  </div>
+
+  <p class="dv-next">조정: "D-day 칩에 › 빼줘" · "아이콘 톤을 초록 계열로 통일" · "선택된 방 표시(초록 라인) 말고 다른 방식" · "이 카드로 핸드오프 README/스크린샷 업데이트"</p>
+</section>
+
+<section class="dv-turn" id="t14">
+  <div class="dv-thd"><a class="dv-tid" href="#t14">14</a><span class="dv-tname">배경 충돌 — 테마가 바뀌어도 버티는 카드 표면</span></div>
+  <p class="dv-sub">배경 테마가 우드·야경 등으로 바뀌니까, 카드는 <b>배경과 독립적인 "표면"</b>이어야 해요. 카드 내부는 13a 차분한 버전으로 고정하고, <b>표면 처리 2안</b>을 각각 우드/야경 배경 위에 얹어 비교. (배경은 근사 그라디언트)</p>
+
+  <div class="dv-opts">
+
+    <!-- 14a opaque paper -->
+    <div class="dv-opt" id="14a" style="width:490px">
+      <div class="dv-olabel"><a class="dv-oid" href="#14a">14a</a><b>불투명 페이퍼 카드</b> — 배경 안 비침 + 확실한 그림자</div>
+      <div style="display:flex;gap:16px">
+        <div style="flex:1;border-radius:14px;padding:18px;background:linear-gradient(135deg,#c9a877,#9a6c3c)">
+          <div style="font-size:10.5px;font-weight:700;color:rgba(255,255,255,.85);margin-bottom:9px">우드 데스크</div>
+          <div style="background:#fffdf7;border-radius:15px;box-shadow:0 8px 22px rgba(0,0,0,.22);padding:14px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:9px"><div style="width:42px;height:42px;border-radius:12px;background:#e6f1ea;display:flex;align-items:center;justify-content:center;color:#52b788;font-size:18px"><i class="ti ti-barbell"></i></div><i class="ti ti-star" style="color:#d5d0c4;font-size:15px"></i></div>
+            <div style="font-size:14px;font-weight:800;color:#1e2e26">헬스 메이트 <span style="font-size:10.5px;color:#52b788">Lv.3</span></div>
+            <div style="font-size:12px;color:#8a988e;margin:3px 0 10px">같이 운동해요 💪 · 1시간 전</div>
+            <div style="display:inline-flex;align-items:center;gap:6px;background:#eef4f0;border:1px solid #dbe8e0;border-radius:9px;padding:5px 10px"><i class="ti ti-calendar-heart" style="color:#357a58;font-size:14px"></i><span style="font-size:12.5px;font-weight:800;color:#1b4332">D-1</span></div>
+          </div>
+        </div>
+        <div style="flex:1;border-radius:14px;padding:18px;background:linear-gradient(135deg,#f0a85f,#c94fb0 45%,#4a6fd0)">
+          <div style="font-size:10.5px;font-weight:700;color:rgba(255,255,255,.9);margin-bottom:9px">도시 야경</div>
+          <div style="background:#fffdf7;border-radius:15px;box-shadow:0 8px 22px rgba(0,0,0,.28);padding:14px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:9px"><div style="width:42px;height:42px;border-radius:12px;background:#eef0e6;display:flex;align-items:center;justify-content:center;color:#8a9a5a;font-size:18px"><i class="ti ti-book"></i></div><i class="ti ti-star" style="color:#d5d0c4;font-size:15px"></i></div>
+            <div style="font-size:14px;font-weight:800;color:#1e2e26">스터디 그룹 <span style="font-size:10.5px;color:#52b788">Lv.1</span></div>
+            <div style="font-size:12px;color:#8a988e;margin:3px 0 10px">같이 공부해요 · 4시간 전</div>
+            <div style="display:inline-flex;align-items:center;gap:6px;background:#eef4f0;border:1px solid #dbe8e0;border-radius:9px;padding:5px 10px"><i class="ti ti-calendar-heart" style="color:#357a58;font-size:14px"></i><span style="font-size:12.5px;font-weight:800;color:#1b4332">D-5</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="dv-callout" style="width:490px">배경이 뭐든 <b>텍스트 대비·가독성 100% 보장.</b> 그림자를 살짝 키워 어떤 테마든 카드가 "떠 있게". 가장 안전하고 구현 쉬움. 살짝 정적일 수 있음.</div>
+    </div>
+
+    <!-- 14b frosted glass -->
+    <div class="dv-opt" id="14b" style="width:490px">
+      <div class="dv-olabel"><a class="dv-oid" href="#14b">14b</a><b>프로스티드 글래스</b> — 배경을 은은히 머금음</div>
+      <div style="display:flex;gap:16px">
+        <div style="flex:1;border-radius:14px;padding:18px;background:linear-gradient(135deg,#c9a877,#9a6c3c)">
+          <div style="font-size:10.5px;font-weight:700;color:rgba(255,255,255,.85);margin-bottom:9px">우드 데스크</div>
+          <div style="background:rgba(255,255,255,.74);backdrop-filter:blur(13px) saturate(1.3);-webkit-backdrop-filter:blur(13px) saturate(1.3);border:1px solid rgba(255,255,255,.55);border-radius:15px;box-shadow:0 8px 22px rgba(0,0,0,.18);padding:14px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:9px"><div style="width:42px;height:42px;border-radius:12px;background:rgba(82,183,136,.22);display:flex;align-items:center;justify-content:center;color:#2f6b45;font-size:18px"><i class="ti ti-barbell"></i></div><i class="ti ti-star" style="color:rgba(0,0,0,.28);font-size:15px"></i></div>
+            <div style="font-size:14px;font-weight:800;color:#16241d">헬스 메이트 <span style="font-size:10.5px;color:#2f6b45">Lv.3</span></div>
+            <div style="font-size:12px;color:#4a5a51;margin:3px 0 10px">같이 운동해요 💪 · 1시간 전</div>
+            <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.6);border:1px solid rgba(27,67,50,.15);border-radius:9px;padding:5px 10px"><i class="ti ti-calendar-heart" style="color:#1b4332;font-size:14px"></i><span style="font-size:12.5px;font-weight:800;color:#12281d">D-1</span></div>
+          </div>
+        </div>
+        <div style="flex:1;border-radius:14px;padding:18px;background:linear-gradient(135deg,#f0a85f,#c94fb0 45%,#4a6fd0)">
+          <div style="font-size:10.5px;font-weight:700;color:rgba(255,255,255,.9);margin-bottom:9px">도시 야경</div>
+          <div style="background:rgba(255,255,255,.72);backdrop-filter:blur(13px) saturate(1.3);-webkit-backdrop-filter:blur(13px) saturate(1.3);border:1px solid rgba(255,255,255,.55);border-radius:15px;box-shadow:0 8px 22px rgba(0,0,0,.2);padding:14px">
+            <div style="display:flex;justify-content:space-between;margin-bottom:9px"><div style="width:42px;height:42px;border-radius:12px;background:rgba(138,154,90,.24);display:flex;align-items:center;justify-content:center;color:#5a6a32;font-size:18px"><i class="ti ti-book"></i></div><i class="ti ti-star" style="color:rgba(0,0,0,.28);font-size:15px"></i></div>
+            <div style="font-size:14px;font-weight:800;color:#16241d">스터디 그룹 <span style="font-size:10.5px;color:#2f6b45">Lv.1</span></div>
+            <div style="font-size:12px;color:#4a5a51;margin:3px 0 10px">같이 공부해요 · 4시간 전</div>
+            <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.6);border:1px solid rgba(27,67,50,.15);border-radius:9px;padding:5px 10px"><i class="ti ti-calendar-heart" style="color:#1b4332;font-size:14px"></i><span style="font-size:12.5px;font-weight:800;color:#12281d">D-5</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="dv-callout" style="width:490px">반투명 + 블러라 <b>배경색을 은은히 머금어</b> 어떤 테마와도 어울리고 층이 살아 있음(고급감). ⚠ 아주 밝거나 복잡한 배경에선 대비가 떨어질 수 있어 불투명도(.72~.8)로 방어 필요.</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">추천: 가독성 최우선이면 <b><a class="dv-oid" href="#14a">14a</a> 불투명 페이퍼</b>, 테마와 어우러지는 감성 원하면 <b><a class="dv-oid" href="#14b">14b</a> 글래스</b>. 내부 레이아웃은 <a class="dv-oid" href="#13a">13a</a> 확정으로 볼게요. 조정: "글래스인데 더 불투명하게" · "헤더/필터칩도 같은 표면으로 통일"</p>
+</section>
+
+<section class="dv-turn" id="t13">
+  <div class="dv-thd"><a class="dv-tid" href="#t13">13</a><span class="dv-tname">방목록 카드 리디자인 — 반복감·무거움 줄이기</span></div>
+  <p class="dv-sub">지적: "반복감/무거움". 원인 = 카드마다 <b>진한 D-day 버튼</b> + <b>똑같은 초록 아이콘 사각</b> + <b>코드 줄</b>이 9번 반복. 기능은 그대로 두고 시각 무게만 덜어낸 2안. (왼쪽이 현재, 오른쪽이 개선)</p>
+
+  <div class="dv-opts">
+
+    <!-- current for reference -->
+    <div class="dv-opt" id="13ref" style="width:250px">
+      <div class="dv-olabel"><b style="color:#9aa89f">현재</b> (참고)</div>
+      <div style="background:#eae6dd;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:14px">
+        <div style="background:#fff;border-radius:16px;box-shadow:0 4px 14px rgba(20,40,30,.07);padding:15px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:10px"><div style="width:48px;height:48px;border-radius:13px;background:#52b788;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px"><i class="ti ti-photo"></i></div><i class="ti ti-star" style="color:#c8c2b4;font-size:17px"></i></div>
+          <div style="font-size:14.5px;font-weight:800;color:#1e2e26">헬스 메이트 · Lv.3</div>
+          <div style="font-size:12.5px;color:#6a7e73;margin:3px 0 9px">같이 운동해요 💪 · 1시간 전</div>
+          <div style="font-size:11.5px;color:#8a988e;margin-bottom:10px"><i class="ti ti-key"></i> 초대 코드: CLOV-8008</div>
+          <div style="background:#1b4332;color:#fff;border-radius:12px;padding:9px 12px"><div style="font-size:14px;font-weight:800">D-1</div><div style="font-size:11px;color:#b9cdbf">헬스장 모임</div></div>
+        </div>
+        <div style="background:#fff;border-radius:16px;box-shadow:0 4px 14px rgba(20,40,30,.07);padding:15px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:10px"><div style="width:48px;height:48px;border-radius:13px;background:#52b788;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px"><i class="ti ti-photo"></i></div><i class="ti ti-star" style="color:#c8c2b4;font-size:17px"></i></div>
+          <div style="font-size:14.5px;font-weight:800;color:#1e2e26">스터디 그룹 · Lv.1</div>
+          <div style="font-size:12.5px;color:#6a7e73;margin:3px 0 9px">같이 공부해요 · 4시간 전</div>
+          <div style="font-size:11.5px;color:#8a988e;margin-bottom:10px"><i class="ti ti-key"></i> 초대 코드: CLOV-3003</div>
+          <div style="background:#1b4332;color:#fff;border-radius:12px;padding:9px 12px"><div style="font-size:14px;font-weight:800">D-5</div><div style="font-size:11px;color:#b9cdbf">중간고사 스터디</div></div>
+        </div>
+      </div>
+      <div class="dv-callout" style="width:250px">진한 버튼 2개 + 초록 사각 2개 + 코드 2줄이 그대로 반복 → 무겁고 단조로움.</div>
+    </div>
+
+    <!-- 13a lighten -->
+    <div class="dv-opt" id="13a" style="width:250px">
+      <div class="dv-olabel"><a class="dv-oid" href="#13a">13a</a><b>가볍게</b> — 구조 유지, 무게만↓</div>
+      <div style="background:#eae6dd;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:14px">
+        <div style="background:#fff;border-radius:16px;box-shadow:0 4px 14px rgba(20,40,30,.07);padding:15px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px"><div style="width:44px;height:44px;border-radius:12px;background:#e6f1ea;display:flex;align-items:center;justify-content:center;color:#52b788;font-size:19px"><i class="ti ti-barbell"></i></div><i class="ti ti-star" style="color:#d5d0c4;font-size:16px"></i></div>
+          <div style="font-size:15px;font-weight:800;color:#1e2e26">헬스 메이트 <span style="font-size:11px;font-weight:700;color:#52b788;background:#eef6f0;border-radius:6px;padding:1px 6px;margin-left:2px">Lv.3</span></div>
+          <div style="font-size:12.5px;color:#8a988e;margin:4px 0 12px">같이 운동해요 💪 · 1시간 전</div>
+          <div style="display:inline-flex;align-items:center;gap:7px;background:#eef4f0;border:1px solid #dbe8e0;border-radius:9px;padding:6px 11px"><i class="ti ti-calendar-heart" style="color:#357a58;font-size:15px"></i><span style="font-size:13px;font-weight:800;color:#1b4332">D-1</span><span style="font-size:11.5px;color:#6a7e73">헬스장 모임</span></div>
+        </div>
+        <div style="background:#fff;border-radius:16px;box-shadow:0 4px 14px rgba(20,40,30,.07);padding:15px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px"><div style="width:44px;height:44px;border-radius:12px;background:#eef0e6;display:flex;align-items:center;justify-content:center;color:#8a9a5a;font-size:19px"><i class="ti ti-book"></i></div><i class="ti ti-star" style="color:#d5d0c4;font-size:16px"></i></div>
+          <div style="font-size:15px;font-weight:800;color:#1e2e26">스터디 그룹 <span style="font-size:11px;font-weight:700;color:#52b788;background:#eef6f0;border-radius:6px;padding:1px 6px;margin-left:2px">Lv.1</span></div>
+          <div style="font-size:12.5px;color:#8a988e;margin:4px 0 12px">같이 공부해요 · 4시간 전</div>
+          <div style="display:inline-flex;align-items:center;gap:7px;background:#eef4f0;border:1px solid #dbe8e0;border-radius:9px;padding:6px 11px"><i class="ti ti-calendar-heart" style="color:#357a58;font-size:15px"></i><span style="font-size:13px;font-weight:800;color:#1b4332">D-5</span><span style="font-size:11.5px;color:#6a7e73">중간고사 스터디</span></div>
+        </div>
+      </div>
+      <div class="dv-callout" style="width:250px">진한 D-day → <b>연한 칩</b>, 코드 줄 제거(6a), 아이콘 배경을 <b>은은한 톤 + 방 성격 아이콘</b>으로. 레벨은 작은 배지로. 구조 그대로라 구현 부담 최소.</div>
+    </div>
+
+    <!-- 13b cover hero -->
+    <div class="dv-opt" id="13b" style="width:250px">
+      <div class="dv-olabel"><a class="dv-oid" href="#13b">13b</a><b>커버 히어로</b> — 사진/색으로 차별화</div>
+      <div style="background:#eae6dd;border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:14px">
+        <div style="background:#fff;border-radius:16px;box-shadow:0 4px 14px rgba(20,40,30,.07);overflow:hidden">
+          <div style="height:100px;background:linear-gradient(135deg,#a7d3b4,#5f9e78);position:relative;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.5);font-size:34px"><i class="ti ti-barbell"></i>
+            <i class="ti ti-star" style="position:absolute;top:9px;right:10px;color:#fff;font-size:16px"></i>
+            <span style="position:absolute;left:10px;bottom:9px;display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.92);border-radius:8px;padding:4px 9px;font-size:12px;font-weight:800;color:#1b4332"><i class="ti ti-calendar-heart" style="font-size:13px"></i> D-1 · 헬스장 모임</span>
+          </div>
+          <div style="padding:12px 14px 14px"><div style="font-size:15px;font-weight:800;color:#1e2e26">헬스 메이트 <span style="font-size:11px;font-weight:700;color:#52b788">Lv.3</span></div><div style="font-size:12.5px;color:#8a988e;margin-top:3px">같이 운동해요 💪 · 1시간 전</div></div>
+        </div>
+        <div style="background:#fff;border-radius:16px;box-shadow:0 4px 14px rgba(20,40,30,.07);overflow:hidden">
+          <div style="height:100px;background:linear-gradient(135deg,#f0d9a8,#d9a85f);position:relative;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.55);font-size:34px"><i class="ti ti-book"></i>
+            <i class="ti ti-star" style="position:absolute;top:9px;right:10px;color:#fff;font-size:16px"></i>
+            <span style="position:absolute;left:10px;bottom:9px;display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.92);border-radius:8px;padding:4px 9px;font-size:12px;font-weight:800;color:#1b4332"><i class="ti ti-calendar-heart" style="font-size:13px"></i> D-5 · 중간고사</span>
+          </div>
+          <div style="padding:12px 14px 14px"><div style="font-size:15px;font-weight:800;color:#1e2e26">스터디 그룹 <span style="font-size:11px;font-weight:700;color:#52b788">Lv.1</span></div><div style="font-size:12.5px;color:#8a988e;margin-top:3px">같이 공부해요 · 4시간 전</div></div>
+        </div>
+      </div>
+      <div class="dv-callout" style="width:250px">사진이 <b>커버로 카드 상단을 채움</b> → 카드마다 달라 반복감이 확 줄어듦. 사진 없는 방은 <b>방마다 다른 파스텔 톤</b> + 성격 아이콘. D-day는 커버 위 작은 칩.</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">추천: 반복감을 확실히 없애려면 <b><a class="dv-oid" href="#13b">13b</a> 커버 히어로</b>, 변화 최소로 가볍게만 하려면 <b><a class="dv-oid" href="#13a">13a</a></b>. 조정: "13b인데 빈 방 색은 초록 계열로 통일" · "D-day 칩 문구 빼고 D-1만" · "그리드 간격/열수도"</p>
+</section>
+
+<section class="dv-turn" id="t12">
+  <div class="dv-thd"><a class="dv-tid" href="#t12">12</a><span class="dv-tname">방목록 카드 — D-day 버튼을 "약속 바로가기"로</span></div>
+  <p class="dv-sub">지금 D-day 버튼은 눌리는 연출만 있고 반응이 없음(죽은 버튼). → <b>탭하면 그 방에 입장 + 일정계획의 그 약속이 펼쳐짐.</b> 버튼 오른쪽에 "바로가기 ›" 힌트를 붙여 살아있는 버튼으로.</p>
+
+  <div class="dv-opts">
+
+    <!-- 12a card with shortcut -->
+    <div class="dv-opt" id="12a">
+      <div class="dv-olabel"><a class="dv-oid" href="#12a">12a</a><b>카드 D-day = 약속 바로가기</b></div>
+      <div style="display:flex;gap:22px;align-items:flex-start;flex-wrap:wrap">
+        <div style="width:290px;background:#fff;border:1.5px solid #52b788;border-radius:18px;box-shadow:0 8px 24px rgba(20,40,30,.1);padding:16px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:11px">
+            <div style="width:54px;height:54px;border-radius:15px;background:linear-gradient(150deg,#4c9a6e,#357a58);display:flex;align-items:center;justify-content:center;color:#fff;font-size:24px"><i class="ti ti-photo"></i></div>
+            <i class="ti ti-star" style="color:#c8c2b4;font-size:18px"></i>
+          </div>
+          <div style="font-size:15.5px;font-weight:800;color:#1e2e26">여행 계획단 · Lv.3</div>
+          <div style="font-size:13px;color:#6a7e73;margin:4px 0 12px">제주도 함께 가요! · 30분 전 활동</div>
+          <div style="font-size:12px;color:#8a988e;display:flex;align-items:center;gap:5px;margin-bottom:12px"><i class="ti ti-key"></i> 초대 코드: CLOV-1001</div>
+          <button style="display:flex;align-items:center;gap:11px;width:100%;background:#1b4332;color:#fff;border:none;border-radius:14px;padding:11px 14px;cursor:pointer;text-align:left">
+            <i class="ti ti-calendar-heart" style="font-size:18px;color:#9ccc65"></i>
+            <div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:800;line-height:1.1">D-21</div><div style="font-size:11.5px;color:#b9cdbf;margin-top:1px">제주 여행</div></div>
+            <span style="display:flex;align-items:center;gap:2px;font-size:11px;color:#cfe0d4;font-weight:600;flex:none">바로가기 <i class="ti ti-chevron-right" style="font-size:16px"></i></span>
+          </button>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:11px;padding-top:6px">
+          <div style="font-size:12px;font-weight:800;color:#1b4332">탭하면 이렇게 흘러요</div>
+          <div style="display:flex;align-items:center;gap:9px">
+            <span style="background:#1b4332;color:#fff;font-size:12px;font-weight:700;border-radius:9px;padding:7px 11px">D-21 버튼 탭</span>
+            <i class="ti ti-arrow-right" style="color:#9aa89f"></i>
+            <span style="background:#e2f2ea;color:#1b4332;font-size:12px;font-weight:700;border-radius:9px;padding:7px 11px;border:1px solid #cfe0d4">방 입장</span>
+            <i class="ti ti-arrow-right" style="color:#9aa89f"></i>
+            <span style="background:#e2f2ea;color:#1b4332;font-size:12px;font-weight:700;border-radius:9px;padding:7px 11px;border:1px solid #cfe0d4">일정계획 · 제주 여행 펼침</span>
+          </div>
+          <div style="font-size:12px;color:#6a7e73;line-height:1.55;max-width:340px;margin-top:2px">· 카드 <b style="color:#1b4332">본체</b> 탭 = 미리보기 모달 (기존)<br>· <b style="color:#1b4332">D-day 버튼</b> 탭 = 그 약속으로 직행 (신규)<br>· D-day 없는 방은 버튼 자체가 없음 → 그대로</div>
+        </div>
+      </div>
+      <div class="dv-callout" style="width:640px;max-width:100%">"바로가기 ›" 힌트로 눌리는 이유가 분명해짐. 죽은 hover 연출 제거 → 실제 진입점으로. 방 안 일정 스포트라이트(<code>selectScheduleChip</code>) 재사용.</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">이대로 좋으면 확정. 조정: "힌트는 <b>› 화살표만</b> (글자 빼고)" · "약속 말고 그냥 방 입장으로" · "초대코드도 <a class="dv-oid" href="#6a">6a</a>대로 빼서 보여줘"</p>
+</section>
+
+<section class="dv-turn" id="t11">
+  <div class="dv-thd"><a class="dv-tid" href="#t11">11</a><span class="dv-tname">방 편집을 미리보기 안으로 — ⚙️ 톱니바퀴 진입</span></div>
+  <p class="dv-sub">룸리스트 연필 수정모달(사진 업로드 버그 지점)을 폐지하고, 방 프로필 편집을 <b>미리보기 모달 안</b>으로 이동. 진입점은 헤더 <b>⚙️ 톱니바퀴</b>. 편집 항목은 공동편집 원칙(<a class="dv-oid" href="#6a">누구나+알림</a>) 그대로 — 사진·이름·소개글.</p>
+
+  <div class="dv-opts">
+
+    <!-- 11a view with gear -->
+    <div class="dv-opt" id="11a">
+      <div class="dv-olabel"><a class="dv-oid" href="#11a">11a</a><b>보기 모드</b> — 헤더에 ⚙️ 추가</div>
+      <div class="m">
+        <div class="m-head">
+          <div class="m-title"><i class="ti ti-home"></i> 여행 계획단</div>
+          <div style="display:flex;gap:6px">
+            <button class="pen" title="방 프로필 편집"><i class="ti ti-settings"></i></button>
+            <button class="m-x"><i class="ti ti-x"></i></button>
+          </div>
+        </div>
+        <div class="m-body">
+          <div class="m-inforow" style="margin-bottom:13px">
+            <div class="m-ico"><i class="ti ti-photo"></i></div>
+            <div style="min-width:0"><div class="m-intro">제주도 함께 가요!</div><div class="m-lvrow"><span class="m-lv">Lv.3</span><span class="m-lvsub">· 활동 30분 전</span></div></div>
+          </div>
+          <div class="mrow"><span class="mem-av">나</span><span class="mem-av a2">김</span><span class="mem-av a3">이</span><span class="mem-av a4">박</span><span class="mrow-n">4명 참여 중</span></div>
+          <div class="m-sechd"><span class="l"><i class="ti ti-history"></i> 새 소식</span><span class="r" style="color:#d95f5f;font-weight:800">2</span></div>
+          <div class="feed">
+            <div class="fi unread"><div class="fi-ic letter"><i class="ti ti-mail"></i></div><div class="fi-tx"><div class="fi-t"><span class="who">민준</span>님의 행운편지</div><div class="fi-d">제주도 숙소 예약 완료했어요! 🏝️</div></div><span class="fi-time">1시간 전</span></div>
+            <div class="fi unread"><div class="fi-ic sched"><i class="ti ti-calendar-heart"></i></div><div class="fi-tx"><div class="fi-t">D-21 제주 여행</div><div class="fi-d">항공권 예약 마감이 얼마 안 남았어요</div></div><span class="fi-time">어제</span></div>
+          </div>
+          <div class="m-more">소식 더 보기</div>
+          <button class="invite-btn" style="margin-top:16px"><i class="ti ti-link"></i> 친구 초대하기</button>
+          <button class="enter"><i class="ti ti-rocket"></i> 우정공간 입장하기</button>
+        </div>
+      </div>
+      <div class="dv-callout">헤더 우측에 ⚙️ 하나 추가 → 누르면 <a class="dv-oid" href="#11b">11b</a> 편집 화면. 멤버 누구나 열 수 있음(방장 없음).</div>
+    </div>
+
+    <!-- 11b edit subview -->
+    <div class="dv-opt" id="11b">
+      <div class="dv-olabel"><a class="dv-oid" href="#11b">11b</a><b>⚙️ → 방 프로필 편집</b></div>
+      <div class="m">
+        <div class="m-head">
+          <div class="m-title"><button class="m-x" style="background:none;width:auto;height:auto;color:#1b4332"><i class="ti ti-arrow-left"></i></button> 방 프로필 편집</div>
+          <button class="m-x"><i class="ti ti-x"></i></button>
+        </div>
+        <div class="m-body" style="padding-top:8px">
+          <div class="ed-lbl">대표 사진</div>
+          <div class="ed-photo"><i class="ti ti-photo"></i><span class="chg"><i class="ti ti-camera"></i> 변경</span></div>
+          <div class="ed-chips">
+            <span class="ed-chip on"><i class="ti ti-palette"></i> 테마 일러스트</span>
+            <span class="ed-chip"><i class="ti ti-photo-heart"></i> 추억에서</span>
+            <span class="ed-chip"><i class="ti ti-upload"></i> 업로드</span>
+          </div>
+
+          <div class="ed-lbl">우정공간 이름 <span class="h">바꾸면 멤버에게 알림</span></div>
+          <input class="ed-in" value="여행 계획단">
+
+          <div class="ed-lbl">소개글 <span class="h" style="color:#9aa89f;font-weight:600">공용 메모 · 60자</span></div>
+          <textarea class="ed-in" style="min-height:56px;resize:none">제주도 함께 가요!</textarea>
+          <div class="cnt">10 / 60</div>
+
+          <div class="notify-b"><i class="ti ti-bell-ringing"></i> <span>여기서 바꾼 내용은 <b>모든 멤버에게 알림</b>으로 남아요. 방장이 없으니 몰래 바뀌지 않게요.</span></div>
+
+          <div class="ed-actions">
+            <button class="ed-cancel">취소</button>
+            <button class="ed-save">저장하기</button>
+          </div>
+        </div>
+      </div>
+      <div class="dv-callout">전용 편집 화면 → 보기 모드는 소식에 집중, 편집은 깔끔. 사진 기본=테마 일러스트(소유자 없음)·추억에서·업로드. 저장 시 방 소식 피드에 "OO님이 수정" 기록.</div>
+    </div>
+
+    <!-- 11c list modal disposition -->
+    <div class="dv-opt" id="11c" style="width:340px">
+      <div class="dv-olabel"><a class="dv-oid" href="#11c">11c</a><b>룸리스트 "편집"은?</b></div>
+      <div style="background:#fff;border-radius:16px;box-shadow:0 8px 26px rgba(20,40,30,.14);padding:18px 18px 20px">
+        <div style="font-size:13px;font-weight:800;color:#1b4332;margin-bottom:12px"><i class="ti ti-alert-triangle" style="color:#c98a2e"></i> 버그였던 연필 수정모달 정리</div>
+        <div style="display:flex;flex-direction:column;gap:9px">
+          <div style="border:1.5px solid #52b788;background:#eef4f0;border-radius:10px;padding:10px 12px"><b style="font-size:13px;color:#1b4332">연필 → 미리보기 편집 열기 (추천)</b><div style="font-size:12px;color:#5c6b62;margin-top:3px">방목록 연필을 누르면 그 방 미리보기의 ⚙️ 편집을 바로 염 → 편집 경로 하나로 일원화</div></div>
+          <div style="border:1px solid #e4ede8;border-radius:10px;padding:10px 12px"><b style="font-size:12.5px;color:#5c6b62">연필 자체 제거</b><div style="font-size:12px;color:#8a988e;margin-top:3px">순서 변경(드래그)만 남기고 정보 수정은 방 안에서만</div></div>
+        </div>
+        <div style="font-size:11.5px;color:#9aa89f;margin-top:11px;line-height:1.5">어느 쪽이든 버그난 <code>previewEditPhoto</code> 업로드 경로는 삭제 → 사진 편집은 미리보기 ⚙️ 한 곳으로.</div>
+      </div>
+      <div class="dv-callout" style="width:340px">드래그 순서변경은 남기고, 정보 수정만 미리보기로 이관하는 게 자연스러워요.</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">추천: <b>보기 <a class="dv-oid" href="#11a">11a</a> + 편집 <a class="dv-oid" href="#11b">11b</a></b>, 룸리스트 연필은 <b><a class="dv-oid" href="#11c">11c</a> "미리보기 편집 열기"</b>로 일원화. 조정: "편집을 서브뷰 말고 인라인으로" · "사진 소스 순서 바꿔" · "다크모드 편집화면도"</p>
+</section>
+
+<section class="dv-turn" id="t10">
+  <div class="dv-thd"><a class="dv-tid" href="#t10">10</a><span class="dv-tname">✅ 최종안 — 9b 하이브리드 + 친구 초대(링크) + 다크모드</span></div>
+  <p class="dv-sub">확정: 무탭·소식 먼저(<a class="dv-oid" href="#9b">9b</a>)에 <b>멤버 아바타 줄</b>을 상단에 얇게 얹음. "친구 초대하기"는 <b>링크(URL) 공유 + 코드 병기 + 재발급</b>. 링크를 탭하면 그 방 <b>가입 신청("수락대기")</b>으로 바로 연결.</p>
+
+  <div class="dv-opts">
+
+    <!-- 10a final light -->
+    <div class="dv-opt" id="10a">
+      <div class="dv-olabel"><a class="dv-oid" href="#10a">10a</a><b>최종 미리보기</b> (라이트)</div>
+      <div class="m">
+        <div class="m-head"><div class="m-title"><i class="ti ti-home"></i> 여행 계획단</div><button class="m-x"><i class="ti ti-x"></i></button></div>
+        <div class="m-body">
+          <div class="m-inforow" style="margin-bottom:13px">
+            <div class="m-ico"><i class="ti ti-photo"></i></div>
+            <div style="min-width:0"><div class="m-intro">제주도 함께 가요!</div><div class="m-lvrow"><span class="m-lv">Lv.3</span><span class="m-lvsub">· 활동 30분 전</span></div></div>
+          </div>
+          <div class="mrow"><span class="mem-av">나</span><span class="mem-av a2">김</span><span class="mem-av a3">이</span><span class="mem-av a4">박</span><span class="mrow-n">4명 참여 중</span></div>
+          <div class="m-sechd"><span class="l"><i class="ti ti-history"></i> 새 소식</span><span class="r" style="color:#d95f5f;font-weight:800">2</span></div>
+          <div class="feed">
+            <div class="fi unread"><div class="fi-ic letter"><i class="ti ti-mail"></i></div><div class="fi-tx"><div class="fi-t"><span class="who">민준</span>님의 행운편지</div><div class="fi-d">제주도 숙소 예약 완료했어요! 🏝️</div></div><span class="fi-time">1시간 전</span></div>
+            <div class="fi unread"><div class="fi-ic sched"><i class="ti ti-calendar-heart"></i></div><div class="fi-tx"><div class="fi-t">D-21 제주 여행</div><div class="fi-d">항공권 예약 마감이 얼마 안 남았어요</div></div><span class="fi-time">어제</span></div>
+            <div class="fi"><div class="fi-ic join"><i class="ti ti-user-plus"></i></div><div class="fi-tx"><div class="fi-t"><span class="who">박지훈</span>님이 합류했어요</div></div><span class="fi-time">3일 전</span></div>
+          </div>
+          <div class="m-more">소식 더 보기</div>
+          <button class="invite-btn" style="margin-top:16px"><i class="ti ti-link"></i> 친구 초대하기</button>
+          <button class="enter"><i class="ti ti-rocket"></i> 우정공간 입장하기</button>
+        </div>
+      </div>
+      <div class="dv-callout">상단에 얼굴(아바타) 한 줄 + 무탭 소식 피드. 편지·일정·가입/퇴장이 한 흐름으로 이어져 "따로 노는" 느낌이 사라짐.</div>
+    </div>
+
+    <!-- 10b invite sheet -->
+    <div class="dv-opt" id="10b">
+      <div class="dv-olabel"><a class="dv-oid" href="#10b">10b</a><b>친구 초대하기 시트</b> — 링크 공유 + 코드</div>
+      <div class="m">
+        <div class="m-head"><div class="m-title"><i class="ti ti-link"></i> 친구 초대하기</div><button class="m-x"><i class="ti ti-x"></i></button></div>
+        <div class="m-body">
+          <p style="font-size:13px;color:#6a7e73;line-height:1.5;margin:0 2px 14px">링크를 보내면 친구가 탭 한 번으로 <b style="color:#1b4332">가입 신청</b>할 수 있어요. 참여 멤버 1명이 수락하면 바로 입장해요.</p>
+          <div class="link-box"><span class="link-url">clov.app/join/CLOV-1001</span><span class="mini-copy"><i class="ti ti-copy"></i> 복사</span></div>
+          <button class="share-btn"><i class="ti ti-send"></i> 링크 공유하기</button>
+          <div class="or-div">또는 코드로</div>
+          <div class="link-box"><span class="code-big">CLOV-1001</span><span class="mini-copy" style="margin-left:auto"><i class="ti ti-copy"></i> 복사</span></div>
+          <div class="regen"><i class="ti ti-refresh"></i> 코드 재발급 · 유출되면 옛 코드가 무효화돼요</div>
+        </div>
+      </div>
+      <div class="dv-callout">링크=탭 한 번(로그인/회원가입 자동 이어짐). 코드=수동 입력 대비. 재발급=유출 방어(<a class="dv-oid" href="#6a">6a</a>). "누구나 초대 가능"이라 방장 없이도 OK.</div>
+    </div>
+
+    <!-- 10c final dark -->
+    <div class="dv-opt" id="10c">
+      <div class="dv-olabel"><a class="dv-oid" href="#10c">10c</a><b>다크모드</b> (미드나잇 올리브)</div>
+      <div class="dark">
+        <div class="m">
+          <div class="m-head"><div class="m-title"><i class="ti ti-home"></i> 여행 계획단</div><button class="m-x"><i class="ti ti-x"></i></button></div>
+          <div class="m-body">
+            <div class="m-inforow" style="margin-bottom:13px">
+              <div class="m-ico"><i class="ti ti-photo"></i></div>
+              <div style="min-width:0"><div class="m-intro">제주도 함께 가요!</div><div class="m-lvrow"><span class="m-lv">Lv.3</span><span class="m-lvsub">· 활동 30분 전</span></div></div>
+            </div>
+            <div class="mrow"><span class="mem-av">나</span><span class="mem-av a2">김</span><span class="mem-av a3">이</span><span class="mem-av a4">박</span><span class="mrow-n">4명 참여 중</span></div>
+            <div class="m-sechd"><span class="l"><i class="ti ti-history"></i> 새 소식</span><span class="r" style="color:#f8a5b0;font-weight:800">2</span></div>
+            <div class="feed">
+              <div class="fi unread"><div class="fi-ic letter"><i class="ti ti-mail"></i></div><div class="fi-tx"><div class="fi-t"><span class="who">민준</span>님의 행운편지</div><div class="fi-d">제주도 숙소 예약 완료했어요! 🏝️</div></div><span class="fi-time">1시간 전</span></div>
+              <div class="fi unread"><div class="fi-ic sched"><i class="ti ti-calendar-heart"></i></div><div class="fi-tx"><div class="fi-t">D-21 제주 여행</div><div class="fi-d">항공권 예약 마감이 얼마 안 남았어요</div></div><span class="fi-time">어제</span></div>
+              <div class="fi"><div class="fi-ic join"><i class="ti ti-user-plus"></i></div><div class="fi-tx"><div class="fi-t"><span class="who">박지훈</span>님이 합류했어요</div></div><span class="fi-time">3일 전</span></div>
+            </div>
+            <div class="m-more">소식 더 보기</div>
+            <button class="invite-btn" style="margin-top:16px"><i class="ti ti-link"></i> 친구 초대하기</button>
+            <button class="enter"><i class="ti ti-rocket"></i> 우정공간 입장하기</button>
+          </div>
+        </div>
+      </div>
+      <div class="dv-callout">makerooms 다크 팔레트(미드나잇 올리브) 적용. 안읽음 하이라이트는 라임 액센트로.</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">이대로 확정이면: "이 최종안대로 <b>makerooms.html에 실제 반영</b>해줘" (구현). 조정할 것: "링크 도메인/문구 바꿔줘" · "소식 아이템 타입 더 추가(잠자기 예고 등)" · "초대 시트를 입장 버튼 옆 아이콘으로도"</p>
+</section>
+
+<section class="dv-turn" id="t9">
+  <div class="dv-thd"><a class="dv-tid" href="#t9">9</a><span class="dv-tname">방 미리보기 개편 — 편지함 + 알림 → 하나의 "소식" 피드</span></div>
+  <p class="dv-sub">문제: 정보 탭의 "주요 알람" · 편지함 · 알림이 <b>같은 "이 방에 무슨 일이 있었나"</b>를 세 군데로 쪼개 따로 논다. 해결: 편지·일정·가입/퇴장·정보수정을 <b>한 시간순 피드</b>로 합침 — 우리가 정한 "누구나+투명" 알림이 사는 자리이기도. 실제 clov 라이트모드 스타일. 통합 방식 3안.</p>
+
+  <div class="dv-opts">
+
+    <!-- 9a keep tabs, dedicated feed -->
+    <div class="dv-opt" id="9a">
+      <div class="dv-olabel"><a class="dv-oid" href="#9a">9a</a><b>탭 유지 · 소식 통합</b> — 정보 | 소식 2탭</div>
+      <div class="m">
+        <div class="m-head"><div class="m-title"><i class="ti ti-home"></i> 여행 계획단</div><button class="m-x"><i class="ti ti-x"></i></button></div>
+        <div class="m-tabs"><div class="m-tab">정보</div><div class="m-tab on">소식<span class="dot"></span></div></div>
+        <div class="m-body">
+          <div class="m-sechd"><span class="l"><i class="ti ti-history"></i> 이 방 소식</span><span class="r">안 읽음 2</span></div>
+          <div class="feed">
+            <div class="fi unread"><div class="fi-ic letter"><i class="ti ti-mail"></i></div><div class="fi-tx"><div class="fi-t"><span class="who">민준</span>님의 행운편지</div><div class="fi-d">제주도 숙소 예약 완료했어요! 다들 확인해주세요 🏝️</div></div><span class="fi-time">1시간 전</span></div>
+            <div class="fi unread"><div class="fi-ic sched"><i class="ti ti-calendar-heart"></i></div><div class="fi-tx"><div class="fi-t">D-21 제주 여행</div><div class="fi-d">항공권 예약 마감이 얼마 안 남았어요</div></div><span class="fi-time">어제</span></div>
+            <div class="fi"><div class="fi-ic join"><i class="ti ti-user-plus"></i></div><div class="fi-tx"><div class="fi-t"><span class="who">박지훈</span>님이 합류했어요</div><div class="fi-d">참여 멤버가 4명이 되었어요</div></div><span class="fi-time">3일 전</span></div>
+            <div class="fi"><div class="fi-ic edit"><i class="ti ti-pencil"></i></div><div class="fi-tx"><div class="fi-t"><span class="who">김다정</span>님이 소개글을 수정했어요</div><div class="fi-d">"제주도 함께 가요!"</div></div><span class="fi-time">4일 전</span></div>
+          </div>
+          <button class="enter"><i class="ti ti-rocket"></i> 우정공간 입장하기</button>
+        </div>
+      </div>
+      <div class="dv-callout">편지·일정·가입/퇴장·수정이 한 타임라인 + 안읽음 하이라이트. "주요 알람" 중복 블록은 삭제(피드 헤더의 "안 읽음 N"으로 대체). 방 정체(멤버·코드)는 <b>정보 탭</b>에 그대로.</div>
+    </div>
+
+    <!-- 9b no tabs, activity-led -->
+    <div class="dv-opt" id="9b">
+      <div class="dv-olabel"><a class="dv-oid" href="#9b">9b</a><b>무탭 · 소식 먼저</b> — 한 스크롤, 활동이 히어로</div>
+      <div class="m">
+        <div class="m-head"><div class="m-title"><i class="ti ti-home"></i> 여행 계획단</div><button class="m-x"><i class="ti ti-x"></i></button></div>
+        <div class="m-body">
+          <div class="m-inforow" style="margin-bottom:18px">
+            <div class="m-ico"><i class="ti ti-photo"></i></div>
+            <div style="min-width:0"><div class="m-intro">제주도 함께 가요!</div><div class="m-lvrow"><span class="m-lv">Lv.3</span><span class="m-lvsub">· 활동 30분 전 · 4명</span></div></div>
+          </div>
+          <div class="m-sechd"><span class="l"><i class="ti ti-history"></i> 새 소식</span><span class="r" style="color:#d95f5f;font-weight:800">2</span></div>
+          <div class="feed">
+            <div class="fi unread"><div class="fi-ic letter"><i class="ti ti-mail"></i></div><div class="fi-tx"><div class="fi-t"><span class="who">민준</span>님의 행운편지</div><div class="fi-d">제주도 숙소 예약 완료했어요! 🏝️</div></div><span class="fi-time">1시간 전</span></div>
+            <div class="fi unread"><div class="fi-ic sched"><i class="ti ti-calendar-heart"></i></div><div class="fi-tx"><div class="fi-t">D-21 제주 여행</div><div class="fi-d">항공권 예약 마감이 얼마 안 남았어요</div></div><span class="fi-time">어제</span></div>
+            <div class="fi"><div class="fi-ic join"><i class="ti ti-user-plus"></i></div><div class="fi-tx"><div class="fi-t"><span class="who">박지훈</span>님이 합류했어요</div></div><span class="fi-time">3일 전</span></div>
+          </div>
+          <div class="m-more">소식 더 보기</div>
+          <button class="invite-btn" style="margin-top:16px"><i class="ti ti-link"></i> 친구 초대하기</button>
+          <button class="enter"><i class="ti ti-rocket"></i> 우정공간 입장하기</button>
+        </div>
+      </div>
+      <div class="dv-callout">탭 완전 제거 → 열자마자 <b>"무슨 일이 있었나"</b>가 한눈에. 미리보기 목적(들어갈까?)에 가장 직결. 코드는 <a class="dv-oid" href="#6a">6a</a> 반영해 "친구 초대하기" 뒤로 숨김.</div>
+    </div>
+
+    <!-- 9c no tabs, identity-led -->
+    <div class="dv-opt" id="9c">
+      <div class="dv-olabel"><a class="dv-oid" href="#9c">9c</a><b>무탭 · 정보 먼저</b> — 정체 위, 소식 요약 아래</div>
+      <div class="m">
+        <div class="m-head"><div class="m-title"><i class="ti ti-home"></i> 여행 계획단</div><button class="m-x"><i class="ti ti-x"></i></button></div>
+        <div class="m-body">
+          <div class="m-inforow">
+            <div class="m-ico"><i class="ti ti-photo"></i></div>
+            <div style="min-width:0"><div class="m-intro">제주도 함께 가요!</div><div class="m-lvrow"><span class="m-lv">Lv.3</span><span class="m-lvsub">· 활동 30분 전</span></div></div>
+          </div>
+          <div class="lbl"><i class="ti ti-users"></i> 참여 멤버 <span style="margin-left:auto;font-weight:600;color:#6a7e73">총 4명</span></div>
+          <div class="members" style="margin-bottom:16px"><span class="mem"><span class="mem-av">나</span>나</span><span class="mem"><span class="mem-av a2">김</span>김다정</span><span class="mem"><span class="mem-av a3">이</span>이서준</span><span class="mem"><span class="mem-av a4">박</span>박지훈</span></div>
+          <div class="m-sechd"><span class="l"><i class="ti ti-history"></i> 최근 소식</span><span class="r">안 읽음 2</span></div>
+          <div class="feed">
+            <div class="fi unread"><div class="fi-ic letter"><i class="ti ti-mail"></i></div><div class="fi-tx"><div class="fi-t"><span class="who">민준</span>님의 행운편지</div><div class="fi-d">제주도 숙소 예약 완료했어요! 🏝️</div></div><span class="fi-time">1시간 전</span></div>
+            <div class="fi unread"><div class="fi-ic sched"><i class="ti ti-calendar-heart"></i></div><div class="fi-tx"><div class="fi-t">D-21 제주 여행</div><div class="fi-d">항공권 예약 마감이 얼마 안 남았어요</div></div><span class="fi-time">어제</span></div>
+          </div>
+          <div class="m-more">소식 전체 보기 (5)</div>
+          <button class="invite-btn" style="margin-top:14px"><i class="ti ti-link"></i> 친구 초대하기</button>
+          <button class="enter"><i class="ti ti-rocket"></i> 우정공간 입장하기</button>
+        </div>
+      </div>
+      <div class="dv-callout">"이 방이 뭔지(멤버)"를 먼저 보여주고 소식은 요약 2~3개 + 전체보기. 기존 정보 탭 감성을 살리면서 편지·알림만 통합 → 변화 폭 가장 작음.</div>
+    </div>
+
+  </div>
+
+  <p class="dv-next">추천은 <b><a class="dv-oid" href="#9b">9b</a> 무탭·소식 먼저</b>예요 — "따로 노는" 문제를 가장 확실히 없애고 미리보기 목적에 맞아요. 골라주세요: "<a class="dv-oid" href="#9b">9b</a>로 가자" · "<a class="dv-oid" href="#9a">9a</a>인데 정보 탭도 보여줘" · "피드 아이템 타입(편지/일정/가입/수정) 색·아이콘 조정" · "다크모드로도 보여줘"</p>
+</section>
+
+</x-dc>
+</body>
+</html>
