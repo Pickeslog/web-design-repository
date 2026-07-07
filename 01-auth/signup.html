@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clov. — 회원가입</title>
+  <meta name="description" content="약속이 추억으로 자라는 친구 전용 기록공간, Clov.에 합류하세요." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --forest:#073b24;
+      --leaf:#16874b;
+      --mint:#50d990;
+      --cream:#f7fbf6;
+      --paper:#ffffff;
+      --text:#0e2d1d;
+      --muted:#638772;
+      --line:rgba(22,135,75,.18);
+      --glow:rgba(80,217,144,.22);
+      --warn:#b45309;
+    }
+    body {
+      font-family:'Outfit',sans-serif;
+      min-height:100vh;
+      display:flex;align-items:center;justify-content:center;
+      padding:32px;
+      overflow-x:hidden;
+      color:var(--text);
+      background:
+        radial-gradient(circle at 12% 12%, rgba(217,201,143,.28), transparent 28%),
+        radial-gradient(circle at 84% 82%, rgba(232,220,174,.2), transparent 32%),
+        linear-gradient(135deg,#fffdf3 0%,#fffaf0 48%,#fdf6e3 100%);
+    }
+    .card-wrap { position:relative;width:100%;max-width:440px; }
+    .card {
+      background:var(--paper);
+      border:1px solid var(--line);
+      border-radius:24px;
+      padding:40px 36px 32px;
+      box-shadow:0 20px 50px rgba(7,59,36,.1),0 1px 0 rgba(255,255,255,.9) inset;
+      animation:rise .5s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes rise { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+    .logo-area { text-align:center;margin-bottom:26px; }
+    .logo-icon {
+      display:inline-flex;align-items:center;justify-content:center;
+      width:48px;height:48px;
+      background:linear-gradient(135deg,#1a8e52,#5de49a);
+      border-radius:16px;box-shadow:0 10px 26px rgba(0,0,0,.18);
+      margin-bottom:12px;cursor:pointer;position:relative;user-select:none;
+    }
+    .logo-pop { position:absolute;left:50%;top:-8px;transform:translate(-50%,-100%);padding:8px 13px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--forest);box-shadow:0 8px 20px rgba(7,59,36,.12);font-size:.74rem;font-weight:700;white-space:nowrap;opacity:0;animation:popMsg 2.4s ease both;pointer-events:none; }
+    @keyframes popMsg { 0%{opacity:0;transform:translate(-50%,-86%) scale(.94)} 12%,82%{opacity:1;transform:translate(-50%,-100%) scale(1)} 100%{opacity:0;transform:translate(-50%,-112%) scale(.98)} }
+    .logo-text { font-size:1.4rem;font-weight:900;color:var(--forest);letter-spacing:-.02em; }
+    .logo-sub  { font-size:.8rem;color:var(--muted);margin-top:4px;font-weight:500; }
+    .step-bar  { display:flex;align-items:center;gap:6px;margin-bottom:28px; }
+    .step-dot  { position:relative;height:3px;border-radius:99px;flex:1;background:var(--line);overflow:hidden; }
+    .step-dot::after {
+      content:'';position:absolute;inset:0;border-radius:inherit;
+      background:var(--leaf);transform:scaleX(0);transform-origin:left;
+      transition:transform .55s cubic-bezier(.22,.7,.32,1),background-color .3s ease;
+    }
+    .step-dot.active::after,.step-dot.done::after { transform:scaleX(1); }
+    .step-dot.done::after { background:var(--mint); }
+    .form-title { font-size:1.3rem;font-weight:800;color:var(--text);margin-bottom:6px;letter-spacing:-.01em; }
+    .form-desc  { font-size:.85rem;color:var(--muted);margin-bottom:20px;font-weight:500;line-height:1.5; }
+    .input-grid { display:grid;grid-template-columns:1fr;gap:14px; }
+    .input-group { position:relative; }
+    .input-label { display:block;font-size:.78rem;font-weight:800;color:var(--forest);margin-bottom:8px;letter-spacing:.02em; }
+    .input-label-row { display:flex;align-items:center;gap:8px;min-height:20px;margin-bottom:8px; }
+    .input-label-row .input-label { margin-bottom:0; }
+    .input-wrap  { position:relative;display:flex;align-items:center; }
+    .input-icon  { position:absolute;left:15px;font-size:1.1rem;color:var(--muted);pointer-events:none;z-index:2;transition:color .2s; }
+    input[type=text],input[type=email],input[type=password] {
+      width:100%;height:50px;padding:0 46px 0 44px;border:1.5px solid var(--line);
+      border-radius:14px;font-size:.92rem;font-family:'Outfit',sans-serif;font-weight:600;
+      color:var(--text);background:var(--cream);
+      outline:none;transition:border-color .18s ease,box-shadow .18s ease,background-color .18s ease,transform .18s ease;
+    }
+    input:focus { border-color:var(--mint);background:#fff;box-shadow:0 0 0 4px var(--glow); }
+    .input-wrap:focus-within .input-icon { color:var(--leaf); }
+    .input-suffix { position:absolute;right:8px;width:32px;height:32px;border:0;border-radius:50%;display:grid;place-items:center;background:rgba(80,217,144,.14);color:var(--muted);cursor:pointer;transition:all .2s;user-select:none; }
+    .input-suffix:hover,.input-suffix:focus-visible { color:var(--leaf);background:rgba(80,217,144,.26);outline:none; }
+    .input-suffix svg { width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round; }
+    .input-suffix .eye-off-icon { display:none; }
+    .input-suffix.is-visible .eye-icon { display:none; }
+    .input-suffix.is-visible .eye-off-icon { display:block; }
+    /* 비밀번호가 화면에 보이는 상태일 때만 뜨는 보안 경고 문구(로그인 페이지와 동일한 방식) */
+    .input-status { padding:0 2px;color:var(--warn);opacity:0;visibility:hidden;transform:translateX(-6px);font-size:.73rem;font-weight:800;line-height:20px;white-space:nowrap;pointer-events:none;transition:opacity .18s,transform .18s,visibility .18s; }
+    .input-status.show { opacity:1;visibility:visible;transform:translateX(0); }
+    .pw-strength { display:flex;gap:5px;margin-top:8px;height:3px; }
+    .pw-seg { flex:1;border-radius:99px;background:var(--line);transition:background .3s ease; }
+    .pw-seg.on-weak   { background:#f87171; }
+    .pw-seg.on-mid    { background:#fbbf24; }
+    .pw-seg.on-strong { background:var(--leaf); }
+    .pw-rules { display:flex;flex-wrap:wrap;gap:12px;margin-top:8px; }
+    .pw-rule { position:relative;padding-left:13px;color:var(--muted);font-size:.72rem;font-weight:700;transition:color .2s; }
+    .pw-rule::before { content:'';position:absolute;left:0;top:50%;width:6px;height:6px;margin-top:-3px;border-radius:50%;background:var(--line);transition:background-color .2s; }
+    .pw-rule.met { color:var(--leaf); }
+    .pw-rule.met::before { background:var(--leaf); }
+    .terms-box { background:var(--cream);border:1px solid var(--line);border-radius:14px;padding:16px;margin:20px 0 24px; }
+    .terms-row  { display:flex;align-items:center;gap:10px;cursor:pointer;padding:3px 0;border-radius:8px; }
+    .terms-row:focus-visible { outline:none;box-shadow:0 0 0 3px var(--glow); }
+    .terms-row + .terms-row { margin-top:8px; }
+    .terms-check { width:19px;height:19px;border:1.5px solid var(--line);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.7rem;flex-shrink:0;transition:all .15s ease;background:#fff;color:transparent; }
+    .terms-check.checked { background:var(--leaf);border-color:var(--leaf);color:#fff; }
+    .terms-label { font-size:.83rem;color:var(--muted);font-weight:500;flex:1; }
+    .terms-label strong { color:var(--text); }
+    .terms-link  { font-size:.75rem;color:var(--leaf);font-weight:700;text-decoration:underline;cursor:pointer; }
+    .terms-divider { height:1px;background:var(--line);margin:10px 0; }
+    .terms-all .terms-label { font-weight:800;color:var(--text); }
+    .profile-setup { text-align:center;padding:6px 0 2px; }
+    .profile-title { font-size:1.25rem;font-weight:800;color:var(--text);letter-spacing:-.01em;margin-bottom:6px; }
+    .profile-desc { color:var(--muted);font-size:.85rem;line-height:1.5;margin-bottom:22px; }
+    .profile-picker { position:relative;width:100px;height:100px;margin:0 auto 22px; }
+    .profile-preview { width:100%;height:100%;display:grid;place-items:center;border-radius:50%;background:linear-gradient(135deg,#1a8e52,#5de49a);overflow:hidden;color:#fff;font-size:2.5rem;font-weight:900; }
+    .profile-preview img { width:100%;height:100%;object-fit:cover;display:block; }
+    .profile-upload { position:absolute;right:-2px;bottom:2px;width:32px;height:32px;display:grid;place-items:center;border:2px solid #fff;border-radius:50%;background:var(--forest);color:#fff;font-size:1rem;cursor:pointer;transition:background-color .2s; }
+    .profile-upload:hover { background:var(--leaf); }
+    .profile-upload input { display:none; }
+    .profile-fields-box { padding:16px;border:1px solid var(--line);border-radius:14px;background:var(--cream);margin-top:22px; }
+    .birth-modal { position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(7,59,36,.32); }
+    .birth-modal.open { display:flex;animation:fadeIn .18s ease both; }
+    .birth-modal-box { width:min(360px,100%);padding:18px;border:1px solid var(--line);border-radius:18px;background:#fff;box-shadow:0 20px 50px rgba(7,59,36,.2);animation:modalUp .2s cubic-bezier(.22,1,.36,1) both; }
+    .nudge-modal-box { padding:22px 20px; }
+    .nudge-title { font-size:1.05rem;font-weight:800;color:var(--text);margin-bottom:8px; }
+    .nudge-desc { color:var(--muted);font-size:.85rem;line-height:1.55;margin-bottom:18px; }
+    .birth-modal-head { display:flex;align-items:center;justify-content:flex-end;margin-bottom:10px; }
+    .birth-modal-close { width:30px;height:30px;border:0;border-radius:8px;background:rgba(80,217,144,.14);color:var(--forest);font-size:1.1rem;font-weight:900;cursor:pointer; }
+    .birth-wheel { display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px; }
+    .birth-wheel select { width:100%;height:42px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--text);font-family:'Outfit',sans-serif;font-size:.95rem;font-weight:700;text-align:center;text-align-last:center;outline:none; }
+    .birth-wheel select:focus { border-color:var(--mint);box-shadow:0 0 0 3px var(--glow); }
+    .birth-wheel-label { display:block;margin-top:2px;color:var(--muted);font-size:.7rem;font-weight:700;text-align:center; }
+    .terms-modal-box { width:min(420px,100%);max-height:min(72vh,560px);display:flex;flex-direction:column; }
+    .birth-modal-head.terms-modal-head { justify-content:space-between; }
+    .terms-modal-title { font-size:.98rem;font-weight:800;color:var(--text); }
+    .terms-modal-body { overflow-y:auto;padding-right:4px;color:var(--muted);font-size:.82rem;line-height:1.65; }
+    .terms-modal-body h4 { margin:14px 0 4px;color:var(--text);font-size:.86rem;font-weight:700; }
+    .terms-modal-body h4:first-child { margin-top:0; }
+    .terms-modal-body p { margin:0 0 2px; }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+    @keyframes modalUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+    .btn-primary {
+      width:100%;height:50px;border:none;border-radius:14px;font-size:.95rem;font-weight:800;font-family:'Outfit',sans-serif;
+      color:#fff;cursor:pointer;position:relative;
+      background:linear-gradient(135deg,#093d26,#16874b 56%,#50d990);
+      box-shadow:0 14px 32px rgba(22,135,75,.28);
+      transition:transform .15s,box-shadow .15s,filter .15s;letter-spacing:.01em;
+    }
+    .btn-primary:hover { transform:translateY(-1px);box-shadow:0 18px 40px rgba(22,135,75,.34);filter:saturate(1.06); }
+    .btn-primary:active { transform:translateY(0); }
+    .btn-primary:focus-visible { outline:none;box-shadow:0 0 0 3px var(--glow); }
+    .btn-secondary { width:100%;height:46px;margin-top:8px;border:1px solid var(--line);border-radius:14px;font-size:.88rem;font-weight:700;font-family:'Outfit',sans-serif;color:var(--muted);cursor:pointer;background:transparent;transition:all .15s; }
+    .btn-secondary:hover { border-color:var(--leaf);color:var(--leaf);background:rgba(80,217,144,.08); }
+    .btn-secondary:focus-visible { outline:none;box-shadow:0 0 0 3px var(--glow); }
+    .divider { display:flex;align-items:center;gap:12px;margin:18px 0 14px;color:var(--muted);font-size:.8rem;font-weight:700; }
+    .divider::before,.divider::after { content:'';flex:1;height:1px;background:var(--line); }
+    .social-row { display:flex;justify-content:center;gap:40px; }
+    .social-btn { position:relative;width:44px;height:44px;display:grid;place-items:center;padding:0;border:0;border-radius:50%;font:inherit;cursor:pointer;background:transparent;transition:transform .15s; }
+    .social-btn:hover,.social-btn:focus-visible { transform:translateY(-2px);outline:none; }
+    .social-btn::after { content:attr(data-label);position:absolute;top:calc(100% + 8px);left:50%;transform:translate(-50%,-4px);padding:5px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--forest);box-shadow:0 6px 16px rgba(7,59,36,.1);font-size:.72rem;font-weight:700;line-height:1;white-space:nowrap;opacity:0;visibility:hidden;transition:opacity .15s ease,transform .15s ease,visibility .15s ease;pointer-events:none; }
+    .social-btn:hover::after,.social-btn:focus-visible::after { opacity:1;visibility:visible;transform:translate(-50%,0); }
+    .social-logo { width:32px;height:32px;display:grid;place-items:center;border-radius:50%;overflow:hidden;box-shadow:0 6px 14px rgba(7,59,36,.12); }
+    .social-logo svg { width:100%;height:100%;display:block; }
+    .social-logo.kakao { background:#fee500; }
+    .social-logo.naver { background:#03c75a; }
+    .social-logo.google { background:#fff;border:1px solid var(--line); }
+    .login-link { text-align:center;margin-top:26px;font-size:.84rem;color:var(--muted);font-weight:600; }
+    .login-link a { color:var(--leaf);font-weight:800;text-decoration:none;transition:color .2s; }
+    .login-link a:hover { color:var(--forest); }
+    .step-view { display:none; }
+    .step-view.active { display:block; }
+    .success-wrap { text-align:center;padding:20px 0; }
+    .success-icon { width:64px;height:64px;background:linear-gradient(135deg,#1a8e52,#5de49a);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2rem;color:#fff;margin:0 auto 20px;animation:popIn .4s cubic-bezier(.36,2,.4,1) both; }
+    @keyframes popIn { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} }
+    .success-title { font-size:1.4rem;font-weight:800;color:var(--text);margin-bottom:8px; }
+    .success-sub   { font-size:.88rem;color:var(--muted);line-height:1.6;margin-bottom:24px; }
+    @keyframes shakeInput { 0%,100%{transform:translateX(0);border-color:var(--line)} 20%,60%{transform:translateX(-6px);border-color:#f87171;box-shadow:0 0 0 4px rgba(248,113,113,.18)} 40%,80%{transform:translateX(6px)} }
+    @keyframes shakeBox { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-5px)} 40%,80%{transform:translateX(5px)} }
+    @media(max-width:520px){.card{padding:32px 24px 26px}}
+  </style>
+<link rel="stylesheet" href="../02-main/css/global-theme.css">
+</head>
+<body>
+<div class="card-wrap">
+  <div class="card">
+    <div class="logo-area">
+      <div class="logo-icon" id="logoIcon" onclick="playLogoEvent()"><img src="../assets/ai-style/clov_logo_half_leaf_cartoon_transparent.png" alt="Clov 로고" style="width:70%;height:70%;object-fit:contain;"></div>
+      <div class="logo-text">Clov.</div>
+      <div class="logo-sub">약속이 추억으로 자라는 친구 전용 기록공간</div>
+    </div>
+    <div class="step-bar" id="stepBar">
+      <div class="step-dot active" id="dot0"></div>
+      <div class="step-dot" id="dot1"></div>
+      <div class="step-dot" id="dot2"></div>
+      <div class="step-dot" id="dot3"></div>
+      <div class="step-dot" id="dot4"></div>
+    </div>
+
+    <!-- STEP 0 -->
+    <div class="step-view active" id="step-0">
+      <div class="input-grid">
+        <div class="input-group">
+          <label class="input-label" for="email">이메일</label>
+          <div class="input-wrap">
+            <span class="input-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></span>
+            <input type="email" id="email" placeholder="example@email.com" autocomplete="email" onkeydown="enterNext(event,'pw')" />
+          </div>
+        </div>
+        <div class="input-group">
+          <div class="input-label-row">
+            <label class="input-label" for="pw">비밀번호</label>
+            <span class="input-status" id="pw-hint"></span>
+          </div>
+          <div class="input-wrap">
+            <span class="input-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
+            <input type="password" id="pw" placeholder="8~20자, 영문/숫자/특수문자 중 2가지 이상" oninput="calcStrength(this.value)" onkeydown="enterNext(event,null,() => goStep(1))" />
+            <button class="input-suffix" type="button" onclick="togglePw('pw', this)" aria-label="비밀번호 보이기" aria-pressed="false">
+              <svg class="eye-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              <svg class="eye-off-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M3 3l18 18"></path>
+                <path d="M10.6 10.6A2 2 0 0 0 13.4 13.4"></path>
+                <path d="M9.9 5.2A10.7 10.7 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.1 4.1"></path>
+                <path d="M6.6 6.7C3.6 8.7 2 12 2 12s3.5 7 10 7a9.8 9.8 0 0 0 4.2-.9"></path>
+              </svg>
+            </button>
+          </div>
+          <div class="pw-strength">
+            <div class="pw-seg" id="seg0"></div>
+            <div class="pw-seg" id="seg1"></div>
+            <div class="pw-seg" id="seg2"></div>
+            <div class="pw-seg" id="seg3"></div>
+          </div>
+          <div class="pw-rules">
+            <span class="pw-rule" id="pw-rule-length">8~20자</span>
+            <span class="pw-rule" id="pw-rule-combo">영문/숫자/특수문자 중 2가지 이상</span>
+          </div>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="goStep(1)" style="margin-top:18px">다음 단계 →</button>
+    </div>
+
+    <!-- STEP 1 -->
+    <div class="step-view" id="step-1">
+      <div class="form-title">거의 다 왔어요!</div>
+      <div class="form-desc">아래 약관에 동의하시면<br>Clov. 여정이 시작됩니다.</div>
+      <div class="terms-box" id="termsBox">
+        <div class="terms-row terms-all" tabindex="0" role="checkbox" aria-checked="false" onclick="toggleAll()" onkeydown="handleTermsKey(event, toggleAll)">
+          <div class="terms-check" id="chk-all">✓</div>
+          <div class="terms-label"><strong>전체 동의</strong> (필수 + 선택 포함)</div>
+        </div>
+        <div class="terms-divider"></div>
+        <div class="terms-row" tabindex="0" role="checkbox" aria-checked="false" onclick="toggle('chk-1')" onkeydown="handleTermsKey(event, () => toggle('chk-1'))">
+          <div class="terms-check" id="chk-1">✓</div>
+          <div class="terms-label"><strong>[필수]</strong> 서비스 이용약관 동의 <span class="terms-link" onclick="event.stopPropagation();openTermsModal('service')">보기</span></div>
+        </div>
+        <div class="terms-row" tabindex="0" role="checkbox" aria-checked="false" onclick="toggle('chk-2')" onkeydown="handleTermsKey(event, () => toggle('chk-2'))">
+          <div class="terms-check" id="chk-2">✓</div>
+          <div class="terms-label"><strong>[필수]</strong> 개인정보 처리방침 동의 <span class="terms-link" onclick="event.stopPropagation();openTermsModal('privacy')">보기</span></div>
+        </div>
+        <div class="terms-row" tabindex="0" role="checkbox" aria-checked="false" onclick="toggle('chk-3')" onkeydown="handleTermsKey(event, () => toggle('chk-3'))">
+          <div class="terms-check" id="chk-3">✓</div>
+          <div class="terms-label"><strong>[선택]</strong> 마케팅 정보 수신 동의</div>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="goStep(2)">Clov. 시작하기</button>
+      <button class="btn-secondary" onclick="goStep(0)">← 이전으로</button>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="step-view" id="step-2">
+      <div class="profile-setup">
+        <div class="profile-title">프로필은 무엇으로 하실건가요?</div>
+        <div class="profile-desc">친구들이 알아볼 수 있는<br>사진을 골라주세요.</div>
+        <div class="profile-picker">
+          <div class="profile-preview" id="profile-preview"><img src="../assets/ai-style/clov_logo_half_leaf_cartoon_transparent.png" alt="" style="width:80%;height:80%;object-fit:contain;"></div>
+          <label class="profile-upload" aria-label="프로필 이미지 등록">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"/><circle cx="12" cy="13" r="3.5"/></svg>
+            <input type="file" id="profile-image" accept="image/*" onchange="previewProfileImage(event)" />
+          </label>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="goStep(3)" style="margin-top:22px">다음</button>
+      <button class="btn-secondary" onclick="goStep(1)">← 이전으로</button>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="step-view" id="step-3">
+      <div class="profile-setup">
+        <div class="profile-title">닉네임과 생년월일을 알려주세요</div>
+        <div class="profile-desc">친구들에게 보여질 이름과<br>생일(선택)을 정해주세요.</div>
+        <div class="profile-fields-box" style="text-align:left">
+          <div class="input-group">
+            <label class="input-label" for="nickname">닉네임</label>
+            <div class="input-wrap">
+              <span class="input-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-6.5 8-6.5s8 2.5 8 6.5"/></svg></span>
+              <input type="text" id="nickname" placeholder="친구들이 부를 이름" autocomplete="nickname" onkeydown="enterNext(event,null,() => goStep(4))" />
+            </div>
+          </div>
+          <div class="input-group" style="margin-top:14px">
+            <label class="input-label" for="birthdate">생년월일 <span class="birth-optional-tag">선택</span></label>
+            <div class="input-wrap">
+              <span class="input-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>
+              <input type="text" id="birthdate" placeholder="YYYY-MM-DD" autocomplete="bday" readonly onclick="openBirthModal()" />
+            </div>
+          </div>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="goStep(4)" style="margin-top:22px">프로필 저장하기 →</button>
+      <button class="btn-secondary" onclick="goStep(2)">← 이전으로</button>
+    </div>
+
+    <!-- STEP 4 -->
+    <div class="step-view" id="step-4">
+      <div class="success-wrap">
+        <div class="success-icon">✓</div>
+        <div class="success-title">가입 완료!</div>
+        <div class="success-sub"><span id="welcome-name">클로버</span>님의 우정공간이 준비됐어요.<br>이제 친구를 초대하고 첫 약속을 만들어 볼까요? 🌱</div>
+        <button class="btn-primary" onclick="window.location.href='login.html'">로그인하러 가기 →</button>
+      </div>
+    </div>
+
+    <!-- 소셜 -->
+    <div id="social-section">
+      <div class="divider">또는</div>
+      <div class="social-row">
+        <button class="social-btn" type="button" data-provider="kakao" data-label="카카오 로그인" aria-label="카카오 OAuth2 회원가입">
+          <span class="social-logo kakao" aria-hidden="true">
+            <svg viewBox="0 0 32 32" role="img">
+              <path d="M16 7.2c-5.55 0-10.05 3.55-10.05 7.93 0 2.83 1.9 5.32 4.75 6.72l-.86 3.15c-.08.3.26.54.52.37l3.77-2.49c.6.09 1.22.14 1.87.14 5.55 0 10.05-3.55 10.05-7.93S21.55 7.2 16 7.2Z" fill="#191919"/>
+            </svg>
+          </span>
+        </button>
+        <button class="social-btn" type="button" data-provider="naver" data-label="네이버 로그인" aria-label="네이버 OAuth2 회원가입">
+          <span class="social-logo naver" aria-hidden="true">
+            <svg viewBox="0 0 32 32" role="img">
+              <path d="M18.5 16.4 13.25 8.8H8.8v14.4h4.7v-7.6l5.25 7.6h4.45V8.8h-4.7v7.6Z" fill="#fff"/>
+            </svg>
+          </span>
+        </button>
+        <button class="social-btn" type="button" data-provider="google" data-label="구글 로그인" aria-label="구글 OAuth2 회원가입">
+          <span class="social-logo google" aria-hidden="true">
+            <svg viewBox="0 0 32 32" role="img">
+              <path d="M28.1 16.32c0-.86-.08-1.68-.22-2.48H16.3v4.69h6.63a5.66 5.66 0 0 1-2.46 3.72v3.04h3.98c2.33-2.15 3.65-5.31 3.65-8.97Z" fill="#4285f4"/>
+              <path d="M16.3 28.2c3.33 0 6.12-1.1 8.15-2.91l-3.98-3.04c-1.1.74-2.52 1.18-4.17 1.18-3.2 0-5.92-2.16-6.89-5.07H5.3v3.14a12.28 12.28 0 0 0 11 6.7Z" fill="#34a853"/>
+              <path d="M9.41 18.36a7.36 7.36 0 0 1 0-4.72V10.5H5.3a12.32 12.32 0 0 0 0 11l4.11-3.14Z" fill="#fbbc05"/>
+              <path d="M16.3 8.57c1.81 0 3.44.62 4.72 1.85l3.52-3.52A11.98 11.98 0 0 0 16.3 3.8a12.28 12.28 0 0 0-11 6.7l4.11 3.14c.97-2.91 3.69-5.07 6.89-5.07Z" fill="#ea4335"/>
+            </svg>
+          </span>
+        </button>
+      </div>
+      <div class="login-link">이미 계정이 있으신가요? <a href="login.html">로그인</a></div>
+    </div>
+  </div>
+</div>
+
+<div class="birth-modal" id="terms-modal" onclick="if(event.target === this) closeTermsModal()">
+  <div class="birth-modal-box terms-modal-box">
+    <div class="birth-modal-head terms-modal-head">
+      <div class="terms-modal-title" id="terms-modal-title"></div>
+      <button class="birth-modal-close" type="button" onclick="closeTermsModal()" aria-label="닫기">×</button>
+    </div>
+    <div class="terms-modal-body" id="terms-modal-body"></div>
+  </div>
+</div>
+
+<div class="birth-modal" id="birth-modal" onclick="if(event.target === this) closeBirthModal()">
+  <div class="birth-modal-box">
+    <div class="birth-modal-head">
+      <button class="birth-modal-close" type="button" onclick="closeBirthModal()" aria-label="닫기">×</button>
+    </div>
+    <div class="birth-wheel">
+      <div><select id="birth-year"></select><span class="birth-wheel-label">년</span></div>
+      <div><select id="birth-month"></select><span class="birth-wheel-label">월</span></div>
+      <div><select id="birth-day"></select><span class="birth-wheel-label">일</span></div>
+    </div>
+    <button class="btn-primary" type="button" onclick="saveBirthModal()" style="margin-top:18px">저장하기</button>
+  </div>
+</div>
+
+<div class="birth-modal" id="birth-nudge-modal" onclick="if(event.target === this) closeBirthNudge()">
+  <div class="birth-modal-box nudge-modal-box">
+    <div class="nudge-title">잠깐!</div>
+    <div class="nudge-desc">생년월일을 입력하지 않았어요.<br>선택사항이지만 Clov.와 친구들의 축하를 받을 수 없게 돼요.</div>
+    <button class="btn-primary" type="button" onclick="closeBirthNudge();openBirthModal()">지금 설정하기</button>
+    <button class="btn-secondary" type="button" onclick="closeBirthNudge();goStep(4,{skipBirthNudge:true})">다음에 할게요</button>
+  </div>
+</div>
+
+<script>
+  function goStep(n, opts) {
+    opts = opts || {};
+    if (n === 1 && !validateStep0()) return;
+    if (n === 2 && !validateStep1()) return;
+    if (n === 4 && !validateStep3()) return;
+    if (n === 4 && !opts.skipBirthNudge && !document.getElementById('birthdate').value.trim()) {
+      openBirthNudge();
+      return;
+    }
+    document.querySelectorAll('.step-view').forEach(el => el.classList.remove('active'));
+    document.getElementById('step-' + n).classList.add('active');
+    for (let i = 0; i < 5; i++) {
+      const d = document.getElementById('dot' + i);
+      d.classList.remove('active','done');
+      if (i < n)  d.classList.add('done');
+      if (i === n) d.classList.add('active');
+    }
+    document.getElementById('social-section').style.display = n === 0 ? 'block' : 'none';
+    if (n === 4) {
+      const nickName = document.getElementById('nickname').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const emailName = email.split('@')[0];
+      const finalName = nickName || emailName || '클로버';
+      document.getElementById('welcome-name').textContent = finalName;
+
+      let profile = {};
+      try { profile = JSON.parse(localStorage.getItem('clov_profile') || '{}'); } catch (e) {}
+      profile.name = finalName;
+      if (email) profile.email = email;
+      const birth = document.getElementById('birthdate').value.trim();
+      if (birth) profile.birth = birth;
+      localStorage.setItem('clov_profile', JSON.stringify(profile));
+    }
+  }
+  function validateStep0() {
+    const emailOk = /\S+@\S+\.\S+/.test(document.getElementById('email').value.trim());
+    if (!emailOk) { shake('email'); return false; }
+    const pwOk = getPasswordChecks(document.getElementById('pw').value).ok;
+    if (!pwOk) { shake('pw'); return false; }
+    return true;
+  }
+  function getPasswordChecks(value) {
+    const hasLetter = /[A-Za-z]/.test(value);
+    const hasNumber = /[0-9]/.test(value);
+    const hasSpecial = /[^A-Za-z0-9]/.test(value);
+    const typeCount = [hasLetter, hasNumber, hasSpecial].filter(Boolean).length;
+    const lengthOk = value.length >= 8 && value.length <= 20;
+    return { lengthOk, comboOk: typeCount >= 2, ok: lengthOk && typeCount >= 2 };
+  }
+  function validateStep1() {
+    const ok = ['chk-1','chk-2'].every(id => document.getElementById(id).classList.contains('checked'));
+    if (!ok) {
+      const b = document.getElementById('termsBox');
+      b.style.animation = 'none';
+      requestAnimationFrame(() => { b.style.animation = 'shakeBox .4s ease'; });
+    }
+    return ok;
+  }
+  function validateStep3() {
+    const nicknameOk = /^[가-힣A-Za-z0-9]{1,12}$/.test(document.getElementById('nickname').value.trim());
+    if (!nicknameOk) { shake('nickname'); return false; }
+    return true;
+  }
+  const TERMS_CONTENT = {
+    service: {
+      title: '서비스 이용약관',
+      body: `
+        <h4>제1조 (목적)</h4>
+        <p>본 약관은 Clov.(이하 "회사")가 제공하는 친구 기록 서비스의 이용과 관련하여 회사와 회원 간의 권리, 의무 및 책임사항을 정함을 목적으로 합니다.</p>
+        <h4>제2조 (서비스의 제공)</h4>
+        <p>회사는 친구와의 약속, 사진, 편지 등을 기록하고 공유할 수 있는 기능을 제공하며, 서비스의 내용은 운영상 필요에 따라 변경될 수 있습니다.</p>
+        <h4>제3조 (회원의 의무)</h4>
+        <p>회원은 타인의 권리를 침해하거나 서비스 운영을 방해하는 행위를 해서는 안 되며, 본인의 계정 정보를 안전하게 관리해야 합니다.</p>
+        <h4>제4조 (약관의 변경)</h4>
+        <p>회사는 관련 법령을 위반하지 않는 범위에서 본 약관을 변경할 수 있으며, 변경 시 서비스 내 공지사항을 통해 안내합니다.</p>
+      `
+    },
+    privacy: {
+      title: '개인정보 처리방침',
+      body: `
+        <h4>1. 수집하는 개인정보 항목</h4>
+        <p>회사는 회원가입 시 이메일, 비밀번호, 닉네임, 생년월일(선택)을 수집하며, 서비스 이용 과정에서 프로필 사진이 추가로 저장될 수 있습니다.</p>
+        <h4>2. 개인정보의 이용 목적</h4>
+        <p>수집된 정보는 회원 식별, 서비스 제공, 생일 등 특별한 날 안내 기능을 위해서만 사용되며 목적 외로 이용되지 않습니다.</p>
+        <h4>3. 개인정보의 보유 및 파기</h4>
+        <p>회원 탈퇴 시 관련 법령에서 정한 기간을 제외하고 지체 없이 개인정보를 파기합니다.</p>
+        <h4>4. 마케팅 정보 수신</h4>
+        <p>선택 항목에 동의한 회원에 한해 이벤트 및 소식 안내를 위한 정보를 발송하며, 언제든지 수신을 거부할 수 있습니다.</p>
+      `
+    }
+  };
+  function openTermsModal(kind) {
+    const data = TERMS_CONTENT[kind];
+    if (!data) return;
+    document.getElementById('terms-modal-title').textContent = data.title;
+    document.getElementById('terms-modal-body').innerHTML = data.body;
+    document.getElementById('terms-modal').classList.add('open');
+  }
+  function closeTermsModal() {
+    document.getElementById('terms-modal').classList.remove('open');
+  }
+  function openBirthModal() {
+    syncBirthSelects();
+    document.getElementById('birth-modal').classList.add('open');
+  }
+  function closeBirthModal() {
+    document.getElementById('birth-modal').classList.remove('open');
+  }
+  function openBirthNudge() {
+    document.getElementById('birth-nudge-modal').classList.add('open');
+  }
+  function closeBirthNudge() {
+    document.getElementById('birth-nudge-modal').classList.remove('open');
+  }
+  function saveBirthModal() {
+    const y = document.getElementById('birth-year').value;
+    const m = document.getElementById('birth-month').value;
+    const d = document.getElementById('birth-day').value;
+    document.getElementById('birthdate').value = `${y}-${m}-${d}`;
+    closeBirthModal();
+  }
+  function initBirthSelects() {
+    const year = document.getElementById('birth-year');
+    const month = document.getElementById('birth-month');
+    const day = document.getElementById('birth-day');
+    if (!year || year.options.length) return;
+    const nowYear = new Date().getFullYear();
+    for (let y = nowYear; y >= 1900; y--) year.add(new Option(String(y), String(y)));
+    for (let m = 1; m <= 12; m++) month.add(new Option(String(m).padStart(2, '0'), String(m).padStart(2, '0')));
+    for (let d = 1; d <= 31; d++) day.add(new Option(String(d).padStart(2, '0'), String(d).padStart(2, '0')));
+  }
+  function syncBirthSelects() {
+    initBirthSelects();
+    const value = document.getElementById('birthdate').value;
+    const match = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    const date = new Date();
+    document.getElementById('birth-year').value = match ? match[1] : '2007';
+    document.getElementById('birth-month').value = match ? match[2] : String(date.getMonth() + 1).padStart(2, '0');
+    document.getElementById('birth-day').value = match ? match[3] : String(date.getDate()).padStart(2, '0');
+  }
+  function previewProfileImage(event) {
+    const file = event.target.files && event.target.files[0];
+    const preview = document.getElementById('profile-preview');
+    if (!file || !preview) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      preview.innerHTML = `<img src="${reader.result}" alt="프로필 미리보기">`;
+    };
+    reader.readAsDataURL(file);
+  }
+  function enterNext(e, nextId, submitFn) {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    const next = nextId && document.getElementById(nextId);
+    if (next) { next.focus(); return; }
+    if (submitFn) submitFn();
+  }
+  function shake(id) {
+    const el = document.getElementById(id);
+    el.style.animation = 'none';
+    requestAnimationFrame(() => { el.style.animation = 'shakeInput .4s ease'; });
+    el.focus();
+  }
+  function calcStrength(val) {
+    const checks = getPasswordChecks(val);
+    document.getElementById('pw-rule-length').classList.toggle('met', checks.lengthOk);
+    document.getElementById('pw-rule-combo').classList.toggle('met', checks.comboOk);
+    let s = 0;
+    if (val.length >= 8)  s++;
+    if (checks.comboOk)   s++;
+    if (val.length >= 12) s++;
+    if (/[^A-Za-z0-9]/.test(val) && checks.comboOk) s++;
+    const cls = s <= 1 ? 'on-weak' : s <= 2 ? 'on-mid' : 'on-strong';
+    for (let i = 0; i < 4; i++) {
+      const seg = document.getElementById('seg' + i);
+      seg.classList.remove('on-weak','on-mid','on-strong');
+      if (i < s) seg.classList.add(cls);
+    }
+  }
+  function togglePw(id, button) {
+    const el = document.getElementById(id);
+    const hint = document.getElementById('pw-hint');
+    const isVisible = el.type === 'text';
+    el.type = isVisible ? 'password' : 'text';
+    if (hint) {
+      if (isVisible) {
+        hint.classList.remove('show');
+      } else {
+        hint.textContent = '조심하세요! 비밀번호가 보여요!';
+        hint.classList.add('show');
+      }
+    }
+    if (button) {
+      button.classList.toggle('is-visible', !isVisible);
+      button.setAttribute('aria-pressed', String(!isVisible));
+      button.setAttribute('aria-label', isVisible ? '비밀번호 보이기' : '비밀번호 숨기기');
+    }
+  }
+  function handleTermsKey(e, action) {
+    if (e.key === ' ' || e.key === 'Spacebar') {
+      e.preventDefault();
+      action();
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      goStep(2);
+    }
+  }
+  function toggle(id) {
+    const chk = document.getElementById(id);
+    chk.classList.toggle('checked');
+    chk.parentElement.setAttribute('aria-checked', String(chk.classList.contains('checked')));
+    updateAllCheck();
+  }
+  function toggleAll() {
+    const all = document.getElementById('chk-all');
+    const will = !all.classList.contains('checked');
+    all.classList.toggle('checked');
+    all.parentElement.setAttribute('aria-checked', String(will));
+    ['chk-1','chk-2','chk-3'].forEach(id => {
+      const el = document.getElementById(id);
+      will ? el.classList.add('checked') : el.classList.remove('checked');
+      el.parentElement.setAttribute('aria-checked', String(will));
+    });
+  }
+  function updateAllCheck() {
+    const ok = ['chk-1','chk-2','chk-3'].every(id => document.getElementById(id).classList.contains('checked'));
+    const a = document.getElementById('chk-all');
+    ok ? a.classList.add('checked') : a.classList.remove('checked');
+    a.parentElement.setAttribute('aria-checked', String(ok));
+  }
+  function playLogoEvent() {
+    const logo = document.getElementById('logoIcon');
+    const messages = ['오늘도 추억 한 잎 저장', 'Clov.가 조용히 자라는 중', '친구와의 약속을 기다려요', '작은 기록도 오래 남아요'];
+    logo.querySelector('.logo-pop')?.remove();
+    const pop = document.createElement('span');
+    pop.className = 'logo-pop';
+    pop.textContent = messages[Math.floor(Math.random() * messages.length)];
+    logo.appendChild(pop);
+  }
+  updateAllCheck();
+</script>
+</body>
+</html>
