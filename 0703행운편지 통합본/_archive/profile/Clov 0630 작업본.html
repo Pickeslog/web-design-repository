@@ -1,0 +1,677 @@
+<!DOCTYPE html><html lang="ko"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clov. - 디자인 미리보기 &amp; 프로토타입</title>
+    
+
+
+<link rel="stylesheet" href="css/desktop.css">
+</head>
+
+<body>
+
+    
+
+    <div class="split-workspace">
+
+        <!-- -------------------------------------------- -->
+        <!-- [LEFT] 데스크톱 화면 뷰포트                     -->
+        <!-- -------------------------------------------- -->
+        <div class="view-section">
+            
+            <div class="desktop-window">
+                
+                <div class="window-content">
+                    <header class="header">
+                        <div class="logo" onclick="switchDesktopTab('space')">🍀 Clov.</div>
+                        <div style="display: flex; align-items: center; gap: 16px;">
+                            <nav class="desktop-nav">
+                                <button class="dt-nav-item active" id="dt-nav-space" onclick="switchDesktopTab('space')">
+                                    <span class="nav-icon">🏠</span>
+                                    <span>우정공간</span>
+                                </button>
+                                <button class="dt-nav-item" id="dt-nav-feed" onclick="switchDesktopTab('feed')">
+                                    <span class="nav-icon">📸</span>
+                                    <span>추억피드</span>
+                                </button>
+                                <button class="dt-nav-item" id="dt-nav-letter" onclick="switchDesktopTab('letter')">
+                                    <span class="nav-icon">💌</span>
+                                    <span>행운편지</span>
+                                </button>
+                                <button class="dt-nav-item" id="dt-nav-schedule" onclick="switchDesktopTab('schedule')">
+                                    <span class="nav-icon">📅</span>
+                                    <span>일정계획</span>
+                                </button><button class="dt-nav-item" id="dt-nav-noti" onclick="openModal('dt-noti-modal')" title="알림">
+                                    <span class="nav-icon">🔔</span>
+                                </button>
+                            </nav>
+                            <div class="profile-container">
+                                <button class="profile-btn" onclick="toggleDropdown('dt-drop')" aria-label="프로필 메뉴 열기">
+                                    <img id="dt-profile-img" src="" alt="프로필 이미지">
+                                    <span id="dt-profile-initial">🍀</span>
+                                </button>
+                                <ul class="profile-dropdown" id="dt-drop">
+                                    <li onclick="openProfileSettingsModal()">👤 내 프로필</li>
+                                    <li onclick="openModal('dt-group-modal')">🚪 방 이동하기</li>
+                                    <li onclick="openModal('dt-invite-modal')">➕ 새로운 방 추가</li>
+                                    <li onclick="alert('로그아웃 되었습니다.')">로그아웃</li>
+                                </ul>
+                            </div>
+                            <button class="dark-mode-toggle-btn dt-dark-btn" onclick="toggleDarkMode()" title="다크모드 토글">
+                                <span class="toggle-icon">☀️</span>
+                            </button>
+                        </div>
+                    </header>
+
+                    <main class="main-content" id="desktop-scroll-container">
+                        <!-- 탭 1: 우정 공간 -->
+                        <div id="dt-tab-space" class="dt-page-view active">
+                            <div class="main-content-inner">
+                                <div class="dashboard-card" id="dt-dashboard" style="padding:0; overflow:hidden; border-radius:18px;">
+<div class="v5-scene" id="dt-v5scene" data-time="day" data-season="summer" data-level="3" data-event="none">
+                                        <div class="scene-sky"></div>
+                                        <div class="scene-stars" id="dt-v5stars"></div>
+                                        <div class="scene-celestial" id="dt-v5cel"></div>
+                                        <div class="scene-clouds">
+                                            <div class="cloud" style="width:84px;height:23px;top:11%;animation-duration:34s;animation-delay:-6s;"></div>
+                                            <div class="cloud" style="width:56px;height:16px;top:5%;animation-duration:26s;animation-delay:-18s;opacity:.72;"></div>
+                                            <div class="cloud" style="width:44px;height:13px;top:23%;animation-duration:20s;animation-delay:-3s;opacity:.60;"></div>
+                                        </div>
+                                        <div class="scene-mountains">
+                                            <svg viewBox="0 0 820 100" preserveAspectRatio="none">
+                                                <path id="dt-v5mtnFar" d="M0,100 L75,65 L148,76 L228,52 L318,68 L408,44 L490,60 L572,40 L650,56 L718,46 L776,62 L820,50 L820,100 Z" fill="rgba(130,175,140,0.88)"></path>
+                                                <path id="dt-v5mtnNear" d="M0,100 L88,72 L195,65 L320,76 L435,60 L555,70 L668,58 L768,68 L820,63 L820,100 Z" fill="rgba(58,118,78,0.96)"></path>
+                                            </svg>
+                                        </div>
+                                        <div class="scene-ground" id="dt-v5ground"></div>
+                                        <div class="scene-clover-field" id="dt-v5clovers"></div>
+                                        <div class="season-particles" id="dt-v5particles"></div>
+                                        <div class="scene-balloons" id="dt-v5balloons"></div>
+                                        <div class="scene-haze"></div>
+                                        <div class="hud-guard"></div>
+                                        <div class="banner-hud">
+                                            <div>
+                                                <p class="hud-eyebrow" id="dt-v5eyebrow">우리 함께한 지</p>
+                                                <p class="hud-dday">D+<span id="dt-v5dday">124</span> 일째</p>
+                                            </div>
+                                            <div class="hud-bottom">
+                                                <div class="lv-pill">
+                                                    <div class="lv-pill-bg" id="dt-v5pillbg" style="width:68%"></div>
+                                                    <div class="lv-pill-content">
+                                                        <span class="lv-badge-icon" id="dt-v5lvicon" onclick="v5LevelUp()" title="클릭하면 레벨업!">Lv.3</span>
+                                                        <span class="lv-badge-name" id="dt-v5lvname">초록 클로버 우정</span>
+                                                        <span class="lv-pct" id="dt-v5lvpct">68%</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="grid-column: span 2;">
+                                    <div class="main-photo-card">
+                                        <div class="main-photo-wrapper">
+                                            <img id="dt-main-photo" src="" alt="대표 사진">
+                                            <div class="photo-edit-overlay" onclick="triggerPhotoUpload('dt')">
+                                                <span>📸 대표 사진 변경하기</span>
+                                            </div>
+                                        </div>
+                                        <div class="cover-summary">
+                                            <div class="cover-kicker">우정공간 대표 커버</div>
+                                            <div class="cover-title-row">
+                                                <span contenteditable="true" id="dt-photo-title" class="editable-title" onblur="savePhotoTitle('dt')">우리가 고등학교때 찍은 사진</span>
+                                                <div class="cover-avatar-stack" aria-label="참여 멤버">
+                                                    <span class="cover-avatar">나</span>
+                                                    <span class="cover-avatar">솔</span>
+                                                    <span class="cover-avatar">민</span>
+                                                    <span class="cover-avatar">준</span>
+                                                </div>
+                                            </div>
+                                            <div class="cover-meta-grid">
+                                                <div class="cover-meta-item">
+                                                    <span class="cover-meta-label">최근 근황</span>
+                                                    <span class="cover-meta-value">2개 업데이트</span>
+                                                </div>
+                                                <div class="cover-meta-item">
+                                                    <span class="cover-meta-label">참여 기록</span>
+                                                    <span class="cover-meta-value">4명 기록</span>
+                                                </div>
+                                                <div class="cover-meta-item">
+                                                    <span class="cover-meta-label">다가오는 약속</span>
+                                                    <span class="cover-meta-value">D-14</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="schedule-banner" onclick="switchDesktopTab('schedule')">
+                                        <div class="schedule-info">
+                                            <span class="schedule-icon">📅</span>
+                                            <span class="schedule-title" id="dt-schedule-title">일정 계획 로딩 중...</span>
+                                            <span class="schedule-date" id="dt-schedule-date"></span>
+                                        </div>
+                                        <div class="schedule-dday-badge" id="dt-schedule-dday">D-Day</div>
+                                    </div>
+                                </div>
+                                <section class="space-memory-preview">
+                                    <div class="section-title">
+                                        <span>참여자별 추억 증거 카드</span>
+                                        <button class="btn-action-sm" onclick="switchDesktopTab('feed')">전체 피드
+                                            보기</button>
+                                    </div>
+                                    <div class="space-memory-grid" id="dt-space-memory-zone"></div>
+                                </section>
+                            </div>
+                        </div>
+
+                        <!-- 탭 2: 추억 피드 -->
+                        <div id="dt-tab-feed" class="dt-page-view">
+                            <div class="feed-hero">
+                                <div class="section-title">
+                                    <span class="feed-title">월별 추억 아카이브</span>
+                                    <span class="feed-subtitle">단짝과 남긴 기록을 월 단위로 접어서 보고, 필요한 달만 빠르게 꺼내봅니다.</span>
+                                </div>
+                                <div class="feed-hero-meta">
+                                    <div class="feed-month-summary" id="dt-feed-month-summary">전체 추억</div>
+                                    <button class="btn-action-sm feed-write-btn" onclick="window.location.href=`write_post.html?action=create&amp;groupId=${activeGroup}&amp;theme=${isDarkMode ? 'dark' : 'light'}`">✏️
+                                        글쓰기</button>
+                                </div>
+                            </div>
+                            <div class="feed-controls">
+                                <div class="feed-month-picker-wrap">
+                                    <div class="feed-month-rail" id="dt-feed-month-rail"></div>
+                                    <button class="month-picker-trigger" id="dt-month-picker-trigger" type="button" onclick="toggleMonthPicker(event)" title="월 선택">📅</button>
+                                </div>
+                                <div class="feed-filter-tabs">
+                                    <button class="feed-tab active" data-filter="all" onclick="setFeedFilter('all')">전체</button>
+                                    <button class="feed-tab" data-filter="mine" onclick="setFeedFilter('mine')">내
+                                        기록</button>
+                                    <button class="feed-tab" data-filter="others" onclick="setFeedFilter('others')">친구
+                                        기록</button>
+                                </div>
+                            </div>
+                            <div id="dt-full-feed-zone" class="feed-grid">
+                                <!-- 동적 피드 영역 -->
+                            </div>
+                        </div>
+
+                        <!-- 탭 3: 행운 편지 -->
+                        <div id="dt-tab-letter" class="dt-page-view">
+                            <div class="section-title">
+                                <span>💌 단짝의 행운 편지 보관함</span>
+                                <button class="btn-lucky-write" onclick="openLetterModal('dt')">✍️ 편지 작성</button>
+                            </div>
+                            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">마음을 담은 행운 편지를 직접
+                                작성해 보내보세요.</p>
+
+                            <div class="letter-filter-container">
+                                <button class="letter-filter-btn active" id="dt-letter-filter-all" onclick="setLetterFilter('all')">
+                                    <span>💌 전체 편지</span>
+                                </button>
+                                <button class="letter-filter-btn" id="dt-letter-filter-favorite" onclick="setLetterFilter('favorite')">
+                                    <span>⭐ 즐겨찾기</span>
+                                </button>
+                            </div>
+
+                            <div id="dt-letter-zone" style="display: grid; grid-template-columns: 1fr; gap: 14px; margin-bottom: 20px;">
+                                <!-- 동적 행운 편지 영역 -->
+                            </div>
+                        </div>
+
+                        <!-- 탭 4: 일정 계획 상세 -->
+                        <div id="dt-tab-schedule" class="dt-page-view">
+                            <div class="section-title">
+                                <span>🍀 약속 여정</span>
+                                <button class="btn-action-sm" onclick="openScheduleModal('dt')">➕ 새 D-day 만들기</button>
+                            </div>
+                            <div id="dt-schedule-list-zone">
+                                <!-- 동적 다중 일정 카드 영역 -->
+                            </div>
+                        </div>
+                    </main>
+
+                    <!-- 데스크톱용 가상 모달 -->
+                    <div class="modal-overlay" id="dt-post-modal">
+                        <div class="modal-box">
+                            <h3>📸 새 추억 게시글 작성</h3>
+                            <div class="modal-form-group">
+                                <label>제목</label><input type="text" id="dt-post-title" placeholder="추억의 제목을 작성해주세요">
+                            </div>
+                            <div class="modal-form-group">
+                                <label>내용</label><textarea id="dt-post-content" placeholder="우리만의 소중한 기록을 남겨보세요."></textarea>
+                            </div>
+                            <div class="modal-form-group">
+                                <label>해시태그 선택</label>
+
+
+
+
+
+
+                                <input class="custom-tag-input" type="text" id="dt-custom-tags" placeholder="직접 태그 입력 예: #한강 #시험끝">
+                            </div>
+                            <div class="modal-buttons">
+                                <button class="btn-sub" onclick="closeModal('dt-post-modal')">취소</button>
+                                <button class="btn-main" onclick="addNewDesktopPost()">등록하기</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 데스크톱용 방 코드 접속 모달 -->
+                    <div class="modal-overlay" id="dt-invite-modal">
+                        <div class="modal-box">
+                            <h3>➕ 새로운 방 추가</h3>
+                            <div class="modal-form-group">
+                                <label>내 고유 방 코드</label>
+                                <input type="text" value="CLOV-9800-X3D" readonly="" style="background: var(--bg-light); text-align: center; font-weight: bold; color: var(--primary-green); border: 1px solid var(--border-color);">
+                            </div>
+                            <div class="modal-form-group">
+                                <label>접속할 방 코드 입력</label>
+                                <input type="text" id="dt-partner-code" placeholder="방 코드를 붙여넣으세요">
+                            </div>
+                            <div class="modal-buttons">
+                                <button class="btn-sub" onclick="closeModal('dt-invite-modal')">닫기</button>
+                                <button class="btn-main" onclick="connectDesktopFriend()">접속하기</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 데스크톱용 방 이동 모달 -->
+                    <div class="modal-overlay" id="dt-group-modal">
+                        <div class="modal-box">
+                            <h3>🚪 방 이동하기</h3>
+                            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;">참여 중인 우정/가족/스터디
+                                방으로 이동합니다.</p>
+                            <div class="modal-form-group">
+                                <button class="btn-main dt-group-btn" onclick="selectGroup('friend')" style="width: 100%; margin-bottom: 8px; text-align: left; background: var(--nav-item-bg-active); color: var(--primary-green); border: 1px solid var(--accent-green); padding: 10px 14px;">🍀
+                                    단짝친구 (D+124)</button>
+                                <button class="btn-main dt-group-btn" onclick="selectGroup('family')" style="width: 100%; margin-bottom: 8px; text-align: left; background: var(--bg-light); color: var(--text-color); border: 1px solid var(--border-color); padding: 10px 14px;">👨‍👩‍👧‍👦
+                                    우리가족 (D+8520)</button>
+                                <button class="btn-main dt-group-btn" onclick="selectGroup('study')" style="width: 100%; margin-bottom: 8px; text-align: left; background: var(--bg-light); color: var(--text-color); border: 1px solid var(--border-color); padding: 10px 14px;">💻
+                                    코딩 스터디 (D+42)</button>
+                            </div>
+                            <div class="modal-buttons" style="margin-top: 18px;">
+                                <button class="btn-sub" style="width: 100%;" onclick="closeModal('dt-group-modal')">닫기</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 데스크톱용 일정 관리 모달 -->
+                    <div class="modal-overlay" id="dt-profile-settings-modal">
+                        <div class="modal-box profile-settings-box">
+                            <aside class="profile-settings-sidebar">
+                                <button class="profile-settings-close" type="button" onclick="closeModal('dt-profile-settings-modal')" aria-label="프로필 설정 닫기">×</button>
+                                <div class="profile-settings-me">
+                                    <button class="profile-settings-avatar" type="button" onclick="triggerProfileModalImage()" aria-label="프로필 이미지 변경">
+                                        <img id="profile-settings-img" src="" alt="내 프로필 이미지">
+                                        <span id="profile-settings-fallback">🍀</span>
+                                    </button>
+                                    <input type="file" id="profile-settings-file" accept="image/*" onchange="handleProfileModalImage(event)">
+                                    <strong id="profile-settings-name-preview">클로버</strong>
+                                    <span id="profile-settings-status-preview">추억을 쌓는 중</span>
+                                </div>
+                                <nav class="profile-settings-menu" aria-label="내 프로필 설정 메뉴">
+                                    <button class="active" type="button" data-panel="account" onclick="setProfileSettingsPanel('account')">👤 개인정보 수정</button>
+                                    <button type="button" data-panel="security" onclick="setProfileSettingsPanel('security')">🔒 비밀번호 변경</button>
+                                    <button type="button" onclick="logoutProfileAccount()">🚪 계정 로그아웃</button>
+                                    <button class="danger" type="button" onclick="deleteProfileAccount()">🗑️ 계정 탈퇴</button>
+                                </nav>
+                            </aside>
+                            <section class="profile-settings-content">
+                                <div class="profile-settings-panel active" id="profile-panel-account">
+                                    <div class="profile-settings-heading">
+                                        <span>계정</span>
+                                        <h3>내 프로필</h3>
+                                        <p>Clov.에서 보여질 프로필 정보를 수정해요.</p>
+                                    </div>
+                                    <div class="profile-settings-row">
+                                        <label for="profile-modal-name">이름 / 닉네임</label>
+                                        <input type="text" id="profile-modal-name" maxlength="16" placeholder="친구들이 부를 이름" oninput="updateProfileModalPreview()">
+                                    </div>
+                                    <div class="profile-settings-row">
+                                        <label for="profile-modal-status">상태 메시지</label>
+                                        <input type="text" id="profile-modal-status" maxlength="40" placeholder="예: 추억을 쌓는 중" oninput="updateProfileModalPreview()">
+                                    </div>
+                                    <div class="profile-settings-row">
+                                        <label for="profile-modal-email">이메일</label>
+                                        <input type="email" id="profile-modal-email" placeholder="clov@gmail.com">
+                                    </div>
+                                    <div class="profile-settings-row">
+                                        <label for="profile-modal-birth">생년월일</label>
+                                        <input type="date" id="profile-modal-birth">
+                                    </div>
+                                    <div class="profile-emoji-row" aria-label="프로필 기본 아이콘 선택">
+                                        <button type="button" data-emoji="🍀" onclick="selectProfileModalEmoji(this)">🍀</button>
+                                        <button type="button" data-emoji="🌿" onclick="selectProfileModalEmoji(this)">🌿</button>
+                                        <button type="button" data-emoji="🌸" onclick="selectProfileModalEmoji(this)">🌸</button>
+                                        <button type="button" data-emoji="⭐" onclick="selectProfileModalEmoji(this)">⭐</button>
+                                        <button type="button" data-emoji="📷" onclick="selectProfileModalEmoji(this)">📷</button>
+                                    </div>
+                                    <p class="profile-settings-hint" id="profile-settings-account-hint"></p>
+                                    <button class="profile-settings-save" type="button" onclick="saveProfileSettings()">변경사항 저장</button>
+                                </div>
+
+                                <div class="profile-settings-panel" id="profile-panel-security">
+                                    <div class="profile-settings-heading">
+                                        <span>보안</span>
+                                        <h3>비밀번호 변경</h3>
+                                        <p>새 비밀번호를 입력하면 임시 로그인 정보에 반영돼요.</p>
+                                    </div>
+                                    <div class="profile-settings-row">
+                                        <label for="profile-modal-current-pw">현재 비밀번호</label>
+                                        <input type="password" id="profile-modal-current-pw" placeholder="현재 비밀번호">
+                                    </div>
+                                    <div class="profile-settings-row">
+                                        <label for="profile-modal-new-pw">새 비밀번호</label>
+                                        <input type="password" id="profile-modal-new-pw" placeholder="8자 이상">
+                                    </div>
+                                    <div class="profile-settings-row">
+                                        <label for="profile-modal-confirm-pw">비밀번호 확인</label>
+                                        <input type="password" id="profile-modal-confirm-pw" placeholder="한 번 더 입력">
+                                    </div>
+                                    <p class="profile-settings-hint" id="profile-settings-hint"></p>
+                                    <button class="profile-settings-save" type="button" onclick="saveProfileSettings()">변경사항 저장</button>
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+
+                    <div class="modal-overlay" id="dt-schedule-modal">
+                        <div class="modal-box">
+                            <h3 id="dt-schedule-modal-title">🍀 다가오는 약속, D-day 새로 세기</h3>
+                            <input type="hidden" id="dt-input-schedule-id">
+                            <div class="modal-form-group">
+                                <label>어떤 약속인가요?</label>
+                                <input type="text" id="dt-input-schedule-title" placeholder="예: 여름 여행, 시험 등">
+                            </div>
+                            <div class="modal-form-group">
+                                <label>언제로 D-day를 맞출까요?</label>
+                                <input type="date" id="dt-input-schedule-date">
+                                <div class="date-preset-row">
+                                    <button type="button" class="date-preset-chip" onclick="applyDatePreset('dt', 7)">1주
+                                        후</button>
+                                    <button type="button" class="date-preset-chip" onclick="applyDatePreset('dt', 14)">2주 후</button>
+                                    <button type="button" class="date-preset-chip" onclick="applyDatePreset('dt', 30)">1개월 후</button>
+                                    <button type="button" class="date-preset-chip" onclick="applyDatePreset('dt', 90)">3개월 후</button>
+                                </div>
+                            </div>
+                            <div class="modal-buttons">
+                                <button class="btn-sub" onclick="closeModal('dt-schedule-modal')">취소</button>
+                                <button class="btn-main" onclick="saveSchedule('dt')">저장하기</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 데스크톱용 행운편지 작성 모달 -->
+                    <div class="modal-overlay" id="dt-letter-modal">
+                        <div class="modal-box" style="max-width: 400px;">
+                            <h3>✍️ 행운편지 작성</h3>
+                            <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">소중한 사람에게 마음을 담은
+                                편지를 보내보세요 💌</p>
+                            <div class="modal-form-group">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <label style="margin-bottom: 0;">받는 사람 이름</label>
+                                    <button type="button" id="dt-letter-to-all-btn" onclick="toggleLetterToAllBtn('dt')" style="padding: 5px 12px; font-size: 11px; font-weight: 600; border-radius: 20px; border: none; cursor: pointer; transition: all 0.2s ease; background: var(--nav-item-bg-active); color: var(--primary-green);">모두에게
+                                        💌</button>
+                                </div>
+                                <input type="text" id="dt-letter-to" placeholder="예: 단짝친구, 너에게">
+                            </div>
+                            <div class="modal-form-group">
+                                <label>보내는 사람 이름</label>
+                                <input type="text" id="dt-letter-from" placeholder="예: 나, 내 닉네임">
+                            </div>
+                            <div class="modal-form-group">
+                                <label>편지 내용</label>
+                                <textarea id="dt-letter-content" placeholder="응원, 감사, 행운의 메시지를 자유롭게 작성해주세요." style="height: 120px; resize: vertical;"></textarea>
+                            </div>
+                            <div class="modal-form-group">
+                                <label>편지 장식 이모지 선택</label>
+                                <div class="letter-emoji-picker">
+                                    <button type="button" class="letter-emoji-chip active" onclick="selectLetterEmoji(this, 'dt')" data-emoji="💌">💌</button>
+                                    <button type="button" class="letter-emoji-chip" onclick="selectLetterEmoji(this, 'dt')" data-emoji="🍀">🍀</button>
+                                    <button type="button" class="letter-emoji-chip" onclick="selectLetterEmoji(this, 'dt')" data-emoji="⭐">⭐</button>
+                                    <button type="button" class="letter-emoji-chip" onclick="selectLetterEmoji(this, 'dt')" data-emoji="🌈">🌈</button>
+                                    <button type="button" class="letter-emoji-chip" onclick="selectLetterEmoji(this, 'dt')" data-emoji="🎉">🎉</button>
+                                    <button type="button" class="letter-emoji-chip" onclick="selectLetterEmoji(this, 'dt')" data-emoji="💪">💪</button>
+                                    <button type="button" class="letter-emoji-chip" onclick="selectLetterEmoji(this, 'dt')" data-emoji="☀️">☀️</button>
+                                    <button type="button" class="letter-emoji-chip" onclick="selectLetterEmoji(this, 'dt')" data-emoji="🌸">🌸</button>
+                                </div>
+                            </div>
+                            <div id="dt-letter-preview" class="letter-preview" style="display: none;">
+                                <div class="letter-preview-label">미리보기</div>
+                                <div class="letter-preview-content" id="dt-letter-preview-content"></div>
+                            </div>
+                            <div class="modal-buttons">
+                                <button class="btn-sub" onclick="closeModal('dt-letter-modal')">취소</button>
+                                <button class="btn-main" onclick="submitLetter('dt')">편지 보내기</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 데스크톱용 행운편지 상세 모달 -->
+                    <div class="modal-overlay" id="dt-letter-detail-modal">
+                        <div class="modal-box" style="max-width: 400px;">
+                            <h3>💌 행운편지</h3>
+                            <div class="letter-preview" style="margin-top: 20px; text-align: center; padding: 30px 20px;">
+                                <div id="dt-detail-letter-to" style="font-weight: bold; color: var(--text-color); margin-bottom: 8px; font-size: 16px;">
+                                </div>
+                                <div id="dt-detail-letter-from" style="font-weight: bold; color: var(--primary-green); margin-bottom: 16px; font-size: 16px;">
+                                </div>
+                                <div id="dt-detail-letter-content" style="font-size: 15px; line-height: 1.8; color: var(--text-color);"></div>
+                            </div>
+                            <div class="modal-buttons" style="margin-top: 24px;">
+                                <button class="btn-main" onclick="closeModal('dt-letter-detail-modal')">닫기</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- -------------------------------------------- -->
+        <!-- [RIGHT] 모바일 화면 뷰포트 (인터랙션 포함)       -->
+        <!-- -------------------------------------------- -->
+        
+
+    </div>
+
+    <div class="memory-detail-backdrop" id="memory-detail-backdrop" onclick="closeMemoryDetail()"></div>
+    <section class="memory-detail-sheet" id="memory-detail-sheet" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="memory-detail-title">
+        <div class="memory-detail-handle"></div>
+        <div class="memory-detail-head">
+            <div>
+                <div class="memory-detail-kicker" id="memory-detail-author">내 기록</div>
+                <div class="memory-detail-title" id="memory-detail-title">추억 기록</div>
+                <div class="memory-detail-date" id="memory-detail-date"></div>
+            </div>
+            <button type="button" class="memory-detail-close" onclick="closeMemoryDetail()" aria-label="닫기">×</button>
+        </div>
+        <div class="memory-detail-body" id="memory-detail-body"></div>
+        <div class="memory-detail-tags" id="memory-detail-tags"></div>
+        <div class="memory-detail-actions" id="memory-detail-actions"></div>
+    </section>
+
+    <div class="month-picker-popover" id="month-picker-popover" role="dialog" aria-label="월 선택">
+        <div class="month-picker-header">
+            <button class="month-picker-nav" type="button" onclick="moveMonthPickerYear(-1)" aria-label="이전 년도">❮</button>
+            <div class="month-picker-year" id="month-picker-year">2026년</div>
+            <button class="month-picker-nav" type="button" onclick="moveMonthPickerYear(1)" aria-label="다음 년도">❯</button>
+        </div>
+        <div class="month-picker-grid" id="month-picker-grid"></div>
+    </div>
+
+    <!-- ==========================================
+       3. 인터랙션 및 프로토타입 상태 제어 스크립트 
+       ========================================== */ -->
+    
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script src="js/desktop.js"></script>
+<div class="modal-overlay" id="dt-noti-modal">
+    <div class="modal-box" style="width: 400px; max-width: 90vw;">
+        <h3 style="margin-bottom: 20px;">🔔 알림</h3>
+        <div class="tabs" style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <button id="dt-tab-admin" onclick="switchNotiTab('admin', 'dt')" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--primary-green); background: var(--primary-green); color: white; font-weight: bold; cursor: pointer; transition: all 0.2s;">📢 관리진 공지</button>
+            <button id="dt-tab-friends" onclick="switchNotiTab('friends', 'dt')" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-muted); font-weight: bold; cursor: pointer; transition: all 0.2s;">🔔 친구들 알림</button>
+        </div>
+
+        <div id="dt-content-admin">
+            <div style="background: rgba(82, 183, 136, 0.1); border-left: 4px solid var(--primary-green); padding: 16px; border-radius: 8px; margin-bottom: 12px; transition: transform 0.2s;">
+                <div style="font-weight: bold; color: var(--primary-green); margin-bottom: 6px;">[업데이트] ➕ 새로운 방 추가 기능이 적용되었습니다!</div>
+                <div style="font-size: 13px; color: var(--text-color); line-height: 1.5;">이제 번거로운 친구 초대코드 대신 <b>'새로운 방 추가'</b> 기능을 통해 코드를 적고 간편하게 방에 접속할 수 있습니다. 메인 화면의 프로필 메뉴를 확인해 보세요!</div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">2026. 06. 30</div>
+            </div>
+            <div style="background: rgba(82, 183, 136, 0.1); border-left: 4px solid var(--primary-green); padding: 16px; border-radius: 8px; transition: transform 0.2s;">
+                <div style="font-weight: bold; color: var(--primary-green); margin-bottom: 6px;">[공지] Clov v2.0 정식 오픈 안내 🎉</div>
+                <div style="font-size: 13px; color: var(--text-color); line-height: 1.5;">더욱 안정적인 환경에서 소중한 추억을 기록해 보세요.</div>
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">2026. 06. 29</div>
+            </div>
+        </div>
+
+        <div id="dt-content-friends" style="display: none;">
+            <div style="text-align: center; color: var(--text-muted); padding: 40px 20px;">
+                <div style="font-size: 32px; margin-bottom: 12px;">📭</div>
+                <p style="font-size: 14px;">새로운 친구 알림이 없습니다.</p>
+            </div>
+        </div>
+
+        <div class="modal-buttons" style="margin-top: 16px;">
+            <button class="btn-sub" style="width: 100%;" onclick="closeModal('dt-noti-modal')">닫기</button>
+        </div>
+    </div>
+</div>
+<script>
+    function switchNotiTab(tab, prefix) {
+        const btnAdmin = document.getElementById(prefix + '-tab-admin');
+        const btnFriends = document.getElementById(prefix + '-tab-friends');
+        const contentAdmin = document.getElementById(prefix + '-content-admin');
+        const contentFriends = document.getElementById(prefix + '-content-friends');
+        if (tab === 'admin') {
+            btnAdmin.style.background = 'var(--primary-green)';
+            btnAdmin.style.color = 'white';
+            btnAdmin.style.borderColor = 'var(--primary-green)';
+            btnFriends.style.background = 'var(--card-bg)';
+            btnFriends.style.color = 'var(--text-muted)';
+            btnFriends.style.borderColor = 'var(--border-color)';
+            contentAdmin.style.display = 'block';
+            contentFriends.style.display = 'none';
+        } else {
+            btnFriends.style.background = 'var(--primary-green)';
+            btnFriends.style.color = 'white';
+            btnFriends.style.borderColor = 'var(--primary-green)';
+            btnAdmin.style.background = 'var(--card-bg)';
+            btnAdmin.style.color = 'var(--text-muted)';
+            btnAdmin.style.borderColor = 'var(--border-color)';
+            contentFriends.style.display = 'block';
+            contentAdmin.style.display = 'none';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        if ("Notification" in window && Notification.permission !== "granted" && Notification.permission !== "denied") {
+            Notification.requestPermission();
+        }
+        updateNotificationBadge();
+    });
+
+    function addUnreadNotification(title, message) {
+        if (!groupsData[activeGroup].notifications) {
+            groupsData[activeGroup].notifications = [];
+        }
+        groupsData[activeGroup].notifications.unshift({
+            id: Date.now(),
+            title,
+            message,
+            date: new Date().toLocaleString(),
+            isRead: false
+        });
+        localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
+        updateNotificationBadge();
+        if ("Notification" in window && Notification.permission === "granted") {
+            new Notification("Clov 알림: " + title, { body: message });
+        } else {
+            setTimeout(() => alert(`[새 알림 도착]\n${title}\n${message}`), 500);
+        }
+    }
+
+    function updateNotificationBadge() {
+        const notiList = groupsData[activeGroup].notifications || [];
+        const unreadCount = notiList.filter(n => !n.isRead).length;
+        const dtNavNoti = document.getElementById('dt-nav-noti');
+        if (!dtNavNoti) return;
+        let badge = dtNavNoti.querySelector('.noti-badge');
+        if (unreadCount > 0) {
+            if (!badge) {
+                badge = document.createElement('span');
+                badge.className = 'noti-badge';
+                badge.style.cssText = 'position:absolute; top:2px; right:2px; background:red; color:white; font-size:10px; padding:2px 5px; border-radius:10px; font-weight:bold; z-index:10;';
+                dtNavNoti.style.position = 'relative';
+                dtNavNoti.appendChild(badge);
+            }
+            badge.innerText = unreadCount > 9 ? '9+' : unreadCount;
+            badge.style.display = 'block';
+        } else if (badge) {
+            badge.style.display = 'none';
+        }
+    }
+
+    function renderFriendsNotifications(prefix) {
+        const contentFriends = document.getElementById(prefix + '-content-friends');
+        if (!contentFriends) return;
+        const notiList = groupsData[activeGroup].notifications || [];
+        if (notiList.length === 0) {
+            contentFriends.innerHTML = `
+                <div style="text-align: center; color: var(--text-muted); padding: 40px 20px;">
+                    <div style="font-size: 32px; margin-bottom: 12px;">📭</div>
+                    <p style="font-size: 14px;">새로운 친구 알림이 없습니다.</p>
+                </div>
+            `;
+            return;
+        }
+        contentFriends.innerHTML = '<div style="display: flex; flex-direction: column; gap: 12px;">' + notiList.map(n => {
+            const bg = n.isRead ? 'transparent' : 'rgba(82, 183, 136, 0.1)';
+            const border = n.isRead ? '1px solid var(--border-color)' : '1px solid var(--primary-green)';
+            const newBadge = n.isRead ? '' : ' <span style="color:red; font-size:10px; vertical-align:top;">NEW</span>';
+            return `
+                <div style="background: ${bg}; border: ${border}; padding: 12px; border-radius: 8px; text-align: left;">
+                    <div style="font-weight: bold; color: var(--text-color); margin-bottom: 4px;">${n.title}${newBadge}</div>
+                    <div style="font-size: 13px; color: var(--text-muted); margin-bottom: 6px;">${n.message}</div>
+                    <div style="font-size: 11px; color: var(--text-muted);">${n.date}</div>
+                </div>
+            `;
+        }).join('') + '</div>';
+        let changed = false;
+        notiList.forEach(n => {
+            if (!n.isRead) {
+                n.isRead = true;
+                changed = true;
+            }
+        });
+        if (changed) {
+            localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
+            updateNotificationBadge();
+        }
+    }
+
+    const originalSwitchNotiTab = window.switchNotiTab;
+    window.switchNotiTab = function(tab, prefix) {
+        originalSwitchNotiTab(tab, prefix);
+        if (tab === 'friends') {
+            renderFriendsNotifications(prefix);
+        }
+    };
+</script>
+</body></html>

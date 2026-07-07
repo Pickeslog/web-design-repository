@@ -98,7 +98,7 @@ document.getElementById = function(id) {
                 level: 3,
                 levelName: "초록 클로버",
                 progress: "65%",
-                photo: (window.CLOV_MAIN_BASE || '../') + "../assets/banner-style/sleeping_cat.gif",
+                photo: "https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?auto=format&fit=crop&w=500&q=80",
                 photoTitle: "우리가 고등학교때 찍은 사진 📸",
                 schedules: [
                     {
@@ -622,6 +622,149 @@ document.getElementById = function(id) {
         window.copyCurrentRoomCode = copyCurrentRoomCode;
         window.copyCurrentRoomLink = copyCurrentRoomLink;
 
+        function openProfileModal() {
+            // 드롭다운 닫기 (헤더 드롭다운은 클래스 기반으로만 닫아야 함 — style.display 직접 조작 금지)
+            const mbDropOnOpen = document.getElementById('mb-drop');
+            const dtDropOnOpen = document.getElementById('dt-drop');
+            if (mbDropOnOpen) mbDropOnOpen.style.display = 'none';
+            if (dtDropOnOpen) dtDropOnOpen.style.display = 'none';
+            document.querySelectorAll('.clov-hdr-dropdown.open').forEach(d => d.classList.remove('open'));
+            loadProfileModalData();
+            openModal('dt-profile-modal');
+        }
+
+        let profileModalAvatarBase64 = '';
+
+        function loadProfileModalData() {
+            let profile = {};
+            try { profile = JSON.parse(localStorage.getItem('clov_profile') || '{}'); } catch (e) {}
+
+            const nameInput = document.getElementById('dt-profile-name');
+            const emailInput = document.getElementById('dt-profile-email');
+            const birthInput = document.getElementById('dt-profile-birth');
+            if (nameInput) nameInput.value = profile.name || '';
+            if (emailInput) emailInput.value = profile.email || '';
+            if (birthInput) birthInput.value = profile.birth || '';
+
+            profileModalAvatarBase64 = profile.avatarBase64 || '';
+            const img = document.getElementById('dt-profile-avatar-img');
+            const initial = document.getElementById('dt-profile-avatar-initial');
+            if (img && initial) {
+                if (profileModalAvatarBase64) {
+                    img.src = profileModalAvatarBase64;
+                    img.style.display = 'block';
+                    initial.style.display = 'none';
+                } else {
+                    img.style.display = 'none';
+                    initial.style.display = 'block';
+                }
+            }
+
+            const pwHint = document.getElementById('dt-profile-pw-hint');
+            if (pwHint) { pwHint.textContent = ''; pwHint.className = 'profile-hint'; }
+            ['dt-profile-pw-current', 'dt-profile-pw-new', 'dt-profile-pw-confirm'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+
+            updateProfilePreview();
+        }
+
+        function updateProfilePreview() {
+            const nameInput = document.getElementById('dt-profile-name');
+            const previewName = document.getElementById('dt-profile-preview-name');
+            const initial = document.getElementById('dt-profile-avatar-initial');
+            const name = (nameInput && nameInput.value.trim()) ? nameInput.value.trim() : '김예린';
+            if (previewName) previewName.textContent = name;
+            if (initial) initial.textContent = name.slice(0, 1) || '김';
+        }
+
+        function toggleProfilePassword(inputId, button) {
+            const input = document.getElementById(inputId);
+            if (!input) return;
+            const show = input.type === 'password';
+            input.type = show ? 'text' : 'password';
+            if (button) button.textContent = show ? '🙈' : '👁';
+        }
+
+        function checkProfilePasswordMatch() {
+            const next = document.getElementById('dt-profile-pw-new');
+            const confirmEl = document.getElementById('dt-profile-pw-confirm');
+            const hint = document.getElementById('dt-profile-pw-hint');
+            if (!next || !confirmEl || !hint) return true;
+            if (!confirmEl.value) {
+                hint.textContent = '';
+                hint.className = 'profile-hint';
+                return true;
+            }
+            const matched = next.value === confirmEl.value;
+            hint.textContent = matched ? '새 비밀번호가 일치합니다.' : '새 비밀번호가 일치하지 않습니다.';
+            hint.className = 'profile-hint ' + (matched ? 'is-ok' : 'is-error');
+            return matched;
+        }
+
+        function saveProfileModal() {
+            if (!checkProfilePasswordMatch()) return;
+            const nameInput = document.getElementById('dt-profile-name');
+            const emailInput = document.getElementById('dt-profile-email');
+            const birthInput = document.getElementById('dt-profile-birth');
+
+            let profile = {};
+            try { profile = JSON.parse(localStorage.getItem('clov_profile') || '{}'); } catch (e) {}
+            profile.name = nameInput ? nameInput.value.trim() : '';
+            profile.email = emailInput ? emailInput.value.trim() : '';
+            profile.birth = birthInput ? birthInput.value : '';
+            if (profileModalAvatarBase64) profile.avatarBase64 = profileModalAvatarBase64;
+
+            localStorage.setItem('clov_profile', JSON.stringify(profile));
+            updateProfilePreview();
+            closeModal('dt-profile-modal');
+            clovToast('프로필이 저장되었습니다! 🍀', 'success');
+        }
+
+        function confirmDeleteProfileAccount() {
+            clovConfirm('정말 계정을 탈퇴하시겠습니까?', () => {
+                closeModal('dt-profile-modal');
+            }, { icon: '🚪', type: 'error', confirmText: '탈퇴', cancelText: '취소' });
+        }
+
+        window.openProfileModal = openProfileModal;
+        window.updateProfilePreview = updateProfilePreview;
+        window.toggleProfilePassword = toggleProfilePassword;
+        window.checkProfilePasswordMatch = checkProfilePasswordMatch;
+        window.saveProfileModal = saveProfileModal;
+        window.confirmDeleteProfileAccount = confirmDeleteProfileAccount;
+
+        function triggerProfileAvatarUpload() {
+            const fileInput = document.getElementById('dt-profile-avatar-file');
+            if (fileInput) fileInput.click();
+        }
+
+        function handleProfileAvatarUpload(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+            if (!file.type.startsWith('image/')) {
+                clovAlert('이미지 파일(JPG, PNG, GIF, WEBP 등)만 업로드할 수 있습니다.', { icon: '⚠️', type: 'warn' });
+                event.target.value = '';
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                profileModalAvatarBase64 = e.target.result;
+                const img = document.getElementById('dt-profile-avatar-img');
+                const initial = document.getElementById('dt-profile-avatar-initial');
+                if (img && initial) {
+                    img.src = e.target.result;
+                    img.style.display = 'block';
+                    initial.style.display = 'none';
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        window.triggerProfileAvatarUpload = triggerProfileAvatarUpload;
+        window.handleProfileAvatarUpload = handleProfileAvatarUpload;
+
         // 3. 하단 탭 메뉴 네비게이션 제어
         function switchTab(tabName) {
             // 모든 뷰 가리기
@@ -797,7 +940,6 @@ document.getElementById = function(id) {
         }
 
         function setEvidenceIndex(index) {
-            if (window.isFilmDraggingPreventClick) return;
             const posts = groupsData[activeGroup].posts || [];
             if (posts.length === 0) return;
             const previousIndex = getEvidenceIndex();
@@ -818,7 +960,7 @@ document.getElementById = function(id) {
                 ? ''
                 : `<span class="memory-clover-placeholder">🍀</span><span class="memory-image-text">사진이 없는 추억은<br>클로버로 보관됩니다</span>`;
             const photoCountBadge = normalizedPost.photos.length > 1
-                ? `<span class="polaroid-photo-count"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:2px;"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"/><circle cx="12" cy="13" r="3.5"/></svg>${normalizedPost.photos.length}</span>`
+                ? `<span class="polaroid-photo-count">📷 ${normalizedPost.photos.length}</span>`
                 : '';
 
             const visibleParticipants = normalizedPost.participants.slice(0, 4);
@@ -844,6 +986,7 @@ document.getElementById = function(id) {
                 <div class="memory-card polaroid-card ${isMine ? 'mine' : 'friend'}">
                     <div class="polaroid-presence-row">
                         ${avatarRail}
+                        <span class="presence-name-label">${escapeHtml(nameSummary)}</span>
                     </div>
                     <div class="polaroid-photo${coverPhoto ? '' : ' is-empty'}" style="${styleBg}" onclick="openMemoryDetail(${postIndex})">
                         <span class="author-badge">${escapeHtml(authorLabel)}</span>
@@ -863,7 +1006,7 @@ document.getElementById = function(id) {
                         ${tagsHtml}
                         <div class="memory-meta-row">
                             <span class="memory-date">${escapeHtml(normalizedPost.date)}${normalizedPost.subtitle ? ` · ${escapeHtml(normalizedPost.subtitle)}` : ''}</span>
-                            <span class="memory-message-count"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:2px;"><path d="M21 15a2 2 0 0 1-2 2H8l-5 4V6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>${messageCount}</span>
+                            <span class="memory-message-count">💬 ${messageCount}</span>
                         </div>
                     </div>
                 </div>
@@ -926,7 +1069,7 @@ document.getElementById = function(id) {
                     `).join('')}
                     ${(memoryDetailState.photoDraft || []).length < MEMORY_PHOTO_LIMIT ? `
                         <button type="button" class="memory-edit-photo-add" onclick="document.getElementById('memory-edit-photo-input').click()">
-                            <span><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"/><circle cx="12" cy="13" r="3.5"/></svg></span><span>추가</span>
+                            <span>📷</span><span>추가</span>
                         </button>
                     ` : ''}
                 </div>
@@ -1259,7 +1402,6 @@ document.getElementById = function(id) {
 
             const currentIndex = getEvidenceIndex();
             const total = posts.length;
-            const cardTheme = getEvidenceCardTheme();
             const avatarColors = ['#52b788', '#e76f51', '#457b9d', '#f4a261', '#2a9d8f'];
 
             function renderAvatars(post) {
@@ -1282,7 +1424,7 @@ document.getElementById = function(id) {
                 const dateText = String(normalizedPost.date || '').replace(/^2026\./, '');
                 const photo = normalizedPost.bg
                     ? `<img src="${escapeHtml(normalizedPost.bg)}" alt="${escapeHtml(normalizedPost.title)}">`
-                    : `<div class="cline-no-photo"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"/><path d="m4 18 4-4 3 2 4-5 5 4"/></svg></span><span class="cline-no-photo-text">사진 없음</span></div>`;
+                    : `<div class="cline-no-photo"><span>🍀</span><span class="cline-no-photo-text">사진 없음</span></div>`;
 
                 return `
                     <article class="cline-polaroid ${isActive ? 'is-active' : ''}" onclick="event.stopPropagation(); ${isActive ? `openMemoryDetail(${postIndex})` : `setEvidenceIndex(${postIndex})`}">
@@ -1305,15 +1447,13 @@ document.getElementById = function(id) {
             function makeSlot(delta, slotCls) {
                 const postIndex = currentIndex + delta;
                 if (postIndex < 0 || postIndex >= total) {
-                    return cardTheme === 'coverflow'
-                        ? `<div class="cline-card-slot cline-slot--empty cline-slot--${slotCls} is-empty"></div>`
-                        : `<div class="cline-card-slot cline-slot--empty"></div>`;
+                    return `<div class="cline-card-slot cline-slot--empty"></div>`;
                 }
                 const isActive = delta === 0;
                 return `
                     <div class="cline-card-slot cline-slot--${slotCls} ${isActive ? 'is-active' : ''}"
                          ${!isActive ? `onclick="event.stopPropagation(); setEvidenceIndex(${postIndex})"` : ''}>
-                        ${cardTheme === 'coverflow' ? '' : clothespinSvg}
+                        ${clothespinSvg}
                         ${renderClinePolaroid(posts[postIndex], postIndex, isActive)}
                     </div>
                 `;
@@ -1333,27 +1473,23 @@ document.getElementById = function(id) {
             }).join('');
 
             return `
-                <div class="memory-evidence-viewer cline-viewer ${viewType === 'mobile' ? 'mobile-evidence' : 'desktop-evidence'} ${cardTheme === 'coverflow' ? 'theme-coverflow' : ''}">
+                <div class="memory-evidence-viewer cline-viewer ${viewType === 'mobile' ? 'mobile-evidence' : 'desktop-evidence'}">
                     <div class="cline-stage">
                         <div class="cline-wire-area">
                             <div class="cline-wire"></div>
                             <div class="cline-cards">
-                                ${viewType === 'desktop' && cardTheme === 'coverflow' ? makeSlot(+3, 'far-far-past') : ''}
                                 ${viewType === 'desktop' ? makeSlot(+2, 'far-past') : ''}
                                 ${makeSlot(+1, 'past')}
                                 ${makeSlot(0, 'current')}
                                 ${makeSlot(-1, 'newer')}
                                 ${viewType === 'desktop' ? makeSlot(-2, 'far-newer') : ''}
-                                ${viewType === 'desktop' && cardTheme === 'coverflow' ? makeSlot(-3, 'far-far-newer') : ''}
                             </div>
                         </div>
                     </div>
                     <div class="cline-film-strip">
                         <span class="cline-film-label">과거</span>
                         <div class="cline-film-frames" id="${viewType === 'mobile' ? 'mb' : 'dt'}-cline-film-frames">
-                            <div class="cline-film-track">
-                                ${filmFrames}
-                            </div>
+                            ${filmFrames}
                         </div>
                         <span class="cline-film-label">현재</span>
                     </div>
@@ -1361,79 +1497,16 @@ document.getElementById = function(id) {
             `;
         }
 
-        // 하단 필름(cline-film-frames) 전용 드래그-스크롤 / 휠-스크롤 상호작용
-        // (윈도우 레벨 이벤트 위임 — 렌더링마다 다시 바인딩하지 않도록 최초 1회만 등록)
-        function initEvidenceInteractions() {
-            if (window._evidenceInteractionsBound) return;
-            window._evidenceInteractionsBound = true;
-
-            // 크롬 등 브라우저 기본 이미지 끌고가기(드래그 앤 드롭) 방지
-            window.addEventListener('dragstart', (e) => {
-                if (e.target.closest('.cline-film-frames') || e.target.tagName === 'IMG') {
-                    e.preventDefault();
-                }
-            });
-
-            // 필름 스트립 드래그-스크롤 핸들러
-            let filmDrag = { active: false, el: null, startX: 0, startScrollLeft: 0, dist: 0 };
-            window.addEventListener('pointerdown', (e) => {
-                const framesEl = e.target.closest('.cline-film-frames');
-                if (framesEl) {
-                    filmDrag = { active: true, el: framesEl, startX: e.clientX, startScrollLeft: framesEl.scrollLeft, dist: 0 };
-                    window.isFilmDraggingPreventClick = false;
-                }
-            });
-            window.addEventListener('pointermove', (e) => {
-                if (!filmDrag.active || !filmDrag.el) return;
-                const dx = e.clientX - filmDrag.startX;
-                filmDrag.dist = Math.max(filmDrag.dist, Math.abs(dx));
-                if (filmDrag.dist > 4) {
-                    window.isFilmDraggingPreventClick = true;
-                    filmDrag.el.scrollLeft = filmDrag.startScrollLeft - dx;
-                }
-            });
-            const endFilmDrag = () => {
-                if (filmDrag.active) {
-                    filmDrag.active = false;
-                    setTimeout(() => { window.isFilmDraggingPreventClick = false; }, 50);
-                }
-            };
-            window.addEventListener('pointerup', endFilmDrag);
-            window.addEventListener('pointercancel', endFilmDrag);
-
-            // 필름 스트립 마우스 휠 가로 스크롤 변환 핸들러
-            window.addEventListener('wheel', (e) => {
-                const framesEl = e.target.closest('.cline-film-frames');
-                if (framesEl) {
-                    if (Math.abs(e.deltaY) >= Math.abs(e.deltaX) && e.deltaY !== 0) {
-                        framesEl.scrollLeft += e.deltaY;
-                        e.preventDefault();
-                    }
-                }
-            }, { passive: false });
-        }
-
         function renderEvidenceViewers() {
             const dtZone = document.getElementById('dt-space-memory-zone');
             const mbZone = document.getElementById('mb-space-memory-zone');
             if (dtZone) dtZone.innerHTML = renderEvidenceViewer('desktop');
             if (mbZone) mbZone.innerHTML = renderEvidenceViewer('mobile');
-            initEvidenceInteractions();
             requestAnimationFrame(() => {
                 document.querySelectorAll('.cline-film-frame.is-current').forEach(frame => {
                     frame.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
                 });
             });
-            if (!window._evidenceResizeBound) {
-                window._evidenceResizeBound = true;
-                window.addEventListener('resize', () => {
-                    requestAnimationFrame(() => {
-                        document.querySelectorAll('.cline-film-frame.is-current').forEach(frame => {
-                            frame.scrollIntoView({ behavior: 'instant', block: 'nearest', inline: 'center' });
-                        });
-                    });
-                });
-            }
         }
 
         // 4. 피드 리스트 동적 렌더링 함수
@@ -1621,56 +1694,36 @@ document.getElementById = function(id) {
         }
 
         // 7. 우정 레벨 및 클로버 비주얼 인터랙션 제어
-        //
-        // 레벨 시스템: 최대 777레벨. 레벨 하나하나에 이름을 붙일 수 없으므로(777개!),
-        // 111레벨씩 7개 티어로 묶어서 이름/아이콘을 부여한다 (777 = 111 × 7).
-        // 클릭 1번 = 12.5%(=1/8), 하루 최대 8번까지만 경험치가 오르고 그 이후 클릭은
-        // 배너 인터랙션(회전+색종이)은 그대로 재생되지만 경험치는 더 늘지 않는다.
-        // 최대 레벨(777)에 도달하면 배지 표기가 "Lv.777"이 아니라 "+777"로 고정된다.
-        const CLOV_MAX_LEVEL = 777;
-        const CLOV_XP_PER_CLICK = 12.5; // 8번 클릭 = 100%
-        const CLOV_MAX_CLICKS_PER_DAY = 8;
-        const CLOV_LEVEL_TIERS = [
-            { max: 111, name: '씨앗의 우정',         icon: '🌱' },
-            { max: 222, name: '새싹의 우정',         icon: '🌿' },
-            { max: 333, name: '초록 클로버 우정',     icon: '💚' },
-            { max: 444, name: '무성한 클로버 들판',   icon: '🍀' },
-            { max: 555, name: '반짝이는 클로버 우정', icon: '🌟' },
-            { max: 666, name: '황금빛 클로버 우정',   icon: '👑' },
-            { max: 777, name: '전설의 클로버 우정',   icon: '💎' },
-        ];
-        function clovLevelTierIndex(level) {
-            for (let i = 0; i < CLOV_LEVEL_TIERS.length; i++) {
-                if (level <= CLOV_LEVEL_TIERS[i].max) return i;
-            }
-            return CLOV_LEVEL_TIERS.length - 1;
-        }
-        function clovLevelInfo(level) {
-            const idx = clovLevelTierIndex(level);
-            return { tierIndex: idx, name: CLOV_LEVEL_TIERS[idx].name, icon: CLOV_LEVEL_TIERS[idx].icon, isMax: level >= CLOV_MAX_LEVEL };
-        }
-        function clovTodayStr() {
-            const d = new Date();
-            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-        }
-        window.clovLevelInfo = clovLevelInfo;
-        window.CLOV_MAX_LEVEL = CLOV_MAX_LEVEL;
-
         let friendshipLevel = 3;
 
-        function updateFriendshipUI() {
-            const grp = groupsData[activeGroup] || {};
-            const info = clovLevelInfo(friendshipLevel);
-            const isMax = friendshipLevel >= CLOV_MAX_LEVEL;
-            const badgeLevelText = isMax ? '+777' : ('Lv.' + friendshipLevel);
-            const progress = isMax ? 100 : (typeof grp.levelProgress === 'number' ? grp.levelProgress : 0);
+        const levelIcons = {
+            1: "🌱",
+            2: "🌿",
+            3: "💚",
+            4: "🍀",
+            5: "✨"
+        };
 
+        function updateFriendshipUI() {
+            const levelNames = {
+                1: "새싹 클로버",
+                2: "성장기 클로버",
+                3: "초록 클로버",
+                4: "희망의 클로버",
+                5: "행운의 네잎클로버"
+            };
+            const levelIcon = levelIcons[friendshipLevel] || "🍀";
+            const levelText = `${levelIcon} 우정 Lv.${friendshipLevel} ${levelNames[friendshipLevel] || "클로버"}`;
+
+            
             ['dt', 'mb'].forEach(p => {
                 const elIcon = document.getElementById(p + '-lvIcon');
                 const elName = document.getElementById(p + '-lvName');
-                if(elIcon) elIcon.innerText = badgeLevelText;
-                if(elName) elName.innerText = info.name;
+                if(elIcon) elIcon.innerText = 'Lv.' + friendshipLevel;
+                if(elName) elName.innerText = levelNames[friendshipLevel] || "클로버 우정";
             });
+
+            
 
             // 레벨별 색상 테마 전환 (대시보드 카드 전체에 컬러가 진화하듯 반영)
             const dtDashboard = document.getElementById('dt-dashboard');
@@ -1678,7 +1731,14 @@ document.getElementById = function(id) {
             if (dtDashboard) dtDashboard.dataset.level = friendshipLevel;
             if (mbDashboard) mbDashboard.dataset.level = friendshipLevel;
 
-            const fillWidth = Math.round(progress) + '%';
+            const progressPercentages = {
+                1: "20%",
+                2: "45%",
+                3: "65%",
+                4: "85%",
+                5: "100%"
+            };
+            const fillWidth = progressPercentages[friendshipLevel] || "65%";
             document.querySelectorAll('.progress-bar-fill').forEach(fill => {
                 fill.style.width = fillWidth;
             });
@@ -1699,88 +1759,21 @@ document.getElementById = function(id) {
         }
 
         // 레벨업 순간 대시보드 카드에 충격파 펄스 애니메이션을 재생
-        // 배너 테두리에 도는 "불효과"(펄스 글로우) 색상 — 하양·말차·하늘색·연분홍 중 클릭마다 랜덤
-        const CLOV_PULSE_GLOW_COLORS = ['rgba(255,255,255,0.6)', 'rgba(182,201,138,0.6)', 'rgba(168,216,234,0.6)', 'rgba(255,194,209,0.6)'];
         function triggerLevelPulse() {
-            const glow = CLOV_PULSE_GLOW_COLORS[Math.floor(Math.random() * CLOV_PULSE_GLOW_COLORS.length)];
             ['dt-dashboard', 'mb-dashboard'].forEach(id => {
                 const el = document.getElementById(id);
                 if (!el) return;
-                el.style.setProperty('--pulse-glow', glow);
                 el.classList.remove('levelup-pulse');
                 void el.offsetWidth; // 강제 리플로우로 애니메이션 재실행 보장
                 el.classList.add('levelup-pulse');
             });
         }
 
-        // 클릭으로 실제 경험치가 오른 순간, 게이지가 반짝여서 "지금 찼다"는 걸 눈에 띄게 알려줌
-        function triggerXpFlash() {
-            ['dt-v5pillbg', 'mb-v5pillbg'].forEach(id => {
-                const el = document.getElementById(id);
-                if (!el) return;
-                el.classList.remove('is-pulse-xp');
-                void el.offsetWidth;
-                el.classList.add('is-pulse-xp');
-            });
-        }
-
         function levelUp() {
-            // 실제 레벨업 여부와 상관없이, 클릭할 때마다 배너가 통통 튀는 느낌을 매번 준다
-            triggerLevelPulse();
-
-            const grp = groupsData[activeGroup];
-            const today = clovTodayStr();
-            if (typeof grp.levelProgress !== 'number') grp.levelProgress = 0;
-            if (typeof grp.xpClicksToday !== 'number') grp.xpClicksToday = 0;
-            if (typeof grp.level !== 'number') grp.level = friendshipLevel;
-            if (!grp.xpDate) grp.xpDate = today;
-
-            // 날짜가 바뀌었으면: 어제 게이지가 100%까지 다 찼었는지 확인해서 그때 비로소 레벨업을 확정한다.
-            // (게이지가 8번째 클릭에 꽉 찬 순간 바로 다음 레벨로 넘어가 버리면 "가득 찬 상태"를 볼 틈이 없어서,
-            //  오늘은 가득 찬 채로 유지하고, 내일 첫 클릭에서 레벨업 + 게이지 리셋이 함께 일어나도록 미룬다.)
-            let leveledUp = false;
-            if (grp.xpDate !== today) {
-                if (grp.levelProgress >= 100 && grp.level < CLOV_MAX_LEVEL) {
-                    grp.level = Math.min(CLOV_MAX_LEVEL, grp.level + 1);
-                    grp.levelProgress = 0;
-                    leveledUp = true;
-                }
-                grp.xpDate = today;
-                grp.xpClicksToday = 0;
-            }
-            friendshipLevel = grp.level;
-
-            if (grp.level >= CLOV_MAX_LEVEL) {
-                grp.level = CLOV_MAX_LEVEL;
-                grp.levelProgress = 0;
-                friendshipLevel = CLOV_MAX_LEVEL;
-                localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
-                updateFriendshipUI();
-                clovToast('🏆 이미 우리 우정은 최고치(777)에 도달했어요!', 'info');
-                return;
-            }
-
-            if (leveledUp) {
-                const info = clovLevelInfo(grp.level);
-                const badgeText = grp.level >= CLOV_MAX_LEVEL ? '+777' : ('Lv.' + grp.level);
-                clovToast(`${info.icon} ${badgeText} 달성! ${info.name}`, 'success');
-            }
-
-            if (grp.xpClicksToday >= CLOV_MAX_CLICKS_PER_DAY) {
-                localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
-                updateFriendshipUI();
-                if (!leveledUp) clovToast('오늘의 우정 경험치를 다 채웠어요! 내일 다시 함께해요 🍀', 'info');
-                return;
-            }
-
-            grp.xpClicksToday += 1;
-            grp.levelProgress = Math.min(100, grp.levelProgress + CLOV_XP_PER_CLICK);
-            localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
+            friendshipLevel = (friendshipLevel % 5) + 1; // 1 ~ 5 순환
+            groupsData[activeGroup].level = friendshipLevel; // 현재 그룹의 레벨 상태에 저장
             updateFriendshipUI();
-            triggerXpFlash();
-            if (grp.levelProgress >= 100 && grp.xpClicksToday >= CLOV_MAX_CLICKS_PER_DAY) {
-                clovToast('🎉 오늘의 우정 경험치를 가득 채웠어요! 내일 레벨업 돼요', 'success');
-            }
+            triggerLevelPulse();
         }
 
         function updateDashboardEnvironment() {
@@ -1859,87 +1852,6 @@ document.getElementById = function(id) {
                 particlesContainer.appendChild(p);
             }
         }
-
-        // 대표 사진 전체 보기 — 썸네일이 있던 자리/크기에서 시작해 화면 중앙 큰 사이즈로
-        // "펼쳐지는" FLIP 애니메이션. 닫을 때는 반대로 원래 썸네일 자리로 되돌아가며 사라진다.
-        let photoViewSourceImg = null;
-        let photoViewCloseTimer = null;
-
-        function openMainPhotoView(sourceImg) {
-            const modal = document.getElementById('dt-photo-view-modal');
-            const viewImg = document.getElementById('dt-photo-view-img');
-            if (!modal || !viewImg || !sourceImg || !sourceImg.src) return;
-
-            clearTimeout(photoViewCloseTimer);
-            photoViewSourceImg = sourceImg;
-            const startRect = sourceImg.getBoundingClientRect();
-
-            viewImg.src = sourceImg.src;
-            viewImg.style.transition = 'none';
-            viewImg.style.top = startRect.top + 'px';
-            viewImg.style.left = startRect.left + 'px';
-            viewImg.style.width = startRect.width + 'px';
-            viewImg.style.height = startRect.height + 'px';
-            viewImg.style.borderRadius = '2px';
-
-            modal.style.display = 'flex';
-            void modal.offsetWidth; // 리플로우 강제 (배경 페이드인 트랜지션 재생 보장)
-            modal.classList.add('open');
-
-            const expandToFull = () => {
-                const naturalW = viewImg.naturalWidth || startRect.width;
-                const naturalH = viewImg.naturalHeight || startRect.height;
-                const maxW = window.innerWidth * 0.88;
-                const maxH = window.innerHeight * 0.84;
-                const ratio = Math.min(maxW / naturalW, maxH / naturalH);
-                const endW = naturalW * ratio;
-                const endH = naturalH * ratio;
-
-                void viewImg.offsetWidth; // 리플로우 강제 후 transition 재활성화
-                viewImg.style.transition = '';
-                viewImg.style.top = ((window.innerHeight - endH) / 2) + 'px';
-                viewImg.style.left = ((window.innerWidth - endW) / 2) + 'px';
-                viewImg.style.width = endW + 'px';
-                viewImg.style.height = endH + 'px';
-                viewImg.style.borderRadius = '12px';
-            };
-
-            if (viewImg.complete && viewImg.naturalWidth) {
-                expandToFull();
-            } else {
-                viewImg.onload = expandToFull;
-            }
-        }
-
-        function closeMainPhotoView() {
-            const modal = document.getElementById('dt-photo-view-modal');
-            const viewImg = document.getElementById('dt-photo-view-img');
-            if (!modal || !viewImg) return;
-
-            const sourceImg = photoViewSourceImg || document.getElementById('dt-main-photo');
-            const rect = sourceImg.getBoundingClientRect();
-
-            modal.classList.remove('open');
-            viewImg.style.top = rect.top + 'px';
-            viewImg.style.left = rect.left + 'px';
-            viewImg.style.width = rect.width + 'px';
-            viewImg.style.height = rect.height + 'px';
-            viewImg.style.borderRadius = '2px';
-
-            clearTimeout(photoViewCloseTimer);
-            photoViewCloseTimer = setTimeout(() => {
-                modal.style.display = 'none';
-            }, 420);
-        }
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key !== 'Escape') return;
-            const modal = document.getElementById('dt-photo-view-modal');
-            if (modal && modal.classList.contains('open')) closeMainPhotoView();
-        });
-
-        window.openMainPhotoView = openMainPhotoView;
-        window.closeMainPhotoView = closeMainPhotoView;
 
         function updateDashboardPhotos() {
             const currentGroup = groupsData[activeGroup];
@@ -2360,18 +2272,17 @@ document.getElementById = function(id) {
                 : null;
 
             if (schedule) {
-                if (modalTitle) modalTitle.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>약속 정보 수정하기';
+                if (modalTitle) modalTitle.textContent = '🍀 약속 정보 수정하기';
                 if (titleInput) titleInput.value = schedule.title;
-                // 수정 시에도 오늘 이전 날짜로는 옮길 수 없도록 생성 때와 동일하게 제한
-                if (dateInput) { dateInput.value = schedule.date; dateInput.min = getTodayDateStr(); }
-                if (bodyInput) bodyInput.innerHTML = schedule.content || '';
+                if (dateInput) { dateInput.value = schedule.date; dateInput.removeAttribute('min'); }
+                if (bodyInput) bodyInput.value = '';
                 if (idInput) idInput.value = schedule.id;
             } else {
-                if (modalTitle) modalTitle.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>다가오는 약속, D-day 새로 세기';
+                if (modalTitle) modalTitle.textContent = '🍀 다가오는 약속, D-day 새로 세기';
                 if (titleInput) titleInput.value = '';
                 // 새 약속은 지난 날짜(어제 이전)로 D-day를 맞출 수 없도록 오늘부터 선택 가능
                 if (dateInput) { dateInput.value = ''; dateInput.min = getTodayDateStr(); }
-                if (bodyInput) bodyInput.innerHTML = '';
+                if (bodyInput) bodyInput.value = '';
                 if (idInput) idInput.value = '';
             }
 
@@ -2388,7 +2299,7 @@ document.getElementById = function(id) {
             if (titleInput && dateInput) {
                 const newTitle = titleInput.value.trim();
                 const newDate = dateInput.value;
-                const newBody = bodyInput ? bodyInput.innerHTML : '';
+                const newBody = bodyInput ? bodyInput.value.trim() : '';
 
                 if (!newTitle || !newDate) {
                     clovAlert('일정 제목과 날짜를 입력해주세요.', { icon: '🗓️', type: 'warn' });
@@ -2396,20 +2307,19 @@ document.getElementById = function(id) {
                 }
 
                 const schId = idInput ? idInput.value : "";
-                const existingSch = schId ? groupsData[activeGroup].schedules.find(s => s.id == schId) : null;
 
-                // 이미 저장돼있던 날짜를 그대로 두는 게 아니라 오늘 이전의 새 날짜로 옮기려는 경우만 막는다
-                if (newDate < getTodayDateStr() && !(existingSch && existingSch.date === newDate)) {
-                    clovAlert(schId ? '일정은 오늘 이후 날짜로만 수정할 수 있어요.' : '새 약속은 오늘 이후 날짜로만 만들 수 있어요.', { icon: '🗓️', type: 'warn' });
+                if (!schId && newDate < getTodayDateStr()) {
+                    clovAlert('새 약속은 오늘 이후 날짜로만 만들 수 있어요.', { icon: '🗓️', type: 'warn' });
                     return;
                 }
 
                 if (schId) {
                     // 수정 모드
-                    if (existingSch) {
-                        existingSch.title = newTitle;
-                        existingSch.date = newDate;
-                        existingSch.content = newBody;
+                    const sch = groupsData[activeGroup].schedules.find(s => s.id == schId);
+                    if (sch) {
+                        sch.title = newTitle;
+                        sch.date = newDate;
+                        if (newBody) sch.content = `<p>${escapeHtml(newBody).replace(/\n/g, '<br>')}</p>`;
                     }
                 } else {
                     // 추가 모드
@@ -2419,7 +2329,9 @@ document.getElementById = function(id) {
                         id: maxId + 1,
                         title: newTitle,
                         date: newDate,
-                        content: newBody || `<h3>📝 ${escapeHtml(newTitle)} 메모</h3>\n<p>이곳을 클릭해 약속에 대한 메모를 남겨보세요.</p>`
+                        content: newBody
+                            ? `<p>${escapeHtml(newBody).replace(/\n/g, '<br>')}</p>`
+                            : `<h3>📝 ${escapeHtml(newTitle)} 메모</h3>\n<p>이곳을 클릭해 약속에 대한 메모를 남겨보세요.</p>`
                     };
                     schedules.push(newSch);
                     // 새로 만든 약속을 바로 스포트라이트로 펼쳐서 보여줌
@@ -2446,59 +2358,10 @@ document.getElementById = function(id) {
             const currentGroup = groupsData[activeGroup];
             const closest = getClosestSchedule();
 
-            // 데스크톱 다중 배너 업데이트 (최대 3개, 없으면 빈 슬롯 표시)
-            const dtBannerContainer = document.getElementById('dt-schedule-banner-container');
-            if (dtBannerContainer) {
-                const schedules = currentGroup.schedules || [];
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-
-                let futureSchedules = schedules.filter(sch => {
-                    const target = new Date(sch.date);
-                    target.setHours(0, 0, 0, 0);
-                    return (target.getTime() - today.getTime()) >= 0;
-                }).sort((a, b) => new Date(a.date) - new Date(b.date));
-
-                let pastSchedules = schedules.filter(sch => {
-                    const target = new Date(sch.date);
-                    target.setHours(0, 0, 0, 0);
-                    return (target.getTime() - today.getTime()) < 0;
-                }).sort((a, b) => new Date(b.date) - new Date(a.date));
-
-                const top3 = [...futureSchedules, ...pastSchedules].slice(0, 3);
-
-                dtBannerContainer.innerHTML = '';
-                for (let i = 0; i < 3; i++) {
-                    const sch = top3[i];
-                    if (sch) {
-                        const ddayText = calculateDday(sch.date);
-                        const diffDays = getDdayDiffDays(sch.date);
-                        const { accent } = getDdayAccent(diffDays);
-                        const badgeStyle = `background-color: ${accent};`;
-                        const formattedDate = sch.date.replace(/-/g, '.');
-                        dtBannerContainer.innerHTML += `
-                            <div class="schedule-banner" onclick="switchDesktopTab('schedule'); selectScheduleChip('dt', ${sch.id})" style="margin-top: 0; cursor: pointer;">
-                                <div class="schedule-info">
-                                    <span class="schedule-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>
-                                    <span class="schedule-title">${escapeHtml(sch.title)}</span>
-                                    <span class="schedule-date">${formattedDate}</span>
-                                </div>
-                                <div class="schedule-dday-badge" style="${badgeStyle}">${ddayText}</div>
-                            </div>
-                        `;
-                    } else {
-                        dtBannerContainer.innerHTML += `
-                            <div class="schedule-banner" onclick="openScheduleModal('dt')" style="margin-top: 0; cursor: pointer; opacity: 0.65; border: 1px dashed rgba(255,255,255,0.3); background: rgba(0,0,0,0.05);">
-                                <div class="schedule-info">
-                                    <span class="schedule-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></span>
-                                    <span class="schedule-title">새로운 약속 만들기</span>
-                                    <span class="schedule-date">클릭하여 일정을 추가해보세요</span>
-                                </div>
-                            </div>
-                        `;
-                    }
-                }
-            }
+            // 데스크톱 배너 업데이트
+            const dtTitle = document.getElementById('dt-schedule-title');
+            const dtDate = document.getElementById('dt-schedule-date');
+            const dtDday = document.getElementById('dt-schedule-dday');
 
             // 모바일 배너 업데이트
             const mbTitle = document.getElementById('mb-schedule-title');
@@ -2509,11 +2372,18 @@ document.getElementById = function(id) {
                 const ddayText = calculateDday(closest.date);
                 const formattedDate = closest.date.replace(/-/g, '.');
 
+                if (dtTitle) dtTitle.innerText = closest.title;
+                if (dtDate) dtDate.innerText = formattedDate;
+                if (dtDday) dtDday.innerText = ddayText;
+
                 if (mbTitle) mbTitle.innerText = closest.title;
                 if (mbDate) mbDate.innerText = formattedDate;
                 if (mbDday) mbDday.innerText = ddayText;
             } else {
                 const noScheduleMsg = "등록된 일정이 없습니다.";
+                if (dtTitle) dtTitle.innerText = noScheduleMsg;
+                if (dtDate) dtDate.innerText = "";
+                if (dtDday) dtDday.innerText = "D-Day";
 
                 if (mbTitle) mbTitle.innerText = noScheduleMsg;
                 if (mbDate) mbDate.innerText = "";
@@ -2706,20 +2576,6 @@ document.getElementById = function(id) {
             if (modal) modal.style.display = 'none';
         }
 
-        // 인생4컷이 막 완성된 순간 — LP 레코드판 클릭 때 쓰던 색종이+음표 폭죽을
-        // "인생 4컷 완성!" 모달의 체크 아이콘 위치에서 재생해 축하해준다.
-        function celebrateFourCutComplete() {
-            const box = document.querySelector('#dt-proof-result-modal .modal-box');
-            const icon = document.getElementById('dt-proof-result-icon');
-            const burst = document.getElementById('dt-proof-burst');
-            if (!box || !icon || !burst || typeof spawnConfettiBurst !== 'function') return;
-            const iconRect = icon.getBoundingClientRect();
-            const boxRect = box.getBoundingClientRect();
-            burst.style.left = (iconRect.left - boxRect.left + iconRect.width / 2) + 'px';
-            burst.style.top = (iconRect.top - boxRect.top + iconRect.height / 2) + 'px';
-            spawnConfettiBurst(burst, { spread: 130 }); // 색상은 spawnConfettiBurst 기본값(여름 팔레트) 사용
-        }
-
         function showLockedStagePhotoModal() {
             showProofResultModal({
                 title: '이미 업로드됐어요',
@@ -2805,7 +2661,6 @@ document.getElementById = function(id) {
                         message: '네 단계의 인증샷이 모두 모였어요.<br>이제 인생네컷으로 만들어 볼까요?',
                         complete: true
                     });
-                    celebrateFourCutComplete();
                 } else {
                     showProofResultModal({
                         title: '인증사진 업로드',
@@ -2991,7 +2846,7 @@ document.getElementById = function(id) {
                         : status === 'locked'
                             ? `
                                 <span class="strip-frame-number">${stage.number}</span>
-                                <span class="strip-lock-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
+                                <span class="strip-lock-icon">🔒</span>
                             `
                             : `
                                 <span class="strip-frame-number">${stage.number}</span>
@@ -3040,39 +2895,19 @@ document.getElementById = function(id) {
             const ddayText = calculateDday(selectedSchedule.date);
             const friendlyDate = formatFriendlyDate(selectedSchedule.date);
             const ddayPhrase = diffDays < 0 ? '함께 보낸 그날로부터' : diffDays === 0 ? '바로 오늘, 약속의 날!' : '함께할 그날까지';
-            const stampColor = diffDays < 0 ? '#2e5233' : '#c0392b';  // 지난 약속=초록, 그 외=빨강
 
             zone.innerHTML = `
                 <section class="growth-shell">
-                    <div class="growth-detail receipt" style="--stamp:${stampColor};">
-                        <div class="receipt-paper">
-                            <div class="receipt-zigzag"></div>
-                            <div class="receipt-head">
-                                <div class="receipt-brand">CLOV. MEMORIES</div>
-                                <div class="receipt-sub">★  약 속 메 모  ★</div>
-                            </div>
-                            <div class="receipt-stamp-wrap">
-                                <div class="receipt-stamp">
-                                    <span class="receipt-stamp-label">${escapeHtml(ddayPhrase)}</span>
-                                    <span class="receipt-stamp-dday">${escapeHtml(ddayText)}</span>
-                                </div>
-                            </div>
-                            <div class="receipt-title">${escapeHtml(selectedSchedule.title)}</div>
-                            <div class="receipt-meta">
-                                <div><span>DATE</span><span>${escapeHtml(friendlyDate)}</span></div>
-                                <div><span>D-DAY</span><span>${escapeHtml(ddayText)}</span></div>
-                            </div>
-                            <div class="receipt-memo-label">— MEMO ————————————</div>
-                            <div class="receipt-memo" contenteditable="true"
-                                 id="${prefix}-schedule-content-${selectedSchedule.id}"
-                                 onblur="saveScheduleContent('${viewType}', ${selectedSchedule.id})"
-                                 placeholder="✎ 메모를 추가해 보세요">${selectedSchedule.content || ''}</div>
-                            <div class="receipt-barcode"></div>
-                            <div class="receipt-actions">
-                                <button onclick="openScheduleModal('${viewType}', ${selectedSchedule.id})">수정</button>
-                                <button class="danger" onclick="deleteSchedule(${selectedSchedule.id})">삭제</button>
-                            </div>
+                    <div class="growth-detail" style="--chip-accent:${accent}; --chip-glow:${glow};">
+                        <div class="spotlight-actions">
+                            <button onclick="openScheduleModal('${viewType}', ${selectedSchedule.id})">수정</button>
+                            <button class="danger" onclick="deleteSchedule(${selectedSchedule.id})">삭제</button>
                         </div>
+                        <div class="spotlight-label">${escapeHtml(ddayPhrase)}</div>
+                        <div class="spotlight-dday">${escapeHtml(ddayText)}</div>
+                        <div class="spotlight-title">${escapeHtml(selectedSchedule.title)}</div>
+                        <div class="spotlight-date">${escapeHtml(friendlyDate)}</div>
+                        ${renderScheduleNoteHtml(viewType, prefix, selectedSchedule)}
                     </div>
                     <div class="growth-hero">
                         <div>
@@ -3085,7 +2920,6 @@ document.getElementById = function(id) {
                             <button class="${activeScheduleDensity === 'proof' ? 'active' : ''}" onclick="setScheduleDensity('proof')">인증 가능 <span>${proofCount}</span></button>
                             <button class="${activeScheduleDensity === 'upcoming' ? 'active' : ''}" onclick="setScheduleDensity('upcoming')">다가오는 약속 <span>${upcomingCount}</span></button>
                             <button class="${activeScheduleDensity === 'done' ? 'active' : ''}" onclick="setScheduleDensity('done')">완료된 약속 <span>${doneCount}</span></button>
-                            <button class="fourcut-gallery-btn" type="button" onclick="openFourCutGallery()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px;"><path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2 2 2 0 0 0 0 4 2 2 0 0 1-2 2H5a2 2 0 0 1-2-2 2 2 0 0 0 0-4z"></path><path d="M13 6v1.5M13 16.5V18M13 11v2"></path></svg>입장하기</button>
                         </div>
                     </div>
                     <div class="growth-card-rail">
@@ -3099,341 +2933,145 @@ document.getElementById = function(id) {
             `;
         }
 
-        // 인생4컷 극장 상태 — 완성작 목록과 현재 상영 중인 인덱스, 진행 중인 타이머
-        const fourCutState = { schedules: [], active: 0, posterTimer: null, ticks: [] };
-
-        function fourCutMemories() {
-            return ((groupsData[activeGroup] && groupsData[activeGroup].schedules) || [])
-                .filter(sch => getScheduleProofCount(sch) === 4)
-                .sort((a, b) => new Date(b.date) - new Date(a.date));
+        // 일정 메모(content)에 <li> 항목이 있으면 "일정 리스트"로, 없으면 자유 메모장으로 렌더링
+        // 리스트: 항목 추가/삭제, 번호 클릭 시 포커스(나머지는 잠시 들어감), 많아지면 모아보기(로드맵)
+        const scheduleUiState = {};
+        function getScheduleUi(id) {
+            if (!scheduleUiState[id]) scheduleUiState[id] = { focus: null, roadmap: false };
+            return scheduleUiState[id];
         }
 
-        function fourCutStopPoster() {
-            if (fourCutState.posterTimer) clearInterval(fourCutState.posterTimer);
-            fourCutState.posterTimer = null;
+        function parseScheduleItems(html) {
+            if (!html) return null;
+            const heading = (html.match(/<h3>([\s\S]*?)<\/h3>/) || ['', ''])[1].replace(/<[^>]+>/g, '').trim();
+            const items = [...html.matchAll(/<li>([\s\S]*?)<\/li>/g)]
+                .map(m => m[1].replace(/<[^>]+>/g, '').trim())
+                .filter(Boolean);
+            if (!items.length) return null;
+            return { heading, items };
         }
 
-        // 완성작들의 '만남' 컷으로 로비 포스터 슬라이드쇼를 3600ms 주기로 크로스페이드
-        function fourCutStartPoster(schedules) {
-            fourCutStopPoster();
-            const wrap = document.getElementById('dt-fourcut-poster-slides');
-            const np = document.getElementById('dt-fourcut-nowplaying');
-            if (!wrap || !schedules.length) return;
-            const slides = [...wrap.children];
-            const show = (n) => {
-                slides.forEach((s, k) => { s.style.opacity = k === n ? '1' : '0'; });
-                if (np && schedules[n]) np.textContent = schedules[n].title;
-            };
-            let i = 0;
-            show(0);
-            fourCutState.posterTimer = setInterval(() => {
-                i = (i + 1) % slides.length;
-                show(i);
-            }, 3600);
+        function serializeScheduleItems(heading, items) {
+            const li = items.map(t => `<li>${escapeHtml(t)}</li>`).join('\n');
+            return `<h3>${escapeHtml(heading)}</h3>\n<ul>\n${li}\n</ul>`;
         }
 
-        function openFourCutGallery() {
-            fourCutCaptureTheaterTemplate();
-            const schedules = fourCutMemories();
-            fourCutState.schedules = schedules;
-            fourCutState.active = 0;
+        function buildScheduleStepsInner(scheduleId) {
+            const sch = groupsData[activeGroup].schedules.find(s => s.id === scheduleId);
+            if (!sch) return '';
+            const parsed = parseScheduleItems(sch.content) || { heading: sch.title, items: [] };
+            const items = parsed.items;
+            const ui = getScheduleUi(scheduleId);
+            const title = escapeHtml(parsed.heading || sch.title);
 
-            const allSchedules = (groupsData[activeGroup] && groupsData[activeGroup].schedules) || [];
-            const upcomingCount = allSchedules.filter(sch => getDdayDiffDays(sch.date) >= 0).length;
-
-            const doneCountEl = document.getElementById('dt-fourcut-done-count');
-            const upcomingCountEl = document.getElementById('dt-fourcut-upcoming-count');
-            const todayCountEl = document.getElementById('dt-fourcut-today-count');
-            if (doneCountEl) doneCountEl.textContent = schedules.length;
-            if (upcomingCountEl) upcomingCountEl.textContent = upcomingCount;
-            if (todayCountEl) todayCountEl.textContent = schedules.length;
-
-            const empty = document.getElementById('dt-fourcut-gallery-empty');
-            const poster = document.getElementById('dt-fourcut-poster');
-            const row = document.getElementById('dt-fourcut-row');
-            if (empty) empty.style.display = schedules.length ? 'none' : 'block';
-            if (poster) poster.style.display = schedules.length ? '' : 'none';
-            if (row) row.style.display = schedules.length ? '' : 'none';
-
-            const slidesWrap = document.getElementById('dt-fourcut-poster-slides');
-            if (slidesWrap) {
-                slidesWrap.innerHTML = schedules.map(sch => {
-                    const photos = getGrowthStagePhotos(sch);
-                    return `<div class="fourcut-poster-slide" style="background-image:url('${photos.meet || ''}')"></div>`;
-                }).join('');
-            }
-
-            // 넷플릭스 "Trending Now" 행처럼, 완성작들을 포스터 카드로 가로 나열 — 클릭하면 그 완성작으로 바로 입장
-            const rowCountEl = document.getElementById('dt-fourcut-row-count');
-            const rowTrack = document.getElementById('dt-fourcut-row-track');
-            if (rowCountEl) rowCountEl.textContent = schedules.length;
-            if (rowTrack) {
-                rowTrack.innerHTML = schedules.map((sch, i) => {
-                    const photos = getGrowthStagePhotos(sch);
-                    return `
-                        <button class="fourcut-row-card" type="button" onclick="fourCutEnterAt(${i})">
-                            <div class="fourcut-row-thumb" style="background-image:url('${photos.meet || ''}')"></div>
-                            <span class="fourcut-row-badge">인생4컷</span>
-                            <div class="fourcut-row-scrim"></div>
-                            <span class="fourcut-row-title">${escapeHtml(sch.title)}</span>
-                        </button>
-                    `;
-                }).join('');
-            }
-
-            // "입장하기" 버튼을 누른 자리에서 모달이 펼쳐져 나오는 FLIP 애니메이션
-            // (First-Last-Invert-Play: 최종 위치/크기를 먼저 구하고, 시작 지점 기준 변환값을
-            // 역산해서 순간이동처럼 보이게 앉힌 뒤, transform을 원상태(none)로 되돌리며 애니메이션한다)
-            const triggerBtn = document.querySelector('.fourcut-gallery-btn');
-            openModal('dt-fourcut-gallery-modal');
-            fourCutStartPoster(schedules);
-            const box = document.querySelector('#dt-fourcut-gallery-modal .modal-box');
-            if (triggerBtn && box) {
-                const startRect = triggerBtn.getBoundingClientRect();
-                const endRect = box.getBoundingClientRect(); // openModal 직후라 이미 최종 레이아웃 반영됨
-                const scaleX = startRect.width / endRect.width;
-                const scaleY = startRect.height / endRect.height;
-                const dx = (startRect.left + startRect.width / 2) - (endRect.left + endRect.width / 2);
-                const dy = (startRect.top + startRect.height / 2) - (endRect.top + endRect.height / 2);
-
-                box.style.transition = 'none';
-                box.style.transformOrigin = 'center center';
-                box.style.opacity = '0.5';
-                box.style.transform = `translate(${dx}px, ${dy}px) scale(${scaleX}, ${scaleY})`;
-
-                void box.offsetWidth; // 강제 리플로우로 시작 상태 커밋
-                box.style.transition = 'transform 0.42s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s ease';
-                box.style.transform = 'translate(0, 0) scale(1, 1)';
-                box.style.opacity = '1';
-
-                const cleanup = () => {
-                    box.style.transition = '';
-                    box.style.transform = '';
-                    box.style.transformOrigin = '';
-                    box.style.opacity = '';
-                    box.removeEventListener('transitionend', cleanup);
-                };
-                box.addEventListener('transitionend', cleanup);
-            }
-        }
-
-        function closeFourCutGallery() {
-            fourCutStopPoster();
-            fourCutResetTheater();
-            closeModal('dt-fourcut-gallery-modal');
-        }
-
-        window.openFourCutGallery = openFourCutGallery;
-        window.closeFourCutGallery = closeFourCutGallery;
-
-        // 같은 요소에 이전 단계(입장/착석/넘기기)의 애니메이션이 아직 남아있으면
-        // 새 애니메이션과 겹쳐 최종 값이 불확실해질 수 있어, 항상 먼저 취소하고 새로 시작한다.
-        function fourCutAnim(id, frames, opts) {
-            const el = document.getElementById(id);
-            if (!el) return null;
-            el.getAnimations().forEach(a => a.cancel());
-            return el.animate(frames, Object.assign({ fill: 'forwards', easing: 'cubic-bezier(.2,.8,.2,1)' }, opts));
-        }
-
-        // 극장을 처음 상태(커튼 닫힘·좌석 숨김·스크린 off·하우스 조명 ON)로 즉시 되돌림
-        // 극장을 입장 전 초기 상태로 강제 복원 — 애니메이션을 취소하는 것만으로는
-        // (특히 '나가기'로 중간에 빠져나온 뒤 재입장할 때) 커튼·스크린 등이 마지막 프레임에
-        // 그대로 멈춰있을 수 있어, 각 요소의 인라인 스타일을 초기값으로 직접 못박아 되돌린다.
-        // 커튼·스크린·조명 등 상영 관련 요소들을 입장 전 초기값으로 즉시 못박는다.
-        // (애니메이션을 cancel()만 하면 되돌아갈 값이 캐스케이드에 의존하게 되므로,
-        // '나가기' 직후·재입장 시 모두 이 함수로 확실하게 하드 리셋한다)
-        // 극장 내부(커튼·스크린·조명 등)의 최초 마크업을 한 번만 캡처해둔다.
-        // 애니메이션 취소/스타일 리셋에 의존하는 대신, 다음 입장 때는 이 원본으로 통째로
-        // 갈아끼워서 이전 상영의 잔여 상태(열린 커튼 등)가 절대 남을 수 없게 한다 —
-        // 새로고침했을 때와 동일한 효과를 컴포넌트 단위로만 재현하는 것.
-        let fourCutTheaterPristineHTML = null;
-        function fourCutCaptureTheaterTemplate() {
-            if (fourCutTheaterPristineHTML !== null) return;
-            const theater = document.getElementById('dt-fourcut-theater');
-            if (theater) fourCutTheaterPristineHTML = theater.innerHTML;
-        }
-
-        function fourCutResetChildren() {
-            const theater = document.getElementById('dt-fourcut-theater');
-            if (theater && fourCutTheaterPristineHTML !== null) {
-                theater.innerHTML = fourCutTheaterPristineHTML;
-            }
-            const sit = document.getElementById('dt-theater-sit');
-            if (sit) sit.style.pointerEvents = 'none';
-        }
-
-        function fourCutResetTheater() {
-            (fourCutState.ticks || []).forEach(clearTimeout);
-            fourCutState.ticks = [];
-            fourCutResetChildren();
-            const theater = document.getElementById('dt-fourcut-theater');
-            if (theater) {
-                theater.getAnimations().forEach(a => a.cancel());
-                theater.style.opacity = '0';
-                theater.style.pointerEvents = 'none';
-            }
-        }
-
-        function fourCutRenderScreen(index) {
-            const sch = fourCutState.schedules[index];
-            if (!sch) return;
-            const stages = buildGrowthStages(sch);
-            const photos = getGrowthStagePhotos(sch);
-
-            const titleEl = document.getElementById('dt-theater-title');
-            const dateEl = document.getElementById('dt-theater-date');
-            const counterEl = document.getElementById('dt-theater-counter');
-            if (titleEl) titleEl.textContent = sch.title;
-            if (dateEl) dateEl.textContent = formatFriendlyDate(sch.date);
-            if (counterEl) counterEl.textContent = (index + 1) + ' / ' + fourCutState.schedules.length;
-
-            const strip = document.getElementById('dt-theater-strip');
-            if (strip) {
-                strip.innerHTML = stages.map(stage => `
-                    <div class="fourcut-frame" style="background-image:url('${photos[stage.key] || ''}')">
-                        <span class="fourcut-frame-label">${escapeHtml(stage.name)}</span>
+            if (ui.roadmap) {
+                const nodes = items.map((t, i) =>
+                    `<button class="rm-node" onclick="focusScheduleItem(${scheduleId}, ${i})">
+                        <span class="rm-dot">${i + 1}</span>
+                        <span class="rm-label">${escapeHtml(t)}</span>
+                     </button>`
+                ).join('<span class="rm-line"></span>');
+                return `
+                    <div class="plan-head">
+                        <span class="plan-title">${title}</span>
+                        <button class="plan-collapse-btn" onclick="toggleScheduleRoadmap(${scheduleId})">목록으로</button>
                     </div>
-                `).join('');
-            }
-        }
-
-        function fourCutSpawnDust() {
-            const w = document.getElementById('dt-theater-dustwrap');
-            if (!w) return;
-            w.innerHTML = '';
-            for (let i = 0; i < 10; i++) {
-                const d = document.createElement('div');
-                d.className = 'fourcut-dust';
-                const sz = 2 + Math.random() * 3;
-                d.style.left = (10 + Math.random() * 80) + '%';
-                d.style.bottom = (Math.random() * 40) + '%';
-                d.style.width = sz + 'px';
-                d.style.height = sz + 'px';
-                d.style.setProperty('--dx', (Math.random() * 30 - 15) + 'px');
-                d.style.animationDuration = (4 + Math.random() * 4) + 's';
-                d.style.animationDelay = (Math.random() * 4) + 's';
-                w.appendChild(d);
-            }
-        }
-
-        // STEP 1 — 입장하기: 극장으로 전진, 하우스 조명 켜진 채 착석하기 버튼 등장
-        function fourCutEnter() {
-            fourCutResetTheater();
-            if (!fourCutState.schedules.length) return;
-
-            const theater = document.getElementById('dt-fourcut-theater');
-            if (theater) {
-                theater.style.pointerEvents = 'auto';
-                theater.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 340, fill: 'forwards' });
-            }
-            fourCutRenderScreen(fourCutState.active);
-
-            fourCutAnim('dt-theater-scene', [{ transform: 'scale(.68) translateY(-6px)' }, { transform: 'scale(1) translateY(0)' }], { duration: 1000, easing: 'cubic-bezier(.2,.7,.3,1)' });
-            fourCutAnim('dt-theater-exit', [{ opacity: 0 }, { opacity: 1 }], { duration: 400, delay: 900 });
-
-            const sit = document.getElementById('dt-theater-sit');
-            if (sit) {
-                sit.getAnimations().forEach(a => a.cancel());
-                sit.style.pointerEvents = 'auto';
-                sit.animate([{ opacity: 0, transform: 'translate(-50%,14px)' }, { opacity: 1, transform: 'translate(-50%,0)' }], { duration: 460, delay: 1000, fill: 'forwards' });
-            }
-        }
-
-        // 완성작 행에서 특정 카드를 눌러 그 완성작으로 바로 입장
-        function fourCutEnterAt(index) {
-            if (!fourCutState.schedules[index]) return;
-            fourCutState.active = index;
-            fourCutEnter();
-        }
-
-        // STEP 2 — 착석하기: 앞좌석이 올라오고 소등 → 커튼 → 3·2·1 카운트다운 → 상영
-        function fourCutSit() {
-            const BOUNCE = 'cubic-bezier(.34,1.56,.64,1)';
-            fourCutState.ticks = fourCutState.ticks || [];
-
-            const sit = document.getElementById('dt-theater-sit');
-            if (sit) {
-                sit.getAnimations().forEach(a => a.cancel());
-                sit.style.pointerEvents = 'none';
-                sit.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 240, fill: 'forwards' });
+                    <div class="plan-roadmap">${nodes || '<span class="plan-empty">아직 일정이 없어요.</span>'}</div>
+                `;
             }
 
-            fourCutAnim('dt-theater-seats', [{ transform: 'translateY(100%)' }, { transform: 'translateY(-5%)', offset: .8 }, { transform: 'translateY(0)' }], { duration: 680, delay: 80, easing: BOUNCE });
-            fourCutAnim('dt-theater-scene', [{ transform: 'scale(1) translateY(0)' }, { transform: 'scale(1) translateY(1.2%)', offset: .5 }, { transform: 'scale(1) translateY(0)' }], { duration: 320, delay: 360 });
-            fourCutAnim('dt-theater-house', [{ opacity: .5 }, { opacity: 0 }], { duration: 460, delay: 720 });
-            fourCutAnim('dt-theater-curtl', [{ transform: 'translateX(0)' }, { transform: 'translateX(-104%)' }], { duration: 720, delay: 1180, easing: 'cubic-bezier(.5,0,.2,1)' });
-            fourCutAnim('dt-theater-curtr', [{ transform: 'translateX(0)' }, { transform: 'translateX(104%)' }], { duration: 720, delay: 1180, easing: 'cubic-bezier(.5,0,.2,1)' });
+            const listHtml = items.map((t, i) => {
+                const isLast = i === items.length - 1;
+                const focused = ui.focus === i;
+                const dimmed = ui.focus !== null && ui.focus !== i;
+                return `
+                    <div class="plan-item ${focused ? 'focused' : ''} ${dimmed ? 'dimmed' : ''}" data-index="${i}">
+                        <div class="plan-node-col">
+                            <button class="tl-node" onclick="focusScheduleItem(${scheduleId}, ${i})">${i + 1}</button>
+                            ${isLast ? '' : '<span class="tl-node-line"></span>'}
+                        </div>
+                        <div class="plan-item-text" contenteditable="true" onblur="saveScheduleItemText(${scheduleId}, ${i}, this)">${escapeHtml(t)}</div>
+                        <button class="plan-item-del" onclick="deleteScheduleItem(${scheduleId}, ${i})" aria-label="일정 삭제">×</button>
+                    </div>
+                `;
+            }).join('');
 
-            const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-            let screenAt = 2020;
-            if (!reducedMotion) {
-                const tick = (n, t) => fourCutState.ticks.push(setTimeout(() => {
-                    const el = document.getElementById('dt-theater-count');
-                    const num = document.getElementById('dt-theater-countnum');
-                    if (!el) return;
-                    if (num) num.textContent = n;
-                    el.getAnimations().forEach(a => a.cancel());
-                    el.animate([
-                        { opacity: 0, transform: 'translate(-50%,-50%) scale(1.5)' },
-                        { opacity: 1, transform: 'translate(-50%,-50%) scale(1)', offset: .35 },
-                        { opacity: 1, transform: 'translate(-50%,-50%) scale(1)', offset: .82 },
-                        { opacity: 0, transform: 'translate(-50%,-50%) scale(.85)' }
-                    ], { duration: 400, fill: 'forwards' });
-                }, t));
-                tick('3', 2060); tick('2', 2480); tick('1', 2900);
-                screenAt = 3420;
+            return `
+                <div class="plan-head">
+                    <span class="plan-title">${title}</span>
+                    ${items.length >= 5 ? `<button class="plan-collapse-btn" onclick="toggleScheduleRoadmap(${scheduleId})">모아보기</button>` : ''}
+                </div>
+                <div class="plan-list ${ui.focus !== null ? 'has-focus' : ''}">
+                    ${listHtml || '<div class="plan-empty">아래 버튼으로 첫 일정을 추가해보세요.</div>'}
+                </div>
+                <button class="plan-add-btn" onclick="addScheduleItem(${scheduleId})">＋ 일정 추가</button>
+            `;
+        }
+
+        function renderScheduleNoteHtml(viewType, prefix, schedule) {
+            if (!parseScheduleItems(schedule.content)) {
+                return `
+                    <div class="spotlight-note" contenteditable="true"
+                         id="${prefix}-schedule-content-${schedule.id}"
+                         onblur="saveScheduleContent('${viewType}', ${schedule.id})"
+                         placeholder="이곳을 클릭해 약속에 대한 메모를 남겨보세요.">${schedule.content || ''}</div>
+                `;
             }
-
-            fourCutAnim('dt-theater-beam', [{ opacity: 0 }, { opacity: 1 }], { duration: 700, delay: 1360 });
-            fourCutSpawnDust();
-            fourCutAnim('dt-theater-scrglow', [{ opacity: 0 }, { opacity: .95, offset: .3 }, { opacity: 0 }], { duration: 560, delay: screenAt });
-            fourCutAnim('dt-theater-grain', [{ opacity: 0 }, { opacity: 1 }], { duration: 400, delay: screenAt + 200 });
-            fourCutAnim('dt-theater-spill', [{ opacity: 0 }, { opacity: 1 }], { duration: 560, delay: screenAt + 40 });
-            fourCutAnim('dt-theater-shot', [{ opacity: 0 }, { opacity: 1, offset: .5 }, { opacity: .82, offset: .62 }, { opacity: 1 }], { duration: 720, delay: screenAt + 60 });
-            fourCutAnim('dt-theater-nav', [{ opacity: 0 }, { opacity: 1 }], { duration: 440, delay: screenAt + 760 });
+            return `<div class="spotlight-plan" id="${prefix}-schedule-steps-${schedule.id}">${buildScheduleStepsInner(schedule.id)}</div>`;
         }
 
-        // 완성작 넘기기 — 재렌더 없이 DOM 직접 갱신 + 필름 어드밴스 전환
-        function fourCutFilmAdvance(dir) {
-            const strip = document.getElementById('dt-theater-strip');
-            if (strip) {
-                strip.getAnimations().forEach(a => a.cancel());
-                strip.animate([
-                    { transform: `translateX(${dir * 46}px)`, filter: 'blur(3px)', opacity: .2 },
-                    { transform: 'translateX(0)', filter: 'blur(0)', opacity: 1 }
-                ], { duration: 380, easing: 'cubic-bezier(.2,.8,.2,1)', fill: 'forwards' });
+        function refreshScheduleSteps(scheduleId) {
+            const inner = buildScheduleStepsInner(scheduleId);
+            ['dt', 'mb'].forEach(p => {
+                const el = document.getElementById(`${p}-schedule-steps-${scheduleId}`);
+                if (el) el.innerHTML = inner;
+            });
+        }
+
+        function focusScheduleItem(scheduleId, index) {
+            const ui = getScheduleUi(scheduleId);
+            // 모아보기(로드맵)에서 노드를 누르면 목록으로 돌아와 해당 일정에 포커스
+            if (ui.roadmap) {
+                ui.roadmap = false;
+                ui.focus = index;
+            } else {
+                ui.focus = ui.focus === index ? null : index;
             }
-            fourCutAnim('dt-theater-scrglow', [{ opacity: 0 }, { opacity: .6, offset: .3 }, { opacity: 0 }], { duration: 300 });
+            refreshScheduleSteps(scheduleId);
         }
 
-        function fourCutNav(dir) {
-            const n = fourCutState.schedules.length;
-            if (!n) return;
-            fourCutState.active = (fourCutState.active + dir + n) % n;
-            fourCutRenderScreen(fourCutState.active);
-            fourCutFilmAdvance(dir);
+        function toggleScheduleRoadmap(scheduleId) {
+            const ui = getScheduleUi(scheduleId);
+            ui.roadmap = !ui.roadmap;
+            ui.focus = null;
+            refreshScheduleSteps(scheduleId);
         }
 
-        // 나가기 — 극장 페이드아웃과 동시에 내부 마크업을 원본으로 통째로 갈아끼운다.
-        // (전체가 어두워지며 사라지는 중이라 안 보이지만, 이렇게 해둬야 다음에 다시 입장했을 때
-        // 직전 상영 상태가 남아있지 않고 항상 닫힌 커튼부터 새로고침한 것처럼 시작한다)
-        function fourCutExit() {
-            (fourCutState.ticks || []).forEach(clearTimeout);
-            fourCutState.ticks = [];
-            const theater = document.getElementById('dt-fourcut-theater');
-            if (theater) {
-                theater.getAnimations().forEach(a => a.cancel());
-                theater.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 320, fill: 'forwards' });
-                theater.style.pointerEvents = 'none';
-            }
-            fourCutResetChildren();
+        function updateScheduleItems(scheduleId, mutate) {
+            const sch = groupsData[activeGroup].schedules.find(s => s.id === scheduleId);
+            if (!sch) return;
+            const parsed = parseScheduleItems(sch.content) || { heading: sch.title, items: [] };
+            mutate(parsed.items);
+            sch.content = serializeScheduleItems(parsed.heading, parsed.items);
         }
 
-        window.fourCutEnter = fourCutEnter;
-        window.fourCutEnterAt = fourCutEnterAt;
-        window.fourCutSit = fourCutSit;
-        window.fourCutExit = fourCutExit;
-        window.fourCutNav = fourCutNav;
+        function addScheduleItem(scheduleId) {
+            updateScheduleItems(scheduleId, items => items.push('새 일정을 입력하세요'));
+            const ui = getScheduleUi(scheduleId);
+            ui.focus = null;
+            ui.roadmap = false;
+            refreshScheduleSteps(scheduleId);
+        }
+
+        function deleteScheduleItem(scheduleId, index) {
+            updateScheduleItems(scheduleId, items => items.splice(index, 1));
+            getScheduleUi(scheduleId).focus = null;
+            refreshScheduleSteps(scheduleId);
+        }
+
+        function saveScheduleItemText(scheduleId, index, el) {
+            updateScheduleItems(scheduleId, items => { items[index] = el.innerText.trim(); });
+        }
 
         // 일정 세부 기입 내용 저장 및 양방향 실시간 동기화
         function saveScheduleContent(viewType, scheduleId) {
@@ -3459,29 +3097,6 @@ document.getElementById = function(id) {
             }
         }
 
-        // 일정 생성 모달 "＋ 단계 넣기" — 제안·일정·확정·만남 4단계 스캐폴드를 커서 위치에 삽입
-        function insertScheduleSteps(editorId) {
-            const editor = document.getElementById(editorId);
-            if (!editor) return;
-            editor.focus();
-            const sel = window.getSelection();
-            const range = document.createRange();
-            range.selectNodeContents(editor);
-            range.collapse(false);            // 커서를 에디터 끝으로
-            sel.removeAllRanges();
-            sel.addRange(range);
-            const scaffold =
-                '<h3>약속 준비 4단계</h3>' +
-                '<ul>' +
-                '<li><b>제안하기</b> — </li>' +
-                '<li><b>일정 맞추기</b> — </li>' +
-                '<li><b>약속 확정</b> — </li>' +
-                '<li><b>만남</b> — </li>' +
-                '</ul><p><br></p>';
-            document.execCommand('insertHTML', false, scaffold);
-        }
-        window.insertScheduleSteps = insertScheduleSteps;
-
         // 레벨이 오를수록 맨땅이었던 지면에 클로버가 하나둘 빽빽하게 자라나도록 채워주는 함수 (잡초 X, 전부 클로버)
         function renderGroundGrowth(containerId) {
             const container = document.getElementById(containerId);
@@ -3489,11 +3104,9 @@ document.getElementById = function(id) {
             container.innerHTML = '';
 
             // 레벨이 오를수록 클로버 개수가 훨씬 더 가파르게 늘어나서 들판이 무성해짐
-            // (최대 777레벨이라 레벨을 그대로 곱하면 폭발하므로, 7단계 티어 인덱스(0~6) 기준으로 계산)
-            const tierIdx = clovLevelTierIndex(friendshipLevel);
-            const cloverCount = 6 + tierIdx * 5; // 6 ~ 36개
+            const cloverCount = friendshipLevel * 6; // 6 ~ 30개
             // 레벨이 높을수록 클로버 한 포기 자체도 더 크고 무성하게 자람
-            const baseScale = 0.7 + tierIdx * 0.12;
+            const baseScale = 0.7 + friendshipLevel * 0.12;
 
             for (let i = 0; i < cloverCount; i++) {
                 const sprout = document.createElement('span');
@@ -3673,8 +3286,6 @@ document.getElementById = function(id) {
             const allLetters = currentGroup.letters || [];
             const filteredLetters = getFilteredLettersWithIndex();
             const dtZone = document.getElementById('dt-letter-zone');
-            const boxTrigger = document.getElementById('dt-letter-box-trigger');
-            if (boxTrigger) boxTrigger.classList.toggle('has-mail', allLetters.length > 0);
             let profileName = '사용자';
             try {
                 const savedProfile = JSON.parse(localStorage.getItem('clov_profile') || '{}');
@@ -3707,6 +3318,41 @@ document.getElementById = function(id) {
                 // 리렌더링으로 화면 갱신 및 실시간 양방향 동기화 효과
                 renderLetters();
             }
+        }
+
+        let activeLetterRecipient = { dt: "모두에게", mb: "모두에게" };
+
+        function selectRecipient(prefix, chipElement) {
+            document.querySelectorAll(`#${prefix}-recipient-selector .recipient-chip`).forEach(c => c.classList.remove('active'));
+            chipElement.classList.add('active');
+            activeLetterRecipient[prefix] = chipElement.getAttribute('data-recipient');
+        }
+
+        function submitInlineLetter(prefix) {
+            const textEl = document.getElementById(`${prefix}-letter-text`);
+            if (!textEl) return;
+            const text = textEl.value.trim();
+            if (!text) {
+                clovAlert('편지 내용을 입력해주세요.', { icon: '✏️', type: 'warn' });
+                return;
+            }
+
+            const currentGroup = groupsData[activeGroup];
+            if (!currentGroup.letters) currentGroup.letters = [];
+
+            currentGroup.letters.unshift({
+                to: activeLetterRecipient[prefix],
+                from: "나 🍀",
+                text: text,
+                favorite: false,
+                isMine: true
+            });
+
+            localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
+            
+            textEl.value = '';
+            setLetterFilter('all');
+            clovToast('따뜻한 마음이 전달되었습니다! 💌', 'success');
         }
 
         function setLetterFilter(filterType) {
@@ -3760,6 +3406,731 @@ document.getElementById = function(id) {
                 if (mbWriteZone) mbWriteZone.style.display = 'block';
             }
         }
+
+        // 편지 상세 보기 모달 열기
+        function openLetterDetailModal(index) {
+            const letters = groupsData[activeGroup]?.letters || [];
+            const letter = letters[index];
+            if (!letter) return;
+
+            document.getElementById('dt-detail-letter-to').textContent = `To. ${letter.to || '전체'}`;
+            document.getElementById('dt-detail-letter-from').textContent = `From. ${letter.from || '익명'}`;
+            document.getElementById('dt-detail-letter-content').textContent = `${letter.emoji || '💌'}\n${letter.text || ''}`;
+            closeModal('dt-letter-inbox-modal');
+            openModal('dt-letter-detail-modal');
+        }
+
+        // 9. 다크모드 제어 기능
+        const urlParamsMain = new URLSearchParams(window.location.search);
+        const themeParamMain = urlParamsMain.get('theme');
+        const groupIdParam = urlParamsMain.get('groupId');
+        let isDarkMode = false;
+        if (themeParamMain === 'dark') {
+            isDarkMode = true;
+            localStorage.setItem('clov_darkMode', 'true');
+        } else if (themeParamMain === 'light') {
+            isDarkMode = false;
+            localStorage.setItem('clov_darkMode', 'false');
+        } else {
+            isDarkMode = localStorage.getItem('clov_darkMode') === 'true';
+        }
+        
+        if (groupIdParam && groupsData[groupIdParam]) {
+            activeGroup = groupIdParam;
+        }
+        if (isDarkMode) {
+            document.body.classList.add('dark-mode');
+        }
+        window.addEventListener('DOMContentLoaded', () => {
+            const icons = document.querySelectorAll('.dt-dark-btn .toggle-icon, .mb-dark-btn .toggle-icon');
+            icons.forEach(icon => {
+                icon.innerText = isDarkMode ? '🌙' : '☀️';
+            });
+        });
+        function getFeedMonthCounts(posts) {
+            const counts = {};
+            getFeedMonths(posts).forEach(month => {
+                counts[month.key] = month.count;
+            });
+            return counts;
+        }
+
+        function getDefaultMonthPickerYear(posts) {
+            if (/^\d{4}-\d{2}$/.test(activeFeedMonth)) {
+                return Number(activeFeedMonth.slice(0, 4));
+            }
+            const firstMonth = getFeedMonths(posts)[0];
+            return firstMonth ? Number(firstMonth.key.slice(0, 4)) : new Date().getFullYear();
+        }
+
+        function renderMonthPicker() {
+            const popover = document.getElementById('month-picker-popover');
+            const yearLabel = document.getElementById('month-picker-year');
+            const grid = document.getElementById('month-picker-grid');
+            if (!popover || !yearLabel || !grid) return;
+
+            const allBtn = document.getElementById('month-picker-all-btn');
+            if (allBtn) allBtn.classList.toggle('active', activeFeedMonth === 'all');
+
+            const posts = groupsData[activeGroup].posts || [];
+            const counts = getFeedMonthCounts(posts);
+            yearLabel.innerText = `${monthPickerYear}년`;
+            grid.innerHTML = Array.from({ length: 12 }, (_, index) => {
+                const month = String(index + 1).padStart(2, '0');
+                const key = `${monthPickerYear}-${month}`;
+                const count = counts[key] || 0;
+                return `
+                    <button class="month-picker-month ${activeFeedMonth === key ? 'active' : ''} ${count === 0 ? 'empty' : ''}" type="button" onclick="setFeedMonth('${key}')">
+                        ${index + 1}월
+                        <span>${count}개</span>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function positionMonthPicker(trigger) {
+            const popover = document.getElementById('month-picker-popover');
+            if (!popover || !trigger) return;
+            const rect = trigger.getBoundingClientRect();
+            const width = Math.min(320, window.innerWidth - 32);
+            const left = Math.min(Math.max(16, rect.right - width), window.innerWidth - width - 16);
+            const top = Math.min(rect.bottom + 10, window.innerHeight - 360);
+            popover.style.width = `${width}px`;
+            popover.style.left = `${left}px`;
+            popover.style.top = `${Math.max(16, top)}px`;
+        }
+
+        function toggleMonthPicker(event) {
+            event.stopPropagation();
+            const trigger = event.currentTarget;
+            const popover = document.getElementById('month-picker-popover');
+            if (!popover) return;
+            const isOpen = popover.classList.contains('open');
+
+            document.querySelectorAll('.month-picker-trigger').forEach(btn => btn.classList.remove('active'));
+            if (isOpen) {
+                closeMonthPicker();
+                return;
+            }
+
+            monthPickerYear = getDefaultMonthPickerYear(groupsData[activeGroup].posts || []);
+            renderMonthPicker();
+            positionMonthPicker(trigger);
+            popover.classList.add('open');
+            trigger.classList.add('active');
+        }
+
+        function closeMonthPicker() {
+            const popover = document.getElementById('month-picker-popover');
+            if (popover) popover.classList.remove('open');
+            document.querySelectorAll('.month-picker-trigger').forEach(btn => btn.classList.remove('active'));
+        }
+
+        function moveMonthPickerYear(direction) {
+            monthPickerYear += direction;
+            renderMonthPicker();
+        }
+
+        function toggleDarkMode() {
+            isDarkMode = !isDarkMode;
+            localStorage.setItem('clov_darkMode', isDarkMode);
+
+            const icons = document.querySelectorAll('.dt-dark-btn .toggle-icon, .mb-dark-btn .toggle-icon');
+
+            icons.forEach(icon => {
+                icon.classList.remove('slide-animation');
+                void icon.offsetWidth; // 리플로우 강제 유발 (애니메이션 재시작)
+                icon.classList.add('slide-animation');
+            });
+
+            // 아이콘이 화면 밖으로 사라지는 타이밍(약 200ms)에 텍스트 교체
+            setTimeout(() => {
+                icons.forEach(icon => {
+                    icon.innerText = isDarkMode ? '🌙' : '☀️';
+                });
+            }, 200);
+
+            if (isDarkMode) {
+                document.body.classList.add('dark-mode');
+            } else {
+                document.body.classList.remove('dark-mode');
+            }
+            updateGroupModalUI(); // 버튼들에 다크모드 변수 테마 강제 리프레시
+        }
+
+        // 화면 밖 클릭 시 드롭다운 닫기 및 모달 바깥 클릭 시 닫기 이벤트 핸들러
+        window.onclick = function (event) {
+            if (!event.target.matches('.profile-btn')) {
+                const mbDropOutside = document.getElementById('mb-drop');
+                const dtDropOutside = document.getElementById('dt-drop');
+                if (mbDropOutside) mbDropOutside.style.display = 'none';
+                if (dtDropOutside) dtDropOutside.style.display = 'none';
+            }
+            if (!event.target.closest('.clov-hdr-avatar-wrap')) {
+                document.querySelectorAll('.clov-hdr-dropdown.open').forEach(d => d.classList.remove('open'));
+            }
+            const monthPicker = document.getElementById('month-picker-popover');
+            if (monthPicker && !event.target.closest('.month-picker-popover') && !event.target.closest('.month-picker-trigger')) {
+                closeMonthPicker();
+            }
+            if (event.target.classList.contains('modal-overlay')) {
+                event.target.style.display = 'none';
+            }
+        }
+
+        // 초기 실행 시 피드 데이터 및 우정 레벨 UI 로드
+        function toggleScheduleSidebar(viewType) {
+            const prefix = viewType === 'dt' ? 'dt' : 'mb';
+            const sidebar = document.getElementById(`${prefix}-schedule-detail-sidebar`);
+            if (sidebar) {
+                sidebar.classList.toggle('open');
+            }
+        }
+
+        function closeScheduleSidebar(viewType) {
+            const prefix = viewType === 'dt' ? 'dt' : 'mb';
+            const sidebar = document.getElementById(`${prefix}-schedule-detail-sidebar`);
+            if (sidebar) {
+                sidebar.classList.remove('open');
+            }
+        }
+
+        function addDetailSchedule(viewType) {
+            const prefix = viewType === 'dt' ? 'dt' : 'mb';
+            const timeInput = document.getElementById(`${prefix}-detail-time`);
+            const contentInput = document.getElementById(`${prefix}-detail-content`);
+            const list = document.getElementById(`${prefix}-detail-timeline-list`);
+
+            if (timeInput && contentInput && list && timeInput.value && contentInput.value) {
+                const newItem = document.createElement('div');
+                newItem.className = 'detail-timeline-item';
+                newItem.innerHTML = `
+                    <div class="detail-timeline-time">${escapeHtml(timeInput.value)}</div>
+                    <div class="detail-timeline-content">
+                        <div>${escapeHtml(contentInput.value)}</div>
+                        <div class="timeline-meta">
+                            <span>👤 나</span>
+                            <span>🔔 알림</span>
+                        </div>
+                    </div>
+                `;
+                list.appendChild(newItem);
+
+                const items = Array.from(list.children);
+                items.sort((a, b) => {
+                    const timeA = a.querySelector('.detail-timeline-time').innerText;
+                    const timeB = b.querySelector('.detail-timeline-time').innerText;
+                    return timeA.localeCompare(timeB);
+                });
+                list.innerHTML = '';
+                items.forEach(item => list.appendChild(item));
+
+                contentInput.value = '';
+            }
+        }
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                closeMemoryDetail();
+                closeScheduleSidebar('dt');
+                closeScheduleSidebar('mb');
+                closeMonthPicker();
+            }
+        });
+
+        window.onload = function () {
+            updateDashboardEnvironment();
+            setInterval(updateDashboardEnvironment, 60000);
+
+            renderFeeds();
+            renderLetters();
+            updateFriendshipUI();
+            updateGroupModalUI();
+            animateDdayCount(groupsData[activeGroup].ddayCount);
+        }
+
+        function forceTheme(type, value) {
+            localStorage.setItem('clov_banner_' + type, value);
+            ['dt-dashboard', 'mb-dashboard'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.dataset[type] = value;
+                    if (type === 'season') {
+                        updateSeasonalParticles(el, value);
+                    }
+                }
+            });
+        }
+
+        function resetTheme() {
+            localStorage.removeItem('clov_banner_time');
+            localStorage.removeItem('clov_banner_season');
+            updateDashboardEnvironment();
+            clovToast('테마가 현재 시간으로 초기화되었어요.', 'info');
+        }
+    
+
+
+/* ══════════════════════ V5 BANNER ENGINE ══════════════════════ */
+(function() {
+  const NS = 'http://www.w3.org/2000/svg';
+  const PREFIXES = ['dt', 'mb'];
+
+  // State
+  const v5state = { level: 3, time: 'day', season: 'summer', event: 'none', friendName: '민지' };
+
+  const V5_LVL = {
+    1: { name:'약속의 씨앗',       pct:15,  clovers:2,  sprouts:0, fourLeaf:0 },
+    2: { name:'설렘의 새싹',       pct:38,  clovers:8,  sprouts:0, fourLeaf:0 },
+    3: { name:'초록 클로버 우정',   pct:68,  clovers:15, sprouts:0, fourLeaf:0 },
+    4: { name:'자라나는 클로버 들판', pct:85, clovers:25, sprouts:0, fourLeaf:2 },
+    5: { name:'단단한 네잎 클로버', pct:100, clovers:36, sprouts:0, fourLeaf:7 },
+  };
+
+  const GROUND_COLORS = {
+    barren: { top:'#9a7a50', bot:'#664c28' },
+    spring: { top:'#7dd97e', bot:'#4a9e5c' },
+    summer: { top:'#28ae62', bot:'#186e3e' },
+    fall:   { top:'#dfc040', bot:'#b89020' },
+    winter: { top:'#c4d8d0', bot:'#96b4aa' },
+  };
+  const MTN_COLORS = {
+    spring: { far:'rgba(138,195,138,0.90)', near:'rgba(86,158,90,0.97)' },
+    summer: { far:'rgba(68,145,98,0.90)',   near:'rgba(38,115,68,0.97)' },
+    fall:   { far:'rgba(156,118,56,0.90)',  near:'rgba(122,86,36,0.97)' },
+    winter: { far:'rgba(190,210,220,0.90)', near:'rgba(148,170,184,0.97)' },
+  };
+  const CEL = {
+    morning: { w:38, h:38, top:'64%', left:'74%', bg:'radial-gradient(circle at 38% 38%, #fffde2 0%, #ffd95c 55%, #ffbe38 100%)', shadow:'0 0 28px 10px rgba(255,218,78,0.55)' },
+    day:     { w:48, h:48, top:'15%', left:'78%', bg:'radial-gradient(circle at 38% 38%, #fffae0 0%, #ffcc60 55%, #ffb038 100%)', shadow:'0 0 42px 15px rgba(255,200,68,0.45)' },
+    evening: { w:46, h:46, top:'60%', left:'13%', bg:'radial-gradient(circle at 38% 38%, #ffe8d0 0%, #ff8c28 55%, #ff5010 100%)', shadow:'0 0 38px 12px rgba(255,100,18,0.52)' },
+    night:   { w:36, h:36, top:'13%', left:'80%', bg:'radial-gradient(circle at 35% 38%, #ffffff 0%, #dce8f4 55%, #b0c8e0 100%)', shadow:'0 0 22px 7px rgba(178,210,240,0.35)',
+               craters: [{w:'28%',h:'28%',top:'18%',left:'50%'},{w:'18%',h:'18%',top:'50%',left:'22%'},{w:'12%',h:'12%',top:'36%',left:'65%'}] },
+  };
+
+  function hexRgb(h) { return [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)]; }
+  function lerpColor(h1,h2,t) {
+    const [r1,g1,b1]=hexRgb(h1), [r2,g2,b2]=hexRgb(h2);
+    return `rgb(${Math.round(r1+(r2-r1)*t)},${Math.round(g1+(g2-g1)*t)},${Math.round(b1+(b2-b1)*t)})`;
+  }
+
+  function v5updateGround(p) {
+    const el = document.getElementById(p+'-v5ground'); if(!el) return;
+    const t=(v5state.level-1)/4, B=GROUND_COLORS.barren, S=GROUND_COLORS[v5state.season];
+    el.style.background = `linear-gradient(180deg, ${lerpColor(B.top,S.top,t)} 0%, ${lerpColor(B.bot,S.bot,t)} 100%)`;
+  }
+
+  function v5updateMountains(p) {
+    const m=MTN_COLORS[v5state.season];
+    const f=document.getElementById(p+'-v5mtnFar'), n=document.getElementById(p+'-v5mtnNear');
+    if(f) f.setAttribute('fill',m.far);
+    if(n) n.setAttribute('fill',m.near);
+  }
+
+  function v5buildStars(p) {
+    const layer=document.getElementById(p+'-v5stars'); if(!layer) return;
+    layer.innerHTML='';
+    for(let i=0;i<58;i++){
+      const s=document.createElement('div'); s.className='star';
+      const sz=Math.random()*2+0.8;
+      s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*68}%;--d:${2.2+Math.random()*3.5}s;--dl:${-Math.random()*6}s;`;
+      layer.appendChild(s);
+    }
+  }
+
+  function v5updateCelestial(p) {
+    const el=document.getElementById(p+'-v5cel'); if(!el) return;
+    const c=CEL[v5state.time];
+    el.style.cssText=`width:${c.w}px;height:${c.h}px;top:${c.top};left:${c.left};transform:translate(-50%,-50%);background:${c.bg};box-shadow:${c.shadow};`;
+    el.innerHTML='';
+    if(c.craters) c.craters.forEach(cr=>{
+      const d=document.createElement('div'); d.className='crater';
+      d.style.cssText=`width:${cr.w};height:${cr.h};top:${cr.top};left:${cr.left};transform:translate(-50%,-50%);`;
+      el.appendChild(d);
+    });
+  }
+
+  function makeSVGClover(fourLeaf=false) {
+    const svg=document.createElementNS(NS,'svg'); svg.setAttribute('viewBox','0 0 40 52'); svg.setAttribute('overflow','visible'); svg.classList.add('clover-svg');
+    const stem=document.createElementNS(NS,'path'); stem.setAttribute('d','M20 26 Q18 38 20 50'); stem.setAttribute('stroke-width','2.2'); stem.setAttribute('fill','none'); stem.setAttribute('stroke-linecap','round'); stem.classList.add('clov-stem'); svg.appendChild(stem);
+    const g=document.createElementNS(NS,'g'); g.setAttribute('transform','translate(20,22)');
+    const leafD='M 0,0 L -6,-6 C -15,-15 -12,-25 -4,-23 C -1.5,-22 0,-17 0,-17 C 0,-17 1.5,-22 4,-23 C 12,-25 15,-15 6,-6 Z';
+    const chevronD='M -9,-14 C -4,-18 -1,-12 0,-15 C 1,-12 4,-18 9,-14';
+    [45,135,225,315].forEach((angle,i)=>{
+      const leaf=document.createElementNS(NS,'path'); leaf.setAttribute('d',leafD); leaf.setAttribute('transform',`rotate(${angle})`); leaf.classList.add('clov-leaf'); if(i%2===1)leaf.classList.add('shade'); g.appendChild(leaf);
+      const ch=document.createElementNS(NS,'path'); ch.setAttribute('d',chevronD); ch.setAttribute('transform',`rotate(${angle})`); ch.setAttribute('stroke-width','1.5'); ch.setAttribute('stroke-linecap','round'); ch.setAttribute('fill','none'); ch.classList.add('clov-vein'); g.appendChild(ch);
+      const mv=document.createElementNS(NS,'path'); mv.setAttribute('d','M 0,0 Q 0.5,-8 0,-14'); mv.setAttribute('transform',`rotate(${angle})`); mv.setAttribute('stroke-width','0.6'); mv.setAttribute('stroke-linecap','round'); mv.setAttribute('fill','none'); mv.setAttribute('stroke-opacity','0.45'); mv.classList.add('clov-vein'); g.appendChild(mv);
+    });
+    svg.appendChild(g); return svg;
+  }
+
+  function v5buildClovers(p) {
+    const field=document.getElementById(p+'-v5clovers'); if(!field) return;
+    field.innerHTML='';
+    const cfg=V5_LVL[v5state.level];
+
+    // 모바일은 클로버 수 절반으로 줄임
+    const isMobile = (p === 'mb');
+    const count = isMobile ? Math.ceil(cfg.clovers * 0.5) : cfg.clovers;
+    const fourLeaf = isMobile ? Math.ceil(cfg.fourLeaf * 0.5) : cfg.fourLeaf;
+
+    // 균등 배치: x축을 슬롯으로 나눠 각 슬롯 안에서 jitter (랜덤성 적당히 추가)
+    const DEPTH_BANDS = 3; // 원경/중경/근경
+    const perBand = Math.ceil(count / DEPTH_BANDS);
+    const positions = [];
+
+    for(let band = 0; band < DEPTH_BANDS; band++){
+      const bandCount = Math.min(perBand, count - positions.length);
+      if(bandCount <= 0) break;
+      // band 0 = 원경(깊음), band 2 = 근경(가까움)
+      const depthMin = band / DEPTH_BANDS;
+      const depthMax = (band + 1) / DEPTH_BANDS;
+
+      // x를 슬롯으로 균등 분할
+      const slotW = 94 / bandCount;
+      for(let i = 0; i < bandCount; i++){
+        // 20% 확률로 인접 band 깊이로 튀어 더 자연스럽게
+        let dMin = depthMin, dMax = depthMax;
+        if(Math.random() < 0.2) {
+          const jump = Math.random() < 0.5 ? -1 : 1;
+          dMin = Math.max(0, depthMin + jump * (1/DEPTH_BANDS) * 0.5);
+          dMax = Math.min(1, depthMax + jump * (1/DEPTH_BANDS) * 0.5);
+        }
+        const depth = dMin + Math.random() * (dMax - dMin);
+        const maxSz = v5state.level === 5 ? 40 : 34;
+        const sz = maxSz - depth * (maxSz - 16);
+        // x: 슬롯 중앙 + ±45% 지터 (랜덤성 강화, 뭉침은 방지)
+        const slotCenter = 3 + slotW * (i + 0.5);
+        const jitter = (Math.random() - 0.5) * slotW * 0.9;
+        const x = Math.max(2, Math.min(98, slotCenter + jitter));
+        positions.push({
+          x, depth,
+          bottom: -8 + depth * 48,
+          size: sz,
+          rot: (Math.random() - 0.5) * 42,  // 회전 범위 살짝 더 넓게
+          op: 1 - depth * 0.42,
+        });
+      }
+    }
+
+    // 깊이 내림차순 정렬 (원경 먼저 그려 근경이 위에 겹치게)
+    positions.sort((a,b) => b.depth - a.depth).forEach((pos, idx) => {
+      const wrap = document.createElement('div'); wrap.className = 'clover-wrap';
+      const h = pos.size * (44/32);
+      wrap.style.cssText = `left:${pos.x}%;bottom:${pos.bottom}px;width:${pos.size}px;height:${h}px;transform:translateX(-50%) rotate(${pos.rot}deg);opacity:${pos.op};z-index:${200 - Math.round(pos.bottom)};`;
+      const anim = document.createElement('div'); anim.className = 'clover-anim';
+      const dur = 2.8 + Math.random() * 2.5, delay = -(Math.random() * dur);
+      anim.style.setProperty('--sw', dur+'s'); anim.style.setProperty('--sd', delay+'s');
+      const svg = makeSVGClover(idx < fourLeaf);
+      svg.style.cssText = 'width:100%;height:100%;display:block;';
+      anim.appendChild(svg); wrap.appendChild(anim); field.appendChild(wrap);
+    });
+  }
+
+  function v5buildParticles(p) {
+    const c=document.getElementById(p+'-v5particles'); if(!c) return; c.innerHTML='';
+    if(v5state.event==='my_birthday'||v5state.event==='friend_birthday'){
+      const colors=['#ff7675','#74b9ff','#55efc4','#ffeaa7','#a29bfe','#fd79a8','#ff9ff3'];
+      for(let i=0;i<45;i++){
+        const el=document.createElement('div'), dur=3.5+Math.random()*5, dl=-Math.random()*dur;
+        el.classList.add('ptcl','confetti');
+        el.style.setProperty('--d',dur+'s'); el.style.setProperty('--dl',dl+'s');
+        el.style.setProperty('--dx',(Math.random()-0.5)*150+'px'); el.style.setProperty('--dr',Math.random()*720+'deg');
+        el.style.setProperty('--drx',Math.random()*720+'deg'); el.style.setProperty('--dry',Math.random()*720+'deg');
+        el.style.left=Math.random()*100+'%'; el.style.top='-20px';
+        const szW=4+Math.random()*5, szH=7+Math.random()*7;
+        el.style.width=szW+'px'; el.style.height=(Math.random()>0.4?szW:szH)+'px';
+        if(Math.random()>0.6) el.style.borderRadius='50%';
+        el.style.background=colors[i%colors.length]; c.appendChild(el);
+      }
+      return;
+    }
+    const cfgs={
+      spring:{type:'blossom',count:18,colors:['#ffb7d5','#ffc8e0','#ffd2e8','#ffdff0']},
+      summer:{type:'firefly',count:15},
+      fall:{type:'leaf',count:15,colors:['#e67e22','#c0392b','#d35400','#e8a030']},
+      winter:{type:'snow',count:30,sizes:[3,4,4,5,5,6,7]},
+    };
+    const cfg=cfgs[v5state.season]; if(!cfg) return;
+    for(let i=0;i<cfg.count;i++){
+      const el=document.createElement('div'), dur=4.5+Math.random()*6, dl=-Math.random()*dur, dx=(Math.random()-0.5)*65;
+      el.classList.add('ptcl',cfg.type);
+      el.style.setProperty('--d',dur+'s'); el.style.setProperty('--dl',dl+'s'); el.style.setProperty('--dx',dx+'px');
+      if(cfg.type==='blossom'){el.style.left=Math.random()*100+'%';el.style.top='-12px';const sz=6+Math.random()*5;el.style.width=sz+'px';el.style.height=sz+'px';el.style.background=cfg.colors[i%cfg.colors.length];}
+      else if(cfg.type==='firefly'){el.style.left=(Math.random()*88)+'%';el.style.top=(18+Math.random()*62)+'%';el.style.setProperty('--dy',(-8-Math.random()*18)+'px');el.style.setProperty('--dl2',(-Math.random()*3)+'s');}
+      else if(cfg.type==='leaf'){el.style.left=Math.random()*100+'%';el.style.top='-12px';const sz=8+Math.random()*6;el.style.width=sz+'px';el.style.height=sz+'px';el.style.background=cfg.colors[i%cfg.colors.length];el.style.setProperty('--dr',(80+Math.random()*260)+'deg');}
+      else if(cfg.type==='snow'){el.style.left=Math.random()*100+'%';el.style.top='-10px';const sz=cfg.sizes[i%cfg.sizes.length];el.style.width=sz+'px';el.style.height=sz+'px';}
+      c.appendChild(el);
+    }
+  }
+
+  function v5buildBalloons(p) {
+    const c=document.getElementById(p+'-v5balloons'); if(!c) return; c.innerHTML='';
+    if(v5state.event!=='my_birthday') return;
+    const colors=['#ff7675','#74b9ff','#ffeaa7','#a29bfe','#55efc4','#fd79a8'];
+    for(let i=0;i<7;i++){
+      const b=document.createElement('div'); b.className='balloon';
+      b.style.setProperty('--bc',colors[i%colors.length]);
+      b.style.left=(5+Math.random()*90)+'%';
+      const dur=10+Math.random()*10, dl=-Math.random()*dur;
+      b.style.setProperty('--bd',dur+'s'); b.style.setProperty('--bdl',dl+'s');
+      b.style.setProperty('--bx',((Math.random()-0.5)*60)+'px');
+      b.style.transform=`scale(${0.75+Math.random()*0.5})`;
+      c.appendChild(b);
+    }
+  }
+
+  function v5updateHUD(p) {
+    const cfg=V5_LVL[v5state.level];
+    const icon=document.getElementById(p+'-v5lvicon'); if(icon) icon.textContent='Lv.'+v5state.level;
+    const name=document.getElementById(p+'-v5lvname'); if(name) name.textContent=cfg.name;
+    const pillbg=document.getElementById(p+'-v5pillbg'); if(pillbg) pillbg.style.width=cfg.pct+'%';
+    const pct=document.getElementById(p+'-v5lvpct'); if(pct) pct.textContent=cfg.pct+'%';
+    const eyebrow=document.getElementById(p+'-v5eyebrow');
+    if(eyebrow){
+      if(v5state.event==='my_birthday'||v5state.event==='friend_birthday'){
+        eyebrow.textContent=v5state.event==='friend_birthday'?`🎉 ${v5state.friendName}님의 생일입니다!`:'🎂 생일 축하해요!';
+        eyebrow.style.color='#ffeba0'; eyebrow.style.fontSize='13px'; eyebrow.style.textShadow='0 1px 6px rgba(255,200,0,0.6)';
+      } else {
+        const labelText = (typeof activeGroup !== 'undefined' && typeof groupsData !== 'undefined' && groupsData[activeGroup]) ? (groupsData[activeGroup].ddayLabel || '우리 함께한 지') : '우리 함께한 지';
+        eyebrow.textContent = labelText;
+        eyebrow.style.color='rgba(255,255,255,0.82)'; eyebrow.style.fontSize='11px'; eyebrow.style.textShadow='0 1px 5px rgba(0,0,0,0.45)';
+      }
+    }
+    // sync dday
+    const ddayEl = document.getElementById(p+'-v5dday');
+    const mainDday = document.getElementById(p === 'dt' ? 'dt-dday' : 'mb-dday');
+    if (ddayEl) {
+      if (mainDday && mainDday.innerText) {
+        const txt = mainDday.innerText || '1';
+        ddayEl.textContent = txt.replace('D+','').replace(' 일째','').trim() || '1';
+      } else if (typeof activeGroup !== 'undefined' && typeof groupsData !== 'undefined' && groupsData[activeGroup]) {
+        if (!ddayEl.classList.contains('is-counting')) {
+          ddayEl.textContent = Math.max(1, Number(groupsData[activeGroup].ddayCount) || 1);
+        }
+      }
+    }
+  }
+
+  function v5render() {
+    PREFIXES.forEach(p=>{
+      const scene=document.getElementById(p+'-v5scene'); if(!scene) return;
+      scene.dataset.time=v5state.time; scene.dataset.season=v5state.season;
+      scene.dataset.level=v5state.level; scene.dataset.event=v5state.event;
+      v5updateGround(p); v5updateMountains(p); v5updateCelestial(p);
+      v5buildClovers(p); v5buildParticles(p); v5buildBalloons(p); v5updateHUD(p);
+    });
+  }
+
+  function v5detectNow() {
+    const h=new Date().getHours(), mo=new Date().getMonth()+1;
+    v5state.time=h>=5&&h<10?'morning':h>=10&&h<17?'day':h>=17&&h<20?'evening':'night';
+    v5state.season=mo>=3&&mo<=5?'spring':mo>=6&&mo<=8?'summer':mo>=9&&mo<=11?'fall':'winter';
+    v5state.event='none';
+  }
+
+  function v5syncButtons() {
+    document.querySelectorAll('[data-v5ctrl]').forEach(b=>{
+      b.classList.toggle('on', b.dataset.v5val===v5state[b.dataset.v5ctrl]);
+    });
+  }
+
+  // 레벨업 연동 (기존 levelUp과 sync)
+  window.v5LevelUp = function() {
+    if(typeof levelUp==='function') levelUp();
+    if(typeof friendshipLevel!=='undefined') v5state.level=friendshipLevel;
+    v5render();
+  };
+
+  // 기존 레벨 UI와 sync
+  function v5syncLevel() {
+    if(typeof friendshipLevel!=='undefined') v5state.level=friendshipLevel;
+    v5render();
+  }
+
+
+  // 테스트 패널 동적 생성 (DOM 타이밍 문제 방지)
+  (function() {
+    const panel = document.createElement('aside');
+    panel.className = 'v5-test-panel';
+    panel.innerHTML = `
+      <p class="tp-title" id="tpToggle"><span>🎛️ 배너 테마 테스트</span><span class="tp-chevron">▾</span></p>
+      <div class="tp-body" id="tpBody">
+      <div class="tp-row">
+        <span class="tp-label">🎉 이벤트</span>
+        <div class="tp-btns">
+          <button class="tp-btn on" data-v5ctrl="event" data-v5val="none">없음</button>
+          <button class="tp-btn" data-v5ctrl="event" data-v5val="my_birthday">내 생일 🎂</button>
+          <button class="tp-btn" data-v5ctrl="event" data-v5val="friend_birthday">친구 생일 🎉</button>
+        </div>
+      </div>
+      <div class="tp-row">
+        <span class="tp-label">⏰ 시간대</span>
+        <div class="tp-btns">
+          <button class="tp-btn" data-v5ctrl="time" data-v5val="morning">아침</button>
+          <button class="tp-btn on" data-v5ctrl="time" data-v5val="day">낮</button>
+          <button class="tp-btn" data-v5ctrl="time" data-v5val="evening">저녁</button>
+          <button class="tp-btn" data-v5ctrl="time" data-v5val="night">밤</button>
+        </div>
+      </div>
+      <div class="tp-row">
+        <span class="tp-label">🌿 계절</span>
+        <div class="tp-btns">
+          <button class="tp-btn" data-v5ctrl="season" data-v5val="spring">봄</button>
+          <button class="tp-btn on" data-v5ctrl="season" data-v5val="summer">여름</button>
+          <button class="tp-btn" data-v5ctrl="season" data-v5val="fall">가을</button>
+          <button class="tp-btn" data-v5ctrl="season" data-v5val="winter">겨울</button>
+        </div>
+      </div>
+      <div class="tp-row">
+        <span class="tp-label">💚 우정 레벨</span>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+          <input type="range" id="v5lvSlider" min="1" max="5" value="3" step="1" style="flex:1;accent-color:#1b4332;cursor:pointer;">
+          <span id="v5lvSliderVal" style="font-size:12px;font-weight:900;color:#1b4332;min-width:16px;text-align:center;">3</span>
+        </div>
+        <div id="v5lvDesc" style="font-size:10px;color:#5c7a6a;font-weight:700;text-align:center;margin-bottom:4px;">초록 클로버 우정</div>
+      </div>
+      <div class="tp-divider"></div>
+      <div class="tp-row">
+        <span class="tp-label tp-label-pink">💌 편지함 테스트</span>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <input type="range" id="letterTestSlider" min="0" max="8" value="2" step="1" class="tp-slider-pink" style="flex:1;cursor:pointer;">
+          <span id="letterTestSliderVal" class="tp-pink-val">2</span>
+        </div>
+        <div class="tp-btns">
+          <button class="tp-btn tp-btn-pink" id="letterTestZero" type="button">📭 0개로 비우기</button>
+          <button class="tp-btn tp-btn-pink" id="letterTestFull" type="button">📬 가득 채우기</button>
+          <button class="tp-btn tp-btn-pink" id="letterTestRestore" type="button">↺ 원래대로</button>
+        </div>
+      </div>
+      <div class="tp-divider"></div>
+      <button class="tp-reset" id="v5resetBtn">⏱ 현재 시간으로 복귀</button>
+      </div>
+    `;
+    document.body.appendChild(panel);
+    const tpToggle = document.getElementById('tpToggle');
+    if (tpToggle) {
+      tpToggle.addEventListener('click', () => {
+        panel.classList.toggle('collapsed');
+      });
+    }
+  })();
+
+  // 버튼 바인딩 (DOMContentLoaded로 패널 렌더 후 실행)
+  function v5bindButtons() {
+    document.querySelectorAll('[data-v5ctrl]').forEach(btn=>{
+      // avoid double-binding
+      if(btn._v5bound) return;
+      btn._v5bound = true;
+      btn.addEventListener('click',()=>{
+        v5state[btn.dataset.v5ctrl]=btn.dataset.v5val;
+        v5syncButtons(); v5render();
+      });
+    });
+    const resetBtn = document.getElementById('v5resetBtn');
+    if(resetBtn && !resetBtn._v5bound) {
+      resetBtn._v5bound = true;
+      resetBtn.addEventListener('click',()=>{
+        v5detectNow(); v5syncButtons(); v5render();
+      });
+    }
+    // 레벨 슬라이더 바인딩
+    const slider = document.getElementById('v5lvSlider');
+    if(slider && !slider._v5bound) {
+      slider._v5bound = true;
+      slider.addEventListener('input', function() {
+        v5state.level = +this.value;
+        const descEl = document.getElementById('v5lvDesc');
+        const valEl  = document.getElementById('v5lvSliderVal');
+        if(valEl) valEl.textContent = this.value;
+        if(descEl) descEl.textContent = V5_LVL[v5state.level].name;
+        v5render();
+      });
+    }
+    // 편지함 테스트 바인딩
+    const letterFillerPool = [
+      { from: "단짝친구 🍀", text: "오늘 하루도 고생 많았어. 내일은 더 좋은 일만 가득하길!", favorite: false },
+      { from: "단짝친구 🍀", text: "네가 있어서 요즘 하루하루가 든든해. 항상 고마워!", favorite: false },
+      { from: "단짝친구 🍀", text: "다음 주말엔 미뤄뒀던 약속 꼭 잡자, 보고 싶다!", favorite: false },
+      { from: "단짝친구 🍀", text: "힘든 일 있으면 언제든 말해. 내가 옆에 있을게.", favorite: false },
+      { from: "단짝친구 🍀", text: "요즘 부쩍 웃을 일이 많아진 건 다 너 덕분이야.", favorite: false },
+      { from: "단짝친구 🍀", text: "사소한 순간에도 네 생각이 나. 좋은 친구를 둬서 행운이다.", favorite: false }
+    ];
+    function applyLetterTestCount(n) {
+      if (typeof groupsData === 'undefined' || typeof activeGroup === 'undefined') return;
+      const g = groupsData[activeGroup];
+      if (!g) return;
+      if (!window._letterTestBackup) window._letterTestBackup = {};
+      if (!window._letterTestBackup[activeGroup]) {
+        window._letterTestBackup[activeGroup] = JSON.parse(JSON.stringify(g.letters || []));
+      }
+      const backup = window._letterTestBackup[activeGroup];
+      let letters;
+      if (n <= backup.length) {
+        letters = backup.slice(0, n);
+      } else {
+        letters = backup.concat(
+          Array.from({ length: n - backup.length }, (_, i) => letterFillerPool[i % letterFillerPool.length])
+        );
+      }
+      g.letters = letters;
+      const valEl = document.getElementById('letterTestSliderVal');
+      const sliderEl = document.getElementById('letterTestSlider');
+      if (valEl) valEl.textContent = n;
+      if (sliderEl) sliderEl.value = n;
+      if (typeof renderLetters === 'function') renderLetters();
+    }
+    const letterSlider = document.getElementById('letterTestSlider');
+    if (letterSlider && !letterSlider._v5bound) {
+      letterSlider._v5bound = true;
+      letterSlider.addEventListener('input', function() {
+        applyLetterTestCount(+this.value);
+      });
+    }
+    const letterZeroBtn = document.getElementById('letterTestZero');
+    if (letterZeroBtn && !letterZeroBtn._v5bound) {
+      letterZeroBtn._v5bound = true;
+      letterZeroBtn.addEventListener('click', () => applyLetterTestCount(0));
+    }
+    const letterFullBtn = document.getElementById('letterTestFull');
+    if (letterFullBtn && !letterFullBtn._v5bound) {
+      letterFullBtn._v5bound = true;
+      letterFullBtn.addEventListener('click', () => applyLetterTestCount(8));
+    }
+    const letterRestoreBtn = document.getElementById('letterTestRestore');
+    if (letterRestoreBtn && !letterRestoreBtn._v5bound) {
+      letterRestoreBtn._v5bound = true;
+      letterRestoreBtn.addEventListener('click', () => {
+        if (window._letterTestBackup && window._letterTestBackup[activeGroup]) {
+          applyLetterTestCount(window._letterTestBackup[activeGroup].length);
+        }
+      });
+    }
+  }
+  // 패널이 위에서 동적 생성됐으므로 바로 바인딩 가능
+  v5bindButtons(); v5syncButtons();
+
+  // 초기화 (별 미리 생성)
+  PREFIXES.forEach(p=>v5buildStars(p));
+  v5detectNow(); v5render();
+
+  // 기존 updateFriendshipUI와 연동
+  const _origUpdateFriendshipUI = window.updateFriendshipUI;
+  window.updateFriendshipUI = function() {
+    if(_origUpdateFriendshipUI) _origUpdateFriendshipUI.apply(this, arguments);
+    if(typeof friendshipLevel!=='undefined') v5state.level=friendshipLevel;
+    const sl=document.getElementById('v5lvSlider'), sv=document.getElementById('v5lvSliderVal'), sd=document.getElementById('v5lvDesc');
+    if(sl) sl.value=v5state.level;
+    if(sv) sv.textContent=v5state.level;
+    if(sd) sd.textContent=V5_LVL[v5state.level].name;
+    v5render();
+  };
+})();
+/* ══════════════════════ END V5 BANNER ENGINE ══════════════════════ */
+
+
+
+
 
         // 행운 편지 작성 관련 함수
         let selectedLetterRecipient = {};
@@ -3932,869 +4303,3 @@ document.getElementById = function(id) {
                 badge.style.display = 'block';
             }
         }
-
-        // 편지 상세 보기 모달 열기
-        function openLetterDetailModal(index) {
-            const letters = groupsData[activeGroup]?.letters || [];
-            const letter = letters[index];
-            if (!letter) return;
-
-            document.getElementById('dt-detail-letter-to').textContent = `To. ${letter.to || '전체'}`;
-            document.getElementById('dt-detail-letter-from').textContent = `From. ${letter.from || '익명'}`;
-            document.getElementById('dt-detail-letter-content').textContent = `${letter.emoji || '💌'}\n${letter.text || ''}`;
-            closeModal('dt-letter-inbox-modal');
-            openModal('dt-letter-detail-modal');
-        }
-
-        // 9. 다크모드 제어 기능
-        const urlParamsMain = new URLSearchParams(window.location.search);
-        const themeParamMain = urlParamsMain.get('theme');
-        const groupIdParam = urlParamsMain.get('groupId');
-        let isDarkMode = false;
-        if (themeParamMain === 'dark') {
-            isDarkMode = true;
-            localStorage.setItem('clov_darkMode', 'true');
-        } else if (themeParamMain === 'light') {
-            isDarkMode = false;
-            localStorage.setItem('clov_darkMode', 'false');
-        } else {
-            isDarkMode = localStorage.getItem('clov_darkMode') === 'true';
-        }
-        
-        if (groupIdParam && groupsData[groupIdParam]) {
-            activeGroup = groupIdParam;
-        }
-        if (isDarkMode) {
-            document.body.classList.add('dark-mode');
-        }
-        // 해/달 토글 아이콘은 body.dark-mode 기준 CSS(clov-header.js)가 알아서 전환하므로
-        // 여기서 아이콘 텍스트를 따로 맞춰줄 필요가 없다
-        function getFeedMonthCounts(posts) {
-            const counts = {};
-            getFeedMonths(posts).forEach(month => {
-                counts[month.key] = month.count;
-            });
-            return counts;
-        }
-
-        function getDefaultMonthPickerYear(posts) {
-            if (/^\d{4}-\d{2}$/.test(activeFeedMonth)) {
-                return Number(activeFeedMonth.slice(0, 4));
-            }
-            const firstMonth = getFeedMonths(posts)[0];
-            return firstMonth ? Number(firstMonth.key.slice(0, 4)) : new Date().getFullYear();
-        }
-
-        function renderMonthPicker() {
-            const popover = document.getElementById('month-picker-popover');
-            const yearLabel = document.getElementById('month-picker-year');
-            const grid = document.getElementById('month-picker-grid');
-            if (!popover || !yearLabel || !grid) return;
-
-            const allBtn = document.getElementById('month-picker-all-btn');
-            if (allBtn) allBtn.classList.toggle('active', activeFeedMonth === 'all');
-
-            const posts = groupsData[activeGroup].posts || [];
-            const counts = getFeedMonthCounts(posts);
-            yearLabel.innerText = `${monthPickerYear}년`;
-            grid.innerHTML = Array.from({ length: 12 }, (_, index) => {
-                const month = String(index + 1).padStart(2, '0');
-                const key = `${monthPickerYear}-${month}`;
-                const count = counts[key] || 0;
-                return `
-                    <button class="month-picker-month ${activeFeedMonth === key ? 'active' : ''} ${count === 0 ? 'empty' : ''}" type="button" onclick="setFeedMonth('${key}')">
-                        ${index + 1}월
-                        <span>${count}개</span>
-                    </button>
-                `;
-            }).join('');
-        }
-
-        function positionMonthPicker(trigger) {
-            const popover = document.getElementById('month-picker-popover');
-            if (!popover || !trigger) return;
-            const rect = trigger.getBoundingClientRect();
-            const width = Math.min(320, window.innerWidth - 32);
-            const left = Math.min(Math.max(16, rect.right - width), window.innerWidth - width - 16);
-            const top = Math.min(rect.bottom + 10, window.innerHeight - 360);
-            popover.style.width = `${width}px`;
-            popover.style.left = `${left}px`;
-            popover.style.top = `${Math.max(16, top)}px`;
-        }
-
-        function toggleMonthPicker(event) {
-            event.stopPropagation();
-            const trigger = event.currentTarget;
-            const popover = document.getElementById('month-picker-popover');
-            if (!popover) return;
-            const isOpen = popover.classList.contains('open');
-
-            document.querySelectorAll('.month-picker-trigger').forEach(btn => btn.classList.remove('active'));
-            if (isOpen) {
-                closeMonthPicker();
-                return;
-            }
-
-            monthPickerYear = getDefaultMonthPickerYear(groupsData[activeGroup].posts || []);
-            renderMonthPicker();
-            positionMonthPicker(trigger);
-            popover.classList.add('open');
-            trigger.classList.add('active');
-        }
-
-        function closeMonthPicker() {
-            const popover = document.getElementById('month-picker-popover');
-            if (popover) popover.classList.remove('open');
-            document.querySelectorAll('.month-picker-trigger').forEach(btn => btn.classList.remove('active'));
-        }
-
-        function moveMonthPickerYear(direction) {
-            monthPickerYear += direction;
-            renderMonthPicker();
-        }
-
-        function toggleDarkMode() {
-            isDarkMode = !isDarkMode;
-            localStorage.setItem('clov_darkMode', isDarkMode);
-
-            const icons = document.querySelectorAll('.dt-dark-btn .toggle-icon, .mb-dark-btn .toggle-icon');
-
-            icons.forEach(icon => {
-                icon.classList.remove('slide-animation');
-                void icon.offsetWidth; // 리플로우 강제 유발 (애니메이션 재시작)
-                icon.classList.add('slide-animation');
-            });
-
-            // 해/달 아이콘은 body.dark-mode 기준 CSS가 알아서 전환하므로 텍스트 교체가 더 이상 필요 없다
-
-            if (isDarkMode) {
-                document.body.classList.add('dark-mode');
-            } else {
-                document.body.classList.remove('dark-mode');
-            }
-            updateGroupModalUI(); // 버튼들에 다크모드 변수 테마 강제 리프레시
-        }
-
-        // 화면 밖 클릭 시 드롭다운 닫기 및 모달 바깥 클릭 시 닫기 이벤트 핸들러
-        window.onclick = function (event) {
-            if (!event.target.matches('.profile-btn')) {
-                const mbDropOutside = document.getElementById('mb-drop');
-                const dtDropOutside = document.getElementById('dt-drop');
-                if (mbDropOutside) mbDropOutside.style.display = 'none';
-                if (dtDropOutside) dtDropOutside.style.display = 'none';
-            }
-            if (!event.target.closest('.clov-hdr-avatar-wrap')) {
-                document.querySelectorAll('.clov-hdr-dropdown.open').forEach(d => d.classList.remove('open'));
-            }
-            const monthPicker = document.getElementById('month-picker-popover');
-            if (monthPicker && !event.target.closest('.month-picker-popover') && !event.target.closest('.month-picker-trigger')) {
-                closeMonthPicker();
-            }
-            if (event.target.classList.contains('modal-overlay')) {
-                event.target.style.display = 'none';
-            }
-        }
-
-        // 초기 실행 시 피드 데이터 및 우정 레벨 UI 로드
-        function toggleScheduleSidebar(viewType) {
-            const prefix = viewType === 'dt' ? 'dt' : 'mb';
-            const sidebar = document.getElementById(`${prefix}-schedule-detail-sidebar`);
-            if (sidebar) {
-                sidebar.classList.toggle('open');
-            }
-        }
-
-        function closeScheduleSidebar(viewType) {
-            const prefix = viewType === 'dt' ? 'dt' : 'mb';
-            const sidebar = document.getElementById(`${prefix}-schedule-detail-sidebar`);
-            if (sidebar) {
-                sidebar.classList.remove('open');
-            }
-        }
-
-        function addDetailSchedule(viewType) {
-            const prefix = viewType === 'dt' ? 'dt' : 'mb';
-            const timeInput = document.getElementById(`${prefix}-detail-time`);
-            const contentInput = document.getElementById(`${prefix}-detail-content`);
-            const list = document.getElementById(`${prefix}-detail-timeline-list`);
-
-            if (timeInput && contentInput && list && timeInput.value && contentInput.value) {
-                const newItem = document.createElement('div');
-                newItem.className = 'detail-timeline-item';
-                newItem.innerHTML = `
-                    <div class="detail-timeline-time">${escapeHtml(timeInput.value)}</div>
-                    <div class="detail-timeline-content">
-                        <div>${escapeHtml(contentInput.value)}</div>
-                        <div class="timeline-meta">
-                            <span><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:2px;"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-6.5 8-6.5s8 2.5 8 6.5"/></svg>나</span>
-                            <span><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:2px;"><path d="M6 8a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>알림</span>
-                        </div>
-                    </div>
-                `;
-                list.appendChild(newItem);
-
-                const items = Array.from(list.children);
-                items.sort((a, b) => {
-                    const timeA = a.querySelector('.detail-timeline-time').innerText;
-                    const timeB = b.querySelector('.detail-timeline-time').innerText;
-                    return timeA.localeCompare(timeB);
-                });
-                list.innerHTML = '';
-                items.forEach(item => list.appendChild(item));
-
-                contentInput.value = '';
-            }
-        }
-
-        document.addEventListener('keydown', function (event) {
-            if (event.key === 'Escape') {
-                closeMemoryDetail();
-                closeScheduleSidebar('dt');
-                closeScheduleSidebar('mb');
-                closeMonthPicker();
-            }
-        });
-
-        window.onload = function () {
-            updateDashboardEnvironment();
-            setInterval(updateDashboardEnvironment, 60000);
-
-            renderFeeds();
-            renderLetters();
-            updateFriendshipUI();
-            updateGroupModalUI();
-            animateDdayCount(groupsData[activeGroup].ddayCount);
-        }
-
-        function forceTheme(type, value) {
-            localStorage.setItem('clov_banner_' + type, value);
-            ['dt-dashboard', 'mb-dashboard'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) {
-                    el.dataset[type] = value;
-                    if (type === 'season') {
-                        updateSeasonalParticles(el, value);
-                    }
-                }
-            });
-        }
-
-        function resetTheme() {
-            localStorage.removeItem('clov_banner_time');
-            localStorage.removeItem('clov_banner_season');
-            updateDashboardEnvironment();
-            clovToast('테마가 현재 시간으로 초기화되었어요.', 'info');
-        }
-    
-
-
-/* ══════════════════════ V5 BANNER ENGINE ══════════════════════ */
-(function() {
-  const NS = 'http://www.w3.org/2000/svg';
-  const PREFIXES = ['dt', 'mb'];
-
-  // State
-  const v5state = { level: 3, time: 'day', season: 'summer', event: 'none', friendName: '민지' };
-
-  // 레벨-이름/클로버 밀도 매핑은 이제 최대 777레벨까지 지원하는 clovLevelInfo()/
-  // clovLevelTierIndex()(desktop.js 상단, 우정 레벨 시스템 섹션)를 그대로 재사용한다.
-
-  const GROUND_COLORS = {
-    barren: { top:'#9a7a50', bot:'#664c28' },
-    spring: { top:'#7dd97e', bot:'#4a9e5c' },
-    summer: { top:'#28ae62', bot:'#186e3e' },
-    fall:   { top:'#dfc040', bot:'#b89020' },
-    winter: { top:'#c4d8d0', bot:'#96b4aa' },
-  };
-  const MTN_COLORS = {
-    spring: { far:'rgba(138,195,138,0.90)', near:'rgba(86,158,90,0.97)' },
-    summer: { far:'rgba(68,145,98,0.90)',   near:'rgba(38,115,68,0.97)' },
-    fall:   { far:'rgba(156,118,56,0.90)',  near:'rgba(122,86,36,0.97)' },
-    winter: { far:'rgba(190,210,220,0.90)', near:'rgba(148,170,184,0.97)' },
-  };
-  const CEL = {
-    morning: { w:38, h:38, top:'64%', left:'74%', bg:'radial-gradient(circle at 38% 38%, #fffde2 0%, #ffd95c 55%, #ffbe38 100%)', shadow:'0 0 28px 10px rgba(255,218,78,0.55)' },
-    day:     { w:48, h:48, top:'15%', left:'78%', bg:'radial-gradient(circle at 38% 38%, #fffae0 0%, #ffcc60 55%, #ffb038 100%)', shadow:'0 0 42px 15px rgba(255,200,68,0.45)' },
-    evening: { w:46, h:46, top:'60%', left:'13%', bg:'radial-gradient(circle at 38% 38%, #ffe8d0 0%, #ff8c28 55%, #ff5010 100%)', shadow:'0 0 38px 12px rgba(255,100,18,0.52)' },
-    night:   { w:36, h:36, top:'13%', left:'80%', bg:'radial-gradient(circle at 35% 38%, #ffffff 0%, #dce8f4 55%, #b0c8e0 100%)', shadow:'0 0 22px 7px rgba(178,210,240,0.35)',
-               craters: [{w:'28%',h:'28%',top:'18%',left:'50%'},{w:'18%',h:'18%',top:'50%',left:'22%'},{w:'12%',h:'12%',top:'36%',left:'65%'}] },
-  };
-
-  function hexRgb(h) { return [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)]; }
-  function lerpColor(h1,h2,t) {
-    const [r1,g1,b1]=hexRgb(h1), [r2,g2,b2]=hexRgb(h2);
-    return `rgb(${Math.round(r1+(r2-r1)*t)},${Math.round(g1+(g2-g1)*t)},${Math.round(b1+(b2-b1)*t)})`;
-  }
-
-  function v5updateGround(p) {
-    const el = document.getElementById(p+'-v5ground'); if(!el) return;
-    const tierIdx = clovLevelTierIndex(v5state.level);
-    const grp = (typeof groupsData !== 'undefined' && groupsData[activeGroup]) || {};
-    const withinTier = v5state.level >= CLOV_MAX_LEVEL ? 100 : (typeof grp.levelProgress === 'number' ? grp.levelProgress : 0);
-    const t = (tierIdx + withinTier / 100) / 6, B=GROUND_COLORS.barren, S=GROUND_COLORS[v5state.season];
-    el.style.background = `linear-gradient(180deg, ${lerpColor(B.top,S.top,t)} 0%, ${lerpColor(B.bot,S.bot,t)} 100%)`;
-  }
-
-  function v5updateMountains(p) {
-    const m=MTN_COLORS[v5state.season];
-    const f=document.getElementById(p+'-v5mtnFar'), n=document.getElementById(p+'-v5mtnNear');
-    if(f) f.setAttribute('fill',m.far);
-    if(n) n.setAttribute('fill',m.near);
-  }
-
-  function v5buildStars(p) {
-    const layer=document.getElementById(p+'-v5stars'); if(!layer) return;
-    layer.innerHTML='';
-    for(let i=0;i<58;i++){
-      const s=document.createElement('div'); s.className='star';
-      const sz=Math.random()*2+0.8;
-      s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*68}%;--d:${2.2+Math.random()*3.5}s;--dl:${-Math.random()*6}s;`;
-      layer.appendChild(s);
-    }
-  }
-
-  function v5updateCelestial(p) {
-    const el=document.getElementById(p+'-v5cel'); if(!el) return;
-    const c=CEL[v5state.time];
-    el.style.cssText=`width:${c.w}px;height:${c.h}px;top:${c.top};left:${c.left};transform:translate(-50%,-50%);background:${c.bg};box-shadow:${c.shadow};`;
-    el.innerHTML='';
-    if(c.craters) c.craters.forEach(cr=>{
-      const d=document.createElement('div'); d.className='crater';
-      d.style.cssText=`width:${cr.w};height:${cr.h};top:${cr.top};left:${cr.left};transform:translate(-50%,-50%);`;
-      el.appendChild(d);
-    });
-  }
-
-  function makeSVGClover(fourLeaf=false) {
-    const svg=document.createElementNS(NS,'svg'); svg.setAttribute('viewBox','0 0 40 52'); svg.setAttribute('overflow','visible'); svg.classList.add('clover-svg');
-    const stem=document.createElementNS(NS,'path'); stem.setAttribute('d','M20 26 Q18 38 20 50'); stem.setAttribute('stroke-width','2.2'); stem.setAttribute('fill','none'); stem.setAttribute('stroke-linecap','round'); stem.classList.add('clov-stem'); svg.appendChild(stem);
-    const g=document.createElementNS(NS,'g'); g.setAttribute('transform','translate(20,22)');
-    const leafD='M 0,0 L -6,-6 C -15,-15 -12,-25 -4,-23 C -1.5,-22 0,-17 0,-17 C 0,-17 1.5,-22 4,-23 C 12,-25 15,-15 6,-6 Z';
-    const chevronD='M -9,-14 C -4,-18 -1,-12 0,-15 C 1,-12 4,-18 9,-14';
-    [45,135,225,315].forEach((angle,i)=>{
-      const leaf=document.createElementNS(NS,'path'); leaf.setAttribute('d',leafD); leaf.setAttribute('transform',`rotate(${angle})`); leaf.classList.add('clov-leaf'); if(i%2===1)leaf.classList.add('shade'); g.appendChild(leaf);
-      const ch=document.createElementNS(NS,'path'); ch.setAttribute('d',chevronD); ch.setAttribute('transform',`rotate(${angle})`); ch.setAttribute('stroke-width','1.5'); ch.setAttribute('stroke-linecap','round'); ch.setAttribute('fill','none'); ch.classList.add('clov-vein'); g.appendChild(ch);
-      const mv=document.createElementNS(NS,'path'); mv.setAttribute('d','M 0,0 Q 0.5,-8 0,-14'); mv.setAttribute('transform',`rotate(${angle})`); mv.setAttribute('stroke-width','0.6'); mv.setAttribute('stroke-linecap','round'); mv.setAttribute('fill','none'); mv.setAttribute('stroke-opacity','0.45'); mv.classList.add('clov-vein'); g.appendChild(mv);
-    });
-    svg.appendChild(g); return svg;
-  }
-
-  function v5buildClovers(p) {
-    const field=document.getElementById(p+'-v5clovers'); if(!field) return;
-    field.innerHTML='';
-    // 최대 777레벨을 감당하려고 레벨 그대로가 아니라 7단계 티어 인덱스(0~6) 기준으로 밀도를 정한다.
-    const tierIdx = clovLevelTierIndex(v5state.level);
-    const cfg = { clovers: 6 + tierIdx * 5, fourLeaf: Math.max(0, Math.round((tierIdx - 1) * 1.6)) };
-
-    // 모바일은 클로버 수 절반으로 줄임
-    const isMobile = (p === 'mb');
-    const count = isMobile ? Math.ceil(cfg.clovers * 0.5) : cfg.clovers;
-    const fourLeaf = isMobile ? Math.ceil(cfg.fourLeaf * 0.5) : cfg.fourLeaf;
-
-    // 균등 배치: x축을 슬롯으로 나눠 각 슬롯 안에서 jitter (랜덤성 적당히 추가)
-    const DEPTH_BANDS = 3; // 원경/중경/근경
-    const perBand = Math.ceil(count / DEPTH_BANDS);
-    const positions = [];
-
-    for(let band = 0; band < DEPTH_BANDS; band++){
-      const bandCount = Math.min(perBand, count - positions.length);
-      if(bandCount <= 0) break;
-      // band 0 = 원경(깊음), band 2 = 근경(가까움)
-      const depthMin = band / DEPTH_BANDS;
-      const depthMax = (band + 1) / DEPTH_BANDS;
-
-      // x를 슬롯으로 균등 분할
-      const slotW = 94 / bandCount;
-      for(let i = 0; i < bandCount; i++){
-        // 20% 확률로 인접 band 깊이로 튀어 더 자연스럽게
-        let dMin = depthMin, dMax = depthMax;
-        if(Math.random() < 0.2) {
-          const jump = Math.random() < 0.5 ? -1 : 1;
-          dMin = Math.max(0, depthMin + jump * (1/DEPTH_BANDS) * 0.5);
-          dMax = Math.min(1, depthMax + jump * (1/DEPTH_BANDS) * 0.5);
-        }
-        const depth = dMin + Math.random() * (dMax - dMin);
-        const maxSz = tierIdx === 6 ? 40 : 34;
-        const sz = maxSz - depth * (maxSz - 16);
-        // x: 슬롯 중앙 + ±45% 지터 (랜덤성 강화, 뭉침은 방지)
-        const slotCenter = 3 + slotW * (i + 0.5);
-        const jitter = (Math.random() - 0.5) * slotW * 0.9;
-        const x = Math.max(2, Math.min(98, slotCenter + jitter));
-        positions.push({
-          x, depth,
-          bottom: -8 + depth * 48,
-          size: sz,
-          rot: (Math.random() - 0.5) * 42,  // 회전 범위 살짝 더 넓게
-          op: 1 - depth * 0.42,
-        });
-      }
-    }
-
-    // 깊이 내림차순 정렬 (원경 먼저 그려 근경이 위에 겹치게)
-    positions.sort((a,b) => b.depth - a.depth).forEach((pos, idx) => {
-      const wrap = document.createElement('div'); wrap.className = 'clover-wrap';
-      const h = pos.size * (44/32);
-      wrap.style.cssText = `left:${pos.x}%;bottom:${pos.bottom}px;width:${pos.size}px;height:${h}px;transform:translateX(-50%) rotate(${pos.rot}deg);opacity:${pos.op};z-index:${200 - Math.round(pos.bottom)};`;
-      const anim = document.createElement('div'); anim.className = 'clover-anim';
-      const dur = 2.8 + Math.random() * 2.5, delay = -(Math.random() * dur);
-      anim.style.setProperty('--sw', dur+'s'); anim.style.setProperty('--sd', delay+'s');
-      const svg = makeSVGClover(idx < fourLeaf);
-      svg.style.cssText = 'width:100%;height:100%;display:block;';
-      anim.appendChild(svg); wrap.appendChild(anim); field.appendChild(wrap);
-    });
-  }
-
-  function v5buildParticles(p) {
-    const c=document.getElementById(p+'-v5particles'); if(!c) return; c.innerHTML='';
-    if(v5state.event==='my_birthday'||v5state.event==='friend_birthday'){
-      const colors=['#ff7675','#74b9ff','#55efc4','#ffeaa7','#a29bfe','#fd79a8','#ff9ff3'];
-      for(let i=0;i<45;i++){
-        const el=document.createElement('div'), dur=3.5+Math.random()*5, dl=-Math.random()*dur;
-        el.classList.add('ptcl','confetti');
-        el.style.setProperty('--d',dur+'s'); el.style.setProperty('--dl',dl+'s');
-        el.style.setProperty('--dx',(Math.random()-0.5)*150+'px'); el.style.setProperty('--dr',Math.random()*720+'deg');
-        el.style.setProperty('--drx',Math.random()*720+'deg'); el.style.setProperty('--dry',Math.random()*720+'deg');
-        el.style.left=Math.random()*100+'%'; el.style.top='-20px';
-        const szW=4+Math.random()*5, szH=7+Math.random()*7;
-        el.style.width=szW+'px'; el.style.height=(Math.random()>0.4?szW:szH)+'px';
-        if(Math.random()>0.6) el.style.borderRadius='50%';
-        el.style.background=colors[i%colors.length]; c.appendChild(el);
-      }
-      return;
-    }
-    const cfgs={
-      spring:{type:'blossom',count:18,colors:['#ffb7d5','#ffc8e0','#ffd2e8','#ffdff0']},
-      summer:{type:'firefly',count:15},
-      fall:{type:'leaf',count:15,colors:['#e67e22','#c0392b','#d35400','#e8a030']},
-      winter:{type:'snow',count:30,sizes:[3,4,4,5,5,6,7]},
-    };
-    const cfg=cfgs[v5state.season]; if(!cfg) return;
-    for(let i=0;i<cfg.count;i++){
-      const el=document.createElement('div'), dur=4.5+Math.random()*6, dl=-Math.random()*dur, dx=(Math.random()-0.5)*65;
-      el.classList.add('ptcl',cfg.type);
-      el.style.setProperty('--d',dur+'s'); el.style.setProperty('--dl',dl+'s'); el.style.setProperty('--dx',dx+'px');
-      if(cfg.type==='blossom'){el.style.left=Math.random()*100+'%';el.style.top='-12px';const sz=6+Math.random()*5;el.style.width=sz+'px';el.style.height=sz+'px';el.style.background=cfg.colors[i%cfg.colors.length];}
-      else if(cfg.type==='firefly'){el.style.left=(Math.random()*88)+'%';el.style.top=(18+Math.random()*62)+'%';el.style.setProperty('--dy',(-8-Math.random()*18)+'px');el.style.setProperty('--dl2',(-Math.random()*3)+'s');}
-      else if(cfg.type==='leaf'){el.style.left=Math.random()*100+'%';el.style.top='-12px';const sz=8+Math.random()*6;el.style.width=sz+'px';el.style.height=sz+'px';el.style.background=cfg.colors[i%cfg.colors.length];el.style.setProperty('--dr',(80+Math.random()*260)+'deg');}
-      else if(cfg.type==='snow'){el.style.left=Math.random()*100+'%';el.style.top='-10px';const sz=cfg.sizes[i%cfg.sizes.length];el.style.width=sz+'px';el.style.height=sz+'px';}
-      c.appendChild(el);
-    }
-  }
-
-  function v5buildBalloons(p) {
-    const c=document.getElementById(p+'-v5balloons'); if(!c) return; c.innerHTML='';
-    if(v5state.event!=='my_birthday') return;
-    const colors=['#ff7675','#74b9ff','#ffeaa7','#a29bfe','#55efc4','#fd79a8'];
-    for(let i=0;i<7;i++){
-      const b=document.createElement('div'); b.className='balloon';
-      b.style.setProperty('--bc',colors[i%colors.length]);
-      b.style.left=(5+Math.random()*90)+'%';
-      const dur=10+Math.random()*10, dl=-Math.random()*dur;
-      b.style.setProperty('--bd',dur+'s'); b.style.setProperty('--bdl',dl+'s');
-      b.style.setProperty('--bx',((Math.random()-0.5)*60)+'px');
-      b.style.transform=`scale(${0.75+Math.random()*0.5})`;
-      c.appendChild(b);
-    }
-  }
-
-  function v5updateHUD(p) {
-    const info = clovLevelInfo(v5state.level);
-    const isMax = v5state.level >= CLOV_MAX_LEVEL;
-    const grp = (typeof groupsData !== 'undefined' && groupsData[activeGroup]) || {};
-    const pct = isMax ? 100 : Math.round((typeof grp.levelProgress === 'number' ? grp.levelProgress : 0));
-    const icon=document.getElementById(p+'-v5lvicon'); if(icon) icon.textContent = isMax ? '+777' : ('Lv.'+v5state.level);
-    const name=document.getElementById(p+'-v5lvname'); if(name) name.textContent=info.name;
-    const pillbg=document.getElementById(p+'-v5pillbg'); if(pillbg) pillbg.style.width=pct+'%';
-    const pctEl=document.getElementById(p+'-v5lvpct'); if(pctEl) pctEl.textContent=pct+'%';
-    const pillWrap = pillbg && pillbg.closest('.lv-pill');
-    if (pillWrap) pillWrap.classList.toggle('is-full', pct >= 100 && !isMax);
-    const eyebrow=document.getElementById(p+'-v5eyebrow');
-    if(eyebrow){
-      if(v5state.event==='my_birthday'||v5state.event==='friend_birthday'){
-        eyebrow.textContent=v5state.event==='friend_birthday'?`🎉 ${v5state.friendName}님의 생일입니다!`:'🎂 생일 축하해요!';
-        eyebrow.style.color='#ffeba0'; eyebrow.style.fontSize='13px'; eyebrow.style.textShadow='0 1px 6px rgba(255,200,0,0.6)';
-      } else {
-        const labelText = (typeof activeGroup !== 'undefined' && typeof groupsData !== 'undefined' && groupsData[activeGroup]) ? (groupsData[activeGroup].ddayLabel || '우리 함께한 지') : '우리 함께한 지';
-        eyebrow.textContent = labelText;
-        eyebrow.style.color='rgba(255,255,255,0.82)'; eyebrow.style.fontSize='11px'; eyebrow.style.textShadow='0 1px 5px rgba(0,0,0,0.45)';
-      }
-    }
-    // sync dday
-    const ddayEl = document.getElementById(p+'-v5dday');
-    const mainDday = document.getElementById(p === 'dt' ? 'dt-dday' : 'mb-dday');
-    if (ddayEl) {
-      if (mainDday && mainDday.innerText) {
-        const txt = mainDday.innerText || '1';
-        ddayEl.textContent = txt.replace('D+','').replace(' 일째','').trim() || '1';
-      } else if (typeof activeGroup !== 'undefined' && typeof groupsData !== 'undefined' && groupsData[activeGroup]) {
-        if (!ddayEl.classList.contains('is-counting')) {
-          ddayEl.textContent = Math.max(1, Number(groupsData[activeGroup].ddayCount) || 1);
-        }
-      }
-    }
-    // LP 턴테이블 배경 테마: 계절별 트랙 재생 칩
-    const chipLabelEl = document.getElementById(p+'-v5chiplabel');
-    if (chipLabelEl) chipLabelEl.textContent = V5_SEASON_LABEL[v5state.season] || '';
-    const chipTrackEl = document.getElementById(p+'-v5chiptrack');
-    if (chipTrackEl && ddayEl) chipTrackEl.textContent = ddayEl.textContent;
-  }
-
-  function v5render() {
-    PREFIXES.forEach(p=>{
-      const scene=document.getElementById(p+'-v5scene'); if(!scene) return;
-      scene.dataset.time=v5state.time; scene.dataset.season=v5state.season;
-      scene.dataset.level=v5state.level; scene.dataset.event=v5state.event;
-      v5updateGround(p); v5updateMountains(p); v5updateCelestial(p);
-      v5buildClovers(p); v5buildParticles(p); v5buildBalloons(p); v5updateHUD(p);
-      v5ApplyWallpaperImage(p);
-    });
-  }
-
-  function v5detectNow() {
-    const h=new Date().getHours(), mo=new Date().getMonth()+1;
-    v5state.time=h>=5&&h<10?'morning':h>=10&&h<17?'day':h>=17&&h<20?'evening':'night';
-    v5state.season=mo>=3&&mo<=5?'spring':mo>=6&&mo<=8?'summer':mo>=9&&mo<=11?'fall':'winter';
-    v5state.event='none';
-  }
-
-  function v5syncButtons() {
-    document.querySelectorAll('[data-v5ctrl]').forEach(b=>{
-      b.classList.toggle('on', b.dataset.v5val===v5state[b.dataset.v5ctrl]);
-    });
-  }
-
-  // 레벨업 연동 (기존 levelUp과 sync)
-  window.v5LevelUp = function() {
-    if(typeof levelUp==='function') levelUp();
-    if(typeof friendshipLevel!=='undefined') v5state.level=friendshipLevel;
-    v5render();
-  };
-
-  // 기존 레벨 UI와 sync
-  function v5syncLevel() {
-    if(typeof friendshipLevel!=='undefined') v5state.level=friendshipLevel;
-    v5render();
-  }
-
-  // 배경 벽지 등록소 — 여기에 항목을 추가하고 계절별 이미지 4장만 넣으면
-  // 사용자설정 배경 목록과 scene-sky 적용이 자동으로 따라온다 (CSS 수정 불필요).
-  // 'field'(클로버 들판, 절차적 배경)는 항상 존재하는 기본값이라 이 목록에 넣지 않는다.
-  const V5_WALLPAPERS = {
-    'lp-turntable': {
-      name: 'LP 턴테이블',
-      icon: '💿',
-      images: {
-        spring: '../assets/ai-style/clov_LP_banner_spring_970x215.png',
-        summer: '../assets/ai-style/clov_LP_banner_970x215.png',
-        fall:   '../assets/ai-style/clov_LP_banner_autumn_970x215.png',
-        winter: '../assets/ai-style/clov_LP_banner_winter_970x215.png',
-      },
-    },
-  };
-  window.V5_WALLPAPERS = V5_WALLPAPERS;
-
-  // 배경 테마 "LP 턴테이블"의 레코드판 위치 계산 (사진은 background-size:cover이므로
-  // 실제 렌더 크기에 맞춰 원본(970x215) 좌표를 스케일/오프셋 변환해야 정확히 겹친다)
-  const V5_PHOTO_SRC = { w: 970, h: 215 };
-  const V5_PHOTO_REC = { x: 619, y: -14, size: 279 };
-  // 색종이 색상: clover-banner.html 원본 SEASON 설정값 그대로 (계절별로 다름)
-  const V5_BURST_COLORS = {
-    spring: ['#e05e8a','#f4a6c6','#ffd6e6','#fff3d6'],
-    summer: ['#ffffff','#a3d5e8','#8ba84f','#c9dd9f'],
-    fall:   ['#c2571e','#e08a3c','#f2c078','#ffe9c2'],
-    winter: ['#3f7cb0','#8ec3e0','#cfe8f5','#ffffff'],
-  };
-  const V5_SEASON_LABEL = { spring: '봄', summer: '여름', fall: '가을', winter: '겨울' };
-
-  // 현재 배경 테마(bgTheme)에 등록된 벽지가 있으면 계절에 맞는 이미지를 scene-sky에 적용
-  function v5ApplyWallpaperImage(p) {
-    const scene = document.getElementById(p+'-v5scene');
-    const sky = scene && scene.querySelector('.scene-sky');
-    if (!sky) return;
-    const wp = V5_WALLPAPERS[scene.dataset.bgTheme];
-    const src = wp && (wp.images[v5state.season] || wp.images.summer);
-    sky.style.backgroundImage = src ? 'url(' + src + ')' : '';
-  }
-  window.v5ApplyWallpaperImage = v5ApplyWallpaperImage;
-
-  function v5PositionPhotoRec(p) {
-    const scene = document.getElementById(p+'-v5scene');
-    const rec = document.getElementById(p+'-v5photorec');
-    if (!scene || !rec) return;
-    const w = scene.clientWidth, h = scene.clientHeight || V5_PHOTO_SRC.h;
-    if (!w) return;
-    const scale = Math.max(w / V5_PHOTO_SRC.w, h / V5_PHOTO_SRC.h);
-    const offsetX = (w - V5_PHOTO_SRC.w * scale) / 2;
-    const offsetY = (h - V5_PHOTO_SRC.h * scale) / 2;
-    rec.style.left = (offsetX + V5_PHOTO_REC.x * scale) + 'px';
-    rec.style.top = (offsetY + V5_PHOTO_REC.y * scale) + 'px';
-    rec.style.width = (V5_PHOTO_REC.size * scale) + 'px';
-    rec.style.height = (V5_PHOTO_REC.size * scale) + 'px';
-  }
-  window.v5PositionPhotoRec = v5PositionPhotoRec;
-
-  // 색종이 + 음표 폭죽 스프라이트 — 원래 레코드판 클릭 전용이었으나, 다른 화면(인생4컷 완성 등)에서도
-  // 재사용할 수 있도록 범용 함수로 분리. burstEl은 position:relative인 조상 안에 있는
-  // .v5-photo-burst 컨테이너(width:0;height:0)면 되고, left/top으로 터지는 중심점을 잡아준다.
-  function spawnConfettiBurst(burstEl, opts) {
-    if (!burstEl) return;
-    opts = opts || {};
-    const colors = opts.colors || V5_BURST_COLORS.summer;
-    const count = opts.count || 32;
-    const spread = opts.spread || 110;
-    for (let i = 0; i < count; i++) {
-      const s = document.createElement('span');
-      s.className = 'v5-photo-confetti';
-      const ang = Math.random() * Math.PI * 2, dist = spread * 0.42 + Math.random() * spread * 0.58, sz = 6 + Math.random() * 6;
-      s.style.width = sz + 'px'; s.style.height = sz + 'px';
-      s.style.borderRadius = Math.random() < 0.5 ? '50%' : '2px';
-      s.style.background = colors[i % colors.length];
-      s.style.setProperty('--dx', Math.cos(ang) * dist + 'px');
-      s.style.setProperty('--dy', Math.sin(ang) * dist + 'px');
-      s.style.setProperty('--dr', (Math.random() * 540 - 270) + 'deg');
-      burstEl.appendChild(s);
-      (function (node) { setTimeout(function () { node.remove(); }, 1000); })(s);
-    }
-    const glyphs = ['♪','♫','♬','♩'];
-    for (let j = 0; j < 3; j++) {
-      const n = document.createElement('span');
-      n.className = 'v5-photo-note';
-      const spreadX = (Math.random() * 2 - 1) * spread * 0.5, rise = -(70 + Math.random() * 60);
-      n.textContent = glyphs[j % glyphs.length];
-      n.style.fontSize = (15 + Math.random() * 11) + 'px';
-      n.style.color = j % 2 ? '#fffdf7' : colors[j % colors.length];
-      n.style.setProperty('--nx0', (spreadX * 0.3) + 'px');
-      n.style.setProperty('--nx', spreadX + 'px');
-      n.style.setProperty('--ny', rise + 'px');
-      n.style.setProperty('--nr', (Math.random() * 50 - 25) + 'deg');
-      n.style.animationDuration = (1.1 + Math.random() * 0.5) + 's';
-      burstEl.appendChild(n);
-      (function (node) { setTimeout(function () { node.remove(); }, 1700); })(n);
-    }
-  }
-  window.spawnConfettiBurst = spawnConfettiBurst;
-
-  // 레코드판 클릭 → 색종이 스프라이트 + 레벨업 (계절별 색상, clover-banner.html 기준)
-  window.v5PhotoRecClick = function(el) {
-    const scene = el.closest('.v5-scene');
-    const season = (scene && scene.dataset.season) || 'summer';
-    const colors = V5_BURST_COLORS[season] || V5_BURST_COLORS.summer;
-    const burst = scene && scene.querySelector('.v5-photo-burst');
-    if (burst) {
-      const recRect = el.getBoundingClientRect(), sceneRect = scene.getBoundingClientRect();
-      burst.style.left = (recRect.left - sceneRect.left + recRect.width / 2) + 'px';
-      burst.style.top = (recRect.top - sceneRect.top + recRect.height / 2) + 'px';
-      spawnConfettiBurst(burst, { colors, spread: Math.max(90, recRect.width * 0.55) });
-    }
-    if (typeof v5LevelUp === 'function') v5LevelUp();
-  };
-
-
-  // 테스트 패널 동적 생성 (DOM 타이밍 문제 방지)
-  (function() {
-    const panel = document.createElement('aside');
-    panel.className = 'v5-test-panel';
-    panel.innerHTML = `
-      <p class="tp-title" id="tpToggle"><span>🎛️ 배너 테마 테스트</span><span class="tp-chevron">▾</span></p>
-      <div class="tp-body" id="tpBody">
-      <div class="tp-row">
-        <span class="tp-label">🎉 이벤트</span>
-        <div class="tp-btns">
-          <button class="tp-btn on" data-v5ctrl="event" data-v5val="none">없음</button>
-          <button class="tp-btn" data-v5ctrl="event" data-v5val="my_birthday">내 생일 🎂</button>
-          <button class="tp-btn" data-v5ctrl="event" data-v5val="friend_birthday">친구 생일 🎉</button>
-        </div>
-      </div>
-      <div class="tp-row">
-        <span class="tp-label">⏰ 시간대</span>
-        <div class="tp-btns">
-          <button class="tp-btn" data-v5ctrl="time" data-v5val="morning">아침</button>
-          <button class="tp-btn on" data-v5ctrl="time" data-v5val="day">낮</button>
-          <button class="tp-btn" data-v5ctrl="time" data-v5val="evening">저녁</button>
-          <button class="tp-btn" data-v5ctrl="time" data-v5val="night">밤</button>
-        </div>
-      </div>
-      <div class="tp-row">
-        <span class="tp-label">🌿 계절</span>
-        <div class="tp-btns">
-          <button class="tp-btn" data-v5ctrl="season" data-v5val="spring">봄</button>
-          <button class="tp-btn on" data-v5ctrl="season" data-v5val="summer">여름</button>
-          <button class="tp-btn" data-v5ctrl="season" data-v5val="fall">가을</button>
-          <button class="tp-btn" data-v5ctrl="season" data-v5val="winter">겨울</button>
-        </div>
-      </div>
-      <div class="tp-row">
-        <span class="tp-label">💚 우정 레벨</span>
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-          <input type="range" id="v5lvSlider" min="1" max="777" value="3" step="1" style="flex:1;accent-color:#1b4332;cursor:pointer;">
-          <span id="v5lvSliderVal" style="font-size:12px;font-weight:900;color:#1b4332;min-width:16px;text-align:center;">3</span>
-        </div>
-        <div id="v5lvDesc" style="font-size:10px;color:#5c7a6a;font-weight:700;text-align:center;margin-bottom:4px;">초록 클로버 우정</div>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <span style="font-size:10px;color:#5c7a6a;font-weight:700;white-space:nowrap;">진행률</span>
-          <input type="range" id="v5progressSlider" min="0" max="100" value="0" step="1" style="flex:1;accent-color:#1b4332;cursor:pointer;">
-          <span id="v5progressSliderVal" style="font-size:12px;font-weight:900;color:#1b4332;min-width:28px;text-align:center;">0%</span>
-        </div>
-      </div>
-      <div class="tp-divider"></div>
-      <div class="tp-row">
-        <span class="tp-label tp-label-pink">💌 편지함 테스트</span>
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-          <input type="range" id="letterTestSlider" min="0" max="8" value="2" step="1" class="tp-slider-pink" style="flex:1;cursor:pointer;">
-          <span id="letterTestSliderVal" class="tp-pink-val">2</span>
-        </div>
-        <div class="tp-btns">
-          <button class="tp-btn tp-btn-pink" id="letterTestZero" type="button">📭 0개로 비우기</button>
-          <button class="tp-btn tp-btn-pink" id="letterTestFull" type="button">📬 가득 채우기</button>
-          <button class="tp-btn tp-btn-pink" id="letterTestRestore" type="button">↺ 원래대로</button>
-        </div>
-      </div>
-      <div class="tp-divider"></div>
-      <button class="tp-reset" id="v5resetBtn">⏱ 현재 시간으로 복귀</button>
-      </div>
-    `;
-    document.body.appendChild(panel);
-    const tpToggle = document.getElementById('tpToggle');
-    if (tpToggle) {
-      tpToggle.addEventListener('click', () => {
-        panel.classList.toggle('collapsed');
-      });
-    }
-  })();
-
-  // 버튼 바인딩 (DOMContentLoaded로 패널 렌더 후 실행)
-  function v5bindButtons() {
-    document.querySelectorAll('[data-v5ctrl]').forEach(btn=>{
-      // avoid double-binding
-      if(btn._v5bound) return;
-      btn._v5bound = true;
-      btn.addEventListener('click',()=>{
-        v5state[btn.dataset.v5ctrl]=btn.dataset.v5val;
-        v5syncButtons(); v5render();
-      });
-    });
-    const resetBtn = document.getElementById('v5resetBtn');
-    if(resetBtn && !resetBtn._v5bound) {
-      resetBtn._v5bound = true;
-      resetBtn.addEventListener('click',()=>{
-        v5detectNow(); v5syncButtons(); v5render();
-      });
-    }
-    // 레벨 슬라이더 바인딩
-    const slider = document.getElementById('v5lvSlider');
-    if(slider && !slider._v5bound) {
-      slider._v5bound = true;
-      slider.addEventListener('input', function() {
-        v5state.level = +this.value;
-        const descEl = document.getElementById('v5lvDesc');
-        const valEl  = document.getElementById('v5lvSliderVal');
-        if(valEl) valEl.textContent = this.value;
-        if(descEl) descEl.textContent = clovLevelInfo(v5state.level).name;
-        v5render();
-      });
-    }
-    // 진행률(%) 슬라이더 바인딩 — 레벨과 별개로 게이지 %만 즉시 테스트
-    const progressSlider = document.getElementById('v5progressSlider');
-    if(progressSlider && !progressSlider._v5bound) {
-      progressSlider._v5bound = true;
-      progressSlider.addEventListener('input', function() {
-        const valEl = document.getElementById('v5progressSliderVal');
-        if(valEl) valEl.textContent = this.value + '%';
-        if(typeof groupsData !== 'undefined' && groupsData[activeGroup]) {
-          groupsData[activeGroup].levelProgress = +this.value;
-        }
-        v5render();
-      });
-    }
-    // 편지함 테스트 바인딩
-    const letterFillerPool = [
-      { from: "단짝친구 🍀", text: "오늘 하루도 고생 많았어. 내일은 더 좋은 일만 가득하길!", favorite: false },
-      { from: "단짝친구 🍀", text: "네가 있어서 요즘 하루하루가 든든해. 항상 고마워!", favorite: false },
-      { from: "단짝친구 🍀", text: "다음 주말엔 미뤄뒀던 약속 꼭 잡자, 보고 싶다!", favorite: false },
-      { from: "단짝친구 🍀", text: "힘든 일 있으면 언제든 말해. 내가 옆에 있을게.", favorite: false },
-      { from: "단짝친구 🍀", text: "요즘 부쩍 웃을 일이 많아진 건 다 너 덕분이야.", favorite: false },
-      { from: "단짝친구 🍀", text: "사소한 순간에도 네 생각이 나. 좋은 친구를 둬서 행운이다.", favorite: false }
-    ];
-    function applyLetterTestCount(n) {
-      if (typeof groupsData === 'undefined' || typeof activeGroup === 'undefined') return;
-      const g = groupsData[activeGroup];
-      if (!g) return;
-      if (!window._letterTestBackup) window._letterTestBackup = {};
-      if (!window._letterTestBackup[activeGroup]) {
-        window._letterTestBackup[activeGroup] = JSON.parse(JSON.stringify(g.letters || []));
-      }
-      const backup = window._letterTestBackup[activeGroup];
-      let letters;
-      if (n <= backup.length) {
-        letters = backup.slice(0, n);
-      } else {
-        letters = backup.concat(
-          Array.from({ length: n - backup.length }, (_, i) => letterFillerPool[i % letterFillerPool.length])
-        );
-      }
-      g.letters = letters;
-      const valEl = document.getElementById('letterTestSliderVal');
-      const sliderEl = document.getElementById('letterTestSlider');
-      if (valEl) valEl.textContent = n;
-      if (sliderEl) sliderEl.value = n;
-      if (typeof renderLetters === 'function') renderLetters();
-    }
-    const letterSlider = document.getElementById('letterTestSlider');
-    if (letterSlider && !letterSlider._v5bound) {
-      letterSlider._v5bound = true;
-      letterSlider.addEventListener('input', function() {
-        applyLetterTestCount(+this.value);
-      });
-    }
-    const letterZeroBtn = document.getElementById('letterTestZero');
-    if (letterZeroBtn && !letterZeroBtn._v5bound) {
-      letterZeroBtn._v5bound = true;
-      letterZeroBtn.addEventListener('click', () => applyLetterTestCount(0));
-    }
-    const letterFullBtn = document.getElementById('letterTestFull');
-    if (letterFullBtn && !letterFullBtn._v5bound) {
-      letterFullBtn._v5bound = true;
-      letterFullBtn.addEventListener('click', () => applyLetterTestCount(8));
-    }
-    const letterRestoreBtn = document.getElementById('letterTestRestore');
-    if (letterRestoreBtn && !letterRestoreBtn._v5bound) {
-      letterRestoreBtn._v5bound = true;
-      letterRestoreBtn.addEventListener('click', () => {
-        if (window._letterTestBackup && window._letterTestBackup[activeGroup]) {
-          applyLetterTestCount(window._letterTestBackup[activeGroup].length);
-        }
-      });
-    }
-  }
-  // 패널이 위에서 동적 생성됐으므로 바로 바인딩 가능
-  v5bindButtons(); v5syncButtons();
-
-  // 초기화 (별 미리 생성)
-  PREFIXES.forEach(p=>v5buildStars(p));
-  v5detectNow(); v5render();
-  PREFIXES.forEach(p=>v5PositionPhotoRec(p));
-  window.addEventListener('resize', function(){ PREFIXES.forEach(p=>v5PositionPhotoRec(p)); });
-
-  // 기존 updateFriendshipUI와 연동
-  const _origUpdateFriendshipUI = window.updateFriendshipUI;
-  window.updateFriendshipUI = function() {
-    if(_origUpdateFriendshipUI) _origUpdateFriendshipUI.apply(this, arguments);
-    if(typeof friendshipLevel!=='undefined') v5state.level=friendshipLevel;
-    const sl=document.getElementById('v5lvSlider'), sv=document.getElementById('v5lvSliderVal'), sd=document.getElementById('v5lvDesc');
-    if(sl) sl.value=v5state.level;
-    if(sv) sv.textContent=v5state.level;
-    if(sd) sd.textContent=clovLevelInfo(v5state.level).name;
-    const grp = (typeof groupsData !== 'undefined' && groupsData[activeGroup]) || {};
-    const pctNow = v5state.level >= CLOV_MAX_LEVEL ? 100 : Math.round(typeof grp.levelProgress === 'number' ? grp.levelProgress : 0);
-    const psl=document.getElementById('v5progressSlider'), psv=document.getElementById('v5progressSliderVal');
-    if(psl) psl.value=pctNow;
-    if(psv) psv.textContent=pctNow + '%';
-    v5render();
-  };
-})();
-/* ══════════════════════ END V5 BANNER ENGINE ══════════════════════ */
-
-
-
-
-

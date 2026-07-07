@@ -19,14 +19,6 @@
 (function () {
   'use strict';
 
-  // 이 스크립트 자신의 실제 로드 경로 기준으로 02-main/ 폴더의 절대 URL을 잡아둔다.
-  // (clov-profile-modal.js의 MAIN_BASE와 동일한 방식 — file://로 직접 열어도 깨지지 않도록)
-  var MAIN_BASE = (function () {
-    var src = document.currentScript && document.currentScript.src;
-    return src ? src.replace(/components\/clov-header\.js.*$/, '') : '../02-main/';
-  })();
-  var LOGO_SRC = MAIN_BASE + '../assets/ai-style/clov_logo_half_leaf_cartoon_transparent.png';
-
   /* ── CSS 주입 ──────────────────────────────────────────── */
   var CSS = `
 .clov-hdr {
@@ -46,8 +38,8 @@
   transition: background .3s, border-color .3s;
 }
 body.dark-mode .clov-hdr {
-  background: var(--header-glass-bg, var(--header-bg, rgba(20,21,14,.82)));
-  border-color: var(--border-color, #2a2c1e);
+  background: var(--header-glass-bg, rgba(9,13,10,.82));
+  border-color: var(--border-color, #1e2f24);
 }
 
 .clov-hdr-left,
@@ -55,13 +47,11 @@ body.dark-mode .clov-hdr {
 
 /* 로고 */
 .clov-hdr-logo {
-  display: inline-flex; align-items: center; gap: 6px;
   font-size: 20px; font-weight: 800; cursor: pointer;
   color: var(--primary-green, var(--primary, #1b4332));
   letter-spacing: -.5px; transition: color .3s;
 }
-body.dark-mode .clov-hdr-logo { color: var(--primary-green, var(--primary, #9ccc65)); }
-.clov-hdr-logo-mark { width: 24px; height: 24px; object-fit: contain; display: block; }
+body.dark-mode .clov-hdr-logo { color: var(--primary-green, #4ade80); }
 
 /* 뒤로가기 */
 .clov-hdr-back {
@@ -71,14 +61,14 @@ body.dark-mode .clov-hdr-logo { color: var(--primary-green, var(--primary, #9ccc
   padding: 4px 8px; border-radius: 8px; transition: background .15s, color .3s;
 }
 .clov-hdr-back:hover { background: var(--nav-item-bg-active, #e8f3ed); }
-body.dark-mode .clov-hdr-back:hover { background: var(--nav-item-bg-active, #2b3020); }
+body.dark-mode .clov-hdr-back:hover { background: var(--nav-item-bg-active, #1e3a27); }
 .clov-hdr-back-arrow { font-size: 20px; line-height: 1; }
 .clov-hdr-title {
   font-size: 15px; font-weight: 700;
   color: var(--text-color, var(--text, #2c3e35));
   transition: color .3s;
 }
-body.dark-mode .clov-hdr-title { color: var(--text-color, #eef0e2); }
+body.dark-mode .clov-hdr-title { color: var(--text-color, #f0fdf4); }
 
 /* 네비게이션 탭 (main 타입) */
 .clov-hdr-nav { display: flex; align-items: center; gap: 2px; }
@@ -96,8 +86,8 @@ body.dark-mode .clov-hdr-title { color: var(--text-color, #eef0e2); }
 }
 body.dark-mode .clov-hdr-nav-btn:hover,
 body.dark-mode .clov-hdr-nav-btn.active {
-  background: var(--nav-item-bg-active, #2b3020);
-  color: var(--nav-item-active, #9ccc65);
+  background: var(--nav-item-bg-active, #1e3a27);
+  color: var(--nav-item-active, #4ade80);
 }
 .clov-hdr-nav-icon-btn { padding: 7px 9px; }
 
@@ -109,7 +99,7 @@ body.dark-mode .clov-hdr-nav-btn.active {
   color: var(--text-muted, #61766a); transition: background .15s;
 }
 .clov-hdr-icon-btn:hover { background: var(--nav-item-bg-active, #e8f3ed); }
-body.dark-mode .clov-hdr-icon-btn:hover { background: var(--nav-item-bg-active, #2b3020); }
+body.dark-mode .clov-hdr-icon-btn:hover { background: var(--nav-item-bg-active, #1e3a27); }
 
 /* 다크모드 토글 — slide 애니메이션 보조 */
 .clov-dark-toggle { overflow: hidden; position: relative; }
@@ -122,11 +112,6 @@ body.dark-mode .clov-hdr-icon-btn:hover { background: var(--nav-item-bg-active, 
   51%  { transform: translateY(110%); opacity: 0; }
   100% { transform: translateY(0); opacity: 1; }
 }
-/* 해/달 아이콘은 body.dark-mode 유무로 CSS가 자동 전환 — JS는 textContent를 더 이상 건드리지 않는다 */
-.clov-dark-icon { display: inline-flex; }
-.clov-dark-icon .clov-icon-moon { display: none; }
-body.dark-mode .clov-dark-icon .clov-icon-sun { display: none; }
-body.dark-mode .clov-dark-icon .clov-icon-moon { display: inline-flex; }
 
 /* 아바타 */
 .clov-hdr-avatar-wrap { position: relative; }
@@ -139,8 +124,8 @@ body.dark-mode .clov-dark-icon .clov-icon-moon { display: inline-flex; }
   transition: background .15s, color .3s;
 }
 .clov-hdr-avatar:hover { background: var(--input-border, #d8ebd2); }
-body.dark-mode .clov-hdr-avatar { color: var(--primary-green, var(--primary, #9ccc65)); }
-body.dark-mode .clov-hdr-avatar:hover { background: var(--input-border, #6b8f4733); }
+body.dark-mode .clov-hdr-avatar { color: var(--primary-green, #4ade80); }
+body.dark-mode .clov-hdr-avatar:hover { background: var(--input-border, #22c55e33); }
 
 .clov-hdr-dropdown {
   position: absolute; top: 42px; right: 0;
@@ -152,15 +137,13 @@ body.dark-mode .clov-hdr-avatar:hover { background: var(--input-border, #6b8f473
 }
 .clov-hdr-dropdown.open { display: block; }
 .clov-hdr-dropdown li {
-  display: flex; align-items: center; gap: 8px;
   padding: 10px 16px; font-size: 13px; cursor: pointer;
   color: var(--text-color, var(--text, #2c3e35)); transition: background .15s;
 }
 .clov-hdr-dropdown li:hover { background: var(--nav-item-bg-active, #e8f3ed); }
-body.dark-mode .clov-hdr-dropdown { background: var(--card-bg, #1e2016); border-color: var(--border-color, #2a2c1e); }
-body.dark-mode .clov-hdr-dropdown li { color: var(--text-color, #eef0e2); }
-body.dark-mode .clov-hdr-dropdown li:hover { background: var(--nav-item-bg-active, #2b3020); }
-.nav-icon svg, .clov-hdr-dropdown li svg, .clov-hdr-nav-icon-btn svg, .clov-hdr-icon-btn svg { display: block; flex-shrink: 0; }
+body.dark-mode .clov-hdr-dropdown { background: var(--card-bg, #151f18); border-color: var(--border-color, #1e2f24); }
+body.dark-mode .clov-hdr-dropdown li { color: var(--text-color, #f0fdf4); }
+body.dark-mode .clov-hdr-dropdown li:hover { background: var(--nav-item-bg-active, #1e3a27); }
 `;
 
   function injectCSS() {
@@ -179,7 +162,10 @@ body.dark-mode .clov-hdr-dropdown li:hover { background: var(--nav-item-bg-activ
   function applyDark(dark) {
     document.body.classList.toggle('dark-mode', dark);
     localStorage.setItem('clov_theme', dark ? 'dark' : 'light');
-    // 아이콘은 body.dark-mode 기준 CSS가 알아서 전환하므로 여기서는 더 이상 손댈 게 없다
+    // 컴포넌트 버튼 아이콘 업데이트
+    document.querySelectorAll('.clov-dark-icon').forEach(function (el) {
+      el.textContent = dark ? '🌙' : '☀️';
+    });
   }
 
   function initTheme(cfg) {
@@ -199,33 +185,18 @@ body.dark-mode .clov-hdr-dropdown li:hover { background: var(--nav-item-bg-activ
   }
 
   /* ── 렌더 헬퍼 ────────────────────────────────────────── */
-  // 해/달 라인 아이콘 — body.dark-mode 여부는 CSS(.clov-dark-icon .clov-icon-*)가 판단하므로
-  // 두 아이콘을 항상 같이 그려두고 보이는 쪽만 CSS로 스위칭한다 (JS는 텍스트를 더 이상 바꾸지 않음)
-  var ICON_SUN = '<svg class="clov-icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>';
-  var ICON_MOON = '<svg class="clov-icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
-  var DARK_ICON_HTML = ICON_SUN + ICON_MOON;
-
-  // 네비/드롭다운용 라인 아이콘 (Tabler 톤에 맞춘 얇은 stroke SVG, currentColor로 라이트/다크 자동 대응)
-  var ICON_HOME = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg>';
-  var ICON_CAMERA = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"/><circle cx="12" cy="13" r="3.5"/></svg>';
-  var ICON_MAIL = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>';
-  var ICON_CALENDAR = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>';
-  var ICON_BELL = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>';
-  var ICON_USERS = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="3"/><path d="M2 20c0-3 2.5-5 6-5s6 2 6 5"/><circle cx="17" cy="9" r="2.3"/><path d="M15.2 14.6c2.3.5 3.6 2 3.8 4.4"/></svg>';
-  var ICON_SHARE = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="12" r="2.3"/><circle cx="18" cy="6" r="2.3"/><circle cx="18" cy="18" r="2.3"/><path d="M8.1 10.8 15.9 7M8.1 13.2l7.8 3.6"/></svg>';
-  var ICON_SETTINGS = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13a7.97 7.97 0 0 0 0-2l2-1.6-2-3.4-2.4 1a8 8 0 0 0-1.7-1L15 3h-4l-.3 2.6a8 8 0 0 0-1.7 1l-2.4-1-2 3.4L6.6 11a8 8 0 0 0 0 2l-2 1.6 2 3.4 2.4-1a8 8 0 0 0 1.7 1L11 21h4l.3-2.6a8 8 0 0 0 1.7-1l2.4 1 2-3.4-2-1.6z"/></svg>';
-
   function darkBtn(useDesktopJs) {
+    var icon = currentIsDark() ? '🌙' : '☀️';
     var onclick = useDesktopJs
       ? 'typeof toggleDarkMode==="function"?toggleDarkMode():ClovHeader.toggleDark()'
       : 'ClovHeader.toggleDark()';
     // main 타입에서는 기존 dt-dark-btn, toggle-icon 클래스 유지 (desktop.js 호환)
     if (useDesktopJs) {
       return '<button class="clov-hdr-icon-btn clov-dark-toggle dt-dark-btn" onclick="' + onclick + '" title="다크모드">'
-        + '<span class="clov-dark-icon toggle-icon">' + DARK_ICON_HTML + '</span></button>';
+        + '<span class="clov-dark-icon toggle-icon">' + icon + '</span></button>';
     }
     return '<button class="clov-hdr-icon-btn clov-dark-toggle" onclick="' + onclick + '" title="다크모드">'
-      + '<span class="clov-dark-icon">' + DARK_ICON_HTML + '</span></button>';
+      + '<span class="clov-dark-icon">' + icon + '</span></button>';
   }
 
   function avatarHTML(label, items) {
@@ -247,10 +218,10 @@ body.dark-mode .clov-hdr-dropdown li:hover { background: var(--nav-item-bg-activ
   /* ── 타입별 렌더 ──────────────────────────────────────── */
   function renderMain(cfg) {
     var tabs = [
-      { id: 'space',    icon: ICON_HOME,     label: '우정공간' },
-      { id: 'feed',     icon: ICON_CAMERA,   label: '추억피드' },
-      { id: 'letter',   icon: ICON_MAIL,     label: '행운편지' },
-      { id: 'schedule', icon: ICON_CALENDAR, label: '일정계획' },
+      { id: 'space',    icon: '🏠', label: '우정공간' },
+      { id: 'feed',     icon: '📸', label: '추억피드' },
+      { id: 'letter',   icon: '💌', label: '행운편지' },
+      { id: 'schedule', icon: '📅', label: '일정계획' },
     ];
     var navHtml = tabs.map(function (t) {
       var active = cfg.activeTab === t.id ? ' active' : '';
@@ -260,19 +231,20 @@ body.dark-mode .clov-hdr-dropdown li:hover { background: var(--nav-item-bg-activ
         + '<span class="nav-icon">' + t.icon + '</span><span>' + t.label + '</span></button>';
     }).join('');
     navHtml += '<button class="clov-hdr-nav-btn dt-nav-item clov-hdr-nav-icon-btn" id="dt-nav-noti"'
-      + ' onclick="openNotiModal()" title="알림">' + ICON_BELL + '</button>';
+      + ' onclick="openNotiModal()" title="알림">🔔</button>';
 
     var backHref = cfg.backHref || '../03-rooms/makerooms.html';
     var dropdown = cfg.dropdownItems || [
-      { label: ICON_USERS + ' 방 변경하기',    onclick: "openModal('dt-group-modal')" },
-      { label: ICON_SHARE + ' 현재 방 코드 공유하기', onclick: "openModal('dt-invite-modal')" },
-      { label: ICON_SETTINGS + ' 사용자설정',    onclick: "openProfileModal();document.getElementById('clov-hdr-drop').classList.remove('open')" },
+      { label: '👥 방 변경하기',    onclick: "openModal('dt-group-modal')" },
+      { label: '🤝 현재 방 코드 공유하기', onclick: "openModal('dt-invite-modal')" },
+      { label: '개인정보 수정',    onclick: "openProfileModal();document.getElementById('clov-hdr-drop').classList.remove('open')" },
       { label: '로그아웃',        onclick: "window.location.href='../01-auth/login.html'" },
+      { label: '🙋 방 멤버 확인',  onclick: "openMemberListModal();document.getElementById('clov-hdr-drop').classList.remove('open')" },
     ];
 
     return '<div class="clov-hdr-left">'
       + '<a href="' + backHref + '" class="clov-hdr-back" title="방 목록으로"><span class="clov-hdr-back-arrow">‹</span></a>'
-      + '<span class="clov-hdr-logo" onclick="switchDesktopTab(\'space\')"><img class="clov-hdr-logo-mark" src="' + LOGO_SRC + '" alt="Clov 로고">Clov.</span>'
+      + '<span class="clov-hdr-logo" onclick="switchDesktopTab(\'space\')">🍀 Clov.</span>'
       + '</div>'
       + '<div class="clov-hdr-right">'
       + '<nav class="clov-hdr-nav">' + navHtml + '</nav>'
@@ -296,11 +268,12 @@ body.dark-mode .clov-hdr-dropdown li:hover { background: var(--nav-item-bg-activ
 
   function renderHome(cfg) {
     return '<div class="clov-hdr-left">'
-      + '<span class="clov-hdr-logo"><img class="clov-hdr-logo-mark" src="' + LOGO_SRC + '" alt="Clov 로고">Clov.</span>'
+      + '<span class="clov-hdr-logo">🍀 Clov.</span>'
       + '</div>'
       + '<div class="clov-hdr-right">'
-      + (cfg.showMail !== false ? '<button class="clov-hdr-icon-btn" title="편지함" onclick="' + (cfg.onMail || '') + '">' + ICON_MAIL + '</button>' : '')
-      + (cfg.showBell !== false ? '<button class="clov-hdr-icon-btn" title="알림" onclick="' + (cfg.onBell || '') + '">' + ICON_BELL + '</button>' : '')
+      + (cfg.showMail !== false ? '<button class="clov-hdr-icon-btn" title="편지함" onclick="' + (cfg.onMail || '') + '">✉️</button>' : '')
+      + (cfg.showBell !== false ? '<button class="clov-hdr-icon-btn" title="알림" onclick="' + (cfg.onBell || '') + '">🔔</button>' : '')
+      + darkBtn(false)
       + avatarHTML(cfg.avatarLabel || '김', cfg.dropdownItems)
       + '</div>';
   }

@@ -1,0 +1,1317 @@
+<!DOCTYPE html><html lang="ko"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clov. - 디자인 미리보기 &amp; 프로토타입</title>
+    <link rel="stylesheet" href="css/desktop.css?v=22">
+<script src="components/clov-header.js?v=5"></script>
+<script src="components/clov-modal.js?v=1"></script>
+<style>
+/* ── 전체화면 레이아웃 오버라이드 ── */
+body {
+  padding: 0 !important;
+  overflow: hidden !important;
+  height: 100vh;
+}
+.split-workspace {
+  max-width: 100% !important;
+  height: 100vh;
+  gap: 0 !important;
+}
+.view-section {
+  flex: 1;
+  height: 100vh;
+  gap: 0 !important;
+}
+.desktop-window {
+  width: 100% !important;
+  height: 100vh !important;
+  border-radius: 0 !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+.window-content {
+  height: 100vh !important;
+}
+/* 스크롤바 숨김 (스크롤 기능은 유지) */
+.main-content {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.main-content::-webkit-scrollbar {
+  display: none;
+}
+</style>
+<link rel="stylesheet" href="css/global-theme.css">
+</head>
+
+<body>
+
+    
+
+    <div class="split-workspace">
+
+        <!-- -------------------------------------------- -->
+        <!-- [LEFT] 데스크톱 화면 뷰포트                     -->
+        <!-- -------------------------------------------- -->
+        <div class="view-section">
+            
+            <div class="desktop-window">
+                
+                <div class="window-content">
+                    <div id="app-header"></div>
+                    <script>ClovHeader.init({ type: 'main', activeTab: 'space' });</script>
+
+                    <main class="main-content" id="desktop-scroll-container">
+                        <!-- 탭 1: 우정 공간 -->
+                        <div id="dt-tab-space" class="dt-page-view active">
+                            <div class="main-content-inner">
+                                <div class="dashboard-card" id="dt-dashboard" style="padding:0; overflow:hidden; border-radius:18px;">
+<div class="v5-scene" id="dt-v5scene" data-time="day" data-season="summer" data-level="3" data-event="none">
+                                        <div class="scene-sky"></div>
+                                        <div class="scene-stars" id="dt-v5stars"></div>
+                                        <div class="scene-celestial" id="dt-v5cel"></div>
+                                        <div class="scene-clouds">
+                                            <div class="cloud" style="width:84px;height:23px;top:11%;animation-duration:34s;animation-delay:-6s;"></div>
+                                            <div class="cloud" style="width:56px;height:16px;top:5%;animation-duration:26s;animation-delay:-18s;opacity:.72;"></div>
+                                            <div class="cloud" style="width:44px;height:13px;top:23%;animation-duration:20s;animation-delay:-3s;opacity:.60;"></div>
+                                        </div>
+                                        <div class="scene-mountains">
+                                            <svg viewBox="0 0 820 100" preserveAspectRatio="none">
+                                                <path id="dt-v5mtnFar" d="M0,100 L75,65 L148,76 L228,52 L318,68 L408,44 L490,60 L572,40 L650,56 L718,46 L776,62 L820,50 L820,100 Z" fill="rgba(130,175,140,0.88)"></path>
+                                                <path id="dt-v5mtnNear" d="M0,100 L88,72 L195,65 L320,76 L435,60 L555,70 L668,58 L768,68 L820,63 L820,100 Z" fill="rgba(58,118,78,0.96)"></path>
+                                            </svg>
+                                        </div>
+                                        <div class="scene-ground" id="dt-v5ground"></div>
+                                        <div class="scene-clover-field" id="dt-v5clovers"></div>
+                                        <div class="season-particles" id="dt-v5particles"></div>
+                                        <div class="scene-balloons" id="dt-v5balloons"></div>
+                                        <div class="scene-haze"></div>
+                                        <div class="hud-guard"></div>
+                                        <div class="banner-hud">
+                                            <div>
+                                                <p class="hud-eyebrow" id="dt-v5eyebrow">우리 함께한 지</p>
+                                                <p class="hud-dday">D+<span id="dt-v5dday">124</span> 일째</p>
+                                            </div>
+                                            <div class="hud-bottom">
+                                                <div class="lv-pill">
+                                                    <div class="lv-pill-bg" id="dt-v5pillbg" style="width:68%"></div>
+                                                    <div class="lv-pill-content">
+                                                        <span class="lv-badge-icon" id="dt-v5lvicon" onclick="v5LevelUp()" title="클릭하면 레벨업!">Lv.3</span>
+                                                        <span class="lv-badge-name" id="dt-v5lvname">초록 클로버 우정</span>
+                                                        <span class="lv-pct" id="dt-v5lvpct">68%</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="grid-column: span 2;">
+                                    <div class="main-photo-card">
+                                        <div class="main-photo-wrapper">
+                                            <img id="dt-main-photo" src="" alt="대표 사진">
+                                            <div class="photo-edit-overlay" onclick="event.stopPropagation(); triggerPhotoUpload('dt');" title="대표 사진 변경하기">
+                                                <span>📸</span>
+                                            </div>
+                                        </div>
+                                        <div class="cover-summary">
+                                            <div class="cover-kicker">우정공간 대표 커버</div>
+                                            <div class="cover-title-row" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 8px;">
+                                                <div class="title-input-box" style="position: relative;" onclick="event.stopPropagation(); const el=document.getElementById('dt-photo-title'); if(el) el.focus();" title="클릭하여 제목 수정">
+                                                    <span class="title-bg-placeholder">제목을 입력하세요</span>
+                                                    <span contenteditable="true" id="dt-photo-title" class="editable-title" onclick="event.stopPropagation()" style="cursor: text; flex: 1; min-width: 320px; outline: none; border: none; font-size: 18px; font-weight: 800; color: var(--text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; position: relative; z-index: 1; background: transparent;" oninput="handleTitleInput(this)" onkeydown="return onTitleKeyDown(event, this);" onblur="savePhotoTitle('dt')">우리가 고등학교때 찍은 사진</span>
+                                                    <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;" onclick="event.stopPropagation();">
+                                                        <span id="dt-title-count" style="font-size: 12px; color: var(--primary-green); font-weight: 700; background: rgba(27, 67, 50, 0.12); padding: 4px 10px; border-radius: 12px; white-space: nowrap;">28 / 40</span>
+                                                        <span style="font-size: 11px; color: var(--text-muted); font-weight: 600; white-space: nowrap;">(한글 20자 / 영어 40자)</span>
+                                                    </div>
+                                                </div>
+                                                <div class="cover-avatar-stack" aria-label="참여 멤버">
+                                                    <span class="cover-avatar">나</span>
+                                                    <span class="cover-avatar">솔</span>
+                                                    <span class="cover-avatar">민</span>
+                                                    <span class="cover-avatar">준</span>
+                                                </div>
+                                            </div>
+                                            <div class="cover-meta-grid">
+                                                <div class="cover-meta-item member-highlight-card" onclick="openMemberListModal(event)" style="cursor: pointer; display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; background: rgba(248, 251, 249, 0.85); border: 1px solid rgba(27, 67, 50, 0.15); border-radius: 14px; box-shadow: 0 4px 14px rgba(8, 28, 22, 0.05); transition: all 0.25s ease;" title="클릭하여 참여 멤버 리스트 보기">
+                                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                                        <div style="display: flex; align-items: center;">
+                                                            <div style="width: 30px; height: 30px; border-radius: 50%; background: var(--primary-green); color: white; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; border: 1.5px solid white; z-index: 4;">나</div>
+                                                            <div style="width: 30px; height: 30px; border-radius: 50%; background: #52b788; color: white; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; border: 1.5px solid white; margin-left: -8px; z-index: 3;">솔</div>
+                                                            <div style="width: 30px; height: 30px; border-radius: 50%; background: #74c69d; color: white; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; border: 1.5px solid white; margin-left: -8px; z-index: 2;">민</div>
+                                                            <div style="width: 30px; height: 30px; border-radius: 50%; background: #95d5b2; color: white; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; border: 1.5px solid white; margin-left: -8px; z-index: 1;">준</div>
+                                                        </div>
+                                                        <div style="display: flex; flex-direction: column; gap: 1px;">
+                                                            <span style="font-size: 11px; color: var(--text-muted); font-weight: 700; letter-spacing: -0.2px;">참여 멤버</span>
+                                                            <span style="font-size: 14px; font-weight: 800; color: var(--text-color);">4명 함께하는 중</span>
+                                                        </div>
+                                                    </div>
+                                                    <div style="background: rgba(27, 67, 50, 0.08); color: var(--primary-green); font-size: 11px; font-weight: 700; padding: 6px 12px; border-radius: 16px; border: 1px solid rgba(27, 67, 50, 0.12); display: flex; align-items: center; gap: 4px;">
+                                                        <span>멤버 보기</span>
+                                                        <span style="font-size: 10px;">➔</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="schedule-banner" onclick="switchDesktopTab('schedule')">
+                                        <div class="schedule-info">
+                                            <span class="schedule-icon">📅</span>
+                                            <span class="schedule-title" id="dt-schedule-title">일정 계획 로딩 중...</span>
+                                            <span class="schedule-date" id="dt-schedule-date"></span>
+                                        </div>
+                                        <div class="schedule-dday-badge" id="dt-schedule-dday">D-Day</div>
+                                    </div>
+                                </div>
+                                <section class="space-memory-preview">
+                                    <div class="section-title">
+                                        <span>참여자별 추억 증거 카드</span>
+                                        <div class="section-actions">
+                                            <button class="btn-action-sm btn-memory-write" type="button" data-open-write-modal onclick="openWriteModal()">✏️ 글쓰기</button>
+                                            <button class="btn-action-sm" onclick="switchDesktopTab('feed')">전체 피드 보기</button>
+                                        </div>
+                                    </div>
+                                    <div class="space-memory-grid" id="dt-space-memory-zone"></div>
+                                </section>
+                            </div>
+                        </div>
+
+                        <!-- 탭 2: 추억 피드 -->
+                        <div id="dt-tab-feed" class="dt-page-view">
+                            <div class="feed-hero">
+                                <div class="section-title">
+                                    <span class="feed-title">월별 추억 아카이브</span>
+                                    <span class="feed-subtitle">단짝과 남긴 기록을 월 단위로 접어서 보고, 필요한 달만 빠르게 꺼내봅니다.</span>
+                                </div>
+                                <div class="feed-hero-meta">
+                                    <div class="feed-month-summary" id="dt-feed-month-summary">전체 추억</div>
+                                    <button class="btn-action-sm feed-write-btn" type="button" data-open-write-modal onclick="openWriteModal()">✏️ 글쓰기</button>
+                                </div>
+                            </div>
+                            <div class="feed-controls">
+                                <button class="month-picker-trigger" id="dt-month-picker-trigger" type="button" onclick="toggleMonthPicker(event)" title="월 선택">📅</button>
+                                <div class="feed-filter-tabs">
+                                    <button class="feed-tab active" data-filter="all" onclick="setFeedFilter('all')">전체</button>
+                                    <button class="feed-tab" data-filter="mine" onclick="setFeedFilter('mine')">내 기록</button>
+                                    <button class="feed-tab" data-filter="others" onclick="setFeedFilter('others')">친구 기록</button>
+                                </div>
+                            </div>
+                            <div id="dt-full-feed-zone" class="feed-grid">
+                                <!-- 동적 피드 영역 -->
+                            </div>
+                        </div>
+
+                        <!-- 탭 3: 행운 편지 -->
+                        <div id="dt-tab-letter" class="dt-page-view">
+                            <section class="letter-stage">
+                                <div class="letter-stage-copy">
+                                    <span class="letter-stage-kicker">Lucky Letter</span>
+                                    <h2>행운 편지함</h2>
+                                    <p>상자를 열어 편지를 천천히 확인해보세요.</p>
+                                </div>
+                                <button class="letter-box-trigger" type="button" onclick="openLetterInboxModal()">
+                                    <span class="letter-box-ground-shadow" aria-hidden="true"></span>
+                                    <span class="gift-bow" aria-hidden="true">
+                                        <svg class="gift-bow-svg" viewBox="0 0 250 120">
+                                            <defs>
+                                                <linearGradient id="dtRibL" x1="0" y1="0" x2="1" y2="1">
+                                                    <stop offset="0" stop-color="#ffd6e4"></stop><stop offset="1" stop-color="#ff8fb3"></stop>
+                                                </linearGradient>
+                                                <linearGradient id="dtRibR" x1="1" y1="0" x2="0" y2="1">
+                                                    <stop offset="0" stop-color="#ffd6e4"></stop><stop offset="1" stop-color="#ff8fb3"></stop>
+                                                </linearGradient>
+                                                <linearGradient id="dtKnot" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="0" stop-color="#ffe3ec"></stop><stop offset="1" stop-color="#ff8fb3"></stop>
+                                                </linearGradient>
+                                            </defs>
+                                            <path d="M120 52 C 108 74, 92 92, 78 112 L 96 116 C 108 96, 118 78, 125 60 Z" fill="url(#dtRibL)"></path>
+                                            <path d="M130 52 C 142 74, 158 92, 172 112 L 154 116 C 142 96, 132 78, 125 60 Z" fill="url(#dtRibR)"></path>
+                                            <path d="M125 54 C 96 26, 44 18, 40 50 C 37 74, 84 74, 125 62 Z" fill="url(#dtRibL)"></path>
+                                            <path d="M125 54 C 154 26, 206 18, 210 50 C 213 74, 166 74, 125 62 Z" fill="url(#dtRibR)"></path>
+                                            <path d="M118 58 C 92 42, 58 40, 52 54 C 62 62, 92 62, 118 58 Z" fill="#e0567f" opacity="0.28"></path>
+                                            <path d="M132 58 C 158 42, 192 40, 198 54 C 188 62, 158 62, 132 58 Z" fill="#e0567f" opacity="0.28"></path>
+                                            <rect x="108" y="44" width="34" height="32" rx="9" fill="url(#dtKnot)"></rect>
+                                            <rect x="112" y="47" width="10" height="26" rx="5" fill="#ffc2d6" opacity="0.5"></rect>
+                                        </svg>
+                                    </span>
+                                    <span class="letter-box-lid"></span>
+                                    <span class="letter-box-body"></span>
+                                </button>
+                                <div id="dt-letter-zone" class="letter-box-summary">
+                                    <!-- 동적 행운 편지함 요약 영역 -->
+                                </div>
+                                <button class="letter-filter-btn action-btn letter-write-btn" onclick="toggleInlineLetterWrite('dt')">
+                                    <span>편지 작성</span>
+                                </button>
+                            </section>
+
+                            <div id="dt-inline-letter-write" class="modal-box" style="display: none; max-width: 100%; margin-bottom: 20px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid var(--border-color);">
+                                <h3>✍️ 행운 편지 작성</h3>
+                                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">소중한 사람에게 마음을 담은 편지를 보내보세요.</p>
+                                <div class="modal-form-group">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                        <label style="margin-bottom: 0;">받는 사람 이름</label>
+                                        <button type="button" id="dt-letter-to-all-btn" onclick="toggleLetterToAllBtn('dt')" style="padding: 5px 12px; font-size: 11px; font-weight: 600; border-radius: 20px; border: none; cursor: pointer; transition: all 0.2s ease; background: var(--nav-item-bg-active); color: var(--primary-green);">모두에게 💌</button>
+                                    </div>
+                                    <input type="text" id="dt-letter-to" placeholder="예: 단짝친구, 너에게" maxlength="15">
+                                </div>
+                                <div class="modal-form-group">
+                                    <label>보내는 사람 이름</label>
+                                    <input type="text" id="dt-letter-from" placeholder="예: 나, 내 닉네임" maxlength="15">
+                                </div>
+                                <div class="modal-form-group">
+                                    <label>편지 내용</label>
+                                    <textarea id="dt-letter-content" placeholder="응원, 감사, 행운의 메시지를 자유롭게 작성해주세요." style="height: 120px; resize: vertical;" maxlength="300"></textarea>
+                                </div>
+                                <div class="modal-form-group">
+                                    <label>편지 장식 이모지 선택</label>
+                                    <div class="letter-emoji-picker">
+                                        <button type="button" class="letter-emoji-chip active" onclick="selectLetterEmoji(this, 'dt')" data-emoji="🍀">🍀</button>
+                                        <button type="button" class="letter-emoji-chip" onclick="selectLetterEmoji(this, 'dt')" data-emoji="💖">💖</button>
+                                        <button type="button" class="letter-emoji-chip" onclick="selectLetterEmoji(this, 'dt')" data-emoji="✨">✨</button>
+                                        <button type="button" class="letter-emoji-chip" onclick="selectLetterEmoji(this, 'dt')" data-emoji="🎉">🎉</button>
+                                        <button type="button" class="letter-emoji-chip" onclick="selectLetterEmoji(this, 'dt')" data-emoji="🌸">🌸</button>
+                                        <button type="button" class="letter-emoji-chip" onclick="selectLetterEmoji(this, 'dt')" data-emoji="🌟">🌟</button>
+                                        <button type="button" class="letter-emoji-chip" onclick="selectLetterEmoji(this, 'dt')" data-emoji="🎁">🎁</button>
+                                        <button type="button" class="letter-emoji-chip" onclick="selectLetterEmoji(this, 'dt')" data-emoji="💌">💌</button>
+                                    </div>
+                                </div>
+                                <div class="modal-buttons" style="margin-top: 16px;">
+                                    <button class="btn-sub" onclick="toggleInlineLetterWrite('dt')">취소</button>
+                                    <button class="btn-main" onclick="submitLetter('dt')">편지 보내기</button>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- 탭 4: 일정 계획 상세 -->
+                        <div id="dt-tab-schedule" class="dt-page-view">
+                            <div class="section-title">
+                                <span>🍀 약속 여정</span>
+                                <button class="btn-action-sm btn-schedule-new" onclick="openScheduleModal('dt')">➕ 새 D-day 만들기</button>
+                            </div>
+                            <div id="dt-schedule-list-zone">
+                                <!-- 동적 다중 일정 카드 영역 -->
+                            </div>
+                        </div>
+                    </main>
+
+                    <!-- 데스크톱용 가상 모달 -->
+                    <div class="modal-overlay" id="dt-post-modal">
+                        <div class="modal-box">
+                            <h3>📸 새 추억 게시글 작성</h3>
+                            <div class="modal-form-group">
+                                <label>제목</label><input type="text" id="dt-post-title" placeholder="추억의 제목을 작성해주세요" maxlength="30">
+                            </div>
+                            <div class="modal-form-group">
+                                <label>내용</label><textarea id="dt-post-content" placeholder="우리만의 소중한 기록을 남겨보세요." maxlength="500"></textarea>
+                            </div>
+                            <div class="modal-form-group">
+                                <label>해시태그 선택</label>
+
+
+
+
+
+
+                                <input class="custom-tag-input" type="text" id="dt-custom-tags" placeholder="직접 태그 입력 예: #한강 #시험끝">
+                            </div>
+                            <div class="modal-buttons">
+                                <button class="btn-sub" onclick="closeModal('dt-post-modal')">취소</button>
+                                <button class="btn-main" onclick="addNewDesktopPost()">등록하기</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 데스크톱용 현재 방 코드 공유 모달 -->
+                    <div class="modal-overlay" id="dt-invite-modal">
+                        <div class="modal-box room-share-modal">
+                            <h3>🤝 현재 방 코드 공유하기</h3>
+                            <p class="room-modal-copy">친구에게 코드나 링크를 보내면 이 방으로 바로 초대할 수 있어요.</p>
+                            <div class="room-share-current">
+                                <span id="dt-share-room-icon">🍀</span>
+                                <div>
+                                    <strong id="dt-share-room-name">단짝친구</strong>
+                                    <small id="dt-share-room-meta">현재 머무는 우정공간</small>
+                                </div>
+                            </div>
+                            <div class="room-share-field">
+                                <label for="dt-current-room-code">방 코드</label>
+                                <div class="room-copy-row">
+                                    <input type="text" id="dt-current-room-code" readonly>
+                                    <button type="button" onclick="copyCurrentRoomCode()">복사</button>
+                                </div>
+                            </div>
+                            <div class="room-share-field">
+                                <label for="dt-current-room-link">공유 링크</label>
+                                <div class="room-copy-row">
+                                    <input type="text" id="dt-current-room-link" readonly>
+                                    <button type="button" onclick="copyCurrentRoomLink()">복사</button>
+                                </div>
+                            </div>
+                            <div class="modal-buttons">
+                                <button class="btn-sub" onclick="closeModal('dt-invite-modal')">닫기</button>
+                                <button class="btn-main" onclick="copyCurrentRoomLink()">링크 복사</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 데스크톱용 방 변경 모달 -->
+                    <div class="modal-overlay" id="dt-group-modal">
+                        <div class="modal-box room-switch-modal">
+                            <h3>👥 방 변경하기</h3>
+                            <p class="room-modal-copy">내가 가지고 있는 우정공간 중 들어갈 방을 선택하세요.</p>
+                            <div class="room-list" id="dt-room-list"></div>
+                            <div class="modal-buttons" style="margin-top: 18px;">
+                                <button class="btn-sub" style="width: 100%;" onclick="closeModal('dt-group-modal')">닫기</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 데스크톱용 개인정보 수정 모달 -->
+                    <div class="modal-overlay" id="dt-profile-modal">
+                        <div class="modal-box profile-edit-modal">
+                            <div class="profile-modal-head">
+                                <div>
+                                    <span class="profile-modal-kicker">ACCOUNT SETTINGS</span>
+                                    <h3>개인정보 수정</h3>
+                                </div>
+                                <button class="profile-modal-close" type="button" onclick="closeModal('dt-profile-modal')" aria-label="닫기">×</button>
+                            </div>
+
+                            <div class="profile-modal-body">
+                                <section class="profile-preview-panel">
+                                    <div class="profile-avatar-wrap">
+                                        <button class="profile-avatar-circle" id="dt-profile-avatar-circle" type="button" onclick="triggerProfileAvatarUpload()">
+                                            <span id="dt-profile-avatar-initial">김</span>
+                                            <img id="dt-profile-avatar-img" src="" alt="프로필 사진">
+                                        </button>
+                                        <button class="profile-avatar-edit" type="button" onclick="triggerProfileAvatarUpload()" aria-label="프로필 사진 변경">✎</button>
+                                    </div>
+                                    <div class="profile-preview-name" id="dt-profile-preview-name">김예린</div>
+                                    <input type="file" id="dt-profile-avatar-file" accept="image/*" onchange="handleProfileAvatarUpload(event)">
+                                </section>
+
+                                <section class="profile-form-panel">
+                                    <div class="profile-form-section">
+                                        <div class="profile-section-title">기본 정보</div>
+                                        <div class="modal-form-group">
+                                            <label for="dt-profile-name">이름 / 닉네임</label>
+                                            <input type="text" id="dt-profile-name" placeholder="예: 김예린" maxlength="16" oninput="updateProfilePreview()">
+                                        </div>
+                                    </div>
+
+                                    <div class="profile-form-section">
+                                        <div class="profile-section-title">연락처</div>
+                                        <div class="modal-form-group">
+                                            <label for="dt-profile-email">이메일</label>
+                                            <input type="email" id="dt-profile-email" placeholder="예: clov@example.com">
+                                        </div>
+                                        <div class="modal-form-group">
+                                            <label for="dt-profile-birth">생년월일</label>
+                                            <input type="date" id="dt-profile-birth">
+                                        </div>
+                                    </div>
+
+                                    <div class="profile-form-section">
+                                        <div class="profile-section-title">비밀번호 변경</div>
+                                        <div class="modal-form-group">
+                                            <label for="dt-profile-pw-current">현재 비밀번호</label>
+                                            <div class="profile-password-field">
+                                                <input type="password" id="dt-profile-pw-current" placeholder="현재 비밀번호 입력">
+                                                <button type="button" onclick="toggleProfilePassword('dt-profile-pw-current', this)">👁</button>
+                                            </div>
+                                        </div>
+                                        <div class="modal-form-group">
+                                            <label for="dt-profile-pw-new">새 비밀번호</label>
+                                            <div class="profile-password-field">
+                                                <input type="password" id="dt-profile-pw-new" placeholder="8자 이상">
+                                                <button type="button" onclick="toggleProfilePassword('dt-profile-pw-new', this)">👁</button>
+                                            </div>
+                                        </div>
+                                        <div class="modal-form-group">
+                                            <label for="dt-profile-pw-confirm">새 비밀번호 확인</label>
+                                            <div class="profile-password-field">
+                                                <input type="password" id="dt-profile-pw-confirm" placeholder="동일하게 입력" oninput="checkProfilePasswordMatch()">
+                                                <button type="button" onclick="toggleProfilePassword('dt-profile-pw-confirm', this)">👁</button>
+                                            </div>
+                                            <div class="profile-hint" id="dt-profile-pw-hint"></div>
+                                        </div>
+                                    </div>
+                                </section>
+                            </div>
+
+                            <div class="profile-modal-actions">
+                                <button class="btn-sub" type="button" onclick="confirmDeleteProfileAccount()">계정 탈퇴</button>
+                                <div class="profile-modal-action-group">
+                                    <button class="btn-sub" type="button" onclick="closeModal('dt-profile-modal')">취소</button>
+                                    <button class="btn-main" type="button" onclick="saveProfileModal()">저장하기</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 데스크톱용 일정 관리 모달 -->
+                    <div class="modal-overlay" id="dt-schedule-modal">
+                        <div class="modal-box">
+                            <h3 id="dt-schedule-modal-title">🍀 다가오는 약속, D-day 새로 세기</h3>
+                            <input type="hidden" id="dt-input-schedule-id">
+                            <div class="modal-form-group">
+                                <label>어떤 약속인가요?</label>
+                                <input type="text" id="dt-input-schedule-title" placeholder="예: 여름 여행, 시험 등" maxlength="20">
+                            </div>
+                            <div class="modal-form-group">
+                                <label>언제로 D-day를 맞출까요?</label>
+                                <input type="date" id="dt-input-schedule-date">
+                            </div>
+                            <div class="modal-form-group">
+                                <label>본문 <span style="color:var(--text-muted);font-weight:400;">(선택)</span></label>
+                                <textarea id="dt-input-schedule-body" placeholder="약속에 대한 계획, 준비물, 메모 등을 자유롭게 적어보세요." style="height:120px;"></textarea>
+                            </div>
+                            <div class="modal-buttons">
+                                <button class="btn-sub" onclick="closeModal('dt-schedule-modal')">취소</button>
+                                <button class="btn-main" onclick="saveSchedule('dt')">저장하기</button>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                    <!-- 데스크톱용 행운편지 보관함(편지함) 모달 -->
+                    <div class="modal-overlay" id="dt-letter-inbox-modal">
+                        <div class="modal-box letter-inbox-modal">
+                            <div class="letter-inbox-head">
+                                <div>
+                                    <span class="letter-stage-kicker">Mailbox</span>
+                                    <h3>도착한 행운 편지</h3>
+                                </div>
+                                <button class="letter-modal-close" type="button" onclick="closeModal('dt-letter-inbox-modal')" aria-label="닫기">×</button>
+                            </div>
+                            <div class="letter-inbox-tabs">
+                                <button class="letter-filter-btn active" id="dt-letter-modal-filter-all" onclick="setLetterFilter('all')">전체</button>
+                                <button class="letter-filter-btn" id="dt-letter-modal-filter-favorite" onclick="setLetterFilter('favorite')">즐겨찾기</button>
+                            </div>
+                            <div id="dt-letter-inbox-list" class="letter-inbox-list"></div>
+                            <div class="letter-inbox-pager">
+                                <button type="button" id="dt-letter-prev" onclick="moveLetterPage(-1)">이전</button>
+                                <span id="dt-letter-page-label">1 / 1</span>
+                                <button type="button" id="dt-letter-next" onclick="moveLetterPage(1)">다음</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 데스크톱용 행운편지 상세 모달 -->
+                    <div class="modal-overlay" id="dt-letter-detail-modal">
+                        <div class="modal-box letter-detail-modal">
+                            <div class="letter-preview letter-detail-paper">
+                                <button class="letter-paper-btn letter-paper-back" onclick="backToLetterInbox()" title="편지함으로 돌아가기">←</button>
+                                <button class="letter-paper-btn letter-paper-close" onclick="closeModal('dt-letter-detail-modal')" title="닫기">×</button>
+                                <h3 class="letter-detail-heading">💌 행운편지</h3>
+                                <div id="dt-detail-letter-to" class="letter-detail-to"></div>
+                                <div id="dt-detail-letter-content" class="letter-detail-content"></div>
+                                <div id="dt-detail-letter-from" class="letter-detail-from"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-overlay" id="dt-proof-result-modal">
+                        <div class="modal-box proof-result-modal">
+                            <div class="proof-result-icon" id="dt-proof-result-icon">✓</div>
+                            <h3 id="dt-proof-result-title">인증사진 업로드</h3>
+                            <p id="dt-proof-result-message">인증사진이 업로드됐어요.</p>
+                            <button class="proof-result-primary" id="dt-proof-result-primary" type="button" onclick="closeProofResultModal()">확인</button>
+                            <button class="proof-result-secondary" id="dt-proof-result-secondary" type="button" onclick="closeProofResultModal()">나중에 하기</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- -------------------------------------------- -->
+        <!-- [RIGHT] 모바일 화면 뷰포트 (인터랙션 포함)       -->
+        <!-- -------------------------------------------- -->
+        
+
+    </div>
+
+    <div class="memory-detail-backdrop" id="memory-detail-backdrop" onclick="closeMemoryDetail()"></div>
+    <section class="memory-detail-sheet" id="memory-detail-sheet" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="memory-detail-author"></section>
+
+    <div class="month-picker-popover" id="month-picker-popover" role="dialog" aria-label="월 선택">
+        <div class="month-picker-header">
+            <button class="month-picker-nav" type="button" onclick="moveMonthPickerYear(-1)" aria-label="이전 년도">❮</button>
+            <div class="month-picker-year" id="month-picker-year">2026년</div>
+            <button class="month-picker-nav" type="button" onclick="moveMonthPickerYear(1)" aria-label="다음 년도">❯</button>
+        </div>
+        <button class="month-picker-all-btn" id="month-picker-all-btn" type="button" onclick="setFeedMonth('all')">전체보기</button>
+        <div class="month-picker-grid" id="month-picker-grid"></div>
+    </div>
+
+    <!-- ==========================================
+       3. 인터랙션 및 프로토타입 상태 제어 스크립트 
+       ========================================== */ -->
+    
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script src="js/desktop.js?v=20260703b"></script>
+<!-- Photo Upload Modal -->
+<div id="photo-upload-overlay" class="modal-overlay" style="display: none; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.6); z-index: 10000;">
+    <div class="photo-upload-modal" style="background: #ffffff; width: 440px; border-radius: 12px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); display: flex; flex-direction: column; gap: 16px;">
+        <h3 style="margin: 0; font-size: 16px; color: var(--text-color);">대표 사진 변경</h3>
+        
+        <div id="photo-drop-zone" style="border: 2px dashed var(--border-color); border-radius: 8px; padding: 32px 16px; text-align: center; cursor: pointer; transition: all 0.2s; display: flex; flex-direction: column; gap: 12px; align-items: center; background: var(--bg-level2);">
+            <div style="font-size: 24px; color: var(--primary-green);">📸</div>
+            <div style="font-size: 13px; color: var(--text-color);">
+                새 이미지를 이 곳으로 드래그 하거나<br>
+                <span style="color: var(--primary-green); font-weight: bold;">클릭하여 파일 선택</span>
+            </div>
+            <input type="file" id="photo-file-input" accept="image/*" style="display: none;">
+        </div>
+
+        <div id="photo-preview-container" style="display: none; position: relative; border-radius: 8px; overflow: hidden; max-height: 200px;">
+            <img id="photo-preview-image" style="width: 100%; height: auto; object-fit: cover;" src="">
+            <button id="photo-remove-btn" style="position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; font-size: 12px; display:flex; align-items:center; justify-content:center;">✕</button>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px;">
+            <button class="btn-sub" id="photo-cancel-btn" style="padding: 8px 16px; font-size: 13px;">취소</button>
+            <button class="btn-main" id="photo-save-btn" style="padding: 8px 16px; font-size: 13px;">확인</button>
+        </div>
+    </div>
+</div>
+
+<!-- Member List Modal -->
+<!-- Member List Modal -->
+<div id="member-list-overlay" class="modal-overlay" style="display: none; align-items: center; justify-content: center; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.6); z-index: 10000;" onclick="if(event.target === this) closeMemberListModal();">
+    <div class="member-list-modal" style="background: #ffffff; width: 500px; height: 800px; max-height: 95vh; border-radius: 20px; padding: 28px; box-shadow: 0 16px 40px rgba(0,0,0,0.22); display: flex; flex-direction: column; gap: 18px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;">
+            <div>
+                <h3 id="member-list-modal-title" style="margin: 0; font-size: 18px; font-weight: 800; color: var(--text-color);">🍀 참여 멤버 상태메시지 (4명)</h3>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">💡 내 상태메시지를 클릭하면 수정할 수 있습니다. (다른 멤버는 읽기 전용)</div>
+            </div>
+            <button onclick="closeMemberListModal()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #999; padding: 4px;">✕</button>
+        </div>
+        
+        <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 6px; flex: 1; overflow-y: auto; padding-right: 4px;">
+            <!-- 내 프로필 (수정 가능 상태메시지) -->
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; background: rgba(248, 251, 249, 0.95); border-radius: 16px; border: 1.5px solid rgba(27, 67, 50, 0.2); box-shadow: 0 4px 12px rgba(27, 67, 50, 0.05); flex-shrink: 0;">
+                <div style="display: flex; align-items: center; gap: 14px;">
+                    <div style="width: 44px; height: 44px; border-radius: 50%; background: var(--primary-green); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; box-shadow: 0 2px 8px rgba(27, 67, 50, 0.25);">나</div>
+                    <span style="font-weight: 800; font-size: 15px; color: var(--text-color);">나</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px; background: rgba(27, 67, 50, 0.1); padding: 8px 14px; border-radius: 20px; border: 1px solid rgba(27, 67, 50, 0.25); max-width: 270px; transition: all 0.2s;">
+                    <span contenteditable="true" id="my-status-msg" onblur="saveMyStatusMsg(this.innerText)" onkeydown="if(event.keyCode===13){event.preventDefault();this.blur();}" style="font-size: 13px; color: var(--primary-green); font-weight: 700; outline: none; cursor: text;" title="클릭하여 내 상태메시지 수정">✨ 행복한 하루 보내자!</span>
+                    <span onclick="document.getElementById('my-status-msg').focus();" style="font-size: 12px; cursor: pointer; color: var(--primary-green); opacity: 0.85;" title="내 상태메시지 수정">✎</span>
+                </div>
+            </div>
+
+            <!-- 솔 (읽기 전용 상태메시지) -->
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; background: rgba(248, 251, 249, 0.6); border-radius: 16px; border: 1px solid rgba(0, 0, 0, 0.06); flex-shrink: 0;">
+                <div style="display: flex; align-items: center; gap: 14px;">
+                    <div style="width: 44px; height: 44px; border-radius: 50%; background: #52b788; color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px;">솔</div>
+                    <span style="font-weight: 800; font-size: 15px; color: var(--text-color);">솔</span>
+                </div>
+                <div style="background: rgba(0, 0, 0, 0.04); padding: 8px 14px; border-radius: 20px; border: 1px solid rgba(0, 0, 0, 0.06); max-width: 270px;">
+                    <span style="font-size: 13px; color: #444; font-weight: 600;">다음 여행 사진 예쁘게 찍어줄게 📸</span>
+                </div>
+            </div>
+
+            <!-- 민 (읽기 전용 상태메시지) -->
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; background: rgba(248, 251, 249, 0.6); border-radius: 16px; border: 1px solid rgba(0, 0, 0, 0.06); flex-shrink: 0;">
+                <div style="display: flex; align-items: center; gap: 14px;">
+                    <div style="width: 44px; height: 44px; border-radius: 50%; background: #74c69d; color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px;">민</div>
+                    <span style="font-weight: 800; font-size: 15px; color: var(--text-color);">민</span>
+                </div>
+                <div style="background: rgba(0, 0, 0, 0.04); padding: 8px 14px; border-radius: 20px; border: 1px solid rgba(0, 0, 0, 0.06); max-width: 270px;">
+                    <span style="font-size: 13px; color: #444; font-weight: 600;">오늘 밤 야식 멤버 구함 🎉</span>
+                </div>
+            </div>
+
+            <!-- 준 (읽기 전용 상태메시지) -->
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; background: rgba(248, 251, 249, 0.6); border-radius: 16px; border: 1px solid rgba(0, 0, 0, 0.06); flex-shrink: 0;">
+                <div style="display: flex; align-items: center; gap: 14px;">
+                    <div style="width: 44px; height: 44px; border-radius: 50%; background: #95d5b2; color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px;">준</div>
+                    <span style="font-weight: 800; font-size: 15px; color: var(--text-color);">준</span>
+                </div>
+                <div style="background: rgba(0, 0, 0, 0.04); padding: 8px 14px; border-radius: 20px; border: 1px solid rgba(0, 0, 0, 0.06); max-width: 270px;">
+                    <span style="font-size: 13px; color: #444; font-weight: 600;">이번 주말 약속 시간 꼭 지키기 📅</span>
+                </div>
+            </div>
+            <!-- 동적 참여 멤버 추가 영역 -->
+            <div id="dynamic-members-container" style="display: flex; flex-direction: column; gap: 12px;"></div>
+        </div>
+        <!-- 우정공간 초대 코드 영역 -->
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: rgba(27, 67, 50, 0.08); border-radius: 14px; border: 1px dashed var(--primary-green); flex-shrink: 0;">
+            <div>
+                <div style="font-size: 11px; color: var(--text-muted); font-weight: 700;">🤝 우정공간 초대 코드</div>
+                <div id="member-modal-room-code" style="font-size: 15px; font-weight: 850; color: var(--primary-green); letter-spacing: 1px; margin-top: 2px;">CLOV-2002</div>
+            </div>
+            <div style="display: flex; gap: 6px;">
+                <button onclick="copyMemberModalRoomCode()" style="padding: 6px 14px; font-size: 12px; font-weight: 700; background: #fff; color: var(--primary-green); border: 1px solid rgba(27, 67, 50, 0.3); border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 2px 6px rgba(0,0,0,0.05);">
+                    📋 복사
+                </button>
+                <button onclick="simulateJoinRequest()" style="padding: 6px 12px; font-size: 11px; font-weight: 700; background: var(--primary-green); color: #fff; border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 4px; box-shadow: 0 2px 6px rgba(27,67,50,0.2);" title="클릭 시 신규 가입 신청 알림 테스트">
+                    🙋‍♂️ 가입 신청 테스트
+                </button>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; margin-top: auto; flex-shrink: 0;">
+            <button class="btn-main" onclick="closeMemberListModal()" style="padding: 10px 22px; font-size: 14px; border-radius: 10px; border: none; background: var(--primary-green); color: white; cursor: pointer; font-weight: 700;">확인</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===== 글쓰기 모달 ===== -->
+<style>
+.write-modal-backdrop {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,.55); z-index: 999999;
+  align-items: center; justify-content: center;
+}
+.write-modal-backdrop.open { display: flex; }
+.write-modal {
+  background: var(--card-bg); border-radius: 20px;
+  width: min(480px, calc(100vw - 32px));
+  max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 24px 60px rgba(0,0,0,.28);
+  animation: wm-rise .22s cubic-bezier(.2,.9,.2,1.05);
+}
+@keyframes wm-rise {
+  from { transform: translateY(18px) scale(.96); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
+.wm-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 22px 24px 0;
+}
+.wm-head h2 { font-size: 17px; font-weight: 800; color: var(--primary-green); margin: 0; }
+.wm-close {
+  width: 32px; height: 32px; border-radius: 50%; border: none;
+  background: var(--bg-light); color: var(--text-muted); font-size: 16px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background .15s;
+}
+.wm-close:hover { background: var(--nav-item-bg-active); color: var(--primary-green); }
+.wm-body { padding: 18px 24px 26px; display: flex; flex-direction: column; gap: 18px; }
+
+/* 이미지 업로드 영역 */
+.wm-img-remove {
+  position: absolute; top: 8px; right: 8px; z-index: 2;
+  background: rgba(0,0,0,.6); color: #fff; border: none;
+  border-radius: 50%; width: 26px; height: 26px; font-size: 12px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+
+/* 여러 장 사진 업로드 */
+.wm-photo-strip { display: flex; flex-wrap: wrap; gap: 8px; }
+.wm-photo-thumb { position: relative; width: 72px; height: 72px; border-radius: 12px; overflow: hidden; }
+.wm-photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.wm-photo-thumb .wm-img-remove { width: 22px; height: 22px; top: 4px; right: 4px; font-size: 10px; }
+.wm-photo-add {
+  width: 72px; height: 72px; border-radius: 12px;
+  border: 2px dashed var(--border-color); background: var(--bg-light); color: var(--text-muted);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  font-size: 11px; font-weight: 700; cursor: pointer; transition: border-color .15s, background .15s;
+}
+.wm-photo-add span:first-child { font-size: 20px; }
+.wm-photo-add:hover { border-color: var(--accent-green); background: var(--nav-item-bg-active); }
+
+/* 폼 필드 */
+.wm-field { display: flex; flex-direction: column; gap: 7px; }
+.wm-label { font-size: 11px; font-weight: 700; color: var(--text-muted); letter-spacing: .5px; text-transform: uppercase; }
+.wm-title-wrap { position: relative; }
+.wm-input {
+  width: 100%; padding: 11px 14px; border-radius: 10px;
+  border: 1.5px solid var(--border-color);
+  background: var(--input-bg); color: var(--text-color);
+  font-size: 14px; font-family: inherit; resize: none;
+  transition: border-color .15s;
+}
+.wm-input:focus { outline: none; border-color: var(--accent-green); }
+.wm-title-wrap .wm-input { padding-right: 52px; }
+.wm-char-count {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  font-size: 11px; color: var(--text-muted); pointer-events: none;
+}
+
+/* 참여자 칩 */
+.wm-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.wm-chip {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 12px; border-radius: 20px;
+  border: 1.5px solid var(--border-color);
+  background: var(--card-bg); cursor: pointer;
+  font-size: 13px; color: var(--text-muted);
+  transition: all .15s; user-select: none;
+}
+.wm-chip.on {
+  border-color: var(--primary-green);
+  background: var(--nav-item-bg-active);
+  color: var(--primary-green); font-weight: 700;
+}
+.wm-chip-av {
+  width: 22px; height: 22px; border-radius: 50%;
+  background: var(--border-color); color: var(--text-muted);
+  font-size: 10px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s, color .15s;
+}
+.wm-chip.on .wm-chip-av { background: var(--primary-green); color: #fff; }
+
+/* 제출 버튼 */
+.wm-submit {
+  width: 100%; padding: 14px; border-radius: 12px; border: none;
+  background: var(--primary-green); color: #fff;
+  font-size: 15px; font-weight: 700; cursor: pointer; transition: opacity .15s;
+}
+.wm-submit:hover { opacity: .85; }
+body.dark-mode .wm-submit { color: #0a0f0c; }
+</style>
+
+<div class="write-modal-backdrop" id="wm-backdrop" onclick="if(event.target===this)closeWriteModal()">
+  <div class="write-modal" role="dialog" aria-modal="true" aria-label="추억 기록하기">
+    <div class="wm-head">
+      <h2>✏️ 추억 기록하기</h2>
+      <button class="wm-close" onclick="closeWriteModal()" aria-label="닫기">✕</button>
+    </div>
+    <div class="wm-body">
+
+      <!-- 사진 (여러 장 가능) -->
+      <div class="wm-field">
+        <span class="wm-label">사진 (선택, 최대 6장)</span>
+        <div class="wm-photo-strip" id="wm-photo-strip"></div>
+        <input type="file" id="wm-img-input" accept="image/*" multiple style="display:none"
+               onchange="previewWriteImg(this)">
+      </div>
+
+      <!-- 제목 -->
+      <div class="wm-field">
+        <span class="wm-label">제목</span>
+        <div class="wm-title-wrap">
+          <input class="wm-input" id="wm-title" type="text" maxlength="25"
+                 placeholder="오늘의 추억 제목을 입력하세요"
+                 oninput="document.getElementById('wm-char-count').textContent=this.value.length+'/25'">
+          <span class="wm-char-count" id="wm-char-count">0/25</span>
+        </div>
+      </div>
+
+      <!-- 본문 -->
+      <div class="wm-field">
+        <span class="wm-label">본문</span>
+        <textarea class="wm-input" id="wm-body" rows="4"
+                  placeholder="오늘 어떤 추억을 남겼나요?"></textarea>
+      </div>
+
+      <!-- 해시태그 -->
+      <div class="wm-field">
+        <span class="wm-label">해시태그</span>
+        <input class="wm-input" id="wm-tags" type="text"
+               placeholder="#한강 #시험끝 처럼 띄어쓰기나 쉼표로 구분해 입력 (선택)">
+      </div>
+
+      <!-- 참여자 -->
+      <div class="wm-field">
+        <span class="wm-label">함께한 친구</span>
+        <div class="wm-chips" id="wm-chips"></div>
+      </div>
+
+      <button class="wm-submit" onclick="saveWritePost()">기록 남기기 🍀</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  let _wmPhotos = [];
+  const WM_PHOTO_LIMIT = 6;
+
+  window.openWriteModal = function() {
+    _wmPhotos = [];
+    document.getElementById('wm-title').value = '';
+    document.getElementById('wm-body').value = '';
+    document.getElementById('wm-tags').value = '';
+    document.getElementById('wm-char-count').textContent = '0/25';
+    document.getElementById('wm-img-input').value = '';
+    _renderPhotoStrip();
+    _buildChips();
+    document.getElementById('wm-backdrop').classList.add('open');
+  };
+
+  window.closeWriteModal = function() {
+    document.getElementById('wm-backdrop').classList.remove('open');
+  };
+
+  function _renderPhotoStrip() {
+    const strip = document.getElementById('wm-photo-strip');
+    strip.innerHTML = _wmPhotos.map(function(url, index) {
+      return '<div class="wm-photo-thumb">' +
+        '<img src="' + url + '">' +
+        '<button type="button" class="wm-img-remove" onclick="removeWriteImg(' + index + ')">✕</button>' +
+        '</div>';
+    }).join('') + (_wmPhotos.length < WM_PHOTO_LIMIT
+      ? '<button type="button" class="wm-photo-add" onclick="document.getElementById(\'wm-img-input\').click()"><span>📷</span><span>추가</span></button>'
+      : '');
+  }
+
+  window.removeWriteImg = function(index) {
+    _wmPhotos.splice(index, 1);
+    _renderPhotoStrip();
+  };
+
+  // 여러 장을 한 번에 선택할 수 있다. 모두 미리보기로 반영되면
+  // desktop.js의 showProofResultModal을 재사용해 업로드 완료를 안내한다.
+  window.previewWriteImg = function(input) {
+    const files = [...(input.files || [])];
+    if (!files.length) return;
+
+    const remaining = WM_PHOTO_LIMIT - _wmPhotos.length;
+    if (remaining <= 0) {
+      input.value = '';
+      clovAlert('사진은 최대 ' + WM_PHOTO_LIMIT + '장까지 추가할 수 있어요.', { icon: '📷', type: 'warn' });
+      return;
+    }
+
+    const toLoad = files.slice(0, remaining);
+    let loadedCount = 0;
+    toLoad.forEach(function(file) {
+      if (!file.type.startsWith('image/')) { loadedCount += 1; return; }
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        _wmPhotos.push(e.target.result);
+        loadedCount += 1;
+        if (loadedCount === toLoad.length) {
+          input.value = '';
+          _renderPhotoStrip();
+          if (typeof showProofResultModal === 'function') {
+            showProofResultModal({
+              title: '이미지 업로드 완료',
+              message: toLoad.length + '장의 사진이 추가됐어요.'
+            });
+          }
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // 참여자 칩은 "함께한 친구"만 고른다. 게시자(나)는 항상 자동 포함되므로 칩 목록에는 넣지 않는다.
+  function _buildChips() {
+    const posts = (typeof groupsData !== 'undefined' && groupsData[activeGroup]) ? (groupsData[activeGroup].posts || []) : [];
+    const seen = new Map();
+    posts.forEach(function(post) {
+      (post.participants || []).forEach(function(p) {
+        if (p.type === 'mine' || p.name === '나') return;
+        const key = p.name || p.icon;
+        if (!seen.has(key)) seen.set(key, p);
+      });
+    });
+    const container = document.getElementById('wm-chips');
+    const chips = [...seen.values()];
+    container.innerHTML = chips.length ? chips.map(function(m) {
+      const icon = (m.icon || (m.name || '?').slice(0, 1));
+      const name = m.name || icon;
+      return '<label class="wm-chip on"' +
+        ' data-name="' + name + '"' +
+        ' data-icon="' + icon + '">' +
+        '<div class="wm-chip-av">' + icon + '</div>' + name + '</label>';
+    }).join('') : '<span class="wm-label" style="text-transform:none;letter-spacing:0;">아직 함께 기록한 친구가 없어요. 나 혼자만의 기록으로 남길 수 있어요.</span>';
+    container.querySelectorAll('.wm-chip').forEach(function(chip) {
+      chip.addEventListener('click', function() { chip.classList.toggle('on'); });
+    });
+  }
+
+  // 게시자(authorId) + 친구 한 줄 메시지(messages[]) 모델에 맞춰 새 게시글을 만든다.
+  // 참여자 선택은 "누구와 함께였는지"만 기록하고, 각자의 글은 더 이상 여기서 받지 않는다
+  // (친구는 상세 모달에서 자기 메시지를 직접 남긴다).
+  window.saveWritePost = function() {
+    const title = document.getElementById('wm-title').value.trim();
+    const body  = document.getElementById('wm-body').value.trim();
+    if (!title) { document.getElementById('wm-title').focus(); return; }
+    if (!body)  { document.getElementById('wm-body').focus(); return; }
+
+    const selected = [...document.querySelectorAll('#wm-chips .wm-chip.on')];
+
+    const tagsInput = document.getElementById('wm-tags').value.trim();
+    const tags = tagsInput
+      ? [...new Set(
+          tagsInput.split(/[\s,]+/)
+            .map(function(tag) { return tag.trim(); })
+            .filter(Boolean)
+            .map(function(tag) { return tag.startsWith('#') ? tag : '#' + tag; })
+        )].slice(0, 5)
+      : [];
+
+    const today = new Date();
+    const pad = function(n) { return String(n).padStart(2, '0'); };
+    const dateStr = today.getFullYear() + '.' + pad(today.getMonth() + 1) + '.' + pad(today.getDate());
+
+    const participants = [
+      { name: '나', icon: '나', type: 'mine' },
+      ...selected.map(function(chip) {
+        return { name: chip.dataset.name, icon: chip.dataset.icon, type: 'friend' };
+      })
+    ];
+
+    const newPost = {
+      date: dateStr,
+      title: title,
+      subtitle: '',
+      text: body,
+      photos: _wmPhotos.slice(),
+      bg: _wmPhotos[0] || '',
+      authorId: CURRENT_USER_ID,
+      messages: [],
+      participants: participants,
+      tags: tags,
+    };
+
+    if (typeof groupsData !== 'undefined' && groupsData[activeGroup]) {
+      groupsData[activeGroup].posts.unshift(newPost);
+      activeEvidenceIndexes[activeGroup] = 0;
+      saveGroupsData();
+      renderFeeds();
+    }
+    window.closeWriteModal();
+  };
+})();
+</script>
+
+<!-- ── 알림 모달 ── -->
+<style>
+.noti-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 350;
+  display: flex; align-items: flex-start; justify-content: flex-end;
+  padding: 68px 16px 0;
+  opacity: 0; pointer-events: none; transition: opacity .2s;
+}
+.noti-backdrop.open { opacity: 1; pointer-events: all; }
+.noti-modal {
+  background: var(--card-bg); border-radius: 20px; width: 360px; max-height: 540px;
+  display: flex; flex-direction: column; overflow: hidden;
+  box-shadow: 0 12px 40px rgba(0,0,0,.25);
+  transform: translateY(-8px) scale(.97); transition: transform .22s;
+}
+.noti-backdrop.open .noti-modal { transform: translateY(0) scale(1); }
+.noti-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 20px 14px; border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+.noti-head h3 { font-size: 15px; font-weight: 700; color: var(--accent-green); display: flex; align-items: center; gap: 6px; margin: 0; }
+.noti-close { background: none; border: none; font-size: 14px; color: var(--text-muted); cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: background .15s; }
+.noti-close:hover { background: var(--nav-item-bg-active); }
+.noti-tabs { display: flex; gap: 8px; padding: 12px 16px; flex-shrink: 0; }
+.noti-tab {
+  flex: 1; padding: 8px 6px; border-radius: 8px; border: 1.5px solid var(--border-color);
+  background: transparent; color: var(--text-muted); font-size: 12px; font-weight: 600;
+  cursor: pointer; transition: all .15s;
+}
+.noti-tab.on { background: var(--primary-green); color: #fff; border-color: var(--primary-green); }
+.noti-body { overflow-y: auto; padding: 0 16px 16px; flex: 1; }
+.noti-card {
+  background: rgba(82,183,136,.08); border-left: 3px solid var(--primary-green);
+  padding: 12px 14px; border-radius: 8px; margin-bottom: 10px;
+}
+.noti-card-title { font-size: 13px; font-weight: 700; color: var(--primary-green); margin-bottom: 5px; }
+.noti-card-body  { font-size: 12px; color: var(--text-color); line-height: 1.6; }
+.noti-card-date  { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
+.noti-empty { text-align: center; padding: 40px 20px; color: var(--text-muted); font-size: 13px; }
+.noti-empty .noti-empty-icon { font-size: 2rem; margin-bottom: 10px; }
+.noti-friend-card {
+  padding: 12px 14px; border-radius: 8px; margin-bottom: 10px;
+  border: 1px solid var(--border-color); transition: background .15s;
+}
+.noti-friend-card.unread { background: rgba(82,183,136,.08); border-color: var(--primary-green); }
+.noti-friend-card .noti-badge { font-size: 10px; color: #e55; font-weight: 700; vertical-align: top; margin-left: 4px; }
+</style>
+
+<div class="noti-backdrop" id="noti-backdrop" onclick="if(event.target===this)closeNotiModal()">
+  <div class="noti-modal">
+    <div class="noti-head">
+      <h3>🔔 알림</h3>
+      <button class="noti-close" onclick="closeNotiModal()">✕ 닫기</button>
+    </div>
+    <div class="noti-tabs">
+      <button class="noti-tab on" id="noti-tab-admin"   onclick="switchNotiTab('admin')">📢 관리진 공지</button>
+      <button class="noti-tab"   id="noti-tab-friends" onclick="switchNotiTab('friends')">🔔 친구들 알림</button>
+      <button class="noti-tab"   id="noti-tab-join"    onclick="switchNotiTab('join')">🤝 가입 신청 <span id="noti-join-count" style="display:none; background:#e55; color:#fff; border-radius:10px; padding:1px 6px; font-size:10px; margin-left:4px;">0</span></button>
+    </div>
+    <div class="noti-body">
+      <div id="noti-admin">
+        <div class="noti-card">
+          <div class="noti-card-title">[업데이트] ➕ 새로운 방 추가 기능이 적용되었습니다!</div>
+          <div class="noti-card-body">이제 번거로운 친구 초대코드 대신 <b>'새로운 방 추가'</b> 기능을 통해 코드를 적고 간편하게 방에 접속할 수 있습니다.</div>
+          <div class="noti-card-date">2026. 06. 30</div>
+        </div>
+        <div class="noti-card">
+          <div class="noti-card-title">[공지] Clov v2.0 정식 오픈 안내 🎉</div>
+          <div class="noti-card-body">일대일 단짝 연동 기능과 다크 모드 동기화 기능이 대폭 개선되었습니다. 더욱 안정적인 환경에서 소중한 추억을 기록해 보세요.</div>
+          <div class="noti-card-date">2026. 06. 29</div>
+        </div>
+      </div>
+      <div id="noti-friends" style="display:none"></div>
+      <div id="noti-join" style="display:none"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  window.openNotiModal = function() {
+    var list = [];
+    try { list = JSON.parse(localStorage.getItem('clov_joinRequests')) || []; } catch(e){}
+    var pending = list.filter(function(r) { return r.status === 'pending'; }).length;
+    if (pending > 0) {
+      switchNotiTab('join');
+    } else {
+      switchNotiTab('admin');
+    }
+    document.getElementById('noti-backdrop').classList.add('open');
+  };
+  window.closeNotiModal = function() {
+    document.getElementById('noti-backdrop').classList.remove('open');
+  };
+  window.switchNotiTab = function(tab) {
+    document.getElementById('noti-tab-admin').classList.toggle('on', tab === 'admin');
+    document.getElementById('noti-tab-friends').classList.toggle('on', tab === 'friends');
+    var tabJoin = document.getElementById('noti-tab-join');
+    if (tabJoin) tabJoin.classList.toggle('on', tab === 'join');
+
+    document.getElementById('noti-admin').style.display   = tab === 'admin' ? '' : 'none';
+    document.getElementById('noti-friends').style.display = tab === 'friends' ? '' : 'none';
+    var elJoin = document.getElementById('noti-join');
+    if (elJoin) elJoin.style.display = tab === 'join' ? '' : 'none';
+
+    if (tab === 'friends') renderFriendsNoti();
+    if (tab === 'join') renderJoinRequestsNoti();
+  };
+  function renderFriendsNoti() {
+    var el = document.getElementById('noti-friends');
+    var groupsData = {};
+    try { groupsData = JSON.parse(localStorage.getItem('clov_groupsData')) || {}; } catch(e) {}
+    var ag = (window._clov && typeof activeGroup !== 'undefined') ? activeGroup : (localStorage.getItem('clov_activeGroup') || 'friend');
+    var list = (groupsData[ag] && groupsData[ag].notifications) ? groupsData[ag].notifications : [];
+    
+    var reqList = [];
+    try { reqList = JSON.parse(localStorage.getItem('clov_joinRequests')) || []; } catch(e){}
+    var pendingReqs = reqList.filter(function(r) { return r.status === 'pending'; });
+    var joinBanner = '';
+    if (pendingReqs.length > 0) {
+      joinBanner = '<div class="noti-friend-card unread" style="border: 1.5px solid #e55; background: rgba(238,85,85,.08); cursor: pointer; margin-bottom: 12px;" onclick="switchNotiTab(\'join\')">' +
+        '<div style="font-size:13px;font-weight:800;color:#e55;display:flex;align-items:center;justify-content:space-between;">' +
+          '<span>🤝 대기 중인 가입 신청이 ' + pendingReqs.length + '건 있습니다! <span class="noti-badge" style="background:#e55;color:#fff;padding:2px 6px;border-radius:10px;">클릭하여 확인</span></span>' +
+        '</div>' +
+        '<div style="font-size:12px;color:var(--text-color);margin-top:4px;">참여 멤버 중 1명이 수락하면 새 멤버가 입장합니다.</div>' +
+      '</div>';
+    }
+
+    if (!list.length && !pendingReqs.length) {
+      el.innerHTML = '<div class="noti-empty"><div class="noti-empty-icon">📭</div>새로운 친구 알림이 없습니다.</div>';
+      return;
+    }
+    var friendsHtml = list.map(function(n) {
+      return '<div class="noti-friend-card' + (n.isRead ? '' : ' unread') + '">' +
+        '<div style="font-size:13px;font-weight:700;color:var(--text-color)">' + n.title + (n.isRead ? '' : '<span class="noti-badge">NEW</span>') + '</div>' +
+        '<div style="font-size:12px;color:var(--text-muted);margin:4px 0 6px;line-height:1.5">' + n.message + '</div>' +
+        '<div style="font-size:11px;color:var(--text-muted)">' + n.date + '</div>' +
+        '</div>';
+    }).join('');
+    el.innerHTML = joinBanner + friendsHtml;
+  }
+
+  window.renderJoinRequestsNoti = function() {
+    var el = document.getElementById('noti-join');
+    if (!el) return;
+    var list = [];
+    try { list = JSON.parse(localStorage.getItem('clov_joinRequests')) || []; } catch(e){}
+    var pending = list.filter(function(r) { return r.status === 'pending'; });
+    
+    var badge = document.getElementById('noti-join-count');
+    if (badge) {
+      badge.textContent = pending.length;
+      badge.style.display = pending.length > 0 ? 'inline-block' : 'none';
+    }
+    updateHeaderNotiBadge();
+
+    if (!list.length) {
+      el.innerHTML = '<div class="noti-empty"><div class="noti-empty-icon">📭</div>대기 중인 가입 신청이 없습니다.<br><span style="font-size:11px; color:var(--text-muted); margin-top:8px; display:inline-block;">참여 멤버 모달의 [🙋‍♂️ 가입 신청 테스트] 버튼으로 신청을 생성해보세요!</span></div>';
+      return;
+    }
+
+    el.innerHTML = list.map(function(req) {
+      if (req.status === 'accepted') {
+        return '<div class="noti-friend-card" style="border: 1px solid var(--border-color); background: var(--bg-light); opacity: 0.85;">' +
+          '<div style="font-size:13px; font-weight:700; color:var(--text-muted); display:flex; align-items:center; justify-content:space-between;">' +
+            '<span>🤝 가입 수락 완료</span><span style="font-size:11px;">' + req.date + '</span>' +
+          '</div>' +
+          '<div style="font-size:13px; color:var(--text-color); margin:8px 0 4px;"><b>' + req.name + '</b> 님이 참여 멤버로 합류했습니다.</div>' +
+        '</div>';
+      }
+      if (req.status === 'rejected') {
+        return '<div class="noti-friend-card" style="border: 1px solid var(--border-color); background: var(--bg-light); opacity: 0.6;">' +
+          '<div style="font-size:13px; font-weight:700; color:var(--text-muted); display:flex; align-items:center; justify-content:space-between;">' +
+            '<span>🚫 가입 거절됨</span><span style="font-size:11px;">' + req.date + '</span>' +
+          '</div>' +
+          '<div style="font-size:13px; color:var(--text-muted); margin:8px 0 4px;"><b>' + req.name + '</b> 님의 가입 신청이 거절되었습니다.</div>' +
+        '</div>';
+      }
+      return '<div class="noti-friend-card unread" id="req-card-' + req.id + '" style="border: 1.5px solid var(--primary-green); background: rgba(82,183,136,.08); padding: 14px 16px;">' +
+        '<div style="font-size:14px; font-weight:800; color:var(--primary-green); display:flex; align-items:center; justify-content:space-between; margin-bottom: 6px;">' +
+          '<span>🙋‍♂️ 우정공간 가입 신청 <span class="noti-badge" style="background:#e55; color:#fff; padding:2px 6px; border-radius:10px; font-size:10px;">NEW</span></span>' +
+          '<span style="font-size:11px; color:var(--text-muted); font-weight:normal;">' + req.date + '</span>' +
+        '</div>' +
+        '<div style="font-size:13px; color:var(--text-color); margin:8px 0 12px; line-height:1.5;">' +
+          '<strong style="font-size:15px; color:var(--text-color);">' + req.name + '</strong> 님이 우정공간(<strong>' + req.code + '</strong>) 입장을 신청했습니다.<br>' +
+          '<div style="margin-top:6px; padding:8px 12px; background:rgba(27,67,50,.06); border-radius:8px; font-size:11px; color:var(--text-muted); display:flex; align-items:center; gap:6px;">' +
+            '<span>💡</span> <span><strong>방장 권한 없음:</strong> 참여 멤버 중 1명만 수락해도 즉시 방에 입장할 수 있습니다.</span>' +
+          '</div>' +
+        '</div>' +
+        '<div style="display:flex; gap:8px; margin-top:12px;">' +
+          '<button onclick="acceptJoinRequest(\'' + req.id + '\', \'' + req.name + '\')" style="flex:1; padding:10px; background:var(--primary-green); color:#fff; border:none; border-radius:10px; font-weight:750; cursor:pointer; font-size:13px; display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 3px 10px rgba(27,67,50,.25); transition:transform .15s;">' +
+            '<span>✨ 수락하고 입장시키기</span>' +
+          '</button>' +
+          '<button onclick="rejectJoinRequest(\'' + req.id + '\', \'' + req.name + '\')" style="padding:10px 16px; background:var(--bg-light); color:var(--text-muted); border:1px solid var(--border-color); border-radius:10px; font-weight:600; cursor:pointer; font-size:13px; transition:background .15s;">' +
+            '거절' +
+          '</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  };
+
+  window.acceptJoinRequest = function(id, name) {
+    var list = [];
+    try { list = JSON.parse(localStorage.getItem('clov_joinRequests')) || []; } catch(e){}
+    list.forEach(function(r) { if (r.id === id) r.status = 'accepted'; });
+    localStorage.setItem('clov_joinRequests', JSON.stringify(list));
+
+    var members = [];
+    try { members = JSON.parse(localStorage.getItem('clov_acceptedMembers')) || []; } catch(e){}
+    if (members.indexOf(name) === -1) {
+      members.push(name);
+      localStorage.setItem('clov_acceptedMembers', JSON.stringify(members));
+    }
+
+    renderJoinRequestsNoti();
+    updateDynamicMembersDisplay();
+
+    if (typeof clovAlert === 'function') {
+      clovAlert('🎉 [' + name + '] 님의 가입 신청을 수락했습니다!\n이제 참여 멤버로 우정공간에 접속하여 함께 활동할 수 있습니다.\n(방장이 없으므로 참여 멤버 누구나 수락 권한을 가집니다)', { icon: '🤝', type: 'success' });
+    }
+  };
+
+  window.rejectJoinRequest = function(id, name) {
+    var list = [];
+    try { list = JSON.parse(localStorage.getItem('clov_joinRequests')) || []; } catch(e){}
+    list.forEach(function(r) { if (r.id === id) r.status = 'rejected'; });
+    localStorage.setItem('clov_joinRequests', JSON.stringify(list));
+
+    renderJoinRequestsNoti();
+    if (typeof clovAlert === 'function') {
+      clovAlert('❌ [' + name + '] 님의 가입 신청을 거절했습니다.', { icon: '🚫', type: 'warn' });
+    }
+  };
+
+  window.simulateJoinRequest = function() {
+    var sampleNames = ['김도현', '이서연', '박지훈', '최유진', '정우진', '강한나', '조민수'];
+    var name = sampleNames[Math.floor(Math.random() * sampleNames.length)];
+    var list = [];
+    try { list = JSON.parse(localStorage.getItem('clov_joinRequests')) || []; } catch(e){}
+    var codeEl = document.getElementById('member-modal-room-code');
+    var code = codeEl ? codeEl.textContent : 'CLOV-2002';
+    list.unshift({
+      id: 'req_' + Date.now(),
+      name: name,
+      code: code,
+      date: '방금 전',
+      status: 'pending'
+    });
+    localStorage.setItem('clov_joinRequests', JSON.stringify(list));
+    updateHeaderNotiBadge();
+
+    if (typeof clovAlert === 'function') {
+      clovAlert('🙋‍♂️ [' + name + '] 님이 우정공간(' + code + ') 가입을 신청했습니다!\n상단 [🔔 알림] 버튼을 누르시면 [🤝 가입 신청] 탭에서 확인하고 수락할 수 있습니다.\n(방장이 없으므로 참여 멤버 중 1명만 수락하면 입장 가능)', { icon: '🔔', type: 'info' });
+    }
+  };
+
+  window.updateDynamicMembersDisplay = function() {
+    var members = [];
+    try { members = JSON.parse(localStorage.getItem('clov_acceptedMembers')) || []; } catch(e){}
+    var totalCount = 4 + members.length;
+    var titleEl = document.getElementById('member-list-modal-title');
+    if (titleEl) titleEl.textContent = '🍀 참여 멤버 상태메시지 (' + totalCount + '명)';
+
+    var mainCountEl = document.querySelector('.photo-card .cover-meta-item span');
+    if (mainCountEl && mainCountEl.textContent.indexOf('명 함께하는 중') !== -1) {
+      mainCountEl.textContent = totalCount + '명 함께하는 중';
+    }
+
+    var container = document.getElementById('dynamic-members-container');
+    if (!container) return;
+    if (!members.length) { container.innerHTML = ''; return; }
+
+    container.innerHTML = members.map(function(name, idx) {
+      var colors = ['#40916c', '#2d6a4f', '#52b788', '#74c69d', '#1b4332'];
+      var bg = colors[idx % colors.length];
+      return '<div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; background: rgba(248, 251, 249, 0.85); border-radius: 16px; border: 1.5px solid rgba(82, 183, 136, 0.45); flex-shrink: 0; animation: wm-rise 0.25s ease;">' +
+        '<div style="display: flex; align-items: center; gap: 14px;">' +
+          '<div style="width: 44px; height: 44px; border-radius: 50%; background: ' + bg + '; color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">' + name.charAt(0) + '</div>' +
+          '<div>' +
+            '<span style="font-weight: 800; font-size: 15px; color: var(--text-color);">' + name + '</span>' +
+            '<span style="font-size: 11px; color: #fff; background: var(--primary-green); padding: 2px 6px; border-radius: 8px; margin-left: 6px; font-weight: 700;">신규 참여</span>' +
+          '</div>' +
+        '</div>' +
+        '<div style="background: rgba(0, 0, 0, 0.04); padding: 8px 14px; border-radius: 20px; border: 1px solid rgba(0, 0, 0, 0.06); max-width: 270px;">' +
+          '<span style="font-size: 13px; color: #444; font-weight: 600;">반가워요! 새로 합류했습니다 👋</span>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  };
+
+  window.updateHeaderNotiBadge = function() {
+    var list = [];
+    try { list = JSON.parse(localStorage.getItem('clov_joinRequests')) || []; } catch(e){}
+    var pending = list.filter(function(r) { return r.status === 'pending'; }).length;
+    var btn = document.getElementById('dt-nav-noti') || document.querySelector('[onclick="openNotiModal()"]');
+    if (btn) {
+      if (pending > 0) {
+        btn.innerHTML = '🔔<span style="position:absolute;top:4px;right:4px;background:#e55;color:#fff;width:16px;height:16px;border-radius:50%;font-size:10px;display:flex;align-items:center;justify-content:center;font-weight:800;border:2px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,.2);">' + pending + '</span>';
+        btn.style.position = 'relative';
+      } else {
+        btn.innerHTML = '🔔';
+      }
+    }
+    var badge = document.getElementById('noti-join-count');
+    if (badge) {
+      badge.textContent = pending;
+      badge.style.display = pending > 0 ? 'inline-block' : 'none';
+    }
+  };
+
+  document.addEventListener('DOMContentLoaded', function() {
+    updateDynamicMembersDisplay();
+    updateHeaderNotiBadge();
+  });
+  updateDynamicMembersDisplay();
+  updateHeaderNotiBadge();
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeNotiModal();
+  });
+})();
+</script>
+</body></html>

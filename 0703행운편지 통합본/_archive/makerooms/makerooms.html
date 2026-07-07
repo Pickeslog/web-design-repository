@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clov. - 우정공간 만들기</title>
+<style>
+    :root {
+        --primary-green: #1b4332;
+        --accent-green: #52b788;
+        --body-bg: #cbdad2;
+        --card-bg: #ffffff;
+        --bg-light: #fafbfc;
+        --text-color: #2c3e35;
+        --text-muted: #61766a;
+        --border-color: #eef2f0;
+        --header-glass-bg: rgba(255, 255, 255, 0.86);
+        --input-bg: #ffffff;
+        --input-border: #d8ebd2;
+        --nav-item-bg-active: #e8f3ed;
+        --shadow-color: rgba(0, 0, 0, 0.1);
+        --title-color: #1b4332;
+        --button-text: #ffffff;
+        --btn-primary-bg: #357a58;
+        --danger: #d95f5f;
+        --danger-bg: #fff4f4;
+    }
+
+    body.dark-mode {
+        --primary-green: #007c2e;
+        --accent-green: #00bd45;
+        --body-bg: #090d0a;
+        --card-bg: #151f18;
+        --bg-light: #0d1510;
+        --text-color: #f0fdf4;
+        --text-muted: #86efac;
+        --border-color: #1e2f24;
+        --header-glass-bg: rgba(9, 13, 10, 0.78);
+        --input-bg: #0d1510;
+        --input-border: #22c55e;
+        --nav-item-bg-active: #1e3a27;
+        --shadow-color: rgba(0, 0, 0, 0.5);
+        --title-color: #4ade80;
+        --button-text: #052e16;
+        --btn-primary-bg: #1da858;
+        --danger: #ff8a8a;
+        --danger-bg: #271414;
+    }
+
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    body {
+        background-color: var(--body-bg);
+        padding: 40px 20px;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 24px;
+        color: var(--text-color);
+    }
+
+    .preview-title { color: var(--title-color); text-align: center; margin-bottom: 8px; }
+    .preview-title p { font-size: 14px; color: var(--text-muted); margin-top: 4px; }
+
+    .split-workspace {
+        display: flex;
+        width: 100%;
+        max-width: 1400px;
+        gap: 40px;
+        justify-content: center;
+        align-items: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .view-section { display: flex; flex-direction: column; gap: 12px; }
+
+    .view-label {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--text-color);
+        background: var(--nav-item-bg-active);
+        padding: 6px 12px;
+        border-radius: 20px;
+        width: fit-content;
+    }
+
+    .desktop-window {
+        width: 850px;
+        height: 750px;
+        background: var(--card-bg);
+        border-radius: 16px;
+        box-shadow: 0 20px 50px var(--shadow-color);
+        overflow: hidden;
+        border: 4px solid var(--primary-green);
+        display: flex;
+        flex-direction: column;
+    }
+    .desktop-browser-bar {
+        height: 32px;
+        background: var(--primary-green);
+        display: flex;
+        align-items: center;
+        padding: 0 16px;
+        gap: 6px;
+    }
+    .browser-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.3); }
+
+    .mobile-window {
+        width: 410px;
+        height: 750px;
+        background: var(--card-bg);
+        border-radius: 32px;
+        box-shadow: 0 20px 50px var(--shadow-color);
+        overflow: hidden;
+        border: 6px solid var(--primary-green);
+        position: relative;
+    }
+
+    .window-content {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        background: var(--bg-light);
+    }
+
+    .header {
+        padding: 18px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: var(--header-glass-bg);
+        backdrop-filter: blur(18px) saturate(1.4);
+        -webkit-backdrop-filter: blur(18px) saturate(1.4);
+        border-bottom: 1px solid var(--border-color);
+        z-index: 10;
+    }
+
+    .logo {
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--primary-green);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        letter-spacing: -0.5px;
+    }
+
+    .header-actions { display: flex; align-items: center; gap: 10px; }
+
+    .icon-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background-color: var(--nav-item-bg-active);
+        border: none;
+        cursor: pointer;
+        font-size: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary-green);
+    }
+    .icon-btn:hover { background-color: var(--input-border); }
+
+    .avatar-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background-color: var(--primary-green);
+        color: #fff;
+        border: none;
+        font-weight: 700;
+        font-size: 13px;
+        cursor: pointer;
+    }
+
+    .main-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 28px 24px 32px;
+    }
+
+    .panel-view { display: block; }
+    .panel-view.hidden { display: none; }
+
+    .page-heading { margin-bottom: 20px; }
+    .page-heading h2 { font-size: 20px; color: var(--primary-green); margin-bottom: 6px; }
+    .page-heading p { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+
+    /* ---------- 우정공간 목록 ---------- */
+    .room-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+
+    .room-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: var(--bg-light);
+        border: 1px solid var(--border-color);
+        border-radius: 14px;
+        padding: 12px;
+        cursor: pointer;
+    }
+    .room-row:hover { border-color: var(--accent-green); }
+
+    .room-photo {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: var(--nav-item-bg-active);
+        border: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        flex-shrink: 0;
+        background-size: cover;
+        background-position: center;
+        color: var(--text-muted);
+    }
+    .room-row.has-dday .room-photo {
+        border-color: var(--accent-green);
+        color: var(--primary-green);
+    }
+
+    .room-info { flex: 1; min-width: 0; }
+    .room-name { font-size: 13px; font-weight: 700; color: var(--text-color); margin-bottom: 3px; }
+    .room-intro {
+        font-size: 11px;
+        color: var(--text-muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .room-dday-chip {
+        flex-shrink: 0;
+        background: var(--btn-primary-bg);
+        color: var(--button-text);
+        border-radius: 10px;
+        padding: 7px 12px;
+        text-align: center;
+    }
+    .room-dday-chip .dday-count { display: block; font-size: 12px; font-weight: 800; }
+    .room-dday-chip .dday-label { display: block; font-size: 9px; opacity: 0.9; margin-top: 1px; }
+
+    .add-room-btn {
+        width: 100%;
+        padding: 13px;
+        border-radius: 14px;
+        border: 1.5px dashed var(--accent-green);
+        background: transparent;
+        color: var(--primary-green);
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+    .add-room-btn:hover { background: var(--nav-item-bg-active); }
+
+    /* ---------- 방 만들기 폼 ---------- */
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        margin-bottom: 14px;
+        padding: 0;
+    }
+    .back-link:hover { color: var(--primary-green); }
+
+    .photo-upload-box {
+        width: 88px;
+        height: 88px;
+        border-radius: 22px;
+        background: var(--nav-item-bg-active);
+        border: 1.5px dashed var(--accent-green);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        cursor: pointer;
+        margin: 0 auto 22px;
+        overflow: hidden;
+        background-size: cover;
+        background-position: center;
+    }
+    .photo-upload-box span { font-size: 11px; color: var(--primary-green); font-weight: 600; }
+    .photo-upload-box.has-photo { border-style: solid; }
+    .photo-upload-box.has-photo span { display: none; }
+
+    .input-group { margin-bottom: 16px; }
+    .input-group label {
+        display: block;
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--text-color);
+        margin-bottom: 6px;
+    }
+    .input-group input, .input-group textarea {
+        width: 100%;
+        padding: 12px 14px;
+        background: var(--input-bg);
+        border: 1px solid var(--input-border);
+        border-radius: 12px;
+        font-size: 13px;
+        outline: none;
+        color: var(--text-color);
+    }
+    .input-group input:focus, .input-group textarea:focus {
+        border-color: var(--accent-green);
+        box-shadow: 0 0 0 3px rgba(82, 183, 136, 0.18);
+    }
+    .input-group textarea { height: 64px; resize: none; }
+    .input-group.invalid input { border-color: var(--danger); background: var(--danger-bg); }
+
+    .warning-text {
+        display: block;
+        min-height: 16px;
+        margin-top: 5px;
+        font-size: 11px;
+        color: var(--danger);
+        opacity: 0;
+    }
+    .input-group.invalid .warning-text { opacity: 1; }
+
+    .btn-main {
+        width: 100%;
+        background: var(--btn-primary-bg);
+        color: var(--button-text);
+        border: none;
+        padding: 13px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        margin-top: 6px;
+    }
+    .btn-sub {
+        width: 100%;
+        background: var(--nav-item-bg-active);
+        color: var(--primary-green);
+        border: none;
+        padding: 13px;
+        border-radius: 12px;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        margin-top: 8px;
+    }
+
+    /* ---------- 생성 완료 패널 ---------- */
+    .success-panel-inner { text-align: center; padding: 18px 0; }
+    .success-icon { font-size: 38px; margin-bottom: 10px; }
+    .success-panel-inner h3 { font-size: 17px; color: var(--primary-green); margin-bottom: 6px; }
+    .success-panel-inner p { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5; }
+
+    .invite-code-row { display: flex; gap: 8px; margin-bottom: 8px; }
+    .invite-code-row input {
+        flex: 1;
+        text-align: center;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        color: var(--primary-green);
+        background: var(--bg-light);
+        border: 1px solid var(--input-border);
+        border-radius: 10px;
+        padding: 11px;
+        font-size: 13px;
+    }
+    .copy-btn {
+        flex-shrink: 0;
+        padding: 0 16px;
+        border-radius: 10px;
+        border: 1px solid var(--accent-green);
+        background: var(--nav-item-bg-active);
+        color: var(--primary-green);
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+    }
+    .copy-btn.copied { background: var(--accent-green); color: #fff; border-color: var(--accent-green); }
+</style>
+</head>
+<body>
+
+<div class="preview-title">
+    <h2>🍀 Clov. 우정공간 목록 / 만들기</h2>
+    <p>우정공간 목록 화면과, "+ 새 우정공간 만들기"로 진입하는 생성 화면을 데스크톱/모바일에서 동시에 확인합니다.</p>
+</div>
+
+<div class="split-workspace">
+
+    <!-- [LEFT] 데스크톱 뷰 -->
+    <div class="view-section">
+        <div class="view-label">🖥️ Desktop 브라우저 뷰</div>
+        <div class="desktop-window">
+            <div class="desktop-browser-bar">
+                <div class="browser-dot"></div>
+                <div class="browser-dot"></div>
+                <div class="browser-dot"></div>
+            </div>
+            <div class="window-content">
+                <header class="header">
+                    <div class="logo">🍀 Clov.</div>
+                    <div class="header-actions">
+                        <button class="icon-btn dt-dark-btn" onclick="toggleDarkMode()" title="다크모드 토글"><span class="toggle-icon">☀️</span></button>
+                        <button class="icon-btn" onclick="alert('받은 행운편지함을 엽니다.')" title="행운편지">✉️</button>
+                        <button class="avatar-btn" title="프로필">김</button>
+                    </div>
+                </header>
+                <main class="main-content">
+
+                    <div id="dt-panel-list" class="panel-view">
+                        <div class="room-list" id="dt-room-list"></div>
+                        <button class="add-room-btn" onclick="showPanel('dt','create')">+ 새 우정공간 만들기</button>
+                    </div>
+
+                    <div id="dt-panel-create" class="panel-view hidden">
+                        <button class="back-link" onclick="showPanel('dt','list')">← 목록으로</button>
+                        <div class="page-heading">
+                            <h2>새 우정공간 만들기</h2>
+                            <p>친구와 함께 약속, 추억, 편지를 쌓아갈 공간이에요. 인원 제한 없이 나중에 친구를 더 초대할 수도 있어요.</p>
+                        </div>
+
+                        <div class="photo-upload-box" id="dt-room-photo" onclick="triggerRoomPhotoUpload('dt')">
+                            <span>📷<br>대표 사진</span>
+                        </div>
+
+                        <div class="input-group" data-field="name" id="dt-name-group">
+                            <label for="dt-room-name">우정공간 이름</label>
+                            <input type="text" id="dt-room-name" placeholder="예: 단짝 모임" maxlength="20">
+                            <span class="warning-text">한글 또는 영문 2~20자로 작성해주세요.</span>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="dt-room-intro">소개글 <span style="color: var(--text-muted); font-weight: 400;">(선택)</span></label>
+                            <textarea id="dt-room-intro" placeholder="이 우정공간을 한 줄로 소개해보세요" maxlength="60"></textarea>
+                        </div>
+
+                        <button class="btn-main" onclick="submitCreateRoom('dt')">🍀 우정공간 만들기</button>
+                    </div>
+
+                    <div id="dt-panel-success" class="panel-view hidden">
+                        <div class="success-panel-inner">
+                            <div class="success-icon">🎉</div>
+                            <h3 id="dt-success-title">우정공간이 만들어졌어요!</h3>
+                            <p>아래 초대 코드를 친구에게 보내서 함께 시작해보세요. 지금 안 보내도 나중에 언제든 초대할 수 있어요.</p>
+                            <div class="invite-code-row">
+                                <input type="text" id="dt-invite-code" readonly>
+                                <button class="copy-btn" id="dt-copy-btn" onclick="copyInviteCode('dt')">복사</button>
+                            </div>
+                            <button class="btn-main" onclick="finishCreateRoom('dt')">우정공간 목록으로</button>
+                        </div>
+                    </div>
+
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <!-- [RIGHT] 모바일 뷰 -->
+    <div class="view-section">
+        <div class="view-label">📱 Mobile 앱 뷰</div>
+        <div class="mobile-window">
+            <div class="window-content">
+                <header class="header">
+                    <div class="logo">🍀 Clov.</div>
+                    <div class="header-actions">
+                        <button class="icon-btn mb-dark-btn" onclick="toggleDarkMode()" title="다크모드 토글"><span class="toggle-icon">☀️</span></button>
+                        <button class="icon-btn" onclick="alert('받은 행운편지함을 엽니다.')" title="행운편지">✉️</button>
+                        <button class="avatar-btn" title="프로필">김</button>
+                    </div>
+                </header>
+                <main class="main-content">
+
+                    <div id="mb-panel-list" class="panel-view">
+                        <div class="room-list" id="mb-room-list"></div>
+                        <button class="add-room-btn" onclick="showPanel('mb','create')">+ 새 우정공간 만들기</button>
+                    </div>
+
+                    <div id="mb-panel-create" class="panel-view hidden">
+                        <button class="back-link" onclick="showPanel('mb','list')">← 목록으로</button>
+                        <div class="page-heading">
+                            <h2>새 우정공간 만들기</h2>
+                            <p>친구와 함께 약속, 추억, 편지를 쌓아갈 공간이에요. 인원 제한 없이 나중에 친구를 더 초대할 수도 있어요.</p>
+                        </div>
+
+                        <div class="photo-upload-box" id="mb-room-photo" onclick="triggerRoomPhotoUpload('mb')">
+                            <span>📷<br>대표 사진</span>
+                        </div>
+
+                        <div class="input-group" data-field="name" id="mb-name-group">
+                            <label for="mb-room-name">우정공간 이름</label>
+                            <input type="text" id="mb-room-name" placeholder="예: 단짝 모임" maxlength="20">
+                            <span class="warning-text">한글 또는 영문 2~20자로 작성해주세요.</span>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="mb-room-intro">소개글 <span style="color: var(--text-muted); font-weight: 400;">(선택)</span></label>
+                            <textarea id="mb-room-intro" placeholder="이 우정공간을 한 줄로 소개해보세요" maxlength="60"></textarea>
+                        </div>
+
+                        <button class="btn-main" onclick="submitCreateRoom('mb')">🍀 우정공간 만들기</button>
+                    </div>
+
+                    <div id="mb-panel-success" class="panel-view hidden">
+                        <div class="success-panel-inner">
+                            <div class="success-icon">🎉</div>
+                            <h3 id="mb-success-title">우정공간이 만들어졌어요!</h3>
+                            <p>아래 초대 코드를 친구에게 보내서 함께 시작해보세요. 지금 안 보내도 나중에 언제든 초대할 수 있어요.</p>
+                            <div class="invite-code-row">
+                                <input type="text" id="mb-invite-code" readonly>
+                                <button class="copy-btn" id="mb-copy-btn" onclick="copyInviteCode('mb')">복사</button>
+                            </div>
+                            <button class="btn-main" onclick="finishCreateRoom('mb')">우정공간 목록으로</button>
+                        </div>
+                    </div>
+
+                </main>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    let isDarkMode = false;
+    const roomPhotos = { dt: '', mb: '' };
+
+    function seedRooms() {
+        return [
+            { name: '단짝 모임', level: 4, intro: '토요일마다 만나는 우리들의 공간', photo: '', dday: { count: 3, label: '토요일 약속' } },
+            { name: '고등학교 4총사', level: 7, intro: '졸업해도 변하지 않는 우리', photo: '', dday: null },
+            { name: '민지랑 나', level: 2, intro: '소개글을 아직 안 적었어요', photo: '', dday: null }
+        ];
+    }
+
+    const roomsData = { dt: seedRooms(), mb: seedRooms() };
+
+    function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.innerText = str;
+        return div.innerHTML;
+    }
+
+    function renderRoomList(view) {
+        const container = document.getElementById(`${view}-room-list`);
+        container.innerHTML = roomsData[view].map(room => `
+            <div class="room-row ${room.dday ? 'has-dday' : ''}" onclick="alert('${escapeHtml(room.name)} 우정공간으로 이동합니다.')">
+                <div class="room-photo" style="${room.photo ? `background-image:url('${room.photo}')` : ''}">${room.photo ? '' : '🖼️'}</div>
+                <div class="room-info">
+                    <p class="room-name">${escapeHtml(room.name)} · Lv.${room.level}</p>
+                    <p class="room-intro">${escapeHtml(room.intro)}</p>
+                </div>
+                ${room.dday ? `
+                <div class="room-dday-chip">
+                    <span class="dday-count">D-${room.dday.count}</span>
+                    <span class="dday-label">${escapeHtml(room.dday.label)}</span>
+                </div>` : ''}
+            </div>
+        `).join('');
+    }
+
+    function showPanel(view, name) {
+        ['list', 'create', 'success'].forEach(panel => {
+            document.getElementById(`${view}-panel-${panel}`).classList.toggle('hidden', panel !== name);
+        });
+    }
+
+    function toggleDarkMode() {
+        isDarkMode = !isDarkMode;
+        document.querySelectorAll('.toggle-icon').forEach(icon => {
+            icon.innerText = isDarkMode ? '🌙' : '☀️';
+        });
+        document.body.classList.toggle('dark-mode', isDarkMode);
+    }
+
+    function triggerRoomPhotoUpload(view) {
+        const url = prompt('대표 사진의 URL을 입력해주세요 (비워두면 기본 아이콘을 사용해요):', roomPhotos[view]);
+        if (url === null) return;
+        roomPhotos[view] = url.trim();
+        const box = document.getElementById(`${view}-room-photo`);
+        if (roomPhotos[view]) {
+            box.style.backgroundImage = `url('${roomPhotos[view]}')`;
+            box.classList.add('has-photo');
+        } else {
+            box.style.backgroundImage = '';
+            box.classList.remove('has-photo');
+        }
+    }
+
+    function validateRoomName(view) {
+        const input = document.getElementById(`${view}-room-name`);
+        const group = document.getElementById(`${view}-name-group`);
+        const value = input.value.trim();
+        const isValid = /^[가-힣a-zA-Z\s]{2,20}$/.test(value);
+        group.classList.toggle('invalid', !isValid);
+        return isValid;
+    }
+
+    function generateInviteCode() {
+        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        let code = '';
+        for (let i = 0; i < 4; i++) code += chars[Math.floor(Math.random() * chars.length)];
+        return `CLOV-${code}`;
+    }
+
+    let pendingRoom = { dt: null, mb: null };
+
+    function submitCreateRoom(view) {
+        if (!validateRoomName(view)) {
+            document.getElementById(`${view}-room-name`).focus();
+            return;
+        }
+        const name = document.getElementById(`${view}-room-name`).value.trim();
+        const intro = document.getElementById(`${view}-room-intro`).value.trim() || '소개글을 아직 안 적었어요';
+
+        pendingRoom[view] = { name, level: 1, intro, photo: roomPhotos[view], dday: null };
+
+        document.getElementById(`${view}-success-title`).innerText = `'${name}' 우정공간이 만들어졌어요!`;
+        document.getElementById(`${view}-invite-code`).value = generateInviteCode();
+        showPanel(view, 'success');
+    }
+
+    function copyInviteCode(view) {
+        const input = document.getElementById(`${view}-invite-code`);
+        const btn = document.getElementById(`${view}-copy-btn`);
+        const finish = () => {
+            btn.innerText = '복사됨';
+            btn.classList.add('copied');
+            setTimeout(() => { btn.innerText = '복사'; btn.classList.remove('copied'); }, 1500);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(input.value).then(finish).catch(() => { input.select(); finish(); });
+        } else {
+            input.select();
+            finish();
+        }
+    }
+
+    function finishCreateRoom(view) {
+        if (pendingRoom[view]) {
+            roomsData[view].unshift(pendingRoom[view]);
+            pendingRoom[view] = null;
+            renderRoomList(view);
+        }
+        document.getElementById(`${view}-room-name`).value = '';
+        document.getElementById(`${view}-room-intro`).value = '';
+        document.getElementById(`${view}-name-group`).classList.remove('invalid');
+        roomPhotos[view] = '';
+        const box = document.getElementById(`${view}-room-photo`);
+        box.style.backgroundImage = '';
+        box.classList.remove('has-photo');
+        showPanel(view, 'list');
+    }
+
+    ['dt', 'mb'].forEach(view => {
+        renderRoomList(view);
+        document.getElementById(`${view}-room-name`).addEventListener('input', () => {
+            const group = document.getElementById(`${view}-name-group`);
+            if (group.classList.contains('invalid')) validateRoomName(view);
+        });
+    });
+</script>
+</body>
+</html>

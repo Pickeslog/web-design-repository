@@ -1,47 +1,93 @@
-# 🎨 Clov Web Design Repository
+# 🍀 Clov — 화면 작업 폴더 구조
 
-> Clov 프로젝트의 화면 명세서 및 UI/UX 설계를 위한 Repository입니다.
+> 각 폴더 = 하나의 화면 파트 = 담당자 1명
 
-## 📖 목적
+---
 
-이 저장소는 Clov 프로젝트의 디자인 산출물을 관리하기 위한 공간입니다.
+## 폴더 구조
 
-## 📂 포함 내용
+```
+test-web-design/
+├── 01-auth/          로그인 + 회원가입
+├── 02-main/          메인 앱 (우정공간 허브, 4탭 통합)
+├── 03-rooms/         우정공간 목록 / 만들기 / 초대
+├── 04-feed/          추억피드 (독립 페이지)
+├── 05-letter/        행운편지 상세
+├── 07-notification/  알림
+├── 08-profile/       내 프로필 / 개인정보 수정
+├── _archive/         구버전 보관 (건드리지 않음)
+└── _docs/            작업 보고서 + 화면 명세서
+```
 
-- 화면 명세서
-- 사용자 플로우(User Flow)
-- 와이어프레임
-- 컴포넌트 설계
-- 디자인 가이드
+---
 
-## 🧩 화면 명세 소스
+## 파트별 파일 목록
 
-`screen-spec-source/` 폴더는 `Clov - 추억피드.html` 기준본을 화면명세서로 바꾸기 위한 설계도 문서 묶음입니다.
+| 폴더 | HTML 파일 | 상태 |
+|---|---|---|
+| `01-auth/` | `login.html`, `signup.html` | ✅ 완성 + 연결됨 |
+| `02-main/` | `index.html` + `css/` `js/` | ✅ 완성 + 연결됨 |
+| `03-rooms/` | `makerooms.html`, `invite.html`, `join_room.html` | ✅ 완성 + 연결됨 |
+| `04-feed/` | `feed.html`, `memory_detail.html` | ✅ 완성 + 연결됨 |
+| `05-letter/` | `letter_detail.html` | ✅ 완성 + 연결됨 |
+| `07-notification/` | `notification.html` | ✅ 완성 + 연결됨 |
+| `08-profile/` | `profile_edit.html` | ✅ 완성 + 연결됨 |
 
-- `00-service-summary.md`: 서비스 개요와 핵심 구조 원칙
-- `01-design-system.md`: 공통 디자인 시스템 요약
-- `02-dashboard-screen.md`: 우정공간 대시보드
-- `03-memory-feed-screen.md`: 추억피드
-- `04-lucky-letter-screen.md`: 행운편지
-- `05-schedule-screen.md`: 일정계획
-- `06-modal-and-interaction.md`: 공통 모달 및 인터랙션
-- `07-user-flow.md`: 화면 간 사용자 흐름
-- `08-data-and-state.md`: 데이터 구조 및 UI 상태
-- `09-component-inventory.md`: 컴포넌트 인벤토리
+> 일정계획은 별도 폴더 없이 `02-main/index.html` 내부 탭(인생4컷)으로만 존재한다. 과거 독립 캘린더 페이지(`06-schedule/schedule.html`)는 실제 구현과 컨셉이 갈라져 사용되지 않았으므로 `_archive/schedule/`로 이동했다.
 
-## 🧭 팀 작업 가이드
+---
 
-`team-guides/` 폴더는 팀원들이 AI 에이전트와 HTML 프로토타입을 효율적으로 다루기 위한 작업 가이드입니다.
+## 전체 화면 흐름
 
-- `10-merge-plan.md`: HTML 기준본 병합 계획
-- `11-claude-prompt-template.md`: Claude 디자인 프레임워크 입력 프롬프트 템플릿
-- `12-ai-agent-team-workflow.md`: 팀원용 AI 에이전트 작업 흐름
-- `13-gemini-prompt-recipes.md`: Gemini 프롬프트 레시피
-- `14-html-prototype-review-checklist.md`: HTML 프로토타입 검수 체크리스트
-- `15-ai-design-work-guide.md`: AI로 HTML 디자인 작업하는 실전 절차
+```
+[01-auth] login.html
+    │  로그인 성공
+    ▼
+[01-auth] signup.html ──(가입 완료)──▶ login.html
+    │  (회원가입 링크)
+    │
+    ▼ (로그인 성공)
+[03-rooms] makerooms.html
+    │  방 카드 클릭 / 코드 입장
+    ▼
+[02-main] index.html  ◀──────────────────────────────┐
+    │                                                  │
+    ├──[📸 추억피드 탭]── 04-feed/memory_detail.html ──┤
+    ├──[💌 행운편지 탭]── 05-letter/letter_detail.html ┤
+    ├──[📅 일정계획 탭]── index.html 내부 (인생4컷)     │
+    ├──[🔔 알림]──────── 07-notification/notification.html
+    ├──[개인정보 수정]──── index.html 내부 모달 ┘
+    └──[로그아웃]──────── 01-auth/login.html
 
-## 📝 작업 기록
+[04-feed] feed.html  (피드 단독 뷰 — makerooms에서도 진입 가능)
+    └──[← 방 목록]──── 03-rooms/makerooms.html
+```
 
-`work-logs/` 폴더는 팀원별 HTML 수정, 화면명세 작성, AI 프롬프트 사용 내역을 기록하는 공간입니다.
+---
 
-Team Leader : myeongjundev
+## 공통 디자인 토큰 (`02-main/css/desktop.css`)
+
+| 토큰 | 라이트 | 다크 |
+|---|---|---|
+| `--primary-green` | `#1b4332` | `#007c2e` |
+| `--accent-green` | `#52b788` | `#00bd45` |
+| `--btn-primary-bg` | `#357a58` | `#1da858` |
+| `--card-bg` | `#ffffff` | `#151f18` |
+| `--text-color` | `#2c3e35` | `#f0fdf4` |
+
+---
+
+## 작업 규칙
+
+1. **자기 파트 폴더만 수정** — 다른 폴더 파일은 건드리지 않는다
+2. **`_archive/` 건드리지 않음** — 구버전 참고용이지 작업 폴더 아님
+3. **공통 CSS/JS 수정 필요 시** — 팀장에게 먼저 알린다 (`02-main/css/`, `02-main/js/`)
+4. **각 HTML 파일 옆에 같은 이름의 `.md` 파일** — 화면 명세서 작성 시 활용
+
+---
+
+## 문서 위치
+
+- 화면 명세서 소스: `_docs/web-design-repository/screen-spec-source/`
+- 팀 작업 가이드: `_docs/web-design-repository/team-guides/`
+- 6/30 작업 보고서: `_docs/0630-통합_작업_요약보고서.md`

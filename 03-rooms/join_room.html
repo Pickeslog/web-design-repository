@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clov. - 방 접속하기</title>
+<style>
+    :root {
+        --primary-green: #1b4332;
+        --accent-green: #52b788;
+        --body-bg: #cbdad2;
+        --card-bg: #ffffff;
+        --bg-light: #fafbfc;
+        --text-color: #2c3e35;
+        --text-muted: #61766a;
+        --border-color: #eef2f0;
+        --header-glass-bg: rgba(255, 255, 255, 0.86);
+        --input-bg: #ffffff;
+        --input-border: #d8ebd2;
+        --nav-item-bg-active: #e8f3ed;
+        --shadow-color: rgba(0, 0, 0, 0.1);
+        --title-color: #1b4332;
+        --button-text: #ffffff;
+        --btn-primary-bg: #357a58;
+        --danger: #d95f5f;
+        --danger-bg: #fff4f4;
+    }
+
+    body.dark-mode {
+        /* 미드나잇 올리브 팔레트 — 02-main/desktop.css와 동일 계열로 통일 */
+        --primary-green: #5a7a3e;
+        --accent-green: #9ccc65;
+        --body-bg: #14150e;
+        --card-bg: #1e2016;
+        --bg-light: #191a12;
+        --text-color: #eef0e2;
+        --text-muted: #b7c99a;
+        --border-color: #2a2c1e;
+        --header-glass-bg: rgba(20, 21, 14, 0.78);
+        --input-bg: #191a12;
+        --input-border: #6b8f47;
+        --nav-item-bg-active: #2b3020;
+        --shadow-color: rgba(0, 0, 0, 0.5);
+        --title-color: #9ccc65;
+        --button-text: #12150a;
+        --btn-primary-bg: #7c9c52;
+        --danger: #ff8a8a;
+        --danger-bg: #271414;
+    }
+
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    body {
+        background-color: var(--body-bg);
+        padding: 40px 20px;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 24px;
+        color: var(--text-color);
+    }
+
+    .desktop-window {
+        width: 850px;
+        height: 750px;
+        background: var(--card-bg);
+        border-radius: 16px;
+        box-shadow: 0 20px 50px var(--shadow-color);
+        overflow: hidden;
+        border: 4px solid var(--primary-green);
+        display: flex;
+        flex-direction: column;
+    }
+    .desktop-browser-bar {
+        height: 32px;
+        background: var(--primary-green);
+        display: flex;
+        align-items: center;
+        padding: 0 16px;
+        gap: 6px;
+    }
+    .browser-dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.3); }
+
+    .window-content {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        background: var(--bg-light);
+    }
+
+    .header {
+        padding: 18px 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: var(--header-glass-bg);
+        backdrop-filter: blur(18px) saturate(1.4);
+        -webkit-backdrop-filter: blur(18px) saturate(1.4);
+        border-bottom: 1px solid var(--border-color);
+        z-index: 10;
+    }
+
+    .logo {
+        font-size: 22px;
+        font-weight: 800;
+        color: var(--primary-green);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        letter-spacing: -0.5px;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .header-actions { display: flex; align-items: center; gap: 10px; }
+
+    .icon-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background-color: var(--nav-item-bg-active);
+        border: none;
+        cursor: pointer;
+        font-size: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary-green);
+    }
+    .icon-btn:hover { background-color: var(--input-border); }
+    /* 해/달 아이콘 — body.dark-mode 기준 CSS가 자동 전환, JS는 텍스트를 건드리지 않는다 */
+    .toggle-icon { display: inline-flex; }
+    .toggle-icon .icon-moon { display: none; }
+    body.dark-mode .toggle-icon .icon-sun { display: none; }
+    body.dark-mode .toggle-icon .icon-moon { display: inline-flex; }
+
+    .avatar-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background-color: var(--primary-green);
+        color: #fff;
+        border: none;
+        font-weight: 700;
+        font-size: 13px;
+        cursor: pointer;
+    }
+
+    .main-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 28px 24px 32px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .form-container {
+        width: 100%;
+        max-width: 400px;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        margin-bottom: 24px;
+        padding: 0;
+        text-decoration: none;
+    }
+    .back-link:hover { color: var(--primary-green); }
+
+    .page-heading { margin-bottom: 30px; text-align: center; }
+    .page-heading h2 { font-size: 24px; color: var(--primary-green); margin-bottom: 10px; }
+    .page-heading p { font-size: 14px; color: var(--text-muted); line-height: 1.5; }
+
+    .input-group { margin-bottom: 24px; }
+    .input-group label {
+        display: block;
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text-color);
+        margin-bottom: 8px;
+    }
+    .input-group input {
+        width: 100%;
+        padding: 14px 16px;
+        background: var(--input-bg);
+        border: 1px solid var(--input-border);
+        border-radius: 12px;
+        font-size: 15px;
+        outline: none;
+        color: var(--text-color);
+        text-align: center;
+        letter-spacing: 1px;
+        font-weight: 700;
+    }
+    .input-group input::placeholder {
+        color: var(--text-muted);
+        font-weight: 400;
+        letter-spacing: normal;
+    }
+    .input-group input:focus {
+        border-color: var(--accent-green);
+        box-shadow: 0 0 0 3px rgba(82, 183, 136, 0.18);
+    }
+    .input-group.invalid input { border-color: var(--danger); background: var(--danger-bg); }
+
+    .warning-text {
+        display: block;
+        min-height: 16px;
+        margin-top: 8px;
+        font-size: 12px;
+        color: var(--danger);
+        opacity: 0;
+        text-align: center;
+    }
+    .input-group.invalid .warning-text { opacity: 1; }
+
+    .btn-main {
+        width: 100%;
+        background: var(--btn-primary-bg);
+        color: var(--button-text);
+        border: none;
+        padding: 16px;
+        border-radius: 12px;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        margin-top: 10px;
+    }
+    .btn-main:hover { opacity: 0.9; }
+
+    /* ---------- 생성 완료 패널 ---------- */
+    .success-panel-inner { text-align: center; padding: 18px 0; display: none; }
+    .success-panel-inner.active { display: block; }
+    .success-icon { font-size: 48px; margin-bottom: 16px; }
+    .success-panel-inner h3 { font-size: 20px; color: var(--primary-green); margin-bottom: 10px; }
+    .success-panel-inner p { font-size: 14px; color: var(--text-muted); margin-bottom: 30px; line-height: 1.5; }
+
+</style>
+<link rel="stylesheet" href="../02-main/css/global-theme.css">
+</head>
+<body>
+
+<div class="desktop-window">
+    <div class="desktop-browser-bar">
+        <div class="browser-dot"></div>
+        <div class="browser-dot"></div>
+        <div class="browser-dot"></div>
+    </div>
+    <div class="window-content">
+        <header class="header">
+            <a href="index.html" class="logo"><img src="../assets/ai-style/clov_logo_half_leaf_cartoon_transparent.png" alt="Clov 로고" style="width:22px;height:22px;object-fit:contain;">Clov.</a>
+            <div class="header-actions">
+                <button class="icon-btn dt-dark-btn" onclick="toggleDarkMode()" title="다크모드 토글"><span class="toggle-icon"><svg class="icon-sun" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg><svg class="icon-moon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></span></button>
+                <button class="icon-btn" onclick="clovToast('받은 행운편지함을 엽니다.', 'info')" title="행운편지"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></button>
+                <button class="avatar-btn" title="프로필">김</button>
+            </div>
+        </header>
+        <main class="main-content">
+
+            <div class="form-container" id="join-form-panel">
+                <a href="index.html" class="back-link">← 홈으로 돌아가기</a>
+                
+                <div class="page-heading">
+                    <h2>방 접속하기</h2>
+                    <p>친구에게 전달받은 우정공간의<br>고유 방 코드를 입력하여 접속하세요.</p>
+                </div>
+
+                <div class="input-group" id="code-group">
+                    <label for="room-code">방 코드 입력</label>
+                    <input type="text" id="room-code" placeholder="CLOV-XXXX-XXXX" maxlength="20" oninput="this.value = this.value.toUpperCase()">
+                    <span class="warning-text">유효하지 않은 코드 형식입니다.</span>
+                </div>
+
+                <button class="btn-main" onclick="submitJoinRoom()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><path d="M10 17l5-5-5-5M15 12H3"/></svg>방 접속하기</button>
+            </div>
+
+            <div class="form-container success-panel-inner" id="success-panel">
+                <div class="success-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg></div>
+                <h3>가입 신청이 완료되었습니다!</h3>
+                <p>우정공간(<b style="color:var(--primary-green);"><span id="applied-room-code"></span></b>)에 입장 신청을 보냈습니다.<br><span style="font-size:12px;color:var(--text-muted);display:inline-block;margin-top:8px;line-height:1.5;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:2px;"><circle cx="12" cy="12" r="9"/><path d="M12 16v-4M12 8h.01"/></svg> 방장 권한이 없으므로 참여 멤버 중 1명만 수락하면 즉시 방에 입장할 수 있습니다.</span></p>
+                <button class="btn-main" onclick="location.href='../02-main/index.html?tab=join'" style="margin-top:10px;">메인(알림)으로 이동</button>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<script src="../02-main/components/clov-modal.js"></script>
+<script>
+    let isDarkMode = false;
+    
+    if(localStorage.getItem('theme') === 'dark') {
+        toggleDarkMode();
+    }
+
+    const joinParams = new URLSearchParams(window.location.search);
+    const prefilledRoomCode = joinParams.get('code') || joinParams.get('roomCode');
+    if (prefilledRoomCode) {
+        document.getElementById('room-code').value = prefilledRoomCode.toUpperCase();
+    }
+
+    function toggleDarkMode() {
+        isDarkMode = !isDarkMode;
+        // 해/달 아이콘은 body.dark-mode 기준 CSS가 알아서 전환한다
+        document.body.classList.toggle('dark-mode', isDarkMode);
+        localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+    }
+
+    function submitJoinRoom() {
+        const input = document.getElementById('room-code');
+        const group = document.getElementById('code-group');
+        const code = input.value.trim().toUpperCase();
+        
+        if (code.length < 5) {
+            group.classList.add('invalid');
+            input.focus();
+            return;
+        }
+        
+        group.classList.remove('invalid');
+        
+        try {
+            let joinReqs = JSON.parse(localStorage.getItem('clov_joinRequests')) || [];
+            joinReqs.unshift({
+                id: 'req_' + Date.now(),
+                name: '새로운 친구 (' + code.slice(-4) + ')',
+                code: code,
+                date: '방금 전',
+                status: 'pending'
+            });
+            localStorage.setItem('clov_joinRequests', JSON.stringify(joinReqs));
+        } catch(e) {
+            console.error("가입 신청 저장 실패", e);
+        }
+
+        const codeSpan = document.getElementById('applied-room-code');
+        if(codeSpan) codeSpan.textContent = code;
+
+        document.getElementById('join-form-panel').style.display = 'none';
+        document.getElementById('success-panel').classList.add('active');
+        
+        if (typeof clovAlert === 'function') {
+            clovAlert(`🍀 [${code}] 방에 가입 신청을 보냈습니다!\n참여 멤버 중 1명이 수락하면 입장이 완료됩니다.`, { icon: '🤝', type: 'success' });
+        }
+    }
+</script>
+</body>
+</html>
