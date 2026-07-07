@@ -752,9 +752,6 @@
             updateDashboardPhotos();
             // 일정 배너 업데이트
             updateScheduleUI();
-
-            renderGroundGrowth('dt-ground-growth');
-            renderGroundGrowth('mb-ground-growth');
         }
 
         // 레벨업 순간 대시보드 카드에 충격파 펄스 애니메이션을 재생
@@ -1320,39 +1317,5 @@
         window.openMemberListModal = openMemberListModal;
         window.closeMemberListModal = closeMemberListModal;
         window.copyMemberModalRoomCode = copyMemberModalRoomCode;
-
-        function renderGroundGrowth(containerId) {
-            const container = document.getElementById(containerId);
-            if (!container) return;
-            container.innerHTML = '';
-
-            // 레벨이 오를수록 클로버 개수가 훨씬 더 가파르게 늘어나서 들판이 무성해짐
-            // (최대 777레벨이라 레벨을 그대로 곱하면 폭발하므로, 7단계 티어 인덱스(0~6) 기준으로 계산)
-            const tierIdx = clovLevelTierIndex(friendshipLevel);
-            const cloverCount = 6 + tierIdx * 5; // 6 ~ 36개
-            // 레벨이 높을수록 클로버 한 포기 자체도 더 크고 무성하게 자람
-            const baseScale = 0.7 + tierIdx * 0.12;
-
-            for (let i = 0; i < cloverCount; i++) {
-                const sprout = document.createElement('span');
-                sprout.className = 'ground-sprout';
-                sprout.innerText = '🍀';
-
-                const leftRandom = 2 + Math.random() * 96; // 지면 가로 전체에 고루 분포
-                const bottomRandom = Math.random() * 18; // 지면 능선 부근에 뿌리내린 듯 배치
-                const scale = baseScale + Math.random() * 0.4;
-                const swayDuration = 3 + Math.random() * 2;
-                const swayDelay = Math.random() * 2;
-                const growDelay = Math.random() * 0.9;
-
-                sprout.style.left = `${leftRandom}%`;
-                sprout.style.bottom = `${bottomRandom}%`;
-                sprout.style.fontSize = `${13 * scale}px`;
-                sprout.style.zIndex = String(Math.round(bottomRandom));
-                sprout.style.animation = `sproutGrow 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) ${growDelay}s backwards, sproutSway ${swayDuration}s ease-in-out ${swayDelay}s infinite`;
-
-                container.appendChild(sprout);
-            }
-        }
 
         // 8. 그룹 변경 기능 실행 로직

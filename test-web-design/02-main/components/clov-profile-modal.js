@@ -155,10 +155,7 @@
                         <div class="profile-form-section">
                             <div class="profile-section-title">대시보드 배경</div>
                             <ul class="settings-list theme-option-list" id="dt-bg-theme-list">
-                                <li class="theme-option" data-bg-theme="field" onclick="setBgTheme('field')">
-                                    <span class="settings-list-label">클로버 들판</span>
-                                </li>
-                                <!-- 나머지 벽지는 desktop.js의 V5_WALLPAPERS 등록소에서 renderBgWallpaperOptions()가 채운다 -->
+                                <!-- 벽지 목록은 desktop.js의 V5_WALLPAPERS 등록소에서 renderBgWallpaperOptions()가 채운다 -->
                             </ul>
                         </div>
 
@@ -502,10 +499,10 @@
     clovToast(icon + ' ' + name + ' 바탕화면으로 바꿨어요!', 'success');
   }
 
-  /* ── 배경 테마 (클로버 들판 + V5_WALLPAPERS 등록소) — 해당 UI가 없는 페이지에선 설정값만 저장 ── */
+  /* ── 배경 테마 (V5_WALLPAPERS 등록소) — 해당 UI가 없는 페이지에선 설정값만 저장 ── */
   function getBgTheme() {
-    var theme = localStorage.getItem('clov_bgTheme') || 'field';
-    if (theme === 'photo') theme = 'lp-turntable'; // 구버전 저장값 마이그레이션
+    var theme = localStorage.getItem('clov_bgTheme') || 'lp-turntable';
+    if (theme === 'photo' || theme === 'field') theme = 'lp-turntable'; // 구버전 저장값(photo/클로버 들판) 마이그레이션
     return theme;
   }
 
@@ -548,8 +545,8 @@
     applyBgTheme(theme);
     updateBgThemeUI();
     var wp = window.V5_WALLPAPERS && window.V5_WALLPAPERS[theme];
-    var name = theme === 'field' ? '클로버 들판' : (wp ? wp.name : theme);
-    var icon = theme === 'field' ? '🌿' : (wp ? wp.icon : '🎨');
+    var name = wp ? wp.name : theme;
+    var icon = wp ? wp.icon : '🎨';
     clovToast(icon + ' ' + name + ' 배경으로 바꿨어요!', 'success');
   }
 

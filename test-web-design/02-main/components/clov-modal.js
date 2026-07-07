@@ -11,10 +11,44 @@
  */
 
 (function () {
+  /* data.js/desktop.js의 "Null Pointer Safe Patch"가 document.getElementById를
+     몽키패치해 없는 id에 숨김 stub div를 만들어 반환한다. 그러면
+     "이미 있으면 만들지 않기" 존재 체크가 stub에 속아 진짜 모달 DOM을 만들지 못하고,
+     confirm/toast가 display:none stub 안에 그려져 화면에 안 보이는 버그가 생긴다.
+     → 이 컴포넌트 내부 조회는 패치를 타지 않는 querySelector를 사용한다. */
+  const $id = (id) => document.querySelector('#' + id);
+
+  /* ─────────────────────────────────────────────
+   * 0. 라인 아이콘 등록소 (Lucide 스타일 SVG)
+   *   이모지 대신 쓰고 싶을 때 clovAlert/clovConfirm의 icon 옵션에
+   *   CLOV_ICONS.trash 처럼 넘기면 원형 틴트 배지로 렌더된다.
+   *   stroke=currentColor 라서 배지 색(type별)을 그대로 따라간다.
+   * ───────────────────────────────────────────── */
+  const svgIcon = (paths) =>
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths}</svg>`;
+  const CLOV_ICONS = {
+    trash: svgIcon('<path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>'),
+    warn: svgIcon('<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/>'),
+    check: svgIcon('<path d="M20 6 9 17l-5-5"/>'),
+    info: svgIcon('<circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="16" y2="12"/><line x1="12" x2="12.01" y1="8" y2="8"/>'),
+  };
+  window.CLOV_ICONS = CLOV_ICONS;
+
+  /* 아이콘 문자열이 SVG면 innerHTML로 넣고 배지 스타일을 켠다. 이모지면 textContent. */
+  function _renderIcon(iconEl, icon) {
+    if (typeof icon === 'string' && icon.trim().startsWith('<svg')) {
+      iconEl.innerHTML = icon;
+      iconEl.classList.add('has-svg');
+    } else {
+      iconEl.textContent = icon;
+      iconEl.classList.remove('has-svg');
+    }
+  }
+
   /* ─────────────────────────────────────────────
    * 1. 공통 CSS 주입 (한 번만)
    * ───────────────────────────────────────────── */
-  if (!document.getElementById('__clov-modal-styles')) {
+  if (!$id('__clov-modal-styles')) {
     const style = document.createElement('style');
     style.id = '__clov-modal-styles';
     style.textContent = `
@@ -42,6 +76,20 @@
       #__clov-alert-icon {
         font-size: 40px; line-height: 1;
       }
+      /* SVG 라인 아이콘일 때: 이모지 대신 원형 틴트 배지 안에 아이콘을 담는다 */
+      #__clov-alert-icon.has-svg {
+        width: 60px; height: 60px;
+        margin: 0 auto;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        background: rgba(0,0,0,.05);
+        color: #1b4332;
+      }
+      #__clov-alert-icon.has-svg svg { width: 28px; height: 28px; display: block; }
+      #__clov-alert-box.success .has-svg { background: #dcfce7; color: #16a34a; }
+      #__clov-alert-box.warn    .has-svg { background: #fef3c7; color: #d97706; }
+      #__clov-alert-box.error   .has-svg { background: #ffe4e6; color: #f43f5e; }
+      #__clov-alert-box.info    .has-svg { background: #dbeafe; color: #2563eb; }
       #__clov-alert-msg {
         font-size: 15px; font-weight: 600;
         color: #1b4332; line-height: 1.55;
@@ -115,7 +163,7 @@
    * 2. Alert 모달 DOM 생성
    * ───────────────────────────────────────────── */
   function ensureAlertEl() {
-    if (document.getElementById('__clov-alert-backdrop')) return;
+    if ($id('__clov-alert-backdrop')) return;
     const backdrop = document.createElement('div');
     backdrop.id = '__clov-alert-backdrop';
     backdrop.innerHTML = `
@@ -142,7 +190,7 @@
   }
 
   function _closeAlert(result) {
-    const backdrop = document.getElementById('__clov-alert-backdrop');
+    const backdrop = $id('__clov-alert-backdrop');
     if (!backdrop) return;
     backdrop.classList.remove('open');
     backdrop._resolveCallback && backdrop._resolveCallback(result);
@@ -153,12 +201,12 @@
    * 3. Toast wrap DOM 생성
    * ───────────────────────────────────────────── */
   function ensureToastWrap() {
-    if (!document.getElementById('__clov-toast-wrap')) {
+    if (!$id('__clov-toast-wrap')) {
       const wrap = document.createElement('div');
       wrap.id = '__clov-toast-wrap';
       document.body.appendChild(wrap);
     }
-    return document.getElementById('__clov-toast-wrap');
+    return $id('__clov-toast-wrap');
   }
 
   /* ─────────────────────────────────────────────
@@ -173,33 +221,33 @@
   window.clovAlert = function (message, options = {}) {
     return new Promise((resolve) => {
       ensureAlertEl();
-      const backdrop = document.getElementById('__clov-alert-backdrop');
-      const box      = document.getElementById('__clov-alert-box');
-      const iconEl   = document.getElementById('__clov-alert-icon');
-      const msgEl    = document.getElementById('__clov-alert-msg');
-      const actionsEl = document.getElementById('__clov-alert-actions');
+      const backdrop = $id('__clov-alert-backdrop');
+      const box      = $id('__clov-alert-box');
+      const iconEl   = $id('__clov-alert-icon');
+      const msgEl    = $id('__clov-alert-msg');
+      const actionsEl = $id('__clov-alert-actions');
 
       const type    = options.type    || 'info';
       const icon    = options.icon    || { success:'✅', warn:'⚠️', error:'❌', info:'💬' }[type];
       const btnText = options.btnText || '확인';
 
       box.className = type;
-      iconEl.textContent = icon;
+      _renderIcon(iconEl, icon);
       msgEl.textContent  = message;
       backdrop.dataset.closeOnBackdrop = options.closeOnBackdrop !== false ? 'true' : 'false';
 
       actionsEl.innerHTML = `<button class="clov-modal-btn primary" id="__clov-alert-ok">${btnText}</button>`;
-      document.getElementById('__clov-alert-ok').onclick = () => _closeAlert(true).then ? _closeAlert(true) : (_closeAlert(true), resolve());
+      $id('__clov-alert-ok').onclick = () => _closeAlert(true).then ? _closeAlert(true) : (_closeAlert(true), resolve());
 
       // promise 연결
       backdrop._resolveCallback = resolve;
-      document.getElementById('__clov-alert-ok').onclick = () => {
+      $id('__clov-alert-ok').onclick = () => {
         _closeAlert();
         resolve();
       };
 
       backdrop.classList.add('open');
-      setTimeout(() => document.getElementById('__clov-alert-ok')?.focus(), 50);
+      setTimeout(() => $id('__clov-alert-ok')?.focus(), 50);
     });
   };
 
@@ -212,11 +260,11 @@
   window.clovConfirm = function (message, onConfirm, options = {}) {
     return new Promise((resolve) => {
       ensureAlertEl();
-      const backdrop  = document.getElementById('__clov-alert-backdrop');
-      const box       = document.getElementById('__clov-alert-box');
-      const iconEl    = document.getElementById('__clov-alert-icon');
-      const msgEl     = document.getElementById('__clov-alert-msg');
-      const actionsEl = document.getElementById('__clov-alert-actions');
+      const backdrop  = $id('__clov-alert-backdrop');
+      const box       = $id('__clov-alert-box');
+      const iconEl    = $id('__clov-alert-icon');
+      const msgEl     = $id('__clov-alert-msg');
+      const actionsEl = $id('__clov-alert-actions');
 
       const type        = options.type        || 'warn';
       const icon        = options.icon        || { success:'✅', warn:'⚠️', error:'🗑️', info:'💬' }[type];
@@ -225,7 +273,7 @@
       const confirmCls  = options.confirmClass || (type === 'error' ? 'danger' : 'primary');
 
       box.className = type;
-      iconEl.textContent = icon;
+      _renderIcon(iconEl, icon);
       msgEl.textContent  = message;
       backdrop.dataset.closeOnBackdrop = 'false';
 
@@ -235,18 +283,18 @@
 
       backdrop._resolveCallback = resolve;
 
-      document.getElementById('__clov-confirm-cancel').onclick = () => {
+      $id('__clov-confirm-cancel').onclick = () => {
         _closeAlert();
         resolve(false);
       };
-      document.getElementById('__clov-confirm-ok').onclick = () => {
+      $id('__clov-confirm-ok').onclick = () => {
         _closeAlert();
         resolve(true);
         onConfirm && onConfirm();
       };
 
       backdrop.classList.add('open');
-      setTimeout(() => document.getElementById('__clov-confirm-ok')?.focus(), 50);
+      setTimeout(() => $id('__clov-confirm-ok')?.focus(), 50);
     });
   };
 
