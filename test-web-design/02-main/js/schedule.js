@@ -1,5 +1,5 @@
         function getClosestSchedule() {
-            const schedules = groupsData[activeGroup].schedules || [];
+            const schedules = window.groupsData[window.activeGroup].schedules || [];
             if (schedules.length === 0) return null;
 
             const today = new Date();
@@ -39,16 +39,16 @@
         }
 
         function openScheduleModal(viewType, scheduleId) {
-            const prefix = viewType === 'mb' ? 'mb' : 'dt';
-            const modalTitle = document.getElementById(`${prefix}-schedule-modal-title`);
-            const titleInput = document.getElementById(`${prefix}-input-schedule-title`);
-            const dateInput = document.getElementById(`${prefix}-input-schedule-date`);
-            const bodyInput = document.getElementById(`${prefix}-input-schedule-body`);
-            const idInput = document.getElementById(`${prefix}-input-schedule-id`);
+            if (viewType !== 'dt') return;
+            const modalTitle = document.getElementById('dt-schedule-modal-title');
+            const titleInput = document.getElementById('dt-input-schedule-title');
+            const dateInput = document.getElementById('dt-input-schedule-date');
+            const bodyInput = document.getElementById('dt-input-schedule-body');
+            const idInput = document.getElementById('dt-input-schedule-id');
 
-            const deleteBtn = document.getElementById(`${prefix}-schedule-modal-delete-btn`) || document.getElementById('dt-schedule-modal-delete-btn');
+            const deleteBtn = document.getElementById('dt-schedule-modal-delete-btn');
             const schedule = (scheduleId !== undefined && scheduleId !== null)
-                ? (groupsData[activeGroup].schedules || []).find(s => s.id == scheduleId)
+                ? (window.groupsData[window.activeGroup].schedules || []).find(s => s.id == scheduleId)
                 : null;
 
             if (schedule) {
@@ -58,7 +58,10 @@
                 if (dateInput) { dateInput.value = schedule.date; dateInput.min = getTodayDateStr(); }
                 if (bodyInput) bodyInput.innerHTML = schedule.content || '';
                 if (idInput) idInput.value = schedule.id;
-                if (deleteBtn) deleteBtn.style.display = 'inline-block';
+                if (deleteBtn) {
+                    deleteBtn.style.display = 'inline-block';
+                    deleteBtn.onclick = () => window.deleteSchedule(schedule.id);
+                }
             } else {
                 if (modalTitle) modalTitle.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>다가오는 약속, D-day 새로 세기';
                 if (titleInput) titleInput.value = '';
@@ -66,18 +69,21 @@
                 if (dateInput) { dateInput.value = ''; dateInput.min = getTodayDateStr(); }
                 if (bodyInput) bodyInput.innerHTML = '';
                 if (idInput) idInput.value = '';
-                if (deleteBtn) deleteBtn.style.display = 'none';
+                if (deleteBtn) {
+                    deleteBtn.style.display = 'none';
+                    deleteBtn.onclick = null;
+                }
             }
 
-            openModal(`${prefix}-schedule-modal`);
+            openModal('dt-schedule-modal');
         }
 
         function saveSchedule(viewType) {
-            const prefix = viewType === 'dt' ? 'dt' : 'mb';
-            const titleInput = document.getElementById(`${prefix}-input-schedule-title`);
-            const dateInput = document.getElementById(`${prefix}-input-schedule-date`);
-            const bodyInput = document.getElementById(`${prefix}-input-schedule-body`);
-            const idInput = document.getElementById(`${prefix}-input-schedule-id`);
+            if (viewType !== 'dt') return;
+            const titleInput = document.getElementById('dt-input-schedule-title');
+            const dateInput = document.getElementById('dt-input-schedule-date');
+            const bodyInput = document.getElementById('dt-input-schedule-body');
+            const idInput = document.getElementById('dt-input-schedule-id');
 
             if (titleInput && dateInput) {
                 const newTitle = titleInput.value.trim();
@@ -90,7 +96,7 @@
                 }
 
                 const schId = idInput ? idInput.value : "";
-                const existingSch = schId ? groupsData[activeGroup].schedules.find(s => s.id == schId) : null;
+                const existingSch = schId ? window.groupsData[window.activeGroup].schedules.find(s => s.id == schId) : null;
 
                 // 이미 저장돼있던 날짜를 그대로 두는 게 아니라 오늘 이전의 새 날짜로 옮기려는 경우만 막는다
                 if (newDate < getTodayDateStr() && !(existingSch && existingSch.date === newDate)) {
@@ -107,7 +113,7 @@
                     }
                 } else {
                     // 추가 모드
-                    const schedules = groupsData[activeGroup].schedules || [];
+                    const schedules = window.groupsData[window.activeGroup].schedules || [];
                     const maxId = schedules.length > 0 ? Math.max(...schedules.map(s => s.id)) : 0;
                     const newSch = {
                         id: maxId + 1,
@@ -117,29 +123,50 @@
                     };
                     schedules.push(newSch);
                     // 새로 만든 약속을 바로 스포트라이트로 펼쳐서 보여줌
-                    selectedScheduleIds[activeGroup] = newSch.id;
+                    window.selectedScheduleIds[window.activeGroup] = newSch.id;
+                }
+
+                if (typeof window.saveGroupsData === 'function') {
+                    window.saveGroupsData();
+                } else {
+                    localStorage.setItem('clov_groupsData', JSON.stringify(window.groupsData));
                 }
 
                 updateScheduleUI();
-                closeModal(`${prefix}-schedule-modal`);
+                closeModal('dt-schedule-modal');
                 clovToast('🍀 D-day가 저장되었어요!', 'success');
             }
         }
 
-        function deleteSchedule(scheduleId) {
+        window.deleteSchedule = function(scheduleId) {
+            if (!scheduleId) return;
+
             clovConfirm('정말 이 약속을 삭제하시겠습니까?', () => {
-                const schedules = groupsData[activeGroup].schedules || [];
-                groupsData[activeGroup].schedules = schedules.filter(s => s.id != scheduleId);
-                if (selectedScheduleIds[activeGroup] == scheduleId) selectedScheduleIds[activeGroup] = null;
+                const targetId = Number(scheduleId);
+                const currentGroup = window.groupsData[window.activeGroup];
+                if (!currentGroup) return;
+
+                const schedules = currentGroup.schedules || [];
+                currentGroup.schedules = schedules.filter(s => Number(s.id) !== targetId);
+
+                if (Number(window.selectedScheduleIds[window.activeGroup]) === targetId) {
+                    window.selectedScheduleIds[window.activeGroup] = null;
+                }
+
+                if (typeof window.saveGroupsData === 'function') {
+                    window.saveGroupsData();
+                } else {
+                    localStorage.setItem('clov_groupsData', JSON.stringify(window.groupsData));
+                }
+
                 updateScheduleUI();
                 closeModal('dt-schedule-modal');
-                closeModal('mb-schedule-modal');
-                clovToast('🗑️ 일정이 삭제되었어요.', 'info');
+                clovToast('🗑️ 일정이 정상적으로 삭제되었습니다.', 'info');
             }, { icon: '🗑️', type: 'error', confirmText: '삭제', cancelText: '취소' });
-        }
+        };
 
         function updateScheduleUI() {
-            const currentGroup = groupsData[activeGroup];
+            const currentGroup = window.groupsData[window.activeGroup];
             const closest = getClosestSchedule();
 
             // 데스크톱 다중 배너 업데이트 (최대 3개, 없으면 빈 슬롯 표시)
@@ -196,41 +223,17 @@
                 }
             }
 
-            // 모바일 배너 업데이트
-            const mbTitle = document.getElementById('mb-schedule-title');
-            const mbDate = document.getElementById('mb-schedule-date');
-            const mbDday = document.getElementById('mb-schedule-dday');
-
-            if (closest) {
-                const ddayText = calculateDday(closest.date);
-                const formattedDate = closest.date.replace(/-/g, '.');
-
-                if (mbTitle) mbTitle.innerText = closest.title;
-                if (mbDate) mbDate.innerText = formattedDate;
-                if (mbDday) mbDday.innerText = ddayText;
-            } else {
-                const noScheduleMsg = "등록된 일정이 없습니다.";
-
-                if (mbTitle) mbTitle.innerText = noScheduleMsg;
-                if (mbDate) mbDate.innerText = "";
-                if (mbDday) mbDday.innerText = "D-Day";
-            }
-
             // 다중 일정 카드 리스트 렌더링
             renderScheduleList('dt');
-            renderScheduleList('mb');
         }
 
         // 일정계획 탭에서 특정 D-day 칩을 선택해 스포트라이트로 펼쳐보기
         function selectScheduleChip(viewType, scheduleId) {
-            selectedScheduleIds[activeGroup] = scheduleId;
+            window.selectedScheduleIds[window.activeGroup] = scheduleId;
             renderScheduleList('dt');
-            renderScheduleList('mb');
 
             // 일정 상세 배너가 맨 위에 있으므로 해당 뷰의 맨 위로 스크롤
-            const scrollContainer = viewType === 'dt'
-                ? document.getElementById('desktop-scroll-container')
-                : document.getElementById('mobile-scroll-container');
+            const scrollContainer = document.getElementById('desktop-scroll-container');
             if (scrollContainer) {
                 scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
             }
@@ -239,7 +242,6 @@
         function setScheduleDensity(density) {
             activeScheduleDensity = density;
             renderScheduleList('dt');
-            renderScheduleList('mb');
         }
 
         function buildGrowthStages(schedule) {
@@ -424,7 +426,7 @@
         }
 
         function requestStagePhotoUpload(scheduleId, stageKey, inputId) {
-            const schedule = (groupsData[activeGroup].schedules || []).find(s => s.id === scheduleId);
+            const schedule = (window.groupsData[window.activeGroup].schedules || []).find(s => s.id === scheduleId);
             if (!schedule) return;
 
             const photos = getGrowthStagePhotos(schedule);
@@ -466,7 +468,7 @@
                 return;
             }
 
-            const schedule = (groupsData[activeGroup].schedules || []).find(s => s.id === scheduleId);
+            const schedule = (window.groupsData[window.activeGroup].schedules || []).find(s => s.id === scheduleId);
             if (!schedule) return;
             const photos = getGrowthStagePhotos(schedule);
 
@@ -480,7 +482,7 @@
                 photos[stageKey] = dataUrl;
 
                 try {
-                    localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
+                    localStorage.setItem('clov_groupsData', JSON.stringify(window.groupsData));
                 } catch (error) {
                     delete photos[stageKey];
                     showProofResultModal({
@@ -491,7 +493,6 @@
                 }
 
                 renderScheduleList('dt');
-                renderScheduleList('mb');
 
                 const stage = buildGrowthStages(schedule).find(item => item.key === stageKey);
                 const isComplete = getScheduleProofCount(schedule) === 4;
@@ -512,7 +513,8 @@
         }
 
         function scrollGrowthCards(viewType, direction) {
-            const viewport = document.getElementById(`${viewType}-growth-card-viewport`);
+            if (viewType !== 'dt') return;
+            const viewport = document.getElementById('dt-growth-card-viewport');
             if (!viewport) return;
             const firstCard = viewport.querySelector('.growth-card');
             const list = viewport.querySelector('.growth-card-list');
@@ -641,11 +643,12 @@
         }
 
         function renderScheduleList(viewType) {
-            const prefix = viewType === 'dt' ? 'dt' : 'mb';
-            const zone = document.getElementById(`${prefix}-schedule-list-zone`);
+            if (viewType !== 'dt') return;
+            const prefix = 'dt';
+            const zone = document.getElementById('dt-schedule-list-zone');
             if (!zone) return;
 
-            const schedules = groupsData[activeGroup].schedules || [];
+            const schedules = window.groupsData[window.activeGroup].schedules || [];
 
             if (schedules.length === 0) {
                 zone.innerHTML = `<div class="spotlight-empty">아직 함께 세어볼 D-day가 없어요.<br>상단의 추가 버튼을 눌러 첫 약속을 만들어보세요!</div>`;
@@ -654,11 +657,11 @@
 
             const sortedSchedules = [...schedules].sort((a, b) => new Date(a.date) - new Date(b.date));
 
-            let selectedId = selectedScheduleIds[activeGroup];
+            let selectedId = window.selectedScheduleIds[window.activeGroup];
             if (!selectedId || !sortedSchedules.some(s => s.id === selectedId)) {
                 const closest = getClosestSchedule();
                 selectedId = closest ? closest.id : sortedSchedules[0].id;
-                selectedScheduleIds[activeGroup] = selectedId;
+                window.selectedScheduleIds[window.activeGroup] = selectedId;
             }
             const selectedSchedule = sortedSchedules.find(s => s.id === selectedId) || sortedSchedules[0];
 
@@ -720,7 +723,7 @@
                             </div>
                             <div style="display: flex; align-items: center; gap: 6px;">
                                 <span class="growth-dday-pill">${escapeHtml(ddayText)}</span>
-                                <button class="strip-card-delete-btn" title="약속 삭제" onclick="event.stopPropagation(); deleteSchedule(${sch.id});"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg></button>
+                                <button class="strip-card-delete-btn" title="약속 삭제" onclick="event.stopPropagation(); window.deleteSchedule(${sch.id});"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg></button>
                             </div>
                         </div>
                         <div class="strip-body">
@@ -769,7 +772,7 @@
                             <div class="receipt-barcode"></div>
                             <div class="receipt-actions">
                                 <button onclick="openScheduleModal('${viewType}', ${selectedSchedule.id})">수정</button>
-                                <button class="danger" onclick="deleteSchedule(${selectedSchedule.id})">삭제</button>
+                                <button class="danger" onclick="window.deleteSchedule(${selectedSchedule.id})">삭제</button>
                             </div>
                         </div>
                     </div>
@@ -800,24 +803,17 @@
 
         // 인생4컷 극장 상태 — 완성작 목록과 현재 상영 중인 인덱스, 진행 중인 타이머
         function saveScheduleContent(viewType, scheduleId) {
-            const prefix = viewType === 'dt' ? 'dt' : 'mb';
-            const id = `${prefix}-schedule-content-${scheduleId}`;
+            if (viewType !== 'dt') return;
+            const prefix = 'dt';
+            const id = `dt-schedule-content-${scheduleId}`;
             const el = document.getElementById(id);
             if (el) {
                 const newContent = el.innerHTML;
 
                 // 메모리 데이터 업데이트
-                const sch = groupsData[activeGroup].schedules.find(s => s.id === scheduleId);
+                const sch = window.groupsData[window.activeGroup].schedules.find(s => s.id === scheduleId);
                 if (sch) {
                     sch.content = newContent;
-                }
-
-                // 데스크톱 <-> 모바일 양방향 실시간 동기화
-                const otherPrefix = viewType === 'dt' ? 'mb' : 'dt';
-                const otherId = `${otherPrefix}-schedule-content-${scheduleId}`;
-                const otherEl = document.getElementById(otherId);
-                if (otherEl && otherEl.innerHTML !== newContent) {
-                    otherEl.innerHTML = newContent;
                 }
             }
         }
@@ -843,19 +839,7 @@
                 '</ul><p><br></p>';
             document.execCommand('insertHTML', false, scaffold);
         }
-        function deleteScheduleFromModal(viewType) {
-            const prefix = viewType === 'mb' ? 'mb' : 'dt';
-            const idInput = document.getElementById(`${prefix}-input-schedule-id`);
-            if (idInput && idInput.value !== '') {
-                const val = idInput.value;
-                const scheduleId = isNaN(Number(val)) ? val : Number(val);
-                deleteSchedule(scheduleId);
-            }
-        }
-
         window.insertScheduleSteps = insertScheduleSteps;
-        window.deleteSchedule = deleteSchedule;
-        window.deleteScheduleFromModal = deleteScheduleFromModal;
         window.openScheduleModal = openScheduleModal;
         window.saveSchedule = saveSchedule;
         window.selectScheduleChip = selectScheduleChip;
@@ -865,26 +849,26 @@
         // 레벨이 오를수록 맨땅이었던 지면에 클로버가 하나둘 빽빽하게 자라나도록 채워주는 함수 (잡초 X, 전부 클로버)
         // 초기 실행 시 피드 데이터 및 우정 레벨 UI 로드
         function toggleScheduleSidebar(viewType) {
-            const prefix = viewType === 'dt' ? 'dt' : 'mb';
-            const sidebar = document.getElementById(`${prefix}-schedule-detail-sidebar`);
+            if (viewType !== 'dt') return;
+            const sidebar = document.getElementById('dt-schedule-detail-sidebar');
             if (sidebar) {
                 sidebar.classList.toggle('open');
             }
         }
 
         function closeScheduleSidebar(viewType) {
-            const prefix = viewType === 'dt' ? 'dt' : 'mb';
-            const sidebar = document.getElementById(`${prefix}-schedule-detail-sidebar`);
+            if (viewType !== 'dt') return;
+            const sidebar = document.getElementById('dt-schedule-detail-sidebar');
             if (sidebar) {
                 sidebar.classList.remove('open');
             }
         }
 
         function addDetailSchedule(viewType) {
-            const prefix = viewType === 'dt' ? 'dt' : 'mb';
-            const timeInput = document.getElementById(`${prefix}-detail-time`);
-            const contentInput = document.getElementById(`${prefix}-detail-content`);
-            const list = document.getElementById(`${prefix}-detail-timeline-list`);
+            if (viewType !== 'dt') return;
+            const timeInput = document.getElementById('dt-detail-time');
+            const contentInput = document.getElementById('dt-detail-content');
+            const list = document.getElementById('dt-detail-timeline-list');
 
             if (timeInput && contentInput && list && timeInput.value && contentInput.value) {
                 const newItem = document.createElement('div');

@@ -386,6 +386,10 @@ document.getElementById = function(id) {
             }
         }
 
+        window.selectedScheduleIds = selectedScheduleIds;
+        window.groupsData = groupsData;
+        window.activeGroup = activeGroup;
+
         // --- Clov Global API (Write Modal & Data Integration) ---
         window._clov = {
             getPosts: function(groupId) {

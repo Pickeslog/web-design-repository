@@ -2432,6 +2432,7 @@
             justify-content: center;
             position: relative;
             z-index: 3;
+            perspective: 1000px;
             transform-style: preserve-3d;
         }
 
@@ -2526,6 +2527,8 @@
             gap: 0;
             width: 100%;
             padding: 16px 0;
+            perspective: 1000px;
+            transform-style: preserve-3d;
         }
 
         .cline-viewer.theme-coverflow .cline-card-slot {
@@ -2536,57 +2539,93 @@
         }
 
         .cline-viewer.theme-coverflow .cline-slot--current.is-active {
-            transform: translateZ(90px) scale(1.08);
+            transform: translateZ(20px) scale(0.95) rotateY(0deg);
             transform-origin: center center;
             z-index: 50;
         }
 
-        .cline-viewer.theme-coverflow .cline-slot--past,
-        .cline-viewer.theme-coverflow .cline-slot--newer {
-            transform: scale(0.86);
+        .cline-viewer.theme-coverflow .cline-slot--past {
+            transform: scale(0.86) rotateY(25deg);
             transform-origin: center center;
             opacity: 0.95;
             filter: brightness(0.96);
             z-index: 8;
         }
-        .cline-viewer.theme-coverflow .cline-slot--past:hover,
-        .cline-viewer.theme-coverflow .cline-slot--newer:hover {
-            transform: scale(0.86);
-            opacity: 1;
-            filter: brightness(1);
-            z-index: 9;
+        .cline-viewer.theme-coverflow .cline-slot--newer {
+            transform: scale(0.86) rotateY(-25deg);
+            transform-origin: center center;
+            opacity: 0.95;
+            filter: brightness(0.96);
+            z-index: 8;
         }
 
-        .cline-viewer.theme-coverflow .cline-slot--far-past,
-        .cline-viewer.theme-coverflow .cline-slot--far-newer {
-            transform: scale(0.72);
+        .cline-viewer.theme-coverflow .cline-slot--past:hover {
+            transform: scale(0.86) rotateY(25deg);
+            opacity: 1;
+            filter: brightness(1);
+            z-index: 20;
+        }
+        .cline-viewer.theme-coverflow .cline-slot--newer:hover {
+            transform: scale(0.86) rotateY(-25deg);
+            opacity: 1;
+            filter: brightness(1);
+            z-index: 20;
+        }
+
+        .cline-viewer.theme-coverflow .cline-slot--far-past {
+            transform: scale(0.72) rotateY(35deg);
             transform-origin: center center;
             opacity: 0.85;
             filter: brightness(0.90);
             z-index: 6;
         }
-        .cline-viewer.theme-coverflow .cline-slot--far-past:hover,
-        .cline-viewer.theme-coverflow .cline-slot--far-newer:hover {
-            transform: scale(0.72);
-            opacity: 0.95;
-            filter: brightness(0.98);
-            z-index: 7;
+        .cline-viewer.theme-coverflow .cline-slot--far-newer {
+            transform: scale(0.72) rotateY(-35deg);
+            transform-origin: center center;
+            opacity: 0.85;
+            filter: brightness(0.90);
+            z-index: 6;
         }
 
-        .cline-viewer.theme-coverflow .cline-slot--far-far-past,
-        .cline-viewer.theme-coverflow .cline-slot--far-far-newer {
-            transform: scale(0.58);
+        .cline-viewer.theme-coverflow .cline-slot--far-past:hover {
+            transform: scale(0.72) rotateY(35deg);
+            opacity: 0.95;
+            filter: brightness(0.98);
+            z-index: 25;
+        }
+        .cline-viewer.theme-coverflow .cline-slot--far-newer:hover {
+            transform: scale(0.72) rotateY(-35deg);
+            opacity: 0.95;
+            filter: brightness(0.98);
+            z-index: 25;
+        }
+
+        .cline-viewer.theme-coverflow .cline-slot--far-far-past {
+            transform: scale(0.58) rotateY(45deg) translateX(8px);
             transform-origin: center center;
             opacity: 0.70;
             filter: brightness(0.82);
             z-index: 4;
         }
-        .cline-viewer.theme-coverflow .cline-slot--far-far-past:hover,
-        .cline-viewer.theme-coverflow .cline-slot--far-far-newer:hover {
-            transform: scale(0.58);
+        .cline-viewer.theme-coverflow .cline-slot--far-far-newer {
+            transform: scale(0.58) rotateY(-45deg) translateX(-8px);
+            transform-origin: center center;
+            opacity: 0.70;
+            filter: brightness(0.82);
+            z-index: 4;
+        }
+
+        .cline-viewer.theme-coverflow .cline-slot--far-far-past:hover {
+            transform: scale(0.58) rotateY(45deg) translateX(8px);
             opacity: 0.88;
             filter: brightness(0.92);
-            z-index: 5;
+            z-index: 30;
+        }
+        .cline-viewer.theme-coverflow .cline-slot--far-far-newer:hover {
+            transform: scale(0.58) rotateY(-45deg) translateX(-8px);
+            opacity: 0.88;
+            filter: brightness(0.92);
+            z-index: 30;
         }
 
 
@@ -2617,39 +2656,68 @@
             100% { transform: perspective(1000px) translateX(0) rotateY(0deg); }
         }
 
-        /* 겹침 카드 슬라이드 시 개별 카드 크기/투명도 자연스러운 부드러운 전환 */
-        .cline-viewer.theme-coverflow .cline-cards.slide-past .cline-slot--current.is-active,
+        /* 겹침 카드 슬라이드 시 개별 카드 크기/투명도/3D 회전 방향성 전환 */
+
+        /* 1. slide-current (왼쪽으로 넘길 때: 카드가 오른쪽에서 왼쪽으로 흘러감) */
         .cline-viewer.theme-coverflow .cline-cards.slide-current .cline-slot--current.is-active {
-            animation: cf-slot-grow 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            animation: cf-current-grow 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
-        .cline-viewer.theme-coverflow .cline-cards.slide-past .cline-slot--newer,
         .cline-viewer.theme-coverflow .cline-cards.slide-current .cline-slot--past {
-            animation: cf-slot-shrink 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            animation: cf-current-shrink 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
-        .cline-viewer.theme-coverflow .cline-cards.slide-past .cline-slot--past,
         .cline-viewer.theme-coverflow .cline-cards.slide-current .cline-slot--newer {
-            animation: cf-slot-step-in 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            animation: cf-current-step-in 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
-        .cline-viewer.theme-coverflow .cline-cards.slide-past .cline-slot--far-newer,
         .cline-viewer.theme-coverflow .cline-cards.slide-current .cline-slot--far-past {
-            animation: cf-slot-step-out 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            animation: cf-current-step-out 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
 
-        @keyframes cf-slot-grow {
-            0% { transform: scale(0.86); opacity: 0.95; filter: brightness(0.96); }
-            100% { transform: translateZ(90px) scale(1.08); opacity: 1; filter: brightness(1); }
+        @keyframes cf-current-grow {
+            0% { transform: scale(0.86) rotateY(-25deg); opacity: 0.95; filter: brightness(0.96); }
+            100% { transform: translateZ(20px) scale(0.95) rotateY(0deg); opacity: 1; filter: brightness(1); }
         }
-        @keyframes cf-slot-shrink {
-            0% { transform: translateZ(90px) scale(1.08); opacity: 1; filter: brightness(1); }
-            100% { transform: scale(0.86); opacity: 0.95; filter: brightness(0.96); }
+        @keyframes cf-current-shrink {
+            0% { transform: translateZ(20px) scale(0.95) rotateY(0deg); opacity: 1; filter: brightness(1); }
+            100% { transform: scale(0.86) rotateY(25deg); opacity: 0.95; filter: brightness(0.96); }
         }
-        @keyframes cf-slot-step-in {
-            0% { transform: scale(0.72); opacity: 0.85; filter: brightness(0.90); }
-            100% { transform: scale(0.86); opacity: 0.95; filter: brightness(0.96); }
+        @keyframes cf-current-step-in {
+            0% { transform: scale(0.72) rotateY(-35deg) translateX(-8px); opacity: 0.85; filter: brightness(0.90); }
+            100% { transform: scale(0.86) rotateY(-25deg) translateX(0); opacity: 0.95; filter: brightness(0.96); }
         }
-        @keyframes cf-slot-step-out {
-            0% { transform: scale(0.86); opacity: 0.95; filter: brightness(0.96); }
-            100% { transform: scale(0.72); opacity: 0.85; filter: brightness(0.90); }
+        @keyframes cf-current-step-out {
+            0% { transform: scale(0.86) rotateY(25deg) translateX(0); opacity: 0.95; filter: brightness(0.96); }
+            100% { transform: scale(0.72) rotateY(35deg) translateX(8px); opacity: 0.85; filter: brightness(0.90); }
+        }
+
+        /* 2. slide-past (오른쪽으로 넘길 때: 카드가 왼쪽에서 오른쪽으로 흘러감) */
+        .cline-viewer.theme-coverflow .cline-cards.slide-past .cline-slot--current.is-active {
+            animation: cf-past-grow 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+        .cline-viewer.theme-coverflow .cline-cards.slide-past .cline-slot--newer {
+            animation: cf-past-shrink 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+        .cline-viewer.theme-coverflow .cline-cards.slide-past .cline-slot--past {
+            animation: cf-past-step-in 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+        .cline-viewer.theme-coverflow .cline-cards.slide-past .cline-slot--far-newer {
+            animation: cf-past-step-out 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        @keyframes cf-past-grow {
+            0% { transform: scale(0.86) rotateY(25deg); opacity: 0.95; filter: brightness(0.96); }
+            100% { transform: translateZ(20px) scale(0.95) rotateY(0deg); opacity: 1; filter: brightness(1); }
+        }
+        @keyframes cf-past-shrink {
+            0% { transform: translateZ(20px) scale(0.95) rotateY(0deg); opacity: 1; filter: brightness(1); }
+            100% { transform: scale(0.86) rotateY(-25deg); opacity: 0.95; filter: brightness(0.96); }
+        }
+        @keyframes cf-past-step-in {
+            0% { transform: scale(0.72) rotateY(35deg) translateX(8px); opacity: 0.85; filter: brightness(0.90); }
+            100% { transform: scale(0.86) rotateY(25deg) translateX(0); opacity: 0.95; filter: brightness(0.96); }
+        }
+        @keyframes cf-past-step-out {
+            0% { transform: scale(0.86) rotateY(-25deg) translateX(0); opacity: 0.95; filter: brightness(0.96); }
+            100% { transform: scale(0.72) rotateY(-35deg) translateX(-8px); opacity: 0.85; filter: brightness(0.90); }
         }
 
         /* ── 집게 SVG (빈티지 암실 필름 집게) ── */

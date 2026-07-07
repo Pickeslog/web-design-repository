@@ -55,7 +55,9 @@
 
         // 2. 모달 열기 / 닫기 기본 함수
         function openModal(id) {
-            document.getElementById(id).style.display = 'flex';
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.style.display = 'flex';
             if(id === 'dt-noti-modal') {
                 let badge = document.getElementById('dt-noti-badge-red');
                 if(badge) badge.style.display = 'none';
@@ -80,7 +82,8 @@
         }
 
         function closeModal(id) {
-            document.getElementById(id).style.display = 'none';
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
         }
 
         function copyCurrentRoomCode() {
@@ -97,6 +100,7 @@
         }
         window.copyCurrentRoomCode = copyCurrentRoomCode;
         window.copyCurrentRoomLink = copyCurrentRoomLink;
+        window.saveGroupsData = saveGroupsData;
 
         // 3. 하단 탭 메뉴 네비게이션 제어
         function switchTab(tabName) {
