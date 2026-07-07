@@ -1707,8 +1707,11 @@ document.getElementById = function(id) {
             return { tierIndex: idx, name: CLOV_LEVEL_TIERS[idx].name, icon: CLOV_LEVEL_TIERS[idx].icon, isMax: level >= CLOV_MAX_LEVEL };
         }
         function clovTodayStr() {
-            const d = new Date();
-            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+            // 항상 한국 시간(KST, UTC+9) 기준으로 날짜를 계산하여 00시 정각에 리셋되도록 보장
+            const now = new Date();
+            const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
+            const kstTime = new Date(utcTime + (9 * 3600000));
+            return kstTime.getFullYear() + '-' + String(kstTime.getMonth() + 1).padStart(2, '0') + '-' + String(kstTime.getDate()).padStart(2, '0');
         }
         window.clovLevelInfo = clovLevelInfo;
         window.CLOV_MAX_LEVEL = CLOV_MAX_LEVEL;
@@ -1727,6 +1730,75 @@ document.getElementById = function(id) {
         // ── XP를 실제 levelProgress에 더하고 레벨업 판정까지 처리하는 중앙 함수
         // rawXp: 배율 적용 전 순수 XP값
         // source: 'click' | 'post' | 'schedule_add' | 'schedule_done' | 'passive'
+        function createBurst(x, y, particleCount, spread) {
+            const burstEl = document.createElement('div');
+            burstEl.style.position = 'fixed';
+            burstEl.style.width = '0px';
+            burstEl.style.height = '0px';
+            burstEl.style.overflow = 'visible';
+            burstEl.style.left = x + 'px';
+            burstEl.style.top = y + 'px';
+            burstEl.style.transform = 'translate(-50%, -50%)';
+            burstEl.style.zIndex = '99999';
+            document.body.appendChild(burstEl);
+
+            const colors = ['#4ade80', '#22c55e', '#16a34a', '#facc15', '#fef08a', '#86efac', '#ffaa00', '#ff00aa'];
+            for (let i = 0; i < particleCount; i++) {
+                const s = document.createElement('span');
+                s.style.position = 'absolute';
+                const size = 10 + Math.random() * 15;
+                s.style.width = size + 'px';
+                s.style.height = size + 'px';
+                s.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                s.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+                s.style.left = '0px';
+                s.style.top = '0px';
+                s.style.pointerEvents = 'none';
+                
+                const ang = Math.random() * Math.PI * 2;
+                const dist = 50 + Math.random() * spread;
+                const tx = Math.cos(ang) * dist;
+                const ty = Math.sin(ang) * dist + (Math.random() * 150);
+                const rot = (Math.random() * 720) - 360;
+                
+                s.style.transition = 'transform 1.8s cubic-bezier(0.1, 0.8, 0.2, 1), opacity 1.8s ease-in-out';
+                s.style.transform = `translate(-50%, -50%) scale(0.2) rotate(0deg)`;
+                s.style.opacity = '1';
+                burstEl.appendChild(s);
+                
+                setTimeout(() => {
+                    s.style.transform = `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px)) scale(${0.8 + Math.random()}) rotate(${rot}deg)`;
+                    s.style.opacity = '0';
+                }, 10);
+            }
+            setTimeout(() => { if (burstEl.parentNode) burstEl.parentNode.removeChild(burstEl); }, 2500);
+        }
+
+        function triggerTierUpEvent(isMaxLevel = false) {
+            let cx = window.innerWidth / 2;
+            let cy = window.innerHeight / 2;
+            const mascotEl = document.getElementById('croby-sprite');
+            if (mascotEl) {
+                const rect = mascotEl.getBoundingClientRect();
+                cx = rect.left + rect.width / 2;
+                cy = rect.top + rect.height / 2;
+            }
+
+            if (isMaxLevel) {
+                const w = window.innerWidth;
+                const h = window.innerHeight;
+                createBurst(w/2, h/2, 200, 600); // 정중앙 거대 폭죽
+                setTimeout(() => createBurst(w*0.2, h*0.3, 100, 300), 400); // 좌측 상단
+                setTimeout(() => createBurst(w*0.8, h*0.3, 100, 300), 800); // 우측 상단
+                setTimeout(() => createBurst(w*0.3, h*0.7, 100, 300), 1200); // 좌측 하단
+                setTimeout(() => createBurst(w*0.7, h*0.7, 100, 300), 1600); // 우측 하단
+                setTimeout(() => createBurst(cx, cy, 150, 400), 2000); // 마스코트 마무리 폭죽
+            } else {
+                createBurst(cx, cy, 100, 400); // 일반 승급 마스코트 폭죽
+            }
+        }
+
+        // ── XP를 실제 levelProgress에 더하고 레벨업 판정까지 처리하는 중앙 함수
         function grantXP(rawXp, source) {
             const grp = groupsData[activeGroup];
             if (!grp) return;
@@ -1734,18 +1806,31 @@ document.getElementById = function(id) {
             if (typeof grp.level !== 'number') grp.level = friendshipLevel || 1;
             if (grp.level >= CLOV_MAX_LEVEL) return;
 
-            const multiplier = (source === 'click' || source === 'passive') ? 1.0 : getXpMultiplier();
-            const finalXp = rawXp * multiplier;
+            const oldLevel = grp.level;
+            const oldTier = clovLevelTierIndex(oldLevel);
 
-            // levelProgress는 0~100의 퍼센트 값. 1 XP = 1% (레벨업에 100 XP 필요)
+            // 기본 교감(click) 외에는 모두 성장 가속도 적용 (방치형, 게시글, 일정 등)
+            const multiplier = (source === 'click') ? 1.0 : getXpMultiplier();
+            const finalXp = Math.round(rawXp * multiplier * 10) / 10;
+
             // Math.min 제한 없이 더한 뒤 레벨업 판정
             grp.levelProgress = grp.levelProgress + finalXp;
+
+            let leveledUp = false;
+            let tierUp = false;
 
             // 레벨업 판정 (100% 이상 달성 시)
             if (grp.levelProgress >= 100 && grp.level < CLOV_MAX_LEVEL) {
                 grp.level = Math.min(CLOV_MAX_LEVEL, grp.level + 1);
                 grp.levelProgress = Math.max(0, grp.levelProgress - 100); // 초과분 이월
                 friendshipLevel = grp.level;
+                leveledUp = true;
+                
+                const newTier = clovLevelTierIndex(grp.level);
+                if (newTier > oldTier) {
+                    tierUp = true;
+                }
+
                 const info = clovLevelInfo(grp.level);
                 const badgeText = grp.level >= CLOV_MAX_LEVEL ? '+777' : ('Lv.' + grp.level);
                 clovToast(`${info.icon} ${badgeText} 달성! ${info.name}`, 'success');
@@ -1763,14 +1848,43 @@ document.getElementById = function(id) {
             // 마스코트 말풍선 표시
             if (window.ClovMascot && typeof window.ClovMascot.say === 'function' && finalXp > 0) {
                 let msg = '';
-                if (source === 'click') msg = `교감 완료! +${finalXp} XP`;
-                else if (source === 'post') msg = `추억 고마워! +${finalXp} XP`;
-                else if (source === 'schedule_add') msg = `약속 등록 완료! +${finalXp} XP`;
-                else if (source === 'schedule_done') msg = `인생4컷 달성! +${finalXp} XP`;
-                else if (source === 'passive') msg = `기다리며 자랐어! +${finalXp} XP`;
-                else msg = `+${finalXp} XP 획득!`;
+                const buffSuffix = multiplier > 1.0 ? `<br>(가속 x${multiplier})` : '';
+                
+                const maxLevelReached = (oldLevel < CLOV_MAX_LEVEL && grp.level >= CLOV_MAX_LEVEL);
+                
+                if (tierUp || maxLevelReached) {
+                    if (maxLevelReached) {
+                        msg = `축하합니다! 클로브가 마침내 최종 진화 형태인 전설의 우정(Lv.777)에 도달했습니다!`;
+                    } else {
+                        msg = `새로운 우정의 단계에 도달했어! 클로브가 더욱 크고 눈부시게 피어났어! (Lv.${grp.level})`;
+                    }
+                    triggerTierUpEvent(maxLevelReached);
+                } else if (leveledUp) {
+                    const levelUpMsgs = [
+                        "우와! 한 뼘 더 자랐어!",
+                        "우리 우정이 더 깊어졌네!",
+                        "앞으로도 계속 추억을 쌓아가자.",
+                        "경험치가 가득 찼어! 레벨업!",
+                        "더 멋진 클로버로 자라고 있어!"
+                    ];
+                    const randMsg = levelUpMsgs[Math.floor(Math.random() * levelUpMsgs.length)];
+                    msg = `${randMsg} (Lv.${grp.level})`;
+                } else {
+                    if (source === 'click') {
+                        if (typeof window.v5state !== 'undefined' && (window.v5state.event === 'my_birthday' || window.v5state.event === 'friend_birthday') && window.lastMascotLine) {
+                            msg = `${window.lastMascotLine} (+${finalXp}&nbsp;XP)`;
+                        } else {
+                            msg = `교감 완료! +${finalXp}&nbsp;XP`;
+                        }
+                    }
+                    else if (source === 'post') msg = `추억 고마워! +${finalXp}&nbsp;XP${buffSuffix}`;
+                    else if (source === 'schedule_add') msg = `약속 등록 완료! +${finalXp}&nbsp;XP${buffSuffix}`;
+                    else if (source === 'schedule_done') msg = `인생4컷 달성! +${finalXp}&nbsp;XP${buffSuffix}`;
+                    else if (source === 'passive') msg = `어제 남겨둔 추억들 덕분에 클로브가 이만큼 자랐어요! <span style="white-space: nowrap;">+${finalXp} XP</span>${buffSuffix}`;
+                    else msg = `<span style="white-space: nowrap;">+${finalXp} XP</span> 획득!${buffSuffix}`;
+                }
 
-                window.ClovMascot.say(msg, 3500);
+                window.ClovMascot.say(msg, leveledUp ? 4500 : 3500);
             }
         }
         window.grantXP = grantXP;
@@ -2064,9 +2178,36 @@ document.getElementById = function(id) {
             const dtImg = document.getElementById('dt-main-photo');
             const mbImg = document.getElementById('mb-main-photo');
             
-            const photoUrl = currentGroup.photo || defaultGroupsData[activeGroup].photo || "";
-            if (dtImg) dtImg.src = photoUrl;
-            if (mbImg) mbImg.src = photoUrl;
+            const photoUrl = typeof currentGroup.photo === 'string' ? currentGroup.photo : (defaultGroupsData[activeGroup].photo || "");
+            
+            function applyPhotoOrPlaceholder(imgEl, url) {
+                if (!imgEl) return;
+                const wrapper = imgEl.parentElement;
+                let placeholder = wrapper.querySelector('.cline-no-photo-wrapper');
+                if (url) {
+                    imgEl.src = url;
+                    imgEl.style.display = '';
+                    if (placeholder) placeholder.style.display = 'none';
+                } else {
+                    imgEl.style.display = 'none';
+                    if (!placeholder) {
+                        placeholder = document.createElement('div');
+                        placeholder.className = 'cline-no-photo-wrapper';
+                        placeholder.style.width = '100%';
+                        placeholder.style.height = '100%';
+                        placeholder.style.display = 'flex';
+                        placeholder.style.alignItems = 'center';
+                        placeholder.style.justifyContent = 'center';
+                        placeholder.style.background = 'var(--bg-light)';
+                        placeholder.innerHTML = `<div class="cline-no-photo"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"></path><path d="m4 18 4-4 3 2 4-5 5 4"></path></svg></span><span class="cline-no-photo-text">사진 없음</span></div>`;
+                        wrapper.appendChild(placeholder);
+                    }
+                    placeholder.style.display = 'flex';
+                }
+            }
+
+            applyPhotoOrPlaceholder(dtImg, photoUrl);
+            applyPhotoOrPlaceholder(mbImg, photoUrl);
 
             // 사진 설명 제목 업데이트
             const dtTitle = document.getElementById('dt-photo-title');

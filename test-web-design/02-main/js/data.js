@@ -447,7 +447,7 @@ document.getElementById = function(id) {
                     const bonusStr = bonusDetails.length ? ' (' + bonusDetails.join(' · ') + ')' : '';
                     setTimeout(() => {
                         if (typeof clovToast === 'function')
-                            clovToast(`추억 기록 +${postXp} XP${bonusStr}`, 'success');
+                            clovToast(`추억 기록 +&nbsp;XP${bonusStr}`, 'success');
                     }, 600);
                 } else {
                     if (typeof clovToast === 'function') {

@@ -376,9 +376,7 @@
     renderMainPhotoOptions();
     if (typeof groupsData === 'undefined' || typeof activeGroup === 'undefined' || !groupsData[activeGroup]) return;
     var currentPhoto = groupsData[activeGroup].photo;
-    var defaultPhoto = (typeof defaultGroupsData !== 'undefined' && defaultGroupsData[activeGroup]) ? defaultGroupsData[activeGroup].photo : '';
-    // '기본 사진'과 등록소 항목이 우연히 같은 이미지를 가리킬 수 있어(예: 기본값 자체를 등록소 사진으로
-    // 바꾼 경우), 둘 다 동시에 켜지지 않도록 등록소 쪽 구체적인 항목을 우선한다.
+    
     var matchedRegistryId = null;
     Object.keys(window.CLOV_MAIN_PHOTOS).forEach(function (id) {
       if (window.CLOV_MAIN_PHOTOS[id].image === currentPhoto) matchedRegistryId = id;
@@ -386,7 +384,7 @@
     document.querySelectorAll('#dt-mainphoto-theme-list .theme-option').forEach(function (li) {
       var id = li.dataset.mainphotoTheme;
       if (id === 'default') {
-        li.classList.toggle('active', !matchedRegistryId && currentPhoto === defaultPhoto);
+        li.classList.toggle('active', currentPhoto === '');
       } else {
         li.classList.toggle('active', id === matchedRegistryId);
       }
@@ -397,8 +395,8 @@
     if (typeof groupsData === 'undefined' || typeof activeGroup === 'undefined' || !groupsData[activeGroup]) return;
     var photoUrl, name, icon;
     if (id === 'default') {
-      photoUrl = (typeof defaultGroupsData !== 'undefined' && defaultGroupsData[activeGroup]) ? defaultGroupsData[activeGroup].photo : '';
-      name = '기본 사진';
+      photoUrl = '';
+      name = '기본 사진(사진 없음)';
       icon = '🖼️';
     } else {
       var mp = window.CLOV_MAIN_PHOTOS[id];

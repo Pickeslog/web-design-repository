@@ -124,7 +124,7 @@
                     grantXP(xpAdd, 'schedule_add');
                     setTimeout(() => {
                         if (typeof clovToast === 'function')
-                            clovToast(`약속 등록 +${xpAdd} XP`, 'success');
+                            clovToast(`약속 등록 +&nbsp;XP`, 'success');
                     }, 500);
                 } else {
                     clovToast('D-day가 저장되었어요!', 'success');
@@ -439,7 +439,7 @@
                 grantXP(xpDone, 'schedule_done');
                 setTimeout(() => {
                     if (typeof clovToast === 'function')
-                        clovToast(`인생4컷 완성! 일정 달성 +${xpDone} XP`, 'success');
+                        clovToast(`인생4컷 완성! 일정 달성 +&nbsp;XP`, 'success');
                 }, 800);
             }
         }

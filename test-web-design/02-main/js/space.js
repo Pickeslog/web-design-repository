@@ -1364,9 +1364,36 @@
             const dtImg = document.getElementById('dt-main-photo');
             const mbImg = document.getElementById('mb-main-photo');
             
-            const photoUrl = currentGroup.photo || defaultGroupsData[activeGroup].photo || "";
-            if (dtImg) dtImg.src = photoUrl;
-            if (mbImg) mbImg.src = photoUrl;
+            const photoUrl = typeof currentGroup.photo === 'string' ? currentGroup.photo : (defaultGroupsData[activeGroup].photo || "");
+            
+            function applyPhotoOrPlaceholder(imgEl, url) {
+                if (!imgEl) return;
+                const wrapper = imgEl.parentElement;
+                let placeholder = wrapper.querySelector('.cline-no-photo-wrapper');
+                if (url) {
+                    imgEl.src = url;
+                    imgEl.style.display = '';
+                    if (placeholder) placeholder.style.display = 'none';
+                } else {
+                    imgEl.style.display = 'none';
+                    if (!placeholder) {
+                        placeholder = document.createElement('div');
+                        placeholder.className = 'cline-no-photo-wrapper';
+                        placeholder.style.width = '100%';
+                        placeholder.style.height = '100%';
+                        placeholder.style.display = 'flex';
+                        placeholder.style.alignItems = 'center';
+                        placeholder.style.justifyContent = 'center';
+                        placeholder.style.background = 'var(--bg-light)';
+                        placeholder.innerHTML = `<div class="cline-no-photo"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"></path><path d="m4 18 4-4 3 2 4-5 5 4"></path></svg></span><span class="cline-no-photo-text">사진 없음</span></div>`;
+                        wrapper.appendChild(placeholder);
+                    }
+                    placeholder.style.display = 'flex';
+                }
+            }
+
+            applyPhotoOrPlaceholder(dtImg, photoUrl);
+            applyPhotoOrPlaceholder(mbImg, photoUrl);
 
             // 사진 설명 제목 업데이트
             const dtTitle = document.getElementById('dt-photo-title');
