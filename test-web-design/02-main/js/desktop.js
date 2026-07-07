@@ -1283,7 +1283,8 @@ document.getElementById = function(id) {
                 `;
             }
 
-            function renderClinePolaroid(post, postIndex, isActive) {
+            function renderClinePolaroid(post, postIndex, isActive, isClickableDetail) {
+                if (typeof isClickableDetail === 'undefined') isClickableDetail = isActive;
                 const normalizedPost = normalizeMemoryPost(post);
                 const tags = getMemoryHashtags(normalizedPost, normalizedPost.participants[0]).slice(0, 3);
                 const dateText = String(normalizedPost.date || '').replace(/^2026\./, '');
@@ -1292,7 +1293,7 @@ document.getElementById = function(id) {
                     : `<div class="cline-no-photo"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"/><path d="m4 18 4-4 3 2 4-5 5 4"/></svg></span><span class="cline-no-photo-text">사진 없음</span></div>`;
 
                 return `
-                    <article class="cline-polaroid ${isActive ? 'is-active' : ''}" onclick="event.stopPropagation(); ${isActive ? `openMemoryDetail(${postIndex})` : `setEvidenceIndex(${postIndex})`}">
+                    <article class="cline-polaroid ${isActive ? 'is-active' : ''}" onclick="event.stopPropagation(); ${isClickableDetail ? `openMemoryDetail(${postIndex})` : `setEvidenceIndex(${postIndex})`}">
                         <div class="cline-card-header">
                             ${renderAvatars(normalizedPost)}
                             <span class="cline-header-date">${escapeHtml(dateText)}</span>
@@ -1312,16 +1313,27 @@ document.getElementById = function(id) {
             function makeSlot(delta, slotCls) {
                 const postIndex = currentIndex + delta;
                 if (postIndex < 0 || postIndex >= total) {
-                    return cardTheme === 'coverflow'
+                    return (cardTheme === 'coverflow' || cardTheme === 'diary')
                         ? `<div class="cline-card-slot cline-slot--empty cline-slot--${slotCls} is-empty"></div>`
                         : `<div class="cline-card-slot cline-slot--empty"></div>`;
                 }
                 const isActive = delta === 0;
+                // 일기장 테마: 펼친 책의 오른쪽(0)·왼쪽(1) 카드 둘 다 상세보기로 열림
+                const isDiaryInner = cardTheme === 'diary' && (delta === 0 || delta === 1);
+                const isClickableDetail = isActive || isDiaryInner;
+
+                // 일기장 테마에서 바깥쪽(+2) 카드를 클릭하면 2칸이 아니라 1칸만 넘어가
+                // "책장을 한 장씩 넘기는" 느낌을 유지한다
+                let targetIndex = postIndex;
+                if (cardTheme === 'diary' && delta === 2) {
+                    targetIndex = currentIndex + 1;
+                }
+
                 return `
                     <div class="cline-card-slot cline-slot--${slotCls} ${isActive ? 'is-active' : ''}"
-                         ${!isActive ? `onclick="event.stopPropagation(); setEvidenceIndex(${postIndex})"` : ''}>
-                        ${cardTheme === 'coverflow' ? '' : clothespinSvg}
-                        ${renderClinePolaroid(posts[postIndex], postIndex, isActive)}
+                         ${!isClickableDetail ? `onclick="event.stopPropagation(); setEvidenceIndex(${targetIndex})"` : ''}>
+                        ${(cardTheme === 'coverflow' || cardTheme === 'diary') ? '' : clothespinSvg}
+                        ${renderClinePolaroid(posts[postIndex], targetIndex, isActive, isClickableDetail)}
                     </div>
                 `;
             }
@@ -1339,19 +1351,40 @@ document.getElementById = function(id) {
                 `;
             }).join('');
 
+            const themeClass = cardTheme === 'coverflow' ? 'theme-coverflow' : (cardTheme === 'diary' ? 'theme-diary' : '');
+            const diaryMarkup = cardTheme === 'diary' ? `
+                <div class="diary-page-stack left"></div>
+                <div class="diary-page-stack right"></div>
+
+                <div class="diary-page-text left-page"></div>
+                <div class="diary-spine"></div>
+                <div class="diary-page-text right-page"></div>
+
+                <div class="diary-memo"></div>
+
+                <div class="diary-sticker clover" style="top: 8%; left: 6%; transform: rotate(-15deg) scale(1.15);"></div>
+                <div class="diary-sticker flower" style="top: 55%; left: 12%; transform: rotate(18deg) scale(1.05);"></div>
+                <div class="diary-sticker clover" style="bottom: 10%; left: 4%; transform: rotate(-8deg) scale(1.2);"></div>
+
+                <div class="diary-sticker flower" style="top: 12%; right: 5%; transform: rotate(12deg) scale(1.2);"></div>
+                <div class="diary-sticker clover" style="top: 45%; right: 8%; transform: rotate(-5deg) scale(1.8);"></div>
+                <div class="diary-sticker flower" style="bottom: 8%; right: 8%; transform: rotate(22deg) scale(1.15);"></div>
+            ` : '';
+
             return `
-                <div class="memory-evidence-viewer cline-viewer ${viewType === 'mobile' ? 'mobile-evidence' : 'desktop-evidence'} ${cardTheme === 'coverflow' ? 'theme-coverflow' : ''}">
+                <div class="memory-evidence-viewer cline-viewer ${viewType === 'mobile' ? 'mobile-evidence' : 'desktop-evidence'} ${themeClass}">
                     <div class="cline-stage">
+                        ${diaryMarkup}
                         <div class="cline-wire-area">
                             <div class="cline-wire"></div>
                             <div class="cline-cards">
-                                ${viewType === 'desktop' && cardTheme === 'coverflow' ? makeSlot(+3, 'far-far-past') : ''}
+                                ${viewType === 'desktop' && (cardTheme === 'coverflow' || cardTheme === 'diary') ? makeSlot(+3, 'far-far-past') : ''}
                                 ${viewType === 'desktop' ? makeSlot(+2, 'far-past') : ''}
                                 ${makeSlot(+1, 'past')}
                                 ${makeSlot(0, 'current')}
                                 ${makeSlot(-1, 'newer')}
                                 ${viewType === 'desktop' ? makeSlot(-2, 'far-newer') : ''}
-                                ${viewType === 'desktop' && cardTheme === 'coverflow' ? makeSlot(-3, 'far-far-newer') : ''}
+                                ${viewType === 'desktop' && (cardTheme === 'coverflow' || cardTheme === 'diary') ? makeSlot(-3, 'far-far-newer') : ''}
                             </div>
                         </div>
                     </div>
