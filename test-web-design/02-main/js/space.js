@@ -648,6 +648,7 @@
             window.addEventListener('pointermove', (e) => {
                 const slotOrCard = e.target.closest('.cline-card-slot, .polaroid-fan-slot, .cline-slot, .cline-polaroid, .polaroid-card');
                 const card = slotOrCard ? (slotOrCard.matches('.cline-polaroid, .polaroid-card') ? slotOrCard : slotOrCard.querySelector('.cline-polaroid, .polaroid-card')) : null;
+                if (card && card.closest('.feed-grid, #view-feed, .memory-feed, .memory-evidence-viewer:not(.theme-coverflow):not(.theme-fan)')) return;
                 if (window._hovered3DCard && window._hovered3DCard !== card) {
                     window._hovered3DCard.style.setProperty('--rotateX', '0deg');
                     window._hovered3DCard.style.setProperty('--rotateY', '0deg');

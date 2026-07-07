@@ -2447,64 +2447,65 @@
         }
         .cline-card-slot:not(.is-active) { cursor: pointer; }
 
-        /* 과거 카드 (바로 옆): 왼쪽으로 기울고 약간 작고 흐림 */
+        /* 1단계 좌측 위치 (past): 우측으로 각도 반전 (+3.8deg) */
         .cline-slot--past {
-            transform: rotate(-4deg) scale(0.88);
+            transform: rotate(3.8deg) scale(0.88);
             transform-origin: top center;
-            opacity: 0.72;
+            opacity: 0.75;
             filter: saturate(0.55) brightness(0.95);
             z-index: 2;
         }
         .cline-slot--past:hover {
-            transform: rotate(-4deg) scale(0.88);
-            opacity: 0.92;
-            filter: saturate(0.85) brightness(1);
+            transform: rotate(0deg) scale(0.88) !important;
+            opacity: 1;
+            filter: none;
         }
 
-        /* 최신 카드 (바로 옆): 오른쪽으로 기울고 약간 작고 흐림 */
+        /* 1단계 우측 위치 (newer): 좌측으로 각도 반전 (-4.5deg) - 좌측 및 중앙과 다른 각도/방향! */
         .cline-slot--newer {
-            transform: rotate(4deg) scale(0.88);
+            transform: rotate(-4.5deg) scale(0.88);
             transform-origin: top center;
-            opacity: 0.72;
+            opacity: 0.75;
             filter: saturate(0.55) brightness(0.95);
             z-index: 2;
         }
         .cline-slot--newer:hover {
-            transform: rotate(4deg) scale(0.88);
-            opacity: 0.92;
-            filter: saturate(0.85) brightness(1);
+            transform: rotate(0deg) scale(0.88) !important;
+            opacity: 1;
+            filter: none;
         }
 
-        /* 가장 먼 과거 카드: 더 기울고 작고 흐림 */
+        /* 2단계 좌측 위치 (far-past): 1단계 좌측(+3.8deg)과 반대 방향인 좌측으로 각도 반전 (-5.2deg) */
         .cline-slot--far-past {
-            transform: rotate(-8.5deg) scale(0.74);
+            transform: rotate(-5.2deg) scale(0.74);
             transform-origin: top center;
-            opacity: 0.42;
+            opacity: 0.50;
             filter: saturate(0.3) brightness(0.88);
             z-index: 1;
         }
         .cline-slot--far-past:hover {
-            transform: rotate(-8.5deg) scale(0.74);
-            opacity: 0.68;
-            filter: saturate(0.6) brightness(0.96);
+            transform: rotate(0deg) scale(0.74) !important;
+            opacity: 1;
+            filter: none;
         }
 
-        /* 가장 먼 최신 카드: 더 기울고 작고 흐림 */
+        /* 2단계 우측 위치 (far-newer): 1단계 우측(-4.5deg)과 반대 방향인 우측으로 각도 반전 (+4.8deg) */
         .cline-slot--far-newer {
-            transform: rotate(8.5deg) scale(0.74);
+            transform: rotate(4.8deg) scale(0.74);
             transform-origin: top center;
-            opacity: 0.42;
+            opacity: 0.50;
             filter: saturate(0.3) brightness(0.88);
             z-index: 1;
         }
         .cline-slot--far-newer:hover {
-            transform: rotate(8.5deg) scale(0.74);
-            opacity: 0.68;
-            filter: saturate(0.6) brightness(0.96);
+            transform: rotate(0deg) scale(0.74) !important;
+            opacity: 1;
+            filter: none;
         }
 
+        /* 중앙 활성 위치 (current): 반듯하게 고정 (0deg) */
         .cline-slot--current.is-active {
-            transform: translateZ(60px) scale(1.06);
+            transform: translateZ(15px) scale(0.93) rotate(0deg);
             transform-origin: top center;
             opacity: 1;
             filter: none;
@@ -2539,7 +2540,7 @@
         }
 
         .cline-viewer.theme-coverflow .cline-slot--current.is-active {
-            transform: translateZ(20px) scale(0.95) rotateY(0deg);
+            transform: translateZ(15px) scale(0.93) rotateY(0deg);
             transform-origin: center center;
             z-index: 50;
         }
@@ -2547,14 +2548,14 @@
         .cline-viewer.theme-coverflow .cline-slot--past {
             transform: scale(0.86) rotateY(25deg) translateX(-12px);
             transform-origin: center center;
-            opacity: 0.95;
+            opacity: 0.75;
             filter: brightness(0.96);
             z-index: 8;
         }
         .cline-viewer.theme-coverflow .cline-slot--newer {
             transform: scale(0.86) rotateY(-25deg) translateX(12px);
             transform-origin: center center;
-            opacity: 0.95;
+            opacity: 0.75;
             filter: brightness(0.96);
             z-index: 8;
         }
@@ -2575,56 +2576,56 @@
         .cline-viewer.theme-coverflow .cline-slot--far-past {
             transform: scale(0.72) rotateY(35deg) translateX(-24px);
             transform-origin: center center;
-            opacity: 0.85;
+            opacity: 0.55;
             filter: brightness(0.90);
             z-index: 6;
         }
         .cline-viewer.theme-coverflow .cline-slot--far-newer {
             transform: scale(0.72) rotateY(-35deg) translateX(24px);
             transform-origin: center center;
-            opacity: 0.85;
+            opacity: 0.55;
             filter: brightness(0.90);
             z-index: 6;
         }
 
         .cline-viewer.theme-coverflow .cline-slot--far-past:hover {
             transform: scale(0.72) rotateY(35deg) translateX(-24px);
-            opacity: 0.95;
-            filter: brightness(0.98);
+            opacity: 1;
+            filter: brightness(1);
             z-index: 25;
         }
         .cline-viewer.theme-coverflow .cline-slot--far-newer:hover {
             transform: scale(0.72) rotateY(-35deg) translateX(24px);
-            opacity: 0.95;
-            filter: brightness(0.98);
+            opacity: 1;
+            filter: brightness(1);
             z-index: 25;
         }
 
         .cline-viewer.theme-coverflow .cline-slot--far-far-past {
             transform: scale(0.58) rotateY(45deg) translateX(-36px);
             transform-origin: center center;
-            opacity: 0.70;
+            opacity: 0.40;
             filter: brightness(0.82);
             z-index: 4;
         }
         .cline-viewer.theme-coverflow .cline-slot--far-far-newer {
             transform: scale(0.58) rotateY(-45deg) translateX(36px);
             transform-origin: center center;
-            opacity: 0.70;
+            opacity: 0.40;
             filter: brightness(0.82);
             z-index: 4;
         }
 
         .cline-viewer.theme-coverflow .cline-slot--far-far-past:hover {
             transform: scale(0.58) rotateY(45deg) translateX(-36px);
-            opacity: 0.88;
-            filter: brightness(0.92);
+            opacity: 1;
+            filter: brightness(1);
             z-index: 30;
         }
         .cline-viewer.theme-coverflow .cline-slot--far-far-newer:hover {
             transform: scale(0.58) rotateY(-45deg) translateX(36px);
-            opacity: 0.88;
-            filter: brightness(0.92);
+            opacity: 1;
+            filter: brightness(1);
             z-index: 30;
         }
 
@@ -2673,20 +2674,20 @@
         }
 
         @keyframes cf-current-grow {
-            0% { transform: scale(0.86) rotateY(-25deg) translateX(12px); opacity: 0.95; filter: brightness(0.96); }
-            100% { transform: translateZ(20px) scale(0.95) rotateY(0deg); opacity: 1; filter: brightness(1); }
+            0% { transform: scale(0.86) rotateY(-25deg) translateX(12px); opacity: 0.75; filter: brightness(0.96); }
+            100% { transform: translateZ(15px) scale(0.93) rotateY(0deg); opacity: 1; filter: brightness(1); }
         }
         @keyframes cf-current-shrink {
-            0% { transform: translateZ(20px) scale(0.95) rotateY(0deg); opacity: 1; filter: brightness(1); }
-            100% { transform: scale(0.86) rotateY(25deg) translateX(-12px); opacity: 0.95; filter: brightness(0.96); }
+            0% { transform: translateZ(15px) scale(0.93) rotateY(0deg); opacity: 1; filter: brightness(1); }
+            100% { transform: scale(0.86) rotateY(25deg) translateX(-12px); opacity: 0.75; filter: brightness(0.96); }
         }
         @keyframes cf-current-step-in {
-            0% { transform: scale(0.72) rotateY(-35deg) translateX(24px); opacity: 0.85; filter: brightness(0.90); }
-            100% { transform: scale(0.86) rotateY(-25deg) translateX(12px); opacity: 0.95; filter: brightness(0.96); }
+            0% { transform: scale(0.72) rotateY(-35deg) translateX(24px); opacity: 0.55; filter: brightness(0.90); }
+            100% { transform: scale(0.86) rotateY(-25deg) translateX(12px); opacity: 0.75; filter: brightness(0.96); }
         }
         @keyframes cf-current-step-out {
-            0% { transform: scale(0.86) rotateY(25deg) translateX(-12px); opacity: 0.95; filter: brightness(0.96); }
-            100% { transform: scale(0.72) rotateY(35deg) translateX(-24px); opacity: 0.85; filter: brightness(0.90); }
+            0% { transform: scale(0.86) rotateY(25deg) translateX(-12px); opacity: 0.75; filter: brightness(0.96); }
+            100% { transform: scale(0.72) rotateY(35deg) translateX(-24px); opacity: 0.55; filter: brightness(0.90); }
         }
 
         /* 2. slide-past (오른쪽으로 넘길 때: 카드가 왼쪽에서 오른쪽으로 흘러감) */
@@ -2704,20 +2705,20 @@
         }
 
         @keyframes cf-past-grow {
-            0% { transform: scale(0.86) rotateY(25deg) translateX(-12px); opacity: 0.95; filter: brightness(0.96); }
-            100% { transform: translateZ(20px) scale(0.95) rotateY(0deg); opacity: 1; filter: brightness(1); }
+            0% { transform: scale(0.86) rotateY(25deg) translateX(-12px); opacity: 0.75; filter: brightness(0.96); }
+            100% { transform: translateZ(15px) scale(0.93) rotateY(0deg); opacity: 1; filter: brightness(1); }
         }
         @keyframes cf-past-shrink {
-            0% { transform: translateZ(20px) scale(0.95) rotateY(0deg); opacity: 1; filter: brightness(1); }
-            100% { transform: scale(0.86) rotateY(-25deg) translateX(12px); opacity: 0.95; filter: brightness(0.96); }
+            0% { transform: translateZ(15px) scale(0.93) rotateY(0deg); opacity: 1; filter: brightness(1); }
+            100% { transform: scale(0.86) rotateY(-25deg) translateX(12px); opacity: 0.75; filter: brightness(0.96); }
         }
         @keyframes cf-past-step-in {
-            0% { transform: scale(0.72) rotateY(35deg) translateX(-24px); opacity: 0.85; filter: brightness(0.90); }
-            100% { transform: scale(0.86) rotateY(25deg) translateX(-12px); opacity: 0.95; filter: brightness(0.96); }
+            0% { transform: scale(0.72) rotateY(35deg) translateX(-24px); opacity: 0.55; filter: brightness(0.90); }
+            100% { transform: scale(0.86) rotateY(25deg) translateX(-12px); opacity: 0.75; filter: brightness(0.96); }
         }
         @keyframes cf-past-step-out {
-            0% { transform: scale(0.86) rotateY(-25deg) translateX(12px); opacity: 0.95; filter: brightness(0.96); }
-            100% { transform: scale(0.72) rotateY(-35deg) translateX(24px); opacity: 0.85; filter: brightness(0.90); }
+            0% { transform: scale(0.86) rotateY(-25deg) translateX(12px); opacity: 0.75; filter: brightness(0.96); }
+            100% { transform: scale(0.72) rotateY(-35deg) translateX(24px); opacity: 0.55; filter: brightness(0.90); }
         }
 
         /* ── 집게 SVG (빈티지 암실 필름 집게) ── */
@@ -2778,15 +2779,27 @@
             0%, 100% { translate: 0 0px; }
             50% { translate: 0 -60px; }
         }
-        .memory-evidence-viewer .cline-polaroid:hover,
-        .memory-evidence-viewer .cline-polaroid.is-3d-hovering,
-        .memory-evidence-viewer .polaroid-card:hover,
-        .memory-evidence-viewer .cline-slot:hover .cline-polaroid,
-        .memory-evidence-viewer .polaroid-fan-slot:hover .polaroid-card {
+        /* 부채꼴 테마 등에서만 float 작동 (빨랫줄 테마에서는 float 및 기울임 완벽 제거) */
+        .memory-evidence-viewer.theme-fan .cline-polaroid:hover,
+        .memory-evidence-viewer.theme-fan .cline-polaroid.is-3d-hovering,
+        .memory-evidence-viewer.theme-fan .polaroid-card:hover,
+        .memory-evidence-viewer.theme-fan .polaroid-fan-slot:hover .polaroid-card {
             animation: evidenceCardFloat 2.6s ease-in-out infinite;
         }
         .polaroid-fan-slot.fan-center:hover .polaroid-card {
             transform: perspective(800px) rotate(0deg) rotateX(var(--rotateX, 0deg)) rotateY(var(--rotateY, 0deg));
+        }
+
+        /* 빨랫줄 테마 (기본 테마): float 애니메이션, 3D 호버, 기울어지는 효과 완벽 제거 및 반듯한 정렬 고정 */
+        .memory-evidence-viewer:not(.theme-coverflow):not(.theme-fan) .cline-polaroid,
+        .memory-evidence-viewer:not(.theme-coverflow):not(.theme-fan) .polaroid-card,
+        .memory-evidence-viewer:not(.theme-coverflow):not(.theme-fan) .cline-polaroid:hover,
+        .memory-evidence-viewer:not(.theme-coverflow):not(.theme-fan) .polaroid-card:hover,
+        .memory-evidence-viewer:not(.theme-coverflow):not(.theme-fan) .cline-polaroid.is-3d-hovering,
+        .memory-evidence-viewer:not(.theme-coverflow):not(.theme-fan) .polaroid-card.is-3d-hovering,
+        .memory-evidence-viewer:not(.theme-coverflow):not(.theme-fan) .cline-slot:hover .cline-polaroid {
+            animation: none !important;
+            transform: rotate(0deg) !important;
         }
 
         /* ── 카드 상단 헤더 (아바타 + 날짜) ── */
