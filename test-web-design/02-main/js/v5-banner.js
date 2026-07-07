@@ -5,6 +5,7 @@
 
   // State
   const v5state = { level: 3, time: 'day', season: 'summer', event: 'none', friendName: '민지' };
+  window.v5state = v5state; // 전역 스코프(window)에 노출시켜 마스코트(croby-mascot.js)와 연동
 
   // 레벨-이름/클로버 밀도 매핑은 이제 최대 777레벨까지 지원하는 clovLevelInfo()/
   // clovLevelTierIndex()(desktop.js 상단, 우정 레벨 시스템 섹션)를 그대로 재사용한다.
@@ -275,8 +276,21 @@
 
   // 레벨업 연동 (기존 levelUp과 sync)
   window.v5LevelUp = function() {
-    if(typeof levelUp==='function') levelUp();
-    if(typeof friendshipLevel!=='undefined') v5state.level=friendshipLevel;
+    if (typeof window.levelUp === 'function') {
+      window.levelUp();
+    } else if (typeof levelUp === 'function') {
+      levelUp();
+    } else {
+      if (window.ClovMascot && typeof window.ClovMascot.say === 'function') {
+        window.ClovMascot.say("v5-banner: levelUp 함수를 찾을 수 없어요!", 5000);
+      }
+    }
+    
+    if(typeof window.friendshipLevel !== 'undefined') {
+      v5state.level = window.friendshipLevel;
+    } else if(typeof friendshipLevel !== 'undefined') {
+      v5state.level = friendshipLevel;
+    }
     v5render();
   };
 
@@ -448,6 +462,14 @@
       </div>
       <div class="tp-divider"></div>
       <div class="tp-row">
+        <span class="tp-label tp-label-pink" style="color:#1b4332;">⚙️ 제한 설정 & 테스트</span>
+        <div class="tp-btns" style="display:flex; flex-direction:column; gap:4px;">
+          <button class="tp-btn on" id="limitToggleBtn" style="flex:1;">하루 3회 교감 제한: ON</button>
+          <button class="tp-btn" id="forcePassiveBtn" style="flex:1; background:#fff3cd; color:#856404;">✨ 어제자 방치형 보상 즉시 발생</button>
+        </div>
+      </div>
+      <div class="tp-divider"></div>
+      <div class="tp-row">
         <span class="tp-label tp-label-pink">💌 편지함 테스트</span>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
           <input type="range" id="letterTestSlider" min="0" max="8" value="2" step="1" class="tp-slider-pink" style="flex:1;cursor:pointer;">
@@ -490,6 +512,40 @@
         v5detectNow(); v5syncButtons(); v5render();
       });
     }
+
+    // 3회 제한 토글 바인딩
+    const limitToggleBtn = document.getElementById('limitToggleBtn');
+    if(limitToggleBtn && !limitToggleBtn._v5bound) {
+      limitToggleBtn._v5bound = true;
+      limitToggleBtn.addEventListener('click', () => {
+        window.CLOV_DISABLE_CLICK_LIMIT = !window.CLOV_DISABLE_CLICK_LIMIT;
+        if (window.CLOV_DISABLE_CLICK_LIMIT) {
+          limitToggleBtn.classList.remove('on');
+          limitToggleBtn.textContent = '하루 3회 교감 제한: OFF (무제한)';
+          limitToggleBtn.style.background = '#f1f5f9';
+          limitToggleBtn.style.color = '#334155';
+        } else {
+          limitToggleBtn.classList.add('on');
+          limitToggleBtn.textContent = '하루 3회 교감 제한: ON';
+          limitToggleBtn.style.background = ''; // 원래 스타일로 복귀
+          limitToggleBtn.style.color = '';
+        }
+      });
+    }
+
+    // 방치형 보상 강제 발생 버튼 바인딩
+    const forcePassiveBtn = document.getElementById('forcePassiveBtn');
+    if(forcePassiveBtn && !forcePassiveBtn._v5bound) {
+      forcePassiveBtn._v5bound = true;
+      forcePassiveBtn.addEventListener('click', () => {
+        if (typeof window.forcePassiveTest === 'function') {
+            window.forcePassiveTest();
+        } else {
+            alert("테스트 함수(window.forcePassiveTest)를 찾을 수 없습니다.");
+        }
+      });
+    }
+
     // 레벨 슬라이더 바인딩
     const slider = document.getElementById('v5lvSlider');
     if(slider && !slider._v5bound) {
@@ -499,8 +555,18 @@
         const descEl = document.getElementById('v5lvDesc');
         const valEl  = document.getElementById('v5lvSliderVal');
         if(valEl) valEl.textContent = this.value;
-        if(descEl) descEl.textContent = clovLevelInfo(v5state.level).name;
+        
+        let infoName = '새싹';
+        if (typeof clovLevelInfo === 'function') {
+            infoName = clovLevelInfo(v5state.level).name;
+        }
+        if(descEl) descEl.textContent = infoName;
         v5render();
+
+        // 실제 메모리에 있는 로직용 레벨도 동기화
+        if (typeof window.forceLevelTest === 'function') {
+            window.forceLevelTest(v5state.level);
+        }
       });
     }
     // 진행률(%) 슬라이더 바인딩 — 레벨과 별개로 게이지 %만 즉시 테스트

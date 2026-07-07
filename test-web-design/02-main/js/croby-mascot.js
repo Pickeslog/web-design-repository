@@ -58,7 +58,7 @@
     root.className = 'croby-mascot croby--' + mode + (mode === 'default' && nudgeClass ? ' ' + nudgeClass : '');
     var text = mode === 'default' ? say : STATE_BUBBLES[mode];
     bubble.hidden = !text;
-    bubble.textContent = text || '';
+    bubble.innerHTML = text || '';
   }
 
   function setMode(next) { mode = next; render(); }
@@ -112,9 +112,41 @@
       nudgeClass = nudgeFlip ? 'croby--nudge' : 'croby--nudge2';
       clearTimeout(nudgeTimer);
       nudgeTimer = setTimeout(function () { nudgeClass = ''; render(); }, 380);
-      /* 대사 한마디 */
-      lastLine = pick(LINES, lastLine);
+      /* 대사 한마디 (단, XP 획득 등 외부 연동 시 덮어씌워짐) */
+      var currentLines = LINES;
+      if (typeof window.v5state !== 'undefined') {
+        if (window.v5state.event === 'my_birthday') {
+          currentLines = [
+            '생일 정말 축하해! 오늘 하루 최고로 행복하길 바랄게!', 
+            '태어나줘서 고마워!', 
+            '오늘의 주인공은 바로 너야!', 
+            '특별한 날인 만큼 예쁜 추억 많이 남기자!'
+          ];
+        } else if (window.v5state.event === 'friend_birthday') {
+          var fName = window.v5state.friendName || '친구';
+          currentLines = [
+            '오늘은 ' + fName + '의 생일이야! 다 같이 축하해주자!', 
+            fName + '에게 따뜻한 생일 축하 메시지를 남겨보는 건 어때?', 
+            '생일 파티 준비는 잘 되어가고 있어?'
+          ];
+        }
+      }
+      
+      lastLine = pick(currentLines, lastLine);
+      window.lastMascotLine = lastLine; // grantXP에서 덮어씌울 때 참고하도록 전역 저장
       showSay(lastLine, CONFIG.sayMs);
+      
+      try {
+        if (typeof window.v5LevelUp === 'function') {
+          window.v5LevelUp();
+        } else if (typeof window.levelUp === 'function') {
+          window.levelUp();
+        } else {
+          showSay("levelUp 함수를 찾을 수 없어요!", 5000);
+        }
+      } catch (e) {
+        showSay("에러: " + e.message, 5000);
+      }
     }
   });
 

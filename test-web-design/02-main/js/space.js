@@ -24,7 +24,7 @@
             const styleBg = coverPhoto ? `background-image: url('${escapeHtml(coverPhoto)}');` : '';
             const imageContent = coverPhoto
                 ? ''
-                : `<span class="memory-clover-placeholder">🍀</span><span class="memory-image-text">사진이 없는 추억은<br>클로버로 보관됩니다</span>`;
+                : `<div class="cline-no-photo"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"></path><path d="m4 18 4-4 3 2 4-5 5 4"></path></svg></span><span class="cline-no-photo-text">사진 없음</span></div>`;
             const photoCountBadge = normalizedPost.photos.length > 1
                 ? `<span class="polaroid-photo-count"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:2px;"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"/><circle cx="12" cy="13" r="3.5"/></svg>${normalizedPost.photos.length}</span>`
                 : '';
@@ -57,7 +57,6 @@
                         <span class="author-badge">${escapeHtml(authorLabel)}</span>
                         ${imageContent}
                         ${photoCountBadge}
-                        <span class="polaroid-zoom-hint">🔍 자세히</span>
                     </div>
                     <div class="polaroid-caption">
                         <div class="my-record-box ${isMine ? 'mine' : 'friend'}">
@@ -151,7 +150,7 @@
                         `).join('')}
                     </div>
                 ` : ''}
-            ` : `<div class="memory-detail-photo memory-detail-photo--empty"><span class="memory-clover-placeholder">🍀</span><span class="memory-image-text">사진이 없는 추억은<br>클로버로 보관됩니다</span></div>`;
+            ` : `<div class="memory-detail-photo memory-detail-photo--empty"><div class="cline-no-photo"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"></path><path d="m4 18 4-4 3 2 4-5 5 4"></path></svg></span><span class="cline-no-photo-text">사진 없음</span></div></div>`;
 
             const rightColumnHtml = memoryDetailState.editing ? `
                 <div class="memory-detail-edit-form">
@@ -695,9 +694,17 @@
             if (dtZone) dtZone.innerHTML = renderEvidenceViewer('desktop');
             if (mbZone) mbZone.innerHTML = renderEvidenceViewer('mobile');
             initEvidenceInteractions();
+            
+            // 수평 스크롤 컨테이너만 직접 스크롤하여 화면 전체가 위아래로 튀는 현상 방지
             requestAnimationFrame(() => {
                 document.querySelectorAll('.cline-film-frame.is-current').forEach(frame => {
-                    frame.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+                    const container = frame.closest('.cline-film-strip');
+                    if (container) {
+                        const frameRect = frame.getBoundingClientRect();
+                        const containerRect = container.getBoundingClientRect();
+                        const scrollLeft = frame.offsetLeft - (containerRect.width / 2) + (frameRect.width / 2);
+                        container.scrollTo({ left: scrollLeft, behavior: 'smooth' });
+                    }
                 });
             });
             if (!window._evidenceResizeBound) {
@@ -705,7 +712,13 @@
                 window.addEventListener('resize', () => {
                     requestAnimationFrame(() => {
                         document.querySelectorAll('.cline-film-frame.is-current').forEach(frame => {
-                            frame.scrollIntoView({ behavior: 'instant', block: 'nearest', inline: 'center' });
+                            const container = frame.closest('.cline-film-strip');
+                            if (container) {
+                                const frameRect = frame.getBoundingClientRect();
+                                const containerRect = container.getBoundingClientRect();
+                                const scrollLeft = frame.offsetLeft - (containerRect.width / 2) + (frameRect.width / 2);
+                                container.scrollTo({ left: scrollLeft, behavior: 'instant' });
+                            }
                         });
                     });
                 });
@@ -793,8 +806,9 @@
 
         const CLOV_XP_MULTIPLIERS = [
             { min: 0,   multiplier: 1.0 },
-            { min: 10,  multiplier: 1.2 },
+            { min: 30,  multiplier: 1.2 },
             { min: 50,  multiplier: 1.5 },
+            { min: 70,  multiplier: 2.0 },
             { min: 100, multiplier: 3.0 },
         ];
         const CLOV_LEVEL_TIERS = [
@@ -808,7 +822,7 @@
         ];
         function clovLevelTierIndex(level) {
             for (let i = 0; i < CLOV_LEVEL_TIERS.length; i++) {
-                if (level <= CLOV_LEVEL_TIERS[i].max) return i;
+                if (level < CLOV_LEVEL_TIERS[i].max) return i;
             }
             return CLOV_LEVEL_TIERS.length - 1;
         }
@@ -817,8 +831,11 @@
             return { tierIndex: idx, name: CLOV_LEVEL_TIERS[idx].name, icon: CLOV_LEVEL_TIERS[idx].icon, isMax: level >= CLOV_MAX_LEVEL };
         }
         function clovTodayStr() {
-            const d = new Date();
-            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+            // 항상 한국 시간(KST, UTC+9) 기준으로 날짜를 계산하여 00시 정각에 리셋되도록 보장
+            const now = new Date();
+            const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
+            const kstTime = new Date(utcTime + (9 * 3600000));
+            return kstTime.getFullYear() + '-' + String(kstTime.getMonth() + 1).padStart(2, '0') + '-' + String(kstTime.getDate()).padStart(2, '0');
         }
         window.clovLevelInfo = clovLevelInfo;
         window.CLOV_MAX_LEVEL = CLOV_MAX_LEVEL;
@@ -902,24 +919,72 @@
             return mul;
         }
 
-        function triggerTierUpEvent() {
+        function createBurst(x, y, particleCount, spread) {
             const burstEl = document.createElement('div');
             burstEl.style.position = 'fixed';
-            burstEl.style.top = '50%';
-            burstEl.style.left = '50%';
+            burstEl.style.width = '0px';
+            burstEl.style.height = '0px';
+            burstEl.style.overflow = 'visible';
+            burstEl.style.left = x + 'px';
+            burstEl.style.top = y + 'px';
             burstEl.style.transform = 'translate(-50%, -50%)';
             burstEl.style.zIndex = '99999';
             document.body.appendChild(burstEl);
 
-            if (typeof spawnConfettiBurst === 'function') {
-                spawnConfettiBurst(burstEl, { spread: 180 });
-                setTimeout(() => spawnConfettiBurst(burstEl, { spread: 180 }), 300);
-                setTimeout(() => spawnConfettiBurst(burstEl, { spread: 180 }), 600);
+            const colors = ['#4ade80', '#22c55e', '#16a34a', '#facc15', '#fef08a', '#86efac', '#ffaa00', '#ff00aa'];
+            for (let i = 0; i < particleCount; i++) {
+                const s = document.createElement('span');
+                s.style.position = 'absolute';
+                const size = 10 + Math.random() * 15;
+                s.style.width = size + 'px';
+                s.style.height = size + 'px';
+                s.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                s.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+                s.style.left = '0px';
+                s.style.top = '0px';
+                s.style.pointerEvents = 'none';
+                
+                const ang = Math.random() * Math.PI * 2;
+                const dist = 50 + Math.random() * spread;
+                const tx = Math.cos(ang) * dist;
+                const ty = Math.sin(ang) * dist + (Math.random() * 150);
+                const rot = (Math.random() * 720) - 360;
+                
+                s.style.transition = 'transform 1.8s cubic-bezier(0.1, 0.8, 0.2, 1), opacity 1.8s ease-in-out';
+                s.style.transform = `translate(-50%, -50%) scale(0.2) rotate(0deg)`;
+                s.style.opacity = '1';
+                burstEl.appendChild(s);
+                
+                setTimeout(() => {
+                    s.style.transform = `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px)) scale(${0.8 + Math.random()}) rotate(${rot}deg)`;
+                    s.style.opacity = '0';
+                }, 10);
             }
-            
-            setTimeout(() => {
-                if (burstEl.parentNode) burstEl.parentNode.removeChild(burstEl);
-            }, 3000);
+            setTimeout(() => { if (burstEl.parentNode) burstEl.parentNode.removeChild(burstEl); }, 2500);
+        }
+
+        function triggerTierUpEvent(isMaxLevel = false) {
+            let cx = window.innerWidth / 2;
+            let cy = window.innerHeight / 2;
+            const mascotEl = document.getElementById('croby-sprite');
+            if (mascotEl) {
+                const rect = mascotEl.getBoundingClientRect();
+                cx = rect.left + rect.width / 2;
+                cy = rect.top + rect.height / 2;
+            }
+
+            if (isMaxLevel) {
+                const w = window.innerWidth;
+                const h = window.innerHeight;
+                createBurst(w/2, h/2, 200, 600); // 정중앙 거대 폭죽
+                setTimeout(() => createBurst(w*0.2, h*0.3, 100, 300), 400); // 좌측 상단
+                setTimeout(() => createBurst(w*0.8, h*0.3, 100, 300), 800); // 우측 상단
+                setTimeout(() => createBurst(w*0.3, h*0.7, 100, 300), 1200); // 좌측 하단
+                setTimeout(() => createBurst(w*0.7, h*0.7, 100, 300), 1600); // 우측 하단
+                setTimeout(() => createBurst(cx, cy, 150, 400), 2000); // 마스코트 마무리 폭죽
+            } else {
+                createBurst(cx, cy, 100, 400); // 일반 승급 마스코트 폭죽
+            }
         }
 
         // ── XP를 실제 levelProgress에 더하고 레벨업 판정까지 처리하는 중앙 함수
@@ -933,7 +998,8 @@
             const oldLevel = grp.level;
             const oldTier = clovLevelTierIndex(oldLevel);
 
-            const multiplier = (source === 'click' || source === 'passive') ? 1.0 : getXpMultiplier();
+            // 기본 교감(click) 외에는 모두 성장 가속도 적용 (방치형, 게시글, 일정 등)
+            const multiplier = (source === 'click') ? 1.0 : getXpMultiplier();
             const finalXp = Math.round(rawXp * multiplier * 10) / 10;
 
             // Math.min 제한 없이 더한 뒤 레벨업 판정
@@ -971,10 +1037,17 @@
             // 마스코트 말풍선 표시
             if (window.ClovMascot && typeof window.ClovMascot.say === 'function' && finalXp > 0) {
                 let msg = '';
+                const buffSuffix = multiplier > 1.0 ? `<br>(가속 x${multiplier})` : '';
                 
-                if (tierUp) {
-                    msg = `새로운 우정의 단계에 도달했어! 티어 승급 축하해! (Lv.${grp.level})`;
-                    triggerTierUpEvent();
+                const maxLevelReached = (oldLevel < CLOV_MAX_LEVEL && grp.level >= CLOV_MAX_LEVEL);
+                
+                if (tierUp || maxLevelReached) {
+                    if (maxLevelReached) {
+                        msg = `축하합니다! 클로브가 마침내 최종 진화 형태인 전설의 우정(Lv.777)에 도달했습니다!`;
+                    } else {
+                        msg = `새로운 우정의 단계에 도달했어! 클로브가 더욱 크고 눈부시게 피어났어! (Lv.${grp.level})`;
+                    }
+                    triggerTierUpEvent(maxLevelReached);
                 } else if (leveledUp) {
                     const levelUpMsgs = [
                         "우와! 한 뼘 더 자랐어!",
@@ -986,18 +1059,58 @@
                     const randMsg = levelUpMsgs[Math.floor(Math.random() * levelUpMsgs.length)];
                     msg = `${randMsg} (Lv.${grp.level})`;
                 } else {
-                    if (source === 'click') msg = `교감 완료! +${finalXp} XP`;
-                    else if (source === 'post') msg = `추억 고마워! +${finalXp} XP`;
-                    else if (source === 'schedule_add') msg = `약속 등록 완료! +${finalXp} XP`;
-                    else if (source === 'schedule_done') msg = `인생4컷 달성! +${finalXp} XP`;
-                    else if (source === 'passive') msg = `기다리며 자랐어! +${finalXp} XP`;
-                    else msg = `+${finalXp} XP 획득!`;
+                    if (source === 'click') {
+                        if (typeof window.v5state !== 'undefined' && (window.v5state.event === 'my_birthday' || window.v5state.event === 'friend_birthday') && window.lastMascotLine) {
+                            msg = `${window.lastMascotLine} (+${finalXp}&nbsp;XP)`;
+                        } else {
+                            msg = `교감 완료! +${finalXp}&nbsp;XP`;
+                        }
+                    }
+                    else if (source === 'post') msg = `추억 고마워! +${finalXp}&nbsp;XP${buffSuffix}`;
+                    else if (source === 'schedule_add') msg = `약속 등록 완료! +${finalXp}&nbsp;XP${buffSuffix}`;
+                    else if (source === 'schedule_done') msg = `인생4컷 달성! +${finalXp}&nbsp;XP${buffSuffix}`;
+                    else if (source === 'passive') msg = `어제 남겨둔 추억들 덕분에 클로브가 이만큼 자랐어요! <span style="white-space: nowrap;">+${finalXp} XP</span>${buffSuffix}`;
+                    else msg = `<span style="white-space: nowrap;">+${finalXp} XP</span> 획득!${buffSuffix}`;
                 }
 
                 window.ClovMascot.say(msg, leveledUp ? 4500 : 3500);
             }
         }
         window.grantXP = grantXP;
+
+        window.forcePassiveTest = function() {
+            const grp = groupsData[activeGroup];
+            if (!grp) return;
+            grp.xpDate = '1999-01-01'; // 과거 날짜로 조작
+            grp.xpClicksToday = 0;
+            applyPassiveXP(grp);
+            updateFriendshipUI();
+            localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
+            clovToast('강제 방치형 테스트가 실행되었습니다.', 'info');
+        };
+
+        window.forceLevelTest = function(level) {
+            const grp = groupsData[activeGroup];
+            if (!grp) return;
+            grp.level = level;
+            friendshipLevel = level;
+            updateFriendshipUI();
+            localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
+        };
+
+        // 접속 시 방치형 경험치 자동 지급 (페이지 로드 완료 후 1초 뒤 마스코트가 말하도록)
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                const grp = groupsData[activeGroup];
+                if (!grp) return;
+                const today = clovTodayStr();
+                if (grp.xpDate !== today) {
+                    grp.xpDate = today;
+                    grp.xpClicksToday = 0;
+                    applyPassiveXP(grp);
+                }
+            }, 1000);
+        });
 
         // ── XP 회수 함수 (게시글/일정 삭제 시)
         function revokeXP(rawXp) {
@@ -1057,11 +1170,10 @@
             if (typeof grp.level !== 'number') grp.level = friendshipLevel || 1;
             if (!grp.xpDate) grp.xpDate = today;
 
-            // 날짜가 바뀌었을 때: 방치형 보상 지급 후 클릭 카운트 리셋
+            // 날짜 갱신 처리 (클릭 카운트 리셋만 수행, 방치형 경험치는 접속 시 자동 지급으로 분리)
             if (grp.xpDate !== today) {
                 grp.xpDate = today;
                 grp.xpClicksToday = 0;
-                applyPassiveXP(grp);
             }
             friendshipLevel = grp.level;
 
@@ -1074,7 +1186,7 @@
                 return;
             }
 
-            if (grp.xpClicksToday >= CLOV_MAX_CLICKS_PER_DAY) {
+            if (!window.CLOV_DISABLE_CLICK_LIMIT && grp.xpClicksToday >= CLOV_MAX_CLICKS_PER_DAY) {
                 localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
                 updateFriendshipUI();
                 clovToast('오늘의 우정 교감을 다 채웠어요! 내일 다시 함께해요', 'info');
@@ -1087,6 +1199,7 @@
                 clovToast('오늘의 교감을 다 채웠어요! 다른 활동으로도 경험치를 얻을 수 있어요', 'info');
             }
         }
+        window.levelUp = levelUp;
 
         function updateDashboardEnvironment() {
             const savedTime = localStorage.getItem('clov_banner_time');

@@ -848,7 +848,7 @@ document.getElementById = function(id) {
             const styleBg = coverPhoto ? `background-image: url('${escapeHtml(coverPhoto)}');` : '';
             const imageContent = coverPhoto
                 ? ''
-                : `<span class="memory-clover-placeholder">🍀</span><span class="memory-image-text">사진이 없는 추억은<br>클로버로 보관됩니다</span>`;
+                : `<div class="cline-no-photo"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"></path><path d="m4 18 4-4 3 2 4-5 5 4"></path></svg></span><span class="cline-no-photo-text">사진 없음</span></div>`;
             const photoCountBadge = normalizedPost.photos.length > 1
                 ? `<span class="polaroid-photo-count"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:2px;"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"/><circle cx="12" cy="13" r="3.5"/></svg>${normalizedPost.photos.length}</span>`
                 : '';
@@ -881,7 +881,6 @@ document.getElementById = function(id) {
                         <span class="author-badge">${escapeHtml(authorLabel)}</span>
                         ${imageContent}
                         ${photoCountBadge}
-                        <span class="polaroid-zoom-hint">🔍 자세히</span>
                     </div>
                     <div class="polaroid-caption">
                         <div class="my-record-box ${isMine ? 'mine' : 'friend'}">
@@ -975,7 +974,7 @@ document.getElementById = function(id) {
                         `).join('')}
                     </div>
                 ` : ''}
-            ` : `<div class="memory-detail-photo memory-detail-photo--empty"><span class="memory-clover-placeholder">🍀</span><span class="memory-image-text">사진이 없는 추억은<br>클로버로 보관됩니다</span></div>`;
+            ` : `<div class="memory-detail-photo memory-detail-photo--empty"><div class="cline-no-photo"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"></path><path d="m4 18 4-4 3 2 4-5 5 4"></path></svg></span><span class="cline-no-photo-text">사진 없음</span></div></div>`;
 
             const rightColumnHtml = memoryDetailState.editing ? `
                 <div class="memory-detail-edit-form">
