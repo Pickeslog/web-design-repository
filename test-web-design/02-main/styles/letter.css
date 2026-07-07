@@ -570,11 +570,17 @@
             display: grid;
             gap: 10px;
             min-height: 278px;
+            /* 편지 개수가 적어도 카드가 세로로 늘어나지 않고 위에서부터 슬림하게 쌓임 */
+            grid-auto-rows: max-content;
+            align-content: start;
         }
 
         .letter-inbox-card {
             position: relative;
             width: 100%;
+            /* 편지 본문 길이와 무관하게 항상 균일한 컴팩트 박스 유지 */
+            height: 76px;
+            box-sizing: border-box;
             border: 1px solid rgba(255, 143, 179, 0.32);
             border-radius: 14px;
             background:
@@ -634,6 +640,10 @@
             font-size: 13px;
             line-height: 1.55;
             margin: 0;
+            /* 아무리 긴 편지도 1줄 말줄임 처리 → 카드 높이 균일 유지 */
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .letter-inbox-card .letter-favorite-btn {

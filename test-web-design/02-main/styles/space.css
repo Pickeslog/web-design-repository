@@ -2556,8 +2556,27 @@
         }
 
         .space-memory-preview .section-title {
-            justify-content: flex-start;
+            justify-content: space-between;
             gap: 14px;
+            /* 바탕화면(배경) 위에서도 섹션 헤더가 또렷하게 읽히도록 반투명 패널 */
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 12px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+            border: 1px solid rgba(82, 183, 136, 0.2);
+            width: 100%;
+            box-sizing: border-box;
+        }
+        body.dark-mode .space-memory-preview .section-title {
+            background-color: rgba(30, 32, 22, 0.95);
+            border-color: var(--border-color);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 제목 텍스트 없이 버튼만 있는 헤더(일정 배너) — 패널 없이 컴팩트하게 */
+        .dashboard-schedule-section .section-title {
+            justify-content: flex-end;
+            margin-bottom: 10px;
         }
 
         .space-memory-preview .section-actions {
@@ -2736,6 +2755,22 @@
             padding: 18px 0 14px;
             background: transparent;
             border-bottom: 1px solid rgba(82, 183, 136, 0.2);
+        }
+        /* 바탕화면 위에서도 "전체 약속 보기" 제목이 또렷하게 읽히도록 반투명 패널 */
+        .growth-hero > div:first-child {
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 14px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+            border: 1px solid rgba(82, 183, 136, 0.25);
+            width: fit-content;
+            max-width: 100%;
+            margin-bottom: 4px;
+        }
+        body.dark-mode .growth-hero > div:first-child {
+            background-color: rgba(30, 32, 22, 0.95);
+            border-color: rgba(156, 204, 101, 0.25);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         }
 
         .growth-kicker {
@@ -4034,3 +4069,17 @@
 }
 .cline-viewer.theme-diary .diary-sticker.clover { background-image: url('../images/clover_sticker_transparent.png'); }
 .cline-viewer.theme-diary .diary-sticker.flower { background-image: url('../images/flower_sticker_transparent.png'); }
+
+/* ── 모달 닫기/제어 버튼: × 기호가 원 안 정중앙에 오도록 flex 중앙정렬 (lami2342 이식) ── */
+.memory-detail-close,
+.profile-modal-close,
+.photo-view-close,
+.fourcut-gallery-close,
+.letter-modal-close,
+.letter-paper-btn.letter-paper-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    line-height: 0;
+}

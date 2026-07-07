@@ -84,7 +84,6 @@
                                     </div>
                                     <section class="dashboard-schedule-section" style="margin-top: 20px;">
                                         <div class="section-title">
-                                            <span>다가오는 약속</span>
                                             <div class="section-actions">
                                                 <button class="btn-action-sm btn-schedule-new" type="button" onclick="openScheduleModal('dt')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;"><path d="M12 5v14M5 12h14"/></svg>새 D-day 만들기</button>
                                             </div>

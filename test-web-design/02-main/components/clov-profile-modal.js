@@ -204,6 +204,18 @@
                                 </li>
                             </ul>
                         </div>
+
+                        <div class="profile-form-section">
+                            <div class="profile-section-title">마스코트 캐릭터</div>
+                            <ul class="settings-list theme-option-list" id="dt-mascot-theme-list">
+                                <li class="theme-option" data-mascot-theme="croby" onclick="setMascotCharacter('croby')">
+                                    <span class="settings-list-label">크로비</span>
+                                </li>
+                                <li class="theme-option" data-mascot-theme="robot" onclick="setMascotCharacter('robot')">
+                                    <span class="settings-list-label">로봇</span>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </section>
             </div>
@@ -553,6 +565,30 @@
     clovToast(icon + ' ' + name + ' 배경으로 바꿨어요!', 'success');
   }
 
+  /* ── 마스코트 캐릭터 (크로비 / 로봇) — 실제 스프라이트 전환은 js/croby-mascot.js의
+     window.CrobyMascot.setCharacter()가 담당하고, 여기서는 저장값 관리와 옵션 UI만 맡는다. ── */
+  function getMascotCharacter() {
+    return localStorage.getItem('clov_mascotCharacter') === 'robot' ? 'robot' : 'croby';
+  }
+
+  function applyMascotCharacter(id) {
+    if (window.CrobyMascot && typeof CrobyMascot.setCharacter === 'function') CrobyMascot.setCharacter(id);
+  }
+
+  function updateMascotCharacterUI() {
+    var id = getMascotCharacter();
+    document.querySelectorAll('#dt-mascot-theme-list .theme-option').forEach(function (li) {
+      li.classList.toggle('active', li.dataset.mascotTheme === id);
+    });
+  }
+
+  function setMascotCharacter(id) {
+    localStorage.setItem('clov_mascotCharacter', id);
+    applyMascotCharacter(id);
+    updateMascotCharacterUI();
+    clovToast(id === 'robot' ? '로봇 마스코트로 바꿨어요!' : '크로비로 바꿨어요!', 'success');
+  }
+
   /* ── 참여자별 추억 증거 카드 테마 (빨랫줄 / 겹침 카드) — 해당 UI가 없는 페이지에선 설정값만 저장 ── */
   function getEvidenceCardTheme() {
     return localStorage.getItem('clov_evidenceCardTheme') || 'wire';
@@ -730,7 +766,7 @@
     var themeActions = document.getElementById('dt-profile-actions-theme');
     if (accountActions) accountActions.style.display = pane === 'account' ? '' : 'none';
     if (themeActions) themeActions.style.display = pane === 'theme' ? '' : 'none';
-    if (pane === 'theme') { updateThemeOptionUI(); updateAppBackgroundUI(); updateBgThemeUI(); updateCoverThemeUI(); updateMainPhotoThemeUI(); updateLetterBoxThemeUI(); updateEvidenceCardThemeUI(); }
+    if (pane === 'theme') { updateThemeOptionUI(); updateAppBackgroundUI(); updateBgThemeUI(); updateCoverThemeUI(); updateMainPhotoThemeUI(); updateLetterBoxThemeUI(); updateEvidenceCardThemeUI(); updateMascotCharacterUI(); }
   }
 
   /* ── 전역 등록 (주입된 HTML의 onclick 속성이 전역 스코프에서 호출하므로 필요) ── */
@@ -746,6 +782,10 @@
   window.applyBgTheme = applyBgTheme;
   window.updateBgThemeUI = updateBgThemeUI;
   window.setBgTheme = setBgTheme;
+  window.getMascotCharacter = getMascotCharacter;
+  window.applyMascotCharacter = applyMascotCharacter;
+  window.updateMascotCharacterUI = updateMascotCharacterUI;
+  window.setMascotCharacter = setMascotCharacter;
   window.getCoverTheme = getCoverTheme;
   window.applyCoverTheme = applyCoverTheme;
   window.updateCoverThemeUI = updateCoverThemeUI;
