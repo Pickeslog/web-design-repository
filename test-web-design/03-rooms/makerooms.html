@@ -110,7 +110,12 @@ body.dark-mode .toggle-knob { transform: translateX(20px); }
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 18px; gap: 12px; flex-wrap: wrap;
 }
-.greeting { font-size: 15px; font-weight: 700; color: var(--primary); }
+.greeting {
+  font-size: 15px; font-weight: 700; color: var(--text);
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--active-bg); border: 1px solid var(--border);
+  padding: 7px 14px; border-radius: 20px;
+}
 .toolbar-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .code-input {
   height: 36px; padding: 0 12px;
@@ -137,9 +142,10 @@ body.dark-mode .toggle-knob { transform: translateX(20px); }
 .btn-create:hover { opacity: .85; }
 .btn-edit {
   height: 36px; padding: 0 12px;
-  background: none; border: 1.5px solid var(--border);
+  background: var(--card-bg); border: 1.5px solid var(--input-bdr);
   border-radius: 10px; color: var(--text);
   font-size: 13px; font-weight: 600; cursor: pointer;
+  box-shadow: var(--shadow-sm);
   transition: background .15s, border-color .15s;
 }
 .btn-edit:hover { background: var(--active-bg); border-color: var(--accent); }
@@ -157,7 +163,11 @@ body.dark-mode .toggle-knob { transform: translateX(20px); }
 .edit-banner.show { display: flex; }
 
 /* ===== 필터 탭 ===== */
-.filter-row { display: flex; gap: 6px; margin-bottom: 24px; }
+.filter-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; margin-bottom: 24px; flex-wrap: wrap;
+}
+.filter-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
 .filter-btn {
   height: 34px; padding: 0 14px; border-radius: 20px;
   border: 1.5px solid var(--border); background: var(--card-bg); color: var(--muted);
@@ -721,7 +731,12 @@ body.dark-mode #room-preview-modal .share-btn { color: #0a0f0c; }
    아직 멤버가 아니므로 티켓이 아닌 점선 카드로 구분. 정렬/즐겨찾기/드래그 제외.
    ========================================================================== */
 .req-section { margin-bottom: 26px; }
-.req-head { font-size: 13px; font-weight: 800; color: var(--primary); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+.req-head {
+  font-size: 13px; font-weight: 800; color: var(--text); margin-bottom: 10px;
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--active-bg); border: 1px solid var(--border);
+  padding: 6px 12px; border-radius: 20px;
+}
 .req-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 @media (max-width: 760px) { .req-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 520px) { .req-grid { grid-template-columns: 1fr; } }
@@ -800,14 +815,6 @@ ClovProfileModal.init();
     <!-- 툴바 -->
     <div class="toolbar">
       <div class="greeting"><i class="ti ti-users"></i> 우리 우정공간들이에요</div>
-      <div class="toolbar-right">
-        <input class="code-input" id="room-code-input" placeholder="방 코드 입력" maxlength="9" onkeydown="if(event.key==='Enter') enterByCode()">
-        <button class="btn-enter" onclick="enterByCode()">입장</button>
-        <button class="btn-create" onclick="openRoomCreateModal()">
-          <i class="ti ti-plus" style="font-size:14px"></i> 방 만들기
-        </button>
-        <button class="btn-edit" id="edit-toggle-btn" onclick="toggleEditMode()">편집</button>
-      </div>
     </div>
 
     <!-- 편집 모드 안내 -->
@@ -821,18 +828,28 @@ ClovProfileModal.init();
 
     <!-- 필터 -->
     <div class="filter-row" id="filter-row">
-      <button class="filter-btn active" data-filter="recent" onclick="setFilter('recent', this)">
-        <i class="ti ti-clock"></i> 최신순
-      </button>
-      <button class="filter-btn" data-filter="old" onclick="setFilter('old', this)">
-        <i class="ti ti-history"></i> 오래된 순
-      </button>
-      <button class="filter-btn" data-filter="fav" onclick="setFilter('fav', this)">
-        <i class="ti ti-star"></i> 즐겨찾기
-      </button>
-      <button class="filter-btn" id="filter-btn-custom" data-filter="custom" onclick="setFilter('custom', this)">
-        <i class="ti ti-layout-grid"></i> 내 순서
-      </button>
+      <div class="filter-tabs">
+        <button class="filter-btn" id="filter-btn-custom" data-filter="custom" onclick="setFilter('custom', this)">
+          <i class="ti ti-layout-grid"></i> 내 순서
+        </button>
+        <button class="filter-btn active" data-filter="recent" onclick="setFilter('recent', this)">
+          <i class="ti ti-clock"></i> 최신순
+        </button>
+        <button class="filter-btn" data-filter="old" onclick="setFilter('old', this)">
+          <i class="ti ti-history"></i> 오래된 순
+        </button>
+        <button class="filter-btn" data-filter="fav" onclick="setFilter('fav', this)">
+          <i class="ti ti-star"></i> 즐겨찾기
+        </button>
+      </div>
+      <div class="toolbar-right">
+        <input class="code-input" id="room-code-input" placeholder="방 코드 입력" maxlength="9" onkeydown="if(event.key==='Enter') enterByCode()">
+        <button class="btn-enter" onclick="enterByCode()">입장</button>
+        <button class="btn-create" onclick="openRoomCreateModal()">
+          <i class="ti ti-plus" style="font-size:14px"></i> 방 만들기
+        </button>
+        <button class="btn-edit" id="edit-toggle-btn" onclick="toggleEditMode()">편집</button>
+      </div>
     </div>
 
     <!-- 방 그리드 -->
