@@ -23,6 +23,8 @@ document.getElementById = function(id) {
         let activeGroup = 'friend'; // 기본값: 단짝친구
         let activeFeedFilter = 'all';
         let activeFeedMonth = 'all';
+        let activeFeedSort = 'new';   // 'new' = 최신순 / 'old' = 오래된순
+        let activeFeedSearch = '';    // 소문자·trim된 검색어 (빈 문자열이면 검색 안 함)
         let monthPickerYear = new Date().getFullYear();
         let activeEvidenceIndexes = {
             friend: 0,

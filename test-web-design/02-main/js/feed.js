@@ -7,6 +7,50 @@
             renderFeeds();
         }
 
+        function setFeedSort(sortName) {
+            activeFeedSort = sortName === 'old' ? 'old' : 'new';
+            document.querySelectorAll('.feed-sort-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.sort === activeFeedSort);
+            });
+            renderFeeds();
+        }
+
+        function setFeedSearch(query) {
+            activeFeedSearch = String(query || '').trim().toLowerCase();
+            document.querySelectorAll('.feed-search-clear').forEach(btn => {
+                btn.hidden = !activeFeedSearch;
+            });
+            renderFeeds();
+        }
+
+        function clearFeedSearch() {
+            activeFeedSearch = '';
+            document.querySelectorAll('.feed-search-input').forEach(input => { input.value = ''; });
+            document.querySelectorAll('.feed-search-clear').forEach(btn => { btn.hidden = true; });
+            renderFeeds();
+        }
+
+        // 정렬용 전체 날짜 키("YYYY-MM-DD"). 일자가 없으면 "-00"으로 채우고, 파싱 불가는 빈 문자열
+        function getPostDateKey(post) {
+            const raw = String(post.date || '').replace(/\./g, '-');
+            const full = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+            if (full) return `${full[1]}-${full[2]}-${full[3]}`;
+            const ym = raw.match(/^(\d{4})-(\d{2})/);
+            return ym ? `${ym[1]}-${ym[2]}-00` : '';
+        }
+
+        // 검색어가 제목·부제·본문·날짜·태그·참여자 이름·참여자 메시지 중 하나라도 포함되면 true
+        function postMatchesFeedSearch(post, query) {
+            if (!query) return true;
+            const haystack = [
+                post.title, post.subtitle, post.text, post.date,
+                ...(post.tags || []),
+                ...((post.participants || []).map(participant => participant.name)),
+                ...((post.messages || []).map(message => message.text))
+            ].filter(Boolean).join(' ').toLowerCase();
+            return haystack.includes(query);
+        }
+
         function getPostMonthKey(post) {
             const rawDate = String(post.date || '').replace(/\./g, '-');
             const match = rawDate.match(/^(\d{4})-(\d{2})/);
@@ -80,22 +124,38 @@
                     if (activeFeedMonth !== 'all' && getPostMonthKey(normalizedPost) !== activeFeedMonth) {
                         return false;
                     }
-                    if (activeFeedFilter === 'others') {
-                        return normalizedPost.participants.some(participant => participant.type !== 'mine');
+                    if (activeFeedFilter === 'others' && !normalizedPost.participants.some(participant => participant.type !== 'mine')) {
+                        return false;
+                    }
+                    if (activeFeedSearch && !postMatchesFeedSearch(normalizedPost, activeFeedSearch)) {
+                        return false;
                     }
                     return true;
                 });
-            const htmlContent = filteredPosts.length > 0
-                ? filteredPosts
+
+            // 날짜 기준 정렬(최신순/오래된순). 날짜 파싱 불가 항목은 항상 맨 뒤로.
+            const sortedPosts = filteredPosts.slice().sort((a, b) => {
+                const da = getPostDateKey(a);
+                const db = getPostDateKey(b);
+                if (da === db) return 0;
+                if (!da) return 1;
+                if (!db) return -1;
+                return activeFeedSort === 'old' ? da.localeCompare(db) : db.localeCompare(da);
+            });
+
+            const htmlContent = sortedPosts.length > 0
+                ? sortedPosts
                     .map(post => renderMemoryCard(post, currentPosts.indexOf(post)))
                     .join('')
-                : `<div class="feed-empty-state">선택한 조건에 맞는 추억이 아직 없습니다.<br>새 추억을 남기면 이 월별 보관함에 바로 정리됩니다.</div>`;
+                : `<div class="feed-empty-state">${activeFeedSearch
+                    ? '검색어와 일치하는 추억이 없습니다.<br>다른 단어로 찾아보세요.'
+                    : '선택한 조건에 맞는 추억이 아직 없습니다.<br>새 추억을 남기면 이 월별 보관함에 바로 정리됩니다.'}</div>`;
 
             zones.forEach(zone => {
                 if (zone) zone.innerHTML = htmlContent;
             });
 
-            renderFeedMonthControls(currentPosts, filteredPosts.length);
+            renderFeedMonthControls(currentPosts, sortedPosts.length);
             renderEvidenceViewers();
         }
 

@@ -12,11 +12,22 @@
                                 </div>
                             </div>
                             <div class="feed-controls">
-                                <div class="feed-filter-tabs">
-                                    <button class="month-picker-trigger" id="dt-month-picker-trigger" type="button" onclick="toggleMonthPicker(event)" title="월 선택"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></button>
-                                    <button class="feed-tab active" data-filter="all" onclick="setFeedFilter('all')">전체</button>
-                                    <button class="feed-tab" data-filter="mine" onclick="setFeedFilter('mine')">내 기록</button>
-                                    <button class="feed-tab" data-filter="others" onclick="setFeedFilter('others')">친구 기록</button>
+                                <div class="feed-search">
+                                    <svg class="feed-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                                    <input class="feed-search-input" id="dt-feed-search" type="search" autocomplete="off" placeholder="추억 검색 (제목·내용·태그·친구)" oninput="setFeedSearch(this.value)" onkeydown="if(event.key==='Escape'){clearFeedSearch();}">
+                                    <button class="feed-search-clear" id="dt-feed-search-clear" type="button" onclick="clearFeedSearch()" aria-label="검색어 지우기" hidden><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+                                </div>
+                                <div class="feed-controls-right">
+                                    <div class="feed-sort" role="group" aria-label="정렬 순서">
+                                        <button class="feed-sort-btn active" data-sort="new" type="button" onclick="setFeedSort('new')">최신순</button>
+                                        <button class="feed-sort-btn" data-sort="old" type="button" onclick="setFeedSort('old')">오래된순</button>
+                                    </div>
+                                    <div class="feed-filter-tabs">
+                                        <button class="month-picker-trigger" id="dt-month-picker-trigger" type="button" onclick="toggleMonthPicker(event)" title="월 선택"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></button>
+                                        <button class="feed-tab active" data-filter="all" onclick="setFeedFilter('all')">전체</button>
+                                        <button class="feed-tab" data-filter="mine" onclick="setFeedFilter('mine')">내 기록</button>
+                                        <button class="feed-tab" data-filter="others" onclick="setFeedFilter('others')">친구 기록</button>
+                                    </div>
                                 </div>
                             </div>
                             <div id="dt-full-feed-zone" class="feed-grid">

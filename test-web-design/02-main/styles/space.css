@@ -2749,7 +2749,10 @@
 
         .growth-hero {
             display: grid;
-            grid-template-columns: minmax(0, 1fr);
+            /* 컬럼 폭을 두 자식(제목 패널·필터 바) 중 넓은 쪽(=필터 바)에 맞추고,
+               두 요소가 같은 폭을 공유하도록 한다. */
+            grid-template-columns: max-content;
+            justify-content: start;
             gap: 12px;
             align-items: start;
             padding: 18px 0 14px;
@@ -2763,9 +2766,10 @@
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
             border: 1px solid rgba(82, 183, 136, 0.25);
-            width: fit-content;
+            width: 100%;      /* 필터 바와 동일한 컬럼 폭을 채운다 */
             max-width: 100%;
             margin-bottom: 4px;
+            box-sizing: border-box;
         }
         body.dark-mode .growth-hero > div:first-child {
             background-color: rgba(30, 32, 22, 0.95);
