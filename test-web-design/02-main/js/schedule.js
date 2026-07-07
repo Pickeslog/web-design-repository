@@ -69,16 +69,6 @@
             openModal(`${prefix}-schedule-modal`);
         }
 
-        // 일정 변경(추가/수정/삭제/메모)을 localStorage에 반영 — groupsData는 부팅 시
-        // clov_groupsData에서 복원되므로, 저장하지 않으면 새로고침 때 변경 전 상태로 되돌아간다
-        function persistGroupsData() {
-            try {
-                localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
-            } catch (error) {
-                clovToast('⚠️ 변경사항 저장에 실패했어요. 저장 공간을 확인해주세요.', 'warn');
-            }
-        }
-
         function saveSchedule(viewType) {
             const prefix = viewType === 'dt' ? 'dt' : 'mb';
             const titleInput = document.getElementById(`${prefix}-input-schedule-title`);
@@ -127,7 +117,7 @@
                     selectedScheduleIds[activeGroup] = newSch.id;
                 }
 
-                persistGroupsData();
+                saveGroupsData();
                 updateScheduleUI();
                 closeModal(`${prefix}-schedule-modal`);
                 clovToast('🍀 D-day가 저장되었어요!', 'success');
@@ -139,9 +129,9 @@
                 const schedules = groupsData[activeGroup].schedules || [];
                 groupsData[activeGroup].schedules = schedules.filter(s => s.id !== scheduleId);
                 if (selectedScheduleIds[activeGroup] === scheduleId) selectedScheduleIds[activeGroup] = null;
-                persistGroupsData();
+                saveGroupsData();
                 updateScheduleUI();
-                clovToast('🗑️ 일정이 삭제되었어요.', 'info');
+                clovToast('일정이 삭제되었어요.', 'success');
             }, { icon: (window.CLOV_ICONS && CLOV_ICONS.trash) || '🗑️', type: 'error', confirmText: '삭제', cancelText: '취소' });
         }
 
@@ -814,7 +804,7 @@
                 const sch = groupsData[activeGroup].schedules.find(s => s.id === scheduleId);
                 if (sch) {
                     sch.content = newContent;
-                    persistGroupsData();
+                    saveGroupsData();
                 }
 
                 // 데스크톱 <-> 모바일 양방향 실시간 동기화

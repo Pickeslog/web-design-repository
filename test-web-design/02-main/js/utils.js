@@ -159,7 +159,14 @@
         }
 
         function saveGroupsData() {
-            localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
+            try {
+                localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
+            } catch (error) {
+                // 저장 공간 초과(QuotaExceeded) 등 — 조용히 실패하지 않고 사용자에게 알린다
+                if (typeof clovToast === 'function') {
+                    clovToast('⚠️ 변경사항 저장에 실패했어요. 저장 공간을 확인해주세요.', 'warn');
+                }
+            }
         }
 
         // post.participants는 "누가 함께했는가"만 나타낸다. 각자의 전체 기록(participants[].text)은

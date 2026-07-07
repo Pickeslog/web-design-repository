@@ -147,6 +147,7 @@
                 tags: getSelectedPostTags('mb')
             });
             activeEvidenceIndexes[activeGroup] = 0;
+            saveGroupsData();
 
             // 입력 필드 초기화 및 팝업 닫기
             titleInput.value = '';
@@ -185,6 +186,7 @@
                 tags: getSelectedPostTags('dt')
             });
             activeEvidenceIndexes[activeGroup] = 0;
+            saveGroupsData();
 
             // 입력 필드 초기화 및 팝업 닫기
             titleInput.value = '';

@@ -676,7 +676,14 @@ document.getElementById = function(id) {
         }
 
         function saveGroupsData() {
-            localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
+            try {
+                localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
+            } catch (error) {
+                // 저장 공간 초과(QuotaExceeded) 등 — 조용히 실패하지 않고 사용자에게 알린다
+                if (typeof clovToast === 'function') {
+                    clovToast('⚠️ 변경사항 저장에 실패했어요. 저장 공간을 확인해주세요.', 'warn');
+                }
+            }
         }
 
         // post.participants는 "누가 함께했는가"만 나타낸다. 각자의 전체 기록(participants[].text)은
@@ -1526,6 +1533,7 @@ document.getElementById = function(id) {
                 tags: getSelectedPostTags('mb')
             });
             activeEvidenceIndexes[activeGroup] = 0;
+            saveGroupsData();
 
             // 입력 필드 초기화 및 팝업 닫기
             titleInput.value = '';
@@ -1564,6 +1572,7 @@ document.getElementById = function(id) {
                 tags: getSelectedPostTags('dt')
             });
             activeEvidenceIndexes[activeGroup] = 0;
+            saveGroupsData();
 
             // 입력 필드 초기화 및 팝업 닫기
             titleInput.value = '';
@@ -2113,6 +2122,7 @@ document.getElementById = function(id) {
             if (el) {
                 const newTitle = el.innerText.replace(/\u200B/g, '').trim();
                 groupsData[activeGroup].photoTitle = newTitle;
+                saveGroupsData();
                 const otherId = viewType === 'dt' ? 'mb-photo-title' : 'dt-photo-title';
                 const otherEl = document.getElementById(otherId);
                 if (otherEl) {
@@ -2375,16 +2385,6 @@ document.getElementById = function(id) {
             openModal(`${prefix}-schedule-modal`);
         }
 
-        // 일정 변경(추가/수정/삭제/메모)을 localStorage에 반영 — groupsData는 부팅 시
-        // clov_groupsData에서 복원되므로, 저장하지 않으면 새로고침 때 변경 전 상태로 되돌아간다
-        function persistGroupsData() {
-            try {
-                localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
-            } catch (error) {
-                clovToast('⚠️ 변경사항 저장에 실패했어요. 저장 공간을 확인해주세요.', 'warn');
-            }
-        }
-
         function saveSchedule(viewType) {
             const prefix = viewType === 'dt' ? 'dt' : 'mb';
             const titleInput = document.getElementById(`${prefix}-input-schedule-title`);
@@ -2433,7 +2433,7 @@ document.getElementById = function(id) {
                     selectedScheduleIds[activeGroup] = newSch.id;
                 }
 
-                persistGroupsData();
+                saveGroupsData();
                 updateScheduleUI();
                 closeModal(`${prefix}-schedule-modal`);
                 clovToast('🍀 D-day가 저장되었어요!', 'success');
@@ -2445,9 +2445,9 @@ document.getElementById = function(id) {
                 const schedules = groupsData[activeGroup].schedules || [];
                 groupsData[activeGroup].schedules = schedules.filter(s => s.id !== scheduleId);
                 if (selectedScheduleIds[activeGroup] === scheduleId) selectedScheduleIds[activeGroup] = null;
-                persistGroupsData();
+                saveGroupsData();
                 updateScheduleUI();
-                clovToast('🗑️ 일정이 삭제되었어요.', 'info');
+                clovToast('일정이 삭제되었어요.', 'success');
             }, { icon: (window.CLOV_ICONS && CLOV_ICONS.trash) || '🗑️', type: 'error', confirmText: '삭제', cancelText: '취소' });
         }
 
@@ -3456,7 +3456,7 @@ document.getElementById = function(id) {
                 const sch = groupsData[activeGroup].schedules.find(s => s.id === scheduleId);
                 if (sch) {
                     sch.content = newContent;
-                    persistGroupsData();
+                    saveGroupsData();
                 }
 
                 // 데스크톱 <-> 모바일 양방향 실시간 동기화

@@ -1172,6 +1172,7 @@
             if (el) {
                 const newTitle = el.innerText.replace(/\u200B/g, '').trim();
                 groupsData[activeGroup].photoTitle = newTitle;
+                saveGroupsData();
                 const otherId = viewType === 'dt' ? 'mb-photo-title' : 'dt-photo-title';
                 const otherEl = document.getElementById(otherId);
                 if (otherEl) {

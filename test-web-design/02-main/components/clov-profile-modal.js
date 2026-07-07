@@ -675,7 +675,7 @@
       closeModal('dt-profile-modal');
       if (typeof renderFeeds === 'function') renderFeeds();
       clovToast('계정을 탈퇴했어요 · 남긴 기록은 \'언노운\'으로 보존돼요', 'info');
-    }, { icon: '🚪', type: 'error', confirmText: '탈퇴', cancelText: '취소' });
+    }, { icon: (window.CLOV_ICONS && CLOV_ICONS.logout) || '🚪', type: 'error', confirmText: '탈퇴', cancelText: '취소' });
   }
 
   function triggerProfileAvatarUpload() {
