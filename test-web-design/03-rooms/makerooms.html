@@ -6,7 +6,7 @@
 <title>Clov. - 우정공간</title>
 <link rel="icon" type="image/png" href="../assets/ai-style/clov_logo_half_leaf_cartoon_transparent.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css">
-<script src="../02-main/components/clov-header.js?v=11"></script>
+<script src="../02-main/components/clov-header.js?v=12"></script>
 <script src="../02-main/components/clov-modal.js?v=1"></script>
 <script src="../02-main/components/clov-profile-modal.js?v=15"></script>
 <style>
@@ -800,7 +800,7 @@ ClovHeader.init({
   showBell: false,
   dropdownItems: [
     { label: '<i class="ti ti-settings"></i> 사용자설정', onclick: "openProfileModal();document.getElementById('clov-hdr-drop').classList.remove('open')" },
-    { label: '로그아웃', onclick: "window.location.href='../01-auth/login.html'" },
+    { label: '로그아웃', onclick: "ClovHeader.logout()" },
   ],
 });
 ClovProfileModal.init();
