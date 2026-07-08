@@ -128,7 +128,8 @@
             const metaLine = `${normalizedPost.date}${normalizedPost.subtitle ? ` · ${normalizedPost.subtitle}` : ''}`;
             memoryDetailState.photoIndex = Math.min(Math.max(memoryDetailState.photoIndex || 0, 0), Math.max(normalizedPost.photos.length - 1, 0));
 
-            const photoHtml = memoryDetailState.editing ? `
+            // ── 수정 모드: 사진 스트립 + 제목/본문 폼 + 약속 연결 편집 ──
+            const editPhotoStripHtml = `
                 <div class="memory-edit-photo-strip">
                     ${(memoryDetailState.photoDraft || []).map((url, index) => `
                         <div class="memory-edit-photo-thumb">
@@ -143,35 +144,89 @@
                     ` : ''}
                 </div>
                 <input type="file" id="memory-edit-photo-input" accept="image/*" multiple style="display:none" onchange="handleMemoryEditPhotoUpload(this)">
-            ` : normalizedPost.photos.length ? `
-                <img class="memory-detail-photo" src="${escapeHtml(normalizedPost.photos[memoryDetailState.photoIndex] || normalizedPost.photos[0])}" alt="${escapeHtml(normalizedPost.title)}">
-                ${normalizedPost.photos.length > 1 ? `
-                    <div class="memory-detail-photo-strip">
-                        ${normalizedPost.photos.map((url, index) => `
-                            <button type="button" class="memory-detail-photo-thumb ${index === memoryDetailState.photoIndex ? 'is-active' : ''}" onclick="setMemoryDetailPhotoIndex(${index})">
-                                <img src="${escapeHtml(url)}" alt="사진 ${index + 1}">
-                            </button>
-                        `).join('')}
-                    </div>
-                ` : ''}
-            ` : `<div class="memory-detail-photo memory-detail-photo--empty"><span class="memory-clover-placeholder">🍀</span><span class="memory-image-text">사진이 없는 추억은<br>클로버로 보관됩니다</span></div>`;
+            `;
 
-            const rightColumnHtml = memoryDetailState.editing ? `
+            const draftSchedule = findScheduleById(memoryDetailState.scheduleDraftId);
+            const scheduleEditHtml = memoryDetailState.schedulePickerOpen ? `
+                <div class="mp-sched-list">
+                    ${renderMemorySchedulePickerRows(memoryDetailState.scheduleDraftId, 'selectMemoryEditSchedule')}
+                </div>
+                <button type="button" class="mp-connect-cancel" onclick="closeMemoryEditSchedulePicker()">목록 닫기</button>
+            ` : draftSchedule ? `
+                <div class="mp-connect-chip">
+                    <span class="mp-connect-dday">${calculateDday(draftSchedule.date)}</span>
+                    <span class="mp-connect-title">${escapeHtml(draftSchedule.title)} <b>· 연결됨</b></span>
+                    <button type="button" class="mp-connect-btn" onclick="openMemoryEditSchedulePicker()">변경</button>
+                    <button type="button" class="mp-connect-btn mp-connect-btn--detach" onclick="detachMemoryEditSchedule()">해제</button>
+                </div>
+            ` : `
+                <button type="button" class="mp-connect-open" onclick="openMemoryEditSchedulePicker()">🗓️ 일정계획에서 약속 가져오기</button>
+                <div class="mp-connect-hint">연결 안 하면 <b>자유 기록(FREE MEMORY)</b>으로 저장돼요</div>
+            `;
+
+            const rightColumnHtml = `
                 <div class="memory-detail-edit-form">
-                    <input type="text" id="memory-detail-edit-title" class="memory-detail-edit-title-input" value="${escapeHtml(normalizedPost.title)}" maxlength="40">
-                    <textarea id="memory-detail-edit-body" class="memory-detail-edit-body-input" rows="6">${escapeHtml(normalizedPost.text || '')}</textarea>
+                    <input type="text" id="memory-detail-edit-title" class="memory-detail-edit-title-input" value="${escapeHtml(memoryDetailState.editTitleDraft ?? normalizedPost.title)}" maxlength="40">
+                    <textarea id="memory-detail-edit-body" class="memory-detail-edit-body-input" rows="6" maxlength="100" oninput="document.getElementById('memory-detail-edit-body-count').textContent = this.value.length + '/100'">${escapeHtml(memoryDetailState.editBodyDraft ?? (normalizedPost.text || ''))}</textarea>
+                    <span class="memory-detail-edit-body-count" id="memory-detail-edit-body-count">${(memoryDetailState.editBodyDraft ?? (normalizedPost.text || '')).length}/100</span>
+                    <div class="mp-connect-field">
+                        <div class="mp-connect-label">약속 연결 <span>(선택 · 일정계획)</span></div>
+                        ${scheduleEditHtml}
+                    </div>
                     <div class="memory-detail-edit-actions">
                         <button type="button" class="btn-sub" onclick="cancelMemoryPostEdit()">취소</button>
                         <button type="button" class="btn-main" onclick="updateMemoryPost()">저장</button>
                     </div>
                 </div>
-            ` : `
-                <div class="memory-detail-title-lg">${escapeHtml(normalizedPost.title)}</div>
-                <div class="memory-detail-body-text">${escapeHtml(normalizedPost.text || '')}</div>
-                <div class="memory-detail-tags">
-                    ${getMemoryHashtags(normalizedPost).map(tag => `<div class="memory-tag">${escapeHtml(tag)}</div>`).join('')}
-                </div>
             `;
+
+            // ── 여권(MEMORY PASSPORT) 보기 모드: 대표사진 + 썸네일 스트립 + 약속 영수증 ──
+            const schedule = findScheduleById(normalizedPost.scheduleId);
+            const stampState = getMemoryStampState(schedule);
+            const photos = normalizedPost.photos;
+            const photoCount = photos.length;
+            const currentPhotoIndex = memoryDetailState.photoIndex;
+            const pad2 = n => String(n).padStart(2, '0');
+            const MP_MAX_THUMBS = 4;
+            const visibleThumbs = photos.slice(0, MP_MAX_THUMBS);
+            const extraThumbCount = photoCount - visibleThumbs.length;
+
+            const passportPhotoHtml = photoCount ? `
+                <div class="mp-photo-main" onclick="openMemoryGallery(${currentPhotoIndex})">
+                    <img src="${escapeHtml(photos[currentPhotoIndex] || photos[0])}" alt="${escapeHtml(normalizedPost.title)}">
+                    <span class="mp-photo-index">${pad2(currentPhotoIndex + 1)} / ${pad2(photoCount)}</span>
+                    ${photoCount > 1 ? `
+                        <button type="button" class="mp-photo-arrow mp-photo-arrow--prev" onclick="event.stopPropagation(); memoryDetailPhotoNav(-1)" aria-label="이전 사진">‹</button>
+                        <button type="button" class="mp-photo-arrow mp-photo-arrow--next" onclick="event.stopPropagation(); memoryDetailPhotoNav(1)" aria-label="다음 사진">›</button>
+                    ` : ''}
+                </div>
+                ${photoCount > 1 ? `
+                    <div class="mp-thumb-strip">
+                        ${visibleThumbs.map((url, index) => `
+                            <button type="button" class="mp-thumb ${index === currentPhotoIndex ? 'is-active' : ''}" onclick="setMemoryDetailPhotoIndex(${index})">
+                                <img src="${escapeHtml(url)}" alt="사진 ${index + 1}">
+                            </button>
+                        `).join('')}
+                        ${extraThumbCount > 0 ? `<button type="button" class="mp-thumb mp-thumb--more" onclick="openMemoryGallery(${MP_MAX_THUMBS})">+${extraThumbCount}</button>` : ''}
+                    </div>
+                ` : ''}
+            ` : `<div class="mp-photo-main mp-photo-main--empty"><span class="memory-clover-placeholder">🍀</span><span class="memory-image-text">사진이 없는 추억은<br>클로버로 보관됩니다</span></div>`;
+
+            let statusText;
+            let statusClass;
+            if (stampState === 'complete') {
+                statusText = '달성 · 인생4컷 완성';
+                statusClass = 'complete';
+            } else if (stampState === 'pending') {
+                statusText = `기록 중 · 인생4컷 ${getScheduleProofCount(schedule)}/4`;
+                statusClass = 'pending';
+            } else if (stampState === 'before') {
+                statusText = `약속 예정 · ${calculateDday(schedule.date)}`;
+                statusClass = 'before';
+            } else {
+                statusText = '자유 기록 · FREE MEMORY';
+                statusClass = 'free';
+            }
 
             const messagesHtml = normalizedPost.participants
                 .map(participant => {
@@ -241,17 +296,65 @@
                 </div>
             `;
 
-            sheet.innerHTML = `
-                <div class="memory-detail-head">
-                    <div>
-                        <div class="memory-detail-kicker" id="memory-detail-author">${escapeHtml(authorLabel)}</div>
-                        <div class="memory-detail-date" id="memory-detail-date">${escapeHtml(metaLine)}</div>
+            if (memoryDetailState.editing) {
+                sheet.classList.add('is-editing');
+                sheet.innerHTML = `
+                    <div class="memory-detail-head">
+                        <div>
+                            <div class="memory-detail-kicker" id="memory-detail-author">${escapeHtml(authorLabel)}</div>
+                            <div class="memory-detail-date" id="memory-detail-date">${escapeHtml(metaLine)}</div>
+                        </div>
+                        <button type="button" class="memory-detail-close" onclick="closeMemoryDetail()" aria-label="닫기">×</button>
                     </div>
-                    <button type="button" class="memory-detail-close" onclick="closeMemoryDetail()" aria-label="닫기">×</button>
+                    <div class="memory-detail-columns">
+                        <div class="memory-detail-photo-col">${editPhotoStripHtml}</div>
+                        <div class="memory-detail-text-col">${rightColumnHtml}</div>
+                    </div>
+                    <div class="memory-detail-messages">
+                        <div class="memory-detail-messages-title">친구 한 줄 메시지</div>
+                        ${messagesHtml || '<div class="memory-message-empty-text">아직 참여한 친구가 없습니다</div>'}
+                    </div>
+                    ${actionsHtml}
+                `;
+                return;
+            }
+
+            sheet.classList.remove('is-editing');
+            sheet.innerHTML = `
+                <div class="mp-cover">
+                    <div class="mp-cover-kicker">★ CLOV MEMORY PASSPORT ★</div>
+                    <div class="mp-cover-title" id="memory-detail-author">${escapeHtml(normalizedPost.title)}</div>
+                    <div class="mp-cover-sub">REPUBLIC OF CLOVER · 우정 여권</div>
+                    <div class="mp-cover-author">${escapeHtml(authorLabel)} · ${escapeHtml(metaLine)}</div>
+                    <button type="button" class="mp-close" onclick="closeMemoryDetail()" aria-label="닫기">×</button>
                 </div>
-                <div class="memory-detail-columns">
-                    <div class="memory-detail-photo-col">${photoHtml}</div>
-                    <div class="memory-detail-text-col">${rightColumnHtml}</div>
+                <div class="mp-main">
+                    <div class="mp-photo-col">${passportPhotoHtml}</div>
+                    <div class="mp-receipt-col">
+                        ${schedule
+                            ? `<button type="button" class="mp-receipt-btn" onclick="openScheduleJourneyModal(${schedule.id})" aria-label="${escapeHtml(schedule.title)} 약속 여정 보기">
+                                ${renderMemoryReceipt(schedule)}
+                                <span class="mp-receipt-cta">약속 여정 보기 ›</span>
+                               </button>`
+                            : renderMemoryReceipt(schedule)}
+                    </div>
+                </div>
+                <div class="mp-fields">
+                    <div class="mp-field">
+                        <div class="mp-field-k">STATUS</div>
+                        <div class="mp-status mp-status--${statusClass}"><span class="mp-status-dot"></span>${statusText}</div>
+                    </div>
+                    <div class="mp-field">
+                        <div class="mp-field-k">PHOTOS</div>
+                        <div class="mp-field-v">${photoCount}장 기록</div>
+                    </div>
+                </div>
+                <div class="mp-remarks">
+                    <div class="mp-field-k">REMARKS</div>
+                    <div class="mp-remarks-text">${escapeHtml(normalizedPost.text || '')}</div>
+                    <div class="memory-detail-tags">
+                        ${getMemoryHashtags(normalizedPost).map(tag => `<div class="memory-tag">${escapeHtml(tag)}</div>`).join('')}
+                    </div>
                 </div>
                 <div class="memory-detail-messages">
                     <div class="memory-detail-messages-title">친구 한 줄 메시지</div>
@@ -266,12 +369,80 @@
             if (!post) return;
             memoryDetailState.editing = true;
             memoryDetailState.photoDraft = normalizeMemoryPost(post).photos.slice();
+            // 약속 연결 편집: 기존 scheduleId를 프리필하고, 저장 전까지는 draft로만 다룬다
+            memoryDetailState.scheduleDraftId = post.scheduleId ?? null;
+            memoryDetailState.schedulePickerOpen = false;
+            memoryDetailState.editTitleDraft = undefined;
+            memoryDetailState.editBodyDraft = undefined;
             renderMemoryDetailModal();
         }
 
         function cancelMemoryPostEdit() {
             memoryDetailState.editing = false;
             memoryDetailState.photoDraft = null;
+            memoryDetailState.scheduleDraftId = null;
+            memoryDetailState.schedulePickerOpen = false;
+            memoryDetailState.editTitleDraft = undefined;
+            memoryDetailState.editBodyDraft = undefined;
+            renderMemoryDetailModal();
+        }
+
+        // 수정 모드에서 다른 상태 변경(사진 추가·약속 선택 등)으로 재렌더링해도
+        // 입력 중이던 제목/본문이 날아가지 않도록 현재 입력값을 draft로 보관한다
+        function captureMemoryEditDrafts() {
+            const titleInput = document.getElementById('memory-detail-edit-title');
+            const bodyInput = document.getElementById('memory-detail-edit-body');
+            if (titleInput) memoryDetailState.editTitleDraft = titleInput.value;
+            if (bodyInput) memoryDetailState.editBodyDraft = bodyInput.value;
+        }
+
+        // ── 약속 연결 편집(수정 모드) ──
+        function renderMemorySchedulePickerRows(selectedId, onSelectFnName) {
+            const schedules = (groupsData[activeGroup].schedules || [])
+                .slice()
+                .sort((a, b) => Math.abs(getDdayDiffDays(a.date)) - Math.abs(getDdayDiffDays(b.date)));
+            if (!schedules.length) {
+                return '<div class="mp-sched-empty">일정계획에 등록된 약속이 없어요</div>';
+            }
+            return schedules.map(schedule => {
+                const proofCount = getScheduleProofCount(schedule);
+                const isSelected = selectedId !== null && String(selectedId) === String(schedule.id);
+                return `
+                    <button type="button" class="mp-sched-item ${isSelected ? 'is-selected' : ''}" onclick="${onSelectFnName}('${escapeHtml(String(schedule.id))}')">
+                        <span class="mp-sched-dday">${calculateDday(schedule.date)}</span>
+                        <span class="mp-sched-info">
+                            <span class="mp-sched-title">${escapeHtml(schedule.title)}</span>
+                            <span class="mp-sched-4cut ${proofCount === 4 ? 'is-done' : ''}">인생4컷 ${proofCount}/4${proofCount === 4 ? ' ✓' : ''}</span>
+                        </span>
+                        ${isSelected ? '<span class="mp-sched-check">✓</span>' : ''}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function openMemoryEditSchedulePicker() {
+            captureMemoryEditDrafts();
+            memoryDetailState.schedulePickerOpen = true;
+            renderMemoryDetailModal();
+        }
+
+        function closeMemoryEditSchedulePicker() {
+            captureMemoryEditDrafts();
+            memoryDetailState.schedulePickerOpen = false;
+            renderMemoryDetailModal();
+        }
+
+        function selectMemoryEditSchedule(scheduleId) {
+            captureMemoryEditDrafts();
+            memoryDetailState.scheduleDraftId = scheduleId;
+            memoryDetailState.schedulePickerOpen = false;
+            renderMemoryDetailModal();
+        }
+
+        function detachMemoryEditSchedule() {
+            captureMemoryEditDrafts();
+            memoryDetailState.scheduleDraftId = null;
+            memoryDetailState.schedulePickerOpen = false;
             renderMemoryDetailModal();
         }
 
@@ -280,6 +451,7 @@
         function handleMemoryEditPhotoUpload(input) {
             const files = [...(input.files || [])];
             if (!files.length) return;
+            captureMemoryEditDrafts();
 
             if (!memoryDetailState.photoDraft) memoryDetailState.photoDraft = [];
             const remaining = MEMORY_PHOTO_LIMIT - memoryDetailState.photoDraft.length;
@@ -289,12 +461,14 @@
                 return;
             }
 
-            const toLoad = files.slice(0, remaining);
+            // 이미지 파일만, 남은 장수만큼만 압축해서 저장 (localStorage 용량 초과 방지)
+            const toLoad = files.slice(0, remaining).filter(file => file.type.startsWith('image/'));
+            if (!toLoad.length) { input.value = ''; return; }
+
             let loadedCount = 0;
             toLoad.forEach(file => {
-                const reader = new FileReader();
-                reader.onload = event => {
-                    memoryDetailState.photoDraft.push(event.target.result);
+                compressMemoryPhoto(file, dataUrl => {
+                    memoryDetailState.photoDraft.push(dataUrl);
                     loadedCount += 1;
                     if (loadedCount === toLoad.length) {
                         input.value = '';
@@ -304,13 +478,13 @@
                             message: `${toLoad.length}장의 사진이 추가됐어요.<br>저장을 눌러야 게시글에 반영됩니다.`
                         });
                     }
-                };
-                reader.readAsDataURL(file);
+                });
             });
         }
 
         function removeMemoryEditPhoto(index) {
             if (!memoryDetailState.photoDraft) return;
+            captureMemoryEditDrafts();
             memoryDetailState.photoDraft.splice(index, 1);
             renderMemoryDetailModal();
         }
@@ -319,6 +493,277 @@
             memoryDetailState.photoIndex = index;
             renderMemoryDetailModal();
         }
+
+        function memoryDetailPhotoNav(direction) {
+            const post = getCurrentMemoryPost();
+            if (!post) return;
+            const photos = normalizeMemoryPost(post).photos;
+            if (photos.length < 2) return;
+            memoryDetailState.photoIndex = (memoryDetailState.photoIndex + direction + photos.length) % photos.length;
+            renderMemoryDetailModal();
+        }
+
+        // ── 전체보기 슬라이드 갤러리 (상세 사진/썸네일/+N 클릭 시) ──
+        let memoryGalleryState = { open: false, index: 0 };
+
+        function getMemoryGalleryPhotos() {
+            const post = getCurrentMemoryPost();
+            if (!post) return [];
+            return normalizeMemoryPost(post).photos || [];
+        }
+
+        // 갤러리 오버레이는 index.html에 정적으로 배치돼 있다.
+        // (동적 createElement로 body에 append하면 이 앱의 모바일 미러링 로직이
+        //  노드를 다른 컨테이너로 옮기고 class를 제거해 position:fixed 오버레이가 깨진다.)
+        // 이벤트 위임은 최초 1회만 바인딩한다.
+        function ensureMemoryGalleryEl() {
+            const overlay = document.getElementById('memory-gallery-overlay');
+            if (!overlay || overlay._galleryBound) return overlay;
+            overlay._galleryBound = true;
+
+            overlay.addEventListener('click', event => {
+                if (event.target === overlay) closeMemoryGallery();
+            });
+
+            // 드래그 스와이프: 스테이지에서 좌우로 40px 이상 끌면 이전/다음
+            let swipe = { active: false, startX: 0 };
+            overlay.addEventListener('pointerdown', event => {
+                if (!event.target.closest('.mp-gallery-stage')) return;
+                swipe = { active: true, startX: event.clientX };
+            });
+            overlay.addEventListener('pointerup', event => {
+                if (!swipe.active) return;
+                swipe.active = false;
+                const dx = event.clientX - swipe.startX;
+                if (Math.abs(dx) > 40) memoryGalleryNav(dx < 0 ? 1 : -1);
+            });
+            overlay.addEventListener('pointercancel', () => { swipe.active = false; });
+            return overlay;
+        }
+
+        function renderMemoryGallery() {
+            const overlay = ensureMemoryGalleryEl();
+            const photos = getMemoryGalleryPhotos();
+            if (!photos.length) return;
+            memoryGalleryState.index = Math.min(Math.max(memoryGalleryState.index, 0), photos.length - 1);
+            const index = memoryGalleryState.index;
+            const pad2 = n => String(n).padStart(2, '0');
+            overlay.innerHTML = `
+                <button type="button" class="mp-gallery-close" onclick="closeMemoryGallery()" aria-label="닫기">×</button>
+                <div class="mp-gallery-counter">${pad2(index + 1)} / ${pad2(photos.length)}</div>
+                <div class="mp-gallery-stage">
+                    ${photos.length > 1 ? `<button type="button" class="mp-gallery-arrow mp-gallery-arrow--prev" onclick="memoryGalleryNav(-1)" aria-label="이전 사진">‹</button>` : ''}
+                    <img src="${escapeHtml(photos[index])}" alt="사진 ${index + 1}" draggable="false">
+                    ${photos.length > 1 ? `<button type="button" class="mp-gallery-arrow mp-gallery-arrow--next" onclick="memoryGalleryNav(1)" aria-label="다음 사진">›</button>` : ''}
+                </div>
+                ${photos.length > 1 ? `
+                    <div class="mp-gallery-thumbs">
+                        ${photos.map((url, thumbIndex) => `
+                            <button type="button" class="mp-gallery-thumb ${thumbIndex === index ? 'is-active' : ''}" onclick="memoryGalleryGoTo(${thumbIndex})">
+                                <img src="${escapeHtml(url)}" alt="사진 ${thumbIndex + 1}" draggable="false">
+                            </button>
+                        `).join('')}
+                    </div>
+                ` : ''}
+            `;
+            requestAnimationFrame(() => {
+                const activeThumb = overlay.querySelector('.mp-gallery-thumb.is-active');
+                if (activeThumb) activeThumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            });
+        }
+
+        function openMemoryGallery(index) {
+            const photos = getMemoryGalleryPhotos();
+            if (!photos.length) return;
+            memoryGalleryState = { open: true, index: Math.min(Math.max(index || 0, 0), photos.length - 1) };
+            renderMemoryGallery();
+            document.getElementById('memory-gallery-overlay').classList.add('open');
+        }
+
+        function closeMemoryGallery() {
+            const overlay = document.getElementById('memory-gallery-overlay');
+            if (overlay) overlay.classList.remove('open');
+            if (memoryGalleryState.open) {
+                // 갤러리에서 넘겨본 위치를 상세 대표사진에도 반영
+                memoryDetailState.photoIndex = memoryGalleryState.index;
+                memoryGalleryState.open = false;
+                if (!memoryDetailState.editing) renderMemoryDetailModal();
+            }
+        }
+
+        function memoryGalleryNav(direction) {
+            const photos = getMemoryGalleryPhotos();
+            if (photos.length < 2) return;
+            memoryGalleryState.index = (memoryGalleryState.index + direction + photos.length) % photos.length;
+            renderMemoryGallery();
+        }
+
+        function memoryGalleryGoTo(index) {
+            memoryGalleryState.index = index;
+            renderMemoryGallery();
+        }
+
+        // Esc로 갤러리만 닫기. 갤러리가 열려 있으면 init.js의 Escape 핸들러(closeMemoryDetail 등)로
+        // 전파되지 않게 막아, 뒤에 있는 상세 모달까지 함께 닫히는 것을 방지한다.
+        document.addEventListener('keydown', event => {
+            if (event.key !== 'Escape' || !memoryGalleryState.open) return;
+            event.stopImmediatePropagation();
+            closeMemoryGallery();
+        });
+
+        // ── 약속 여정 모달 (여권 상세의 약속 영수증 클릭 시) ──
+        // 연결된 일정(scheduleId)의 인생4컷 단계(제안→일정맞추기→약속확정→만남)를 한눈에 보여준다.
+        // 일정계획 탭의 stage 헬퍼(buildGrowthStages 등)를 그대로 재사용해 상태가 한 소스에서 동기화된다.
+        let scheduleJourneyState = { open: false, scheduleId: null };
+
+        function renderScheduleJourney(schedule) {
+            const stages = buildGrowthStages(schedule);
+            const photos = getGrowthStagePhotos(schedule);
+            const proofCount = getScheduleProofCount(schedule);
+            const isComplete = proofCount === 4;
+            const diffDays = getDdayDiffDays(schedule.date);
+            const ddayText = calculateDday(schedule.date);
+            const friendlyDate = formatFriendlyDate(schedule.date);
+            const ddayPhrase = diffDays < 0 ? '함께 보낸 그날로부터' : diffDays === 0 ? '바로 오늘, 약속의 날!' : '함께할 그날까지';
+
+            const stageHtml = stages.map(stage => {
+                const status = getGrowthStageStatus(stage, schedule);
+                const message = getGrowthStageMessage(stage, schedule, status);
+                const photo = photos[stage.key];
+                const inputId = `sj-stage-upload-${schedule.id}-${stage.key}`;
+                const badge = status === 'done'
+                    ? '<span class="sj-stage-badge is-done">완료 ✓</span>'
+                    : status === 'active'
+                        ? '<span class="sj-stage-badge is-active"><span class="sj-rec-dot"></span>REC</span>'
+                        : '<span class="sj-stage-badge is-locked">잠김</span>';
+
+                // done: 사진 확대 / active: 인증사진 업로드(기존 4컷 업로드 로직 재사용) / locked: 잠금 안내
+                let thumb;
+                if (photo) {
+                    thumb = `<button type="button" class="sj-stage-photo has-photo" style="background-image:url('${escapeHtml(photo)}')" onclick="openScheduleJourneyPhoto('${escapeHtml(stage.key)}')" aria-label="${escapeHtml(stage.name)} 사진 크게 보기"></button>`;
+                } else if (status === 'active') {
+                    thumb = `<button type="button" class="sj-stage-photo is-uploadable" onclick="requestStagePhotoUpload(${schedule.id}, '${escapeHtml(stage.key)}', '${inputId}')" aria-label="${escapeHtml(stage.name)} 인증사진 올리기">
+                                <span class="sj-stage-num">${stage.number}</span>
+                                <span class="sj-up-plus">＋</span>
+                             </button>
+                             <input id="${inputId}" type="file" accept="image/*" hidden onchange="uploadStagePhoto(${schedule.id}, '${escapeHtml(stage.key)}', this)">`;
+                } else {
+                    thumb = `<button type="button" class="sj-stage-photo is-locked" onclick="showStageLockedGuidanceModal('${escapeHtml(message)}')" aria-label="잠긴 단계">
+                                <span class="sj-stage-num">${stage.number}</span><span class="sj-lock">🔒</span>
+                             </button>`;
+                }
+
+                const actionHint = status === 'active' && !photo
+                    ? '<span class="sj-stage-upload-hint">＋ 인증사진 올리기</span>'
+                    : '';
+
+                return `
+                    <div class="sj-stage sj-stage--${status}">
+                        ${thumb}
+                        <div class="sj-stage-info">
+                            <div class="sj-stage-name">${stage.number}. ${escapeHtml(stage.name)}</div>
+                            <div class="sj-stage-date">${escapeHtml(String(stage.date || '').replace(/-/g, '.'))}</div>
+                            <div class="sj-stage-msg">${escapeHtml(message)}</div>
+                            ${actionHint}
+                        </div>
+                        ${badge}
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <div class="sj-modal">
+                    <div class="sj-head">
+                        <div class="sj-kicker">★ 약속 여정 ★</div>
+                        <div class="sj-title">${escapeHtml(schedule.title)}</div>
+                        <div class="sj-sub">${escapeHtml(friendlyDate)} · <b>${escapeHtml(ddayText)}</b> · ${escapeHtml(ddayPhrase)}</div>
+                        <button type="button" class="sj-close" onclick="closeScheduleJourneyModal()" aria-label="닫기">×</button>
+                    </div>
+                    <div class="sj-progress ${isComplete ? 'is-complete' : ''}">
+                        <span class="sj-progress-label">인생4컷 ${proofCount}/4${isComplete ? ' · 완성 🍀' : ''}</span>
+                        <span class="sj-progress-bar"><span class="sj-progress-fill" style="width:${Math.round(proofCount / 4 * 100)}%"></span></span>
+                    </div>
+                    <div class="sj-stages">${stageHtml}</div>
+                    <div class="sj-actions">
+                        <button type="button" class="btn-sub" onclick="closeScheduleJourneyModal()">닫기</button>
+                        <button type="button" class="btn-main" onclick="openScheduleFromJourney(${schedule.id})">일정계획에서 열기</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function ensureScheduleJourneyEl() {
+            const overlay = document.getElementById('schedule-journey-overlay');
+            if (!overlay || overlay._journeyBound) return overlay;
+            overlay._journeyBound = true;
+            overlay.addEventListener('click', event => {
+                if (event.target === overlay) closeScheduleJourneyModal();
+            });
+            return overlay;
+        }
+
+        function openScheduleJourneyModal(scheduleId) {
+            const schedule = findScheduleById(scheduleId);
+            if (!schedule) return;
+            const overlay = ensureScheduleJourneyEl();
+            if (!overlay) return;
+            scheduleJourneyState = { open: true, scheduleId };
+            overlay.innerHTML = renderScheduleJourney(schedule);
+            overlay.classList.add('open');
+        }
+
+        function closeScheduleJourneyModal() {
+            const overlay = document.getElementById('schedule-journey-overlay');
+            if (overlay) overlay.classList.remove('open');
+            scheduleJourneyState = { open: false, scheduleId: null };
+        }
+
+        // 4컷 인증사진 업로드 후 호출된다(uploadStagePhoto). 열려 있는 약속 여정 모달과
+        // 그 뒤의 여권 상세(영수증·완성 도장·상태)를 최신 상태로 다시 그린다.
+        function refreshScheduleJourneyAndDetail() {
+            if (scheduleJourneyState.open) {
+                const schedule = findScheduleById(scheduleJourneyState.scheduleId);
+                const overlay = document.getElementById('schedule-journey-overlay');
+                if (schedule && overlay) overlay.innerHTML = renderScheduleJourney(schedule);
+            }
+            if (memoryDetailState.postIndex !== null && !memoryDetailState.editing) {
+                renderMemoryDetailModal();
+            }
+        }
+        window.refreshScheduleJourneyAndDetail = refreshScheduleJourneyAndDetail;
+
+        // 단계 사진 크게 보기 — 재사용 중인 대표사진 뷰어(FLIP 확대)로 띄운다
+        function openScheduleJourneyPhoto(stageKey) {
+            const schedule = findScheduleById(scheduleJourneyState.scheduleId);
+            if (!schedule) return;
+            const url = getGrowthStagePhotos(schedule)[stageKey];
+            if (!url) return;
+            if (typeof openMainPhotoView === 'function') {
+                const temp = new Image();
+                temp.src = url;
+                openMainPhotoView(temp);
+            }
+        }
+
+        // "일정계획에서 열기" — 일정 탭으로 이동해 해당 약속을 선택 (데스크톱/모바일 모두 반영)
+        function openScheduleFromJourney(scheduleId) {
+            closeScheduleJourneyModal();
+            closeMemoryDetail();
+            if (typeof switchDesktopTab === 'function') switchDesktopTab('schedule');
+            if (typeof switchTab === 'function') switchTab('schedule');
+            if (typeof selectScheduleChip === 'function') {
+                selectScheduleChip('dt', scheduleId);
+                selectScheduleChip('mb', scheduleId);
+            }
+        }
+
+        // Esc로 약속 여정 모달만 닫기 (열림 상태에서만). 갤러리와 동일하게 전파를 막아
+        // 뒤의 상세 모달까지 닫히지 않게 한다.
+        document.addEventListener('keydown', event => {
+            if (event.key !== 'Escape' || !scheduleJourneyState.open) return;
+            event.stopImmediatePropagation();
+            closeScheduleJourneyModal();
+        });
 
         function updateMemoryPost() {
             const post = getCurrentMemoryPost();
@@ -337,9 +782,14 @@
             post.text = newBody;
             post.photos = (memoryDetailState.photoDraft || []).slice();
             post.bg = post.photos[0] || '';
+            post.scheduleId = memoryDetailState.scheduleDraftId ?? null;
             memoryDetailState.editing = false;
             memoryDetailState.photoDraft = null;
             memoryDetailState.photoIndex = 0;
+            memoryDetailState.scheduleDraftId = null;
+            memoryDetailState.schedulePickerOpen = false;
+            memoryDetailState.editTitleDraft = undefined;
+            memoryDetailState.editBodyDraft = undefined;
             saveGroupsData();
             renderMemoryDetailModal();
             renderFeeds();
@@ -582,7 +1032,7 @@
                         ${diaryMarkup}
                         <div class="cline-wire-area">
                             <div class="cline-wire"></div>
-                            <div class="cline-cards">
+                            <div class="cline-cards ${cardTheme === 'coverflow' && evidenceSlideDirection !== 'idle' ? 'slide-' + evidenceSlideDirection : ''}">
                                 ${viewType === 'desktop' && (cardTheme === 'coverflow' || cardTheme === 'diary') ? makeSlot(+3, 'far-far-past') : ''}
                                 ${viewType === 'desktop' ? makeSlot(+2, 'far-past') : ''}
                                 ${makeSlot(+1, 'past')}
@@ -656,6 +1106,42 @@
                     }
                 }
             }, { passive: false });
+
+            // 겹침 카드(coverflow) 테마 3D 마우스 틸트 (동수 lami2342 이식)
+            // 마우스 위치에 따라 카드가 커서 방향으로 기운다(최대 ±18°/±15°). coverflow 테마에만 적용.
+            // 회전으로 변형되는 카드 대신 고정된 부모 슬롯을 기준점으로 삼아 떨림(jitter)을 방지한다.
+            const reset3DCard = (card) => {
+                card.style.setProperty('--rotateX', '0deg');
+                card.style.setProperty('--rotateY', '0deg');
+                card.classList.remove('is-3d-hovering');
+                const slot = card.closest('.cline-card-slot');
+                if (slot) slot.classList.remove('is-3d-hovering');
+            };
+            window.addEventListener('pointermove', (e) => {
+                const viewer = e.target.closest('.memory-evidence-viewer.theme-coverflow');
+                const card = viewer ? e.target.closest('.cline-polaroid') : null;
+                if (window._hovered3DCard && window._hovered3DCard !== card) {
+                    reset3DCard(window._hovered3DCard);
+                    window._hovered3DCard = null;
+                }
+                if (!card) return;
+                window._hovered3DCard = card;
+                const refEl = card.closest('.cline-card-slot') || card.parentElement || card;
+                const rect = refEl.getBoundingClientRect();
+                const normX = Math.max(-1, Math.min(1, (e.clientX - (rect.left + rect.width / 2)) / (rect.width / 2)));
+                const normY = Math.max(-1, Math.min(1, (e.clientY - (rect.top + rect.height / 2)) / (rect.height / 2)));
+                card.style.setProperty('--rotateY', (normX * 18).toFixed(2) + 'deg');
+                card.style.setProperty('--rotateX', (-normY * 15).toFixed(2) + 'deg');
+                card.classList.add('is-3d-hovering');
+                const slot = card.closest('.cline-card-slot');
+                if (slot) slot.classList.add('is-3d-hovering');
+            });
+            window.addEventListener('pointerout', (e) => {
+                if (window._hovered3DCard && !(e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest('.cline-polaroid, .cline-card-slot'))) {
+                    reset3DCard(window._hovered3DCard);
+                    window._hovered3DCard = null;
+                }
+            });
         }
 
         function renderEvidenceViewers() {

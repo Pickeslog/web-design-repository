@@ -102,6 +102,7 @@ document.getElementById = function(id) {
                         subtitle: "성수동 카페",
                         text: "문제 풀고 커피 마시며 집중한 날.",
                         bg: "https://picsum.photos/seed/cafe1/400/300",
+                        scheduleId: 61501,
                         authorId: "sol",
                         participants: [
                             { name: "나", icon: "나", text: "문제 하나 풀어서 뿌듯" },
@@ -441,6 +442,26 @@ document.getElementById = function(id) {
 
         const lifeFourCutScheduleExamples = [
             {
+                // 약속 연결 데모: 추억피드 "성수 스터디 카페" 게시글(scheduleId: 61501)이 참조하는
+                // 완료된 약속 — 인생4컷 4/4 완성 → 상세 영수증에 '추억 완성' 도장이 찍힌다.
+                id: 61501,
+                title: "성수 스터디 카페",
+                date: "2026-06-15",
+                content: `<h3>📚 성수 스터디 카페</h3>
+<ul>
+  <li><strong>제안하기:</strong> 시험 전 집중 스터디 제안</li>
+  <li><strong>일정 맞추기:</strong> 오후 1시 성수역 3번 출구</li>
+  <li><strong>약속 확정:</strong> 카페 자리 예약 캡처 공유</li>
+  <li><strong>만남:</strong> 문제 풀고 커피 마시며 집중</li>
+</ul>`,
+                stagePhotos: {
+                    proposal: "https://picsum.photos/seed/study-p1/480/360",
+                    coordinate: "https://picsum.photos/seed/study-p2/480/360",
+                    confirm: "https://picsum.photos/seed/study-p3/480/360",
+                    meet: "https://picsum.photos/seed/study-p4/480/360"
+                }
+            },
+            {
                 id: 70101,
                 title: "홍대 전시회 나들이",
                 date: "2026-07-05",
@@ -523,4 +544,23 @@ document.getElementById = function(id) {
         }
 
         ensureLifeFourCutScheduleExamples();
+
+        // 약속 연결 데모 1회 이관: 저장된(localStorage) 데이터의 "성수 스터디 카페" 게시글에
+        // scheduleId가 아직 없으면 데모 일정(61501)을 연결해준다. (이미 null로 해제한 경우는 건드리지 않음)
+        function ensureMemoryScheduleLinkExamples() {
+            const friendGroup = groupsData.friend;
+            if (!friendGroup || !Array.isArray(friendGroup.posts)) return;
+            let changed = false;
+            friendGroup.posts.forEach(post => {
+                if (post.title === "성수 스터디 카페" && typeof post.scheduleId === 'undefined') {
+                    post.scheduleId = 61501;
+                    changed = true;
+                }
+            });
+            if (changed) {
+                localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
+            }
+        }
+
+        ensureMemoryScheduleLinkExamples();
 

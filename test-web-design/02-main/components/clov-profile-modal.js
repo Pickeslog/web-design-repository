@@ -73,21 +73,18 @@
                     <div class="settings-pane" id="dt-settings-pane-account">
                         <div class="profile-form-section">
                             <div class="profile-section-title">기본 정보</div>
-                            <div class="modal-form-group field-wrap">
-                                <label class="field-label">프로필 사진</label>
-                                <div class="profile-avatar-upload">
-                                    <button class="profile-avatar-upload-circle" id="dt-profile-avatar-circle-2" type="button" onclick="triggerProfileAvatarUpload()" aria-label="프로필 사진 변경">
-                                        <span id="dt-profile-avatar-initial-2">김</span>
-                                        <img id="dt-profile-avatar-img-2" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" alt="프로필 사진">
-                                    </button>
-                                    <span class="profile-avatar-upload-hint">클릭하여 사진을 변경하세요</span>
-                                    <input type="file" id="dt-profile-avatar-file" accept="image/*" onchange="handleProfileAvatarUpload(event)">
+                            <div class="basic-info-row">
+                                <button class="profile-avatar-upload-circle" id="dt-profile-avatar-circle-2" type="button" onclick="triggerProfileAvatarUpload()" aria-label="프로필 사진 변경">
+                                    <span id="dt-profile-avatar-initial-2">김</span>
+                                    <img id="dt-profile-avatar-img-2" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" alt="프로필 사진">
+                                </button>
+                                <div class="modal-form-group field-wrap basic-info-name">
+                                    <label class="field-label" for="dt-profile-name">이름 / 닉네임</label>
+                                    <input class="text-input" type="text" id="dt-profile-name" placeholder="예: 김예린" maxlength="16" oninput="updateProfilePreview()">
                                 </div>
+                                <input type="file" id="dt-profile-avatar-file" accept="image/*" onchange="handleProfileAvatarUpload(event)">
                             </div>
-                            <div class="modal-form-group field-wrap">
-                                <label class="field-label" for="dt-profile-name">이름 / 닉네임</label>
-                                <input class="text-input" type="text" id="dt-profile-name" placeholder="예: 김예린" maxlength="16" oninput="updateProfilePreview()">
-                            </div>
+                            <div class="basic-info-hint">프로필 사진을 클릭하면 변경할 수 있어요</div>
                         </div>
 
                         <div class="profile-form-section">
@@ -222,7 +219,7 @@
 
             <div class="profile-modal-actions" id="dt-profile-modal-actions">
                 <div class="profile-modal-actions-row" id="dt-profile-actions-account">
-                    <button class="btn-sub profile-footer-btn secondary" type="button" onclick="confirmDeleteProfileAccount()">계정 탈퇴</button>
+                    <button class="btn-sub profile-footer-btn secondary danger" type="button" onclick="confirmDeleteProfileAccount()">계정 탈퇴</button>
                     <div class="profile-modal-action-group">
                         <button class="btn-sub profile-footer-btn secondary" type="button" onclick="closeModal('dt-profile-modal')">취소</button>
                         <button class="btn-main profile-footer-btn primary" type="button" onclick="saveProfileModal()">저장하기</button>
@@ -256,7 +253,10 @@
       '.profile-pw-toggle{display:inline-flex;align-items:center;justify-content:center;}' +
       '.profile-pw-toggle .pwt-icon-eye-off{display:none;}' +
       '.profile-pw-toggle.is-visible .pwt-icon-eye{display:none;}' +
-      '.profile-pw-toggle.is-visible .pwt-icon-eye-off{display:inline-flex;}';
+      '.profile-pw-toggle.is-visible .pwt-icon-eye-off{display:inline-flex;}' +
+      // 계정 탈퇴 버튼: 파괴적 액션이라 빨강 톤으로 강조 (기본=빨강 글자·테두리, hover=빨강 채움)
+      '.profile-footer-btn.danger{color:#dc2626;border-color:rgba(220,38,38,.5);transition:background-color .15s ease,color .15s ease,border-color .15s ease;}' +
+      '.profile-footer-btn.danger:hover{background:#dc2626;border-color:#dc2626;color:#fff;}';
     document.head.appendChild(s);
   }
 
@@ -591,7 +591,7 @@
 
   /* ── 참여자별 추억 증거 카드 테마 (빨랫줄 / 겹침 카드) — 해당 UI가 없는 페이지에선 설정값만 저장 ── */
   function getEvidenceCardTheme() {
-    return localStorage.getItem('clov_evidenceCardTheme') || 'wire';
+    return localStorage.getItem('clov_evidenceCardTheme') || 'coverflow';
   }
 
   function updateEvidenceCardThemeUI() {
@@ -714,7 +714,19 @@
       closeModal('dt-profile-modal');
       if (typeof renderFeeds === 'function') renderFeeds();
       clovToast('계정을 탈퇴했어요 · 남긴 기록은 \'언노운\'으로 보존돼요', 'info');
-    }, { icon: (window.CLOV_ICONS && CLOV_ICONS.logout) || '🚪', type: 'error', confirmText: '탈퇴', cancelText: '취소' });
+
+      // 기록 보존/익명화는 위에서 이미 영속화됨 → 마지막에 로그아웃 + 로그인 페이지로 이동
+      // (탈퇴가 실제로 "나가는" 흐름이 되도록. 데이터 삭제는 하지 않는다.)
+      if (window.ClovAuth && typeof ClovAuth.clearAccessToken === 'function') {
+        ClovAuth.clearAccessToken();
+      } else {
+        localStorage.removeItem('accessToken');
+        sessionStorage.removeItem('accessToken');
+      }
+      setTimeout(function () {
+        window.location.href = '../01-auth/login.html';
+      }, 1400);
+    }, { icon: (window.CLOV_ICONS && CLOV_ICONS.logout) || '🚪', type: 'error', confirmText: '탈퇴하기', cancelText: '취소' });
   }
 
   function triggerProfileAvatarUpload() {

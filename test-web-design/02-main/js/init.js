@@ -37,6 +37,24 @@
             updateFriendshipUI();
             updateGroupModalUI();
             animateDdayCount(groupsData[activeGroup].ddayCount);
+
+            // 압축 도입 이전에 저장된 대용량 원본 사진을 1회 재압축해 localStorage 공간을 회수한다.
+            // (이미 한도가 꽉 차 새 사진조차 못 올라가는 "저장 공간이 부족해요" 상태를 데이터 손실 없이 해소)
+            if (typeof compactStoredPhotos === 'function' && localStorage.getItem('clov_photo_compacted_v1') !== '1') {
+                compactStoredPhotos().then(result => {
+                    localStorage.setItem('clov_photo_compacted_v1', '1');
+                    if (result && result.changed && result.saved) {
+                        const freedKB = Math.max(0, Math.round((result.before - result.after) / 1024));
+                        if (freedKB > 0) {
+                            renderFeeds();
+                            updateFriendshipUI();
+                            if (typeof clovToast === 'function') {
+                                clovToast(`🧹 저장 공간을 정리했어요 (약 ${freedKB}KB 확보). 이제 사진을 더 올릴 수 있어요.`, 'success', 3600);
+                            }
+                        }
+                    }
+                });
+            }
         }
 
         function forceTheme(type, value) {

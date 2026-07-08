@@ -11,191 +11,193 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --p1: #0d4a28; --p2: #1a7a45; --p3: #26a85e; --p4: #4dc984; --p5: #a8f0c6;
-      --bg: #f0f9f3; --text: #0d2e1a; --muted: #5a8a6a;
-      --border: rgba(26,122,69,0.18); --glow: rgba(38,168,94,0.25);
+      --forest:#073b24;
+      --leaf:#16874b;
+      --mint:#50d990;
+      --cream:#f7fbf6;
+      --paper:#ffffff;
+      --text:#0e2d1d;
+      --muted:#638772;
+      --line:rgba(22,135,75,.18);
+      --glow:rgba(80,217,144,.22);
+      --warn:#b45309;
     }
     body {
-      font-family: 'Outfit', sans-serif;
-      background: var(--bg);
-      min-height: 100vh;
-      display: flex; align-items: center; justify-content: center;
-      overflow-x: hidden; position: relative;
+      font-family:'Outfit',sans-serif;
+      min-height:100vh;
+      display:flex;align-items:center;justify-content:center;
+      padding:32px;
+      overflow-x:hidden;
+      color:var(--text);
+      background:
+        radial-gradient(circle at 12% 12%, rgba(217,201,143,.28), transparent 28%),
+        radial-gradient(circle at 84% 82%, rgba(232,220,174,.2), transparent 32%),
+        linear-gradient(135deg,#fffdf3 0%,#fffaf0 48%,#fdf6e3 100%);
     }
-    .bg-canvas { position: fixed; inset: 0; z-index: 0; background: linear-gradient(135deg,#fffdf3,#fffaf0 40%,#fdf6e3 70%,#faf0d7); overflow: hidden; }
-    .orb { position: absolute; border-radius: 50%; filter: blur(80px); opacity: .55; animation: drift 12s ease-in-out infinite alternate; }
-    .orb-1 { width:520px;height:520px;background:radial-gradient(circle,#e8dcae,transparent);top:-140px;left:-100px;animation-delay:0s; }
-    .orb-2 { width:380px;height:380px;background:radial-gradient(circle,#d9c98f,transparent);bottom:-80px;right:-80px;animation-delay:-4s; }
-    .orb-3 { width:260px;height:260px;background:radial-gradient(circle,#f2e7c3,transparent);top:50%;left:55%;animation-delay:-8s; }
-    @keyframes drift { from{transform:translate(0,0) scale(1)} to{transform:translate(30px,-40px) scale(1.08)} }
-    .card-wrap { position:relative;z-index:10;width:100%;max-width:560px;padding:18px; }
+    .card-wrap { position:relative;width:100%;max-width:440px; }
     .card {
-      position:relative;
-      background:rgba(255,255,255,.72);
-      backdrop-filter:blur(24px) saturate(160%);
-      -webkit-backdrop-filter:blur(24px) saturate(160%);
-      border:1.5px solid rgba(77,201,132,.3);
-      border-radius:28px; padding:36px 44px 34px;
-      box-shadow:0 4px 24px rgba(13,74,40,.08),0 1px 0 rgba(255,255,255,.9) inset,0 32px 80px rgba(38,168,94,.12);
-      animation:slideUp .7s cubic-bezier(.22,1,.36,1) both;
+      background:var(--paper);
+      border:1px solid var(--line);
+      border-radius:28px;
+      padding:40px 36px 32px;
+      box-shadow:0 28px 70px rgba(7,59,36,.14),0 1px 0 rgba(255,255,255,.9) inset;
+      animation:rise .6s cubic-bezier(.22,1,.36,1) both;
     }
-    .card::before,.card::after { content:'';position:absolute;top:0;width:50%;height:100%;border:1.5px solid rgba(77,201,132,.24);background:rgba(255,255,255,.86);box-shadow:0 16px 42px rgba(13,74,40,.13);backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%);opacity:0;pointer-events:none;z-index:20; }
-    .card::before { left:0;border-radius:28px 0 0 28px;clip-path:polygon(0 0,100% 0,88% 18%,100% 34%,85% 52%,100% 70%,90% 100%,0 100%); }
-    .card::after { right:0;border-radius:0 28px 28px 0;clip-path:polygon(12% 0,100% 0,100% 100%,10% 100%,0 70%,15% 52%,0 34%,12% 18%); }
-    .card.cracking { background:transparent;border-color:transparent;box-shadow:none;overflow:visible; }
-    .card.cracking > *:not(.crack-text) { opacity:0;transition:opacity .12s ease; }
-    .card.cracking::before { opacity:1;animation:crackLeft 4s ease both; }
-    .card.cracking::after { opacity:1;animation:crackRight 4s ease both; }
-    @keyframes slideUp { from{opacity:0;transform:translateY(36px) scale(.97)} to{opacity:1;transform:translateY(0) scale(1)} }
-    .logo-area { text-align:center;margin-bottom:22px; }
+    @keyframes rise { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+    .logo-area { text-align:center;margin-bottom:26px; }
     .logo-icon {
       display:inline-flex;align-items:center;justify-content:center;
-      width:58px;height:58px;background:linear-gradient(135deg,#1a7a45,#4dc984);
-      border-radius:18px;font-size:1.75rem;margin-bottom:10px;
-      box-shadow:0 8px 24px rgba(26,122,69,.35),0 0 0 6px rgba(77,201,132,.12);
-      animation:pulse-logo 3s ease-in-out infinite;
-      cursor:pointer;position:relative;user-select:none;
+      width:48px;height:48px;
+      background:linear-gradient(135deg,#1a8e52,#5de49a);
+      border-radius:16px;box-shadow:0 10px 26px rgba(0,0,0,.18);
+      margin-bottom:12px;cursor:pointer;position:relative;user-select:none;
     }
-    .logo-pop { position:absolute;left:50%;top:-8px;transform:translate(-50%,-100%);padding:8px 13px;border:1px solid rgba(77,201,132,.28);border-radius:999px;background:linear-gradient(135deg,rgba(255,255,255,.96),rgba(232,250,240,.94));color:var(--p1);box-shadow:0 10px 24px rgba(13,74,40,.12),0 0 0 4px rgba(168,240,198,.16);font-size:.74rem;font-weight:900;white-space:nowrap;opacity:0;animation:popMsg 2.4s ease both;pointer-events:none; }
-    .crack-text { position:absolute;left:50%;top:46%;z-index:25;transform:translate(-50%,-50%);color:#606a64;text-align:center;font-size:1rem;font-weight:900;line-height:1.5;letter-spacing:0;opacity:0;animation:crackText 4s ease both;white-space:nowrap;text-shadow:0 1px 0 rgba(255,255,255,.85);pointer-events:none; }
-    @keyframes pulse-logo {
-      0%,100%{box-shadow:0 8px 24px rgba(26,122,69,.35),0 0 0 6px rgba(77,201,132,.12)}
-      50%    {box-shadow:0 8px 32px rgba(26,122,69,.5), 0 0 0 10px rgba(77,201,132,.08)}
-    }
+    .logo-pop { position:absolute;left:50%;top:-8px;transform:translate(-50%,-100%);padding:8px 13px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--forest);box-shadow:0 8px 20px rgba(7,59,36,.12);font-size:.74rem;font-weight:700;white-space:nowrap;opacity:0;animation:popMsg 2.4s ease both;pointer-events:none; }
     @keyframes popMsg { 0%{opacity:0;transform:translate(-50%,-86%) scale(.94)} 12%,82%{opacity:1;transform:translate(-50%,-100%) scale(1)} 100%{opacity:0;transform:translate(-50%,-112%) scale(.98)} }
-    @keyframes crackLeft { 0%,78%{transform:translate(0,0) rotate(0);opacity:1} 30%,52%{transform:translate(-18px,34px) rotate(-3deg);opacity:1} 100%{transform:translate(0,0) rotate(0);opacity:0} }
-    @keyframes crackRight { 0%,78%{transform:translate(0,0) rotate(0);opacity:1} 30%,52%{transform:translate(18px,34px) rotate(3deg);opacity:1} 100%{transform:translate(0,0) rotate(0);opacity:0} }
-    @keyframes crackText { 0%,14%{opacity:0;transform:translate(-50%,-44%)} 22%,42%{opacity:1;transform:translate(-50%,-50%)} 50%{opacity:0;transform:translate(-50%,-54%)} 60%,88%{opacity:1;transform:translate(-50%,-50%)} 100%{opacity:0;transform:translate(-50%,-58%)} }
-    .logo-text { font-size:1.85rem;font-weight:900;color:var(--p1);letter-spacing:-.03em; }
-    .logo-sub  { font-size:.82rem;color:var(--muted);margin-top:4px;font-weight:500; }
-    .step-bar  { display:flex;align-items:center;gap:6px;margin-bottom:24px; }
-    .step-dot  { height:4px;border-radius:99px;transition:all .4s ease;flex:1;background:var(--border); }
-    .step-dot.active { background:linear-gradient(90deg,var(--p2),var(--p3)); }
-    .step-dot.done   { background:var(--p4); }
-    .form-title { font-size:1.45rem;font-weight:800;color:var(--text);margin-bottom:6px;letter-spacing:-.02em; }
-    .form-desc  { font-size:.85rem;color:var(--muted);margin-bottom:20px;font-weight:400;line-height:1.5; }
-    .input-grid { display:grid;grid-template-columns:1fr;gap:10px;align-items:start; }
-    .input-grid .input-group { margin-bottom:0; }
-    .input-grid .input-group.full { grid-column:auto; }
-    .input-group { margin-bottom:14px;position:relative; }
-    .input-group.has-hint { margin-bottom:10px; }
-    .input-label { display:block;font-size:.78rem;font-weight:700;color:var(--p1);margin-bottom:8px;letter-spacing:.03em;text-transform:uppercase; }
-    .input-wrap  { position:relative;display:flex;align-items:center; }
-    .input-icon  { position:absolute;left:16px;font-size:1.1rem;pointer-events:none;z-index:2;transition:transform .2s; }
-    input[type=text],input[type=email],input[type=password],input[type=tel] {
-      width:100%;padding:13px 44px 13px 46px;border:1.5px solid var(--border);
-      border-radius:14px;font-size:.95rem;font-family:'Outfit',sans-serif;font-weight:500;
-      color:var(--text);background:rgba(255,255,255,.7);outline:none;transition:all .25s ease;
+    .logo-text { font-size:1.4rem;font-weight:900;color:var(--forest);letter-spacing:-.02em; }
+    .logo-sub  { font-size:.8rem;color:var(--muted);margin-top:4px;font-weight:500; }
+    .step-bar  { display:flex;align-items:center;gap:6px;margin-bottom:28px; }
+    .step-dot  { position:relative;height:3px;border-radius:99px;flex:1;background:var(--line);overflow:hidden; }
+    .step-dot::after {
+      content:'';position:absolute;inset:0;border-radius:inherit;
+      background:var(--leaf);transform:scaleX(0);transform-origin:left;
+      transition:transform .55s cubic-bezier(.22,.7,.32,1),background-color .3s ease;
     }
-    input:focus { border-color:var(--p3);background:#fff;box-shadow:0 0 0 4px var(--glow); }
-    .input-wrap:focus-within .input-icon { transform:scale(1.15); }
-    .input-suffix { position:absolute;right:10px;width:32px;height:32px;border:0;border-radius:50%;display:grid;place-items:center;background:rgba(168,240,198,.18);color:var(--muted);cursor:pointer;transition:all .2s;user-select:none; }
-    .input-suffix:hover,.input-suffix:focus-visible { color:var(--p2);background:rgba(168,240,198,.34);outline:none; }
+    .step-dot.active::after,.step-dot.done::after { transform:scaleX(1); }
+    .step-dot.done::after { background:var(--mint); }
+    .form-title { font-size:1.3rem;font-weight:800;color:var(--text);margin-bottom:6px;letter-spacing:-.01em; }
+    .form-desc  { font-size:.85rem;color:var(--muted);margin-bottom:20px;font-weight:500;line-height:1.5; }
+    .input-grid { display:grid;grid-template-columns:1fr;gap:14px; }
+    .input-group { position:relative; }
+    .input-label { display:block;font-size:.78rem;font-weight:800;color:var(--forest);margin-bottom:8px;letter-spacing:.02em; }
+    .input-label-row { display:flex;align-items:center;gap:8px;min-height:24px;margin-bottom:8px; }
+    .input-label-row .input-label { margin-bottom:0; }
+    .input-wrap  { position:relative;display:flex;align-items:center; }
+    .input-icon  { position:absolute;left:15px;font-size:1.05rem;pointer-events:none;z-index:2;transition:transform .2s; }
+    input[type=text],input[type=email],input[type=password] {
+      width:100%;height:54px;padding:0 48px 0 46px;border:1.5px solid var(--line);
+      border-radius:18px;font-size:.96rem;font-family:'Outfit',sans-serif;font-weight:600;
+      color:var(--text);background:var(--cream);
+      outline:none;transition:border-color .22s,box-shadow .22s,background-color .22s,transform .22s;
+    }
+    input:focus { border-color:var(--mint);background:#fff;box-shadow:0 0 0 5px var(--glow); }
+    .input-wrap:focus-within .input-icon { transform:scale(1.12); }
+    .input-suffix { position:absolute;right:10px;width:34px;height:34px;border:0;border-radius:50%;display:grid;place-items:center;background:rgba(80,217,144,.14);color:var(--muted);cursor:pointer;transition:background-color .2s,color .2s,transform .2s;user-select:none; }
+    .input-suffix:hover,.input-suffix:focus-visible { color:var(--leaf);background:rgba(80,217,144,.26);outline:none;transform:scale(1.04); }
     .input-suffix svg { width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round; }
     .input-suffix .eye-off-icon { display:none; }
     .input-suffix.is-visible .eye-icon { display:none; }
     .input-suffix.is-visible .eye-off-icon { display:block; }
-    .input-hint { width:fit-content;max-width:100%;height:0;margin-top:0;padding:0 10px;border:1px solid rgba(77,201,132,.24);border-radius:999px;background:rgba(255,255,255,.76);color:var(--p2);font-size:.74rem;font-weight:800;line-height:24px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;opacity:0;transform:translateY(-4px);box-shadow:0 6px 18px rgba(13,74,40,.06);transition:height .18s ease,margin-top .18s ease,opacity .18s ease,transform .18s ease,color .2s,background-color .2s,border-color .2s;pointer-events:none; }
-    .input-group:focus-within .input-hint.show { height:26px;margin-top:10px;opacity:1;transform:translateY(0); }
-    .input-hint.warning { color:#b45309;background:rgba(255,251,235,.9);border-color:rgba(217,119,6,.24);opacity:1; }
-    .input-hint.is-error { height:26px;margin-top:10px;color:#b42318;background:rgba(255,241,242,.92);border-color:rgba(244,63,94,.22);opacity:1;transform:translateY(0);box-shadow:0 8px 20px rgba(180,35,24,.08); }
+    /* 비밀번호가 화면에 보이는 상태일 때만 뜨는 보안 경고 문구(로그인 페이지와 동일한 방식) */
+    .input-status { padding:0 2px;color:var(--warn);opacity:0;visibility:hidden;transform:translateX(-6px);font-size:.73rem;font-weight:900;line-height:22px;white-space:nowrap;pointer-events:none;transition:opacity .18s,transform .18s,visibility .18s; }
+    .input-status.show { opacity:1;visibility:visible;transform:translateX(0); }
     .pw-strength { display:flex;gap:5px;margin-top:8px;height:3px; }
-    .pw-seg { flex:1;border-radius:99px;background:var(--border);transition:background .35s ease; }
+    .pw-seg { flex:1;border-radius:99px;background:var(--line);transition:background .3s ease; }
     .pw-seg.on-weak   { background:#f87171; }
     .pw-seg.on-mid    { background:#fbbf24; }
-    .pw-seg.on-strong { background:var(--p3); }
-    .terms-box { background:linear-gradient(135deg,rgba(168,240,198,.25),rgba(212,252,232,.15));border:1px solid rgba(77,201,132,.25);border-radius:14px;padding:16px;margin:20px 0 24px; }
-    .terms-row  { display:flex;align-items:center;gap:10px;cursor:pointer;padding:3px 0; }
+    .pw-seg.on-strong { background:var(--leaf); }
+    .pw-rules { display:flex;flex-wrap:wrap;gap:12px;margin-top:8px; }
+    .pw-rule { position:relative;padding-left:13px;color:var(--muted);font-size:.72rem;font-weight:700;transition:color .2s; }
+    .pw-rule::before { content:'';position:absolute;left:0;top:50%;width:6px;height:6px;margin-top:-3px;border-radius:50%;background:var(--line);transition:background-color .2s; }
+    .pw-rule.met { color:var(--leaf); }
+    .pw-rule.met::before { background:var(--leaf); }
+    .terms-box { background:var(--cream);border:1px solid var(--line);border-radius:14px;padding:16px;margin:20px 0 24px; }
+    .terms-row  { display:flex;align-items:center;gap:10px;cursor:pointer;padding:3px 0;border-radius:8px; }
+    .terms-row:focus-visible { outline:none;box-shadow:0 0 0 3px var(--glow); }
     .terms-row + .terms-row { margin-top:8px; }
-    .terms-check { width:20px;height:20px;border:2px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.75rem;flex-shrink:0;transition:all .2s ease;background:#fff; }
-    .terms-check.checked { background:linear-gradient(135deg,var(--p2),var(--p3));border-color:transparent;color:#fff; }
-    .terms-label { font-size:.83rem;color:var(--muted);font-weight:500;flex:1; }
-    .terms-label strong { color:var(--p2); }
-    .terms-link  { font-size:.75rem;color:var(--p3);font-weight:600;text-decoration:underline;cursor:pointer; }
-    .terms-divider { height:1px;background:rgba(77,201,132,.2);margin:10px 0; }
-    .terms-all .terms-label { font-weight:700;color:var(--text); }
-    .profile-setup { text-align:center;padding:6px 0 2px; }
-    .profile-title { font-size:1.38rem;font-weight:900;color:var(--text);letter-spacing:-.02em;margin-bottom:6px; }
-    .profile-desc { color:var(--muted);font-size:.85rem;line-height:1.5;margin-bottom:22px; }
-    .profile-picker { position:relative;width:118px;height:118px;margin:0 auto 22px; }
-    .profile-preview { width:100%;height:100%;display:grid;place-items:center;border-radius:50%;background:linear-gradient(135deg,rgba(26,122,69,.92),rgba(77,201,132,.92));box-shadow:0 18px 42px rgba(26,122,69,.28),0 0 0 8px rgba(168,240,198,.28);overflow:hidden;color:#fff;font-size:2.5rem;font-weight:900; }
-    .profile-preview img { width:100%;height:100%;object-fit:cover;display:block; }
-    .profile-upload { position:absolute;right:-4px;bottom:4px;width:38px;height:38px;display:grid;place-items:center;border:3px solid #fff;border-radius:50%;background:var(--p2);color:#fff;font-size:1rem;box-shadow:0 8px 18px rgba(13,74,40,.18);cursor:pointer;transition:transform .2s,background-color .2s; }
-    .profile-upload:hover { transform:scale(1.06);background:var(--p1); }
-    .profile-upload input { display:none; }
-    .nickname-card { position:relative;min-height:170px;perspective:900px;text-align:left; }
-    .profile-flip-inner { position:relative;width:100%;min-height:170px;transition:transform .72s cubic-bezier(.22,1,.36,1);transform-style:preserve-3d; }
-    .nickname-card.flipped .profile-flip-inner { transform:rotateY(180deg); }
-    .profile-face { position:absolute;inset:0;padding:16px;border:1px solid rgba(77,201,132,.22);border-radius:18px;background:linear-gradient(135deg,rgba(255,255,255,.84),rgba(232,250,240,.62));box-shadow:0 12px 28px rgba(13,74,40,.06);backface-visibility:hidden; }
-    .profile-face.back { transform:rotateY(180deg); }
-    .birth-open-btn { position:absolute;right:12px;top:12px;width:34px;height:34px;border:0;border-radius:50%;display:grid;place-items:center;background:rgba(26,122,69,.1);color:var(--p1);font-size:1rem;cursor:pointer;box-shadow:0 6px 14px rgba(13,74,40,.08);transition:transform .2s,background-color .2s; }
-    .birth-open-btn:hover,.birth-back-btn:hover { transform:translateY(-1px) scale(1.05);background:rgba(77,201,132,.22); }
-    .birth-back-btn { position:absolute;left:12px;top:12px;width:34px;height:34px;border:0;border-radius:50%;display:grid;place-items:center;background:rgba(26,122,69,.1);color:var(--p1);font-size:1rem;font-weight:900;cursor:pointer;box-shadow:0 6px 14px rgba(13,74,40,.08);transition:transform .2s,background-color .2s; }
-    .birth-card-title { color:var(--text);font-size:1rem;font-weight:900;margin:4px 0 4px 36px; }
-    .birth-card-desc { color:var(--muted);font-size:.78rem;font-weight:600;line-height:1.45;margin:0 0 14px 36px; }
-    .birth-modal { position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(13,46,26,.28);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px); }
-    .birth-modal.open { display:flex;animation:fadeIn .18s ease both; }
-    .birth-modal-box { width:min(360px,100%);padding:18px;border:1px solid rgba(77,201,132,.28);border-radius:20px;background:rgba(255,255,255,.96);box-shadow:0 28px 70px rgba(13,74,40,.24);animation:modalUp .24s cubic-bezier(.22,1,.36,1) both; }
-    .birth-modal-head { display:flex;align-items:center;justify-content:flex-end;margin-bottom:10px; }
-    .birth-modal-close { width:32px;height:32px;border:0;border-radius:50%;background:rgba(26,122,69,.08);color:var(--p1);font-size:1.1rem;font-weight:900;cursor:pointer; }
-    .birth-wheel { display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px; }
-    .birth-wheel select { width:100%;height:44px;border:0;border-radius:8px;background:#fff;color:var(--text);font-family:'Outfit',sans-serif;font-size:.95rem;font-weight:900;text-align:center;text-align-last:center;outline:none;box-shadow:0 0 0 1px rgba(77,201,132,.18); }
-    .birth-wheel select:focus { box-shadow:0 0 0 3px var(--glow); }
-    .birth-wheel-label { display:block;margin-top:2px;color:var(--muted);font-size:.7rem;font-weight:800;text-align:center; }
-    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
-    @keyframes modalUp { from{opacity:0;transform:translateY(16px) scale(.98)} to{opacity:1;transform:translateY(0) scale(1)} }
-    .btn-primary {
-      width:100%;padding:15px;border:none;border-radius:14px;font-size:1rem;font-weight:800;font-family:'Outfit',sans-serif;
-      color:#fff;cursor:pointer;position:relative;overflow:hidden;
-      background:linear-gradient(135deg,#1a7a45 0%,#26a85e 50%,#4dc984 100%);background-size:200% 200%;
-      animation:gradShift 4s ease infinite;
-      box-shadow:0 6px 24px rgba(26,122,69,.4),0 1px 0 rgba(255,255,255,.2) inset;
-      transition:transform .2s,box-shadow .2s;letter-spacing:.01em;
+    .terms-check { position:relative;width:19px;height:19px;border:1.5px solid var(--line);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.7rem;flex-shrink:0;transition:all .15s ease;background:#fff;color:transparent; }
+    .terms-check.checked { background:var(--leaf);border-color:var(--leaf);color:#fff; }
+    .chk-ripple { position:absolute;left:50%;top:50%;width:19px;height:19px;margin:-9.5px 0 0 -9.5px;border-radius:50%;background:var(--mint);opacity:.4;pointer-events:none;animation:chkRipple .9s ease-out forwards; }
+    @keyframes chkRipple { to{transform:scale(2.6);opacity:0} }
+    @keyframes chkPop {
+      0%   { transform:scale(1) rotate(0); }
+      25%  { transform:scale(.8) rotate(-6deg); }
+      50%  { transform:scale(1.18) rotate(5deg); }
+      75%  { transform:scale(.96) rotate(-2deg); }
+      100% { transform:scale(1) rotate(0); }
     }
-    @keyframes gradShift { 0%{background-position:0% 50%} 50%{background-position:100% 50%} 100%{background-position:0% 50%} }
-    .btn-primary:hover { transform:translateY(-2px);box-shadow:0 10px 32px rgba(26,122,69,.5); }
+    .terms-label { font-size:.83rem;color:var(--muted);font-weight:500;flex:1; }
+    .terms-label strong { color:var(--text); }
+    .terms-divider { height:1px;background:var(--line);margin:10px 0; }
+    .terms-all .terms-label { font-weight:800;color:var(--text); }
+    .terms-item + .terms-item,.terms-item + .terms-row { margin-top:8px; }
+    .terms-toggle { flex-shrink:0;width:26px;height:26px;margin-left:2px;border:0;border-radius:50%;background:transparent;color:var(--muted);display:grid;place-items:center;cursor:pointer;transition:background-color .2s,color .2s; }
+    .terms-toggle:hover,.terms-toggle:focus-visible { background:rgba(80,217,144,.14);color:var(--leaf);outline:none; }
+    .terms-toggle svg { width:14px;height:14px;transition:transform .25s ease; }
+    .terms-toggle.open svg { transform:rotate(180deg); }
+    .terms-panel { max-height:0;overflow:hidden;transition:max-height .4s cubic-bezier(.22,.7,.32,1); }
+    .terms-panel.open { max-height:190px; }
+    .terms-panel-inner { max-height:190px;overflow-y:auto;padding:8px 6px 10px 29px;color:var(--muted);font-size:.78rem;line-height:1.65; }
+    .terms-panel-inner h4 { margin:10px 0 3px;color:var(--text);font-size:.82rem;font-weight:700; }
+    .terms-panel-inner h4:first-child { margin-top:0; }
+    .terms-panel-inner p { margin:0 0 2px; }
+    .profile-setup { text-align:center;padding:6px 0 2px; }
+    .profile-title { font-size:1.25rem;font-weight:800;color:var(--text);letter-spacing:-.01em;margin-bottom:6px; }
+    .profile-desc { color:var(--muted);font-size:.85rem;line-height:1.5;margin-bottom:22px; }
+    .profile-picker { position:relative;width:100px;height:100px;margin:0 auto 22px; }
+    .profile-preview { width:100%;height:100%;display:grid;place-items:center;border-radius:50%;background:linear-gradient(135deg,#1a8e52,#5de49a);overflow:hidden;color:#fff;font-size:2.5rem;font-weight:900; }
+    .profile-preview img { width:100%;height:100%;object-fit:cover;display:block; }
+    .profile-upload { position:absolute;right:-2px;bottom:2px;width:32px;height:32px;display:grid;place-items:center;border:2px solid #fff;border-radius:50%;background:var(--forest);color:#fff;font-size:1rem;cursor:pointer;transition:background-color .2s; }
+    .profile-upload:hover { background:var(--leaf); }
+    .profile-upload input { display:none; }
+    .profile-fields-box { padding:16px;border:1px solid var(--line);border-radius:14px;background:var(--cream);margin-top:22px; }
+    .birth-modal { position:fixed;inset:0;z-index:60;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(7,59,36,.32); }
+    .birth-modal.open { display:flex;animation:fadeIn .18s ease both; }
+    .birth-modal-box { width:min(360px,100%);padding:18px;border:1px solid var(--line);border-radius:18px;background:#fff;box-shadow:0 20px 50px rgba(7,59,36,.2);animation:modalUp .2s cubic-bezier(.22,1,.36,1) both; }
+    .nudge-modal-box { padding:22px 20px; }
+    .nudge-title { font-size:1.05rem;font-weight:800;color:var(--text);margin-bottom:8px; }
+    .nudge-desc { color:var(--muted);font-size:.85rem;line-height:1.55;margin-bottom:18px; }
+    .birth-modal-head { display:flex;align-items:center;justify-content:flex-end;margin-bottom:10px; }
+    .birth-modal-close { width:30px;height:30px;border:0;border-radius:8px;background:rgba(80,217,144,.14);color:var(--forest);font-size:1.1rem;font-weight:900;cursor:pointer; }
+    .birth-wheel { display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px; }
+    .birth-wheel select { width:100%;height:42px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--text);font-family:'Outfit',sans-serif;font-size:.95rem;font-weight:700;text-align:center;text-align-last:center;outline:none; }
+    .birth-wheel select:focus { border-color:var(--mint);box-shadow:0 0 0 3px var(--glow); }
+    .birth-wheel-label { display:block;margin-top:2px;color:var(--muted);font-size:.7rem;font-weight:700;text-align:center; }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+    @keyframes modalUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+    .btn-primary {
+      width:100%;height:54px;border:none;border-radius:18px;font-size:1rem;font-weight:900;font-family:'Outfit',sans-serif;
+      color:#fff;cursor:pointer;position:relative;
+      background:linear-gradient(135deg,#093d26,#16874b 56%,#50d990);
+      box-shadow:0 14px 32px rgba(22,135,75,.3);
+      transition:transform .2s,box-shadow .2s,filter .2s;letter-spacing:.01em;
+    }
+    .btn-primary:hover { transform:translateY(-2px);box-shadow:0 18px 40px rgba(22,135,75,.38);filter:saturate(1.06); }
     .btn-primary:active { transform:translateY(0); }
-    .btn-primary::after { content:'';position:absolute;inset:0;background:linear-gradient(to bottom,rgba(255,255,255,.15),transparent);pointer-events:none; }
-    .btn-secondary { width:100%;margin-top:10px;padding:14px;border:1.5px solid var(--border);border-radius:14px;font-size:.9rem;font-weight:600;font-family:'Outfit',sans-serif;color:var(--muted);cursor:pointer;background:transparent;transition:all .2s; }
-    .btn-secondary:hover { border-color:var(--p3);color:var(--p2);background:rgba(77,201,132,.06); }
-    .divider { display:flex;align-items:center;gap:12px;margin:18px 0 14px;color:var(--muted);font-size:.8rem;font-weight:600; }
-    .divider::before,.divider::after { content:'';flex:1;height:1px;background:var(--border); }
-    .social-row { display:flex;justify-content:center;gap:48px; }
-    .social-btn { position:relative;width:50px;height:50px;display:grid;place-items:center;padding:0;border:0;border-radius:50%;font:inherit;cursor:pointer;background:rgba(255,255,255,.5);transition:transform .2s,box-shadow .2s,background-color .2s; }
-    .social-btn:hover,.social-btn:focus-visible { background:#fff;transform:translateY(-3px);box-shadow:0 10px 24px rgba(13,74,40,.14);outline:none; }
-    .social-btn:active { transform:translateY(-1px) scale(.96); }
-    .social-btn::after { content:attr(data-label);position:absolute;top:calc(100% + 8px);left:50%;transform:translate(-50%,-4px);padding:5px 10px;border:1px solid rgba(77,201,132,.22);border-radius:999px;background:rgba(255,255,255,.9);color:var(--p1);box-shadow:0 8px 18px rgba(13,74,40,.08);font-size:.72rem;font-weight:800;line-height:1;white-space:nowrap;opacity:0;visibility:hidden;transition:opacity .18s ease,transform .18s ease,visibility .18s ease;pointer-events:none; }
+    .btn-primary:focus-visible { outline:none;box-shadow:0 0 0 3px var(--glow); }
+    .btn-secondary { width:100%;height:48px;margin-top:8px;border:1px solid var(--line);border-radius:16px;font-size:.88rem;font-weight:700;font-family:'Outfit',sans-serif;color:var(--muted);cursor:pointer;background:transparent;transition:all .2s; }
+    .btn-secondary:hover { border-color:var(--leaf);color:var(--leaf);background:rgba(80,217,144,.08); }
+    .btn-secondary:focus-visible { outline:none;box-shadow:0 0 0 3px var(--glow); }
+    .divider { display:flex;align-items:center;gap:12px;margin:26px 0 18px;color:var(--muted);font-size:.8rem;font-weight:800; }
+    .divider::before,.divider::after { content:'';flex:1;height:1px;background:var(--line); }
+    .social-row { display:flex;justify-content:center;gap:38px; }
+    .social-btn { position:relative;width:48px;height:48px;display:grid;place-items:center;padding:0;border:0;border-radius:50%;font:inherit;cursor:pointer;background:transparent;transition:transform .2s; }
+    .social-btn:hover,.social-btn:focus-visible { transform:translateY(-4px);outline:none; }
+    .social-btn::after { content:attr(data-label);position:absolute;top:calc(100% + 8px);left:50%;transform:translate(-50%,-4px);padding:5px 10px;border:1px solid rgba(80,217,144,.22);border-radius:999px;background:rgba(255,255,255,.94);color:var(--forest);box-shadow:0 8px 18px rgba(7,59,36,.08);font-size:.72rem;font-weight:900;line-height:1;white-space:nowrap;opacity:0;visibility:hidden;transition:opacity .18s,transform .18s,visibility .18s;pointer-events:none; }
     .social-btn:hover::after,.social-btn:focus-visible::after { opacity:1;visibility:visible;transform:translate(-50%,0); }
-    .social-logo { width:38px;height:38px;display:grid;place-items:center;border-radius:50%;overflow:hidden;box-shadow:0 5px 16px rgba(13,74,40,.12);transition:transform .2s; }
-    .social-btn:hover .social-logo,.social-btn:focus-visible .social-logo { transform:scale(1.06); }
+    .social-logo { width:40px;height:40px;display:grid;place-items:center;border-radius:50%;overflow:hidden;box-shadow:0 8px 18px rgba(7,59,36,.13);transition:transform .2s,box-shadow .2s; }
+    .social-btn:hover .social-logo,.social-btn:focus-visible .social-logo { transform:scale(1.07);box-shadow:0 12px 24px rgba(7,59,36,.18); }
     .social-logo svg { width:100%;height:100%;display:block; }
     .social-logo.kakao { background:#fee500; }
     .social-logo.naver { background:#03c75a; }
-    .social-logo.google { background:#fff;border:1px solid rgba(13,74,40,.08); }
-    .login-link { text-align:center;margin-top:28px;font-size:.84rem;color:var(--muted);font-weight:500; }
-    .login-link a { color:var(--p2);font-weight:700;text-decoration:none;transition:color .2s; }
-    .login-link a:hover { color:var(--p1); }
+    .social-logo.google { background:#fff;border:1px solid var(--line); }
+    .login-link { text-align:center;margin-top:26px;font-size:.84rem;color:var(--muted);font-weight:600; }
+    .login-link a { color:var(--leaf);font-weight:800;text-decoration:none;transition:color .2s; }
+    .login-link a:hover { color:var(--forest); }
     .step-view { display:none; }
     .step-view.active { display:block; }
     .success-wrap { text-align:center;padding:20px 0; }
-    .success-icon { width:80px;height:80px;background:linear-gradient(135deg,#1a7a45,#4dc984);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2.4rem;margin:0 auto 20px;animation:popIn .5s cubic-bezier(.36,2,.4,1) both;box-shadow:0 12px 36px rgba(26,122,69,.4); }
+    .success-icon { width:64px;height:64px;background:linear-gradient(135deg,#1a8e52,#5de49a);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:2rem;color:#fff;margin:0 auto 20px;animation:popIn .4s cubic-bezier(.36,2,.4,1) both; }
     @keyframes popIn { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} }
-    .success-title { font-size:1.5rem;font-weight:900;color:var(--text);margin-bottom:8px; }
+    .success-title { font-size:1.4rem;font-weight:800;color:var(--text);margin-bottom:8px; }
     .success-sub   { font-size:.88rem;color:var(--muted);line-height:1.6;margin-bottom:24px; }
-    .confetti { font-size:1.8rem;display:flex;justify-content:center;gap:8px;margin-bottom:20px;animation:bounceRow .6s ease .3s both; }
-    @keyframes bounceRow { from{opacity:0;transform:scale(.5)} to{opacity:1;transform:scale(1)} }
-    @keyframes shakeInput { 0%,100%{transform:translateX(0);border-color:var(--border)} 20%,60%{transform:translateX(-6px);border-color:#f87171;box-shadow:0 0 0 3px rgba(248,113,113,.2)} 40%,80%{transform:translateX(6px)} }
+    @keyframes shakeInput { 0%,100%{transform:translateX(0);border-color:var(--line)} 20%,60%{transform:translateX(-6px);border-color:#f87171;box-shadow:0 0 0 4px rgba(248,113,113,.18)} 40%,80%{transform:translateX(6px)} }
     @keyframes shakeBox { 0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-5px)} 40%,80%{transform:translateX(5px)} }
-    @media(max-width:520px){.card{padding:30px 24px 28px}.logo-icon{width:54px;height:54px}.logo-area{margin-bottom:18px}}
+    @media(max-width:520px){.card{padding:32px 24px 26px}}
   </style>
 <link rel="stylesheet" href="../02-main/css/global-theme.css">
 </head>
 <body>
-<div class="bg-canvas">
-  <div class="orb orb-1"></div>
-  <div class="orb orb-2"></div>
-  <div class="orb orb-3"></div>
-</div>
 <div class="card-wrap">
   <div class="card">
     <div class="logo-area">
@@ -208,32 +210,27 @@
       <div class="step-dot" id="dot1"></div>
       <div class="step-dot" id="dot2"></div>
       <div class="step-dot" id="dot3"></div>
+      <div class="step-dot" id="dot4"></div>
     </div>
 
     <!-- STEP 0 -->
     <div class="step-view active" id="step-0">
       <div class="input-grid">
-        <div class="input-group has-hint">
+        <div class="input-group">
           <label class="input-label" for="email">이메일</label>
           <div class="input-wrap">
             <span class="input-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></span>
-            <input type="email" id="email" placeholder="example@email.com" autocomplete="email" oninput="checkEmail(false)" onblur="checkEmail(true)" />
+            <input type="email" id="email" placeholder="example@email.com" autocomplete="email" onkeydown="enterNext(event,'pw')" />
           </div>
-          <div class="input-hint" id="email-hint"></div>
         </div>
-        <div class="input-group has-hint">
-          <label class="input-label" for="phone">전화번호</label>
-          <div class="input-wrap">
-            <span class="input-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></svg></span>
-            <input type="tel" id="phone" placeholder="010-1234-5678" autocomplete="tel" oninput="formatPhoneInput(this); checkPhone(false)" onblur="checkPhone(true)" />
+        <div class="input-group">
+          <div class="input-label-row">
+            <label class="input-label" for="pw">비밀번호</label>
+            <span class="input-status" id="pw-hint"></span>
           </div>
-          <div class="input-hint" id="phone-hint">연락 가능한 전화번호를 입력해주세요.</div>
-        </div>
-        <div class="input-group has-hint full" style="margin-bottom:0">
-          <label class="input-label" for="pw">비밀번호</label>
           <div class="input-wrap">
             <span class="input-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></span>
-            <input type="password" id="pw" placeholder="8자 이상, 영문+숫자 조합" oninput="calcStrength(this.value); checkPassword(false)" onblur="checkPassword(true)" />
+            <input type="password" id="pw" placeholder="8~20자, 영문/숫자/특수문자 중 2가지 이상" oninput="calcStrength(this.value)" onkeydown="enterNext(event,null,() => goStep(1))" />
             <button class="input-suffix" type="button" onclick="togglePw('pw', this)" aria-label="비밀번호 보이기" aria-pressed="false">
               <svg class="eye-icon" viewBox="0 0 24 24" aria-hidden="true">
                 <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z"></path>
@@ -247,12 +244,15 @@
               </svg>
             </button>
           </div>
-          <div class="input-hint" id="pw-hint">지금은 비밀번호가 안보여요!</div>
           <div class="pw-strength">
             <div class="pw-seg" id="seg0"></div>
             <div class="pw-seg" id="seg1"></div>
             <div class="pw-seg" id="seg2"></div>
             <div class="pw-seg" id="seg3"></div>
+          </div>
+          <div class="pw-rules">
+            <span class="pw-rule" id="pw-rule-length">8~20자</span>
+            <span class="pw-rule" id="pw-rule-combo">영문/숫자/특수문자 중 2가지 이상</span>
           </div>
         </div>
       </div>
@@ -261,28 +261,40 @@
 
     <!-- STEP 1 -->
     <div class="step-view" id="step-1">
-      <div class="form-title">거의 다 왔어요! <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><path d="M6 21c8 0 12-6 12-14a5 5 0 0 0-5 5c0 8-6 9-7 9z"/><path d="M6 21c1-4 3-6 6-8"/></svg></div>
+      <div class="form-title">거의 다 왔어요!</div>
       <div class="form-desc">아래 약관에 동의하시면<br>Clov. 여정이 시작됩니다.</div>
       <div class="terms-box" id="termsBox">
-        <div class="terms-row terms-all" onclick="toggleAll()">
+        <div class="terms-row terms-all" tabindex="0" role="checkbox" aria-checked="false" onclick="toggleAll()" onkeydown="handleTermsKey(event, toggleAll)">
           <div class="terms-check" id="chk-all">✓</div>
           <div class="terms-label"><strong>전체 동의</strong> (필수 + 선택 포함)</div>
         </div>
         <div class="terms-divider"></div>
-        <div class="terms-row" onclick="toggle('chk-1')">
-          <div class="terms-check checked" id="chk-1">✓</div>
-          <div class="terms-label"><strong>[필수]</strong> 서비스 이용약관 동의 <span class="terms-link" onclick="event.stopPropagation()">보기</span></div>
+        <div class="terms-item">
+          <div class="terms-row" tabindex="0" role="checkbox" aria-checked="false" onclick="toggle('chk-1')" onkeydown="handleTermsKey(event, () => toggle('chk-1'))">
+            <div class="terms-check" id="chk-1">✓</div>
+            <div class="terms-label"><strong>[필수]</strong> 서비스 이용약관 동의</div>
+            <button type="button" class="terms-toggle" aria-expanded="false" aria-controls="terms-panel-service" aria-label="서비스 이용약관 내용 보기" onclick="event.stopPropagation();toggleTermsPanel('service', this)" onkeydown="event.stopPropagation()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+          </div>
+          <div class="terms-panel" id="terms-panel-service"><div class="terms-panel-inner" id="terms-panel-service-inner"></div></div>
         </div>
-        <div class="terms-row" onclick="toggle('chk-2')">
-          <div class="terms-check checked" id="chk-2">✓</div>
-          <div class="terms-label"><strong>[필수]</strong> 개인정보 처리방침 동의 <span class="terms-link" onclick="event.stopPropagation()">보기</span></div>
+        <div class="terms-item">
+          <div class="terms-row" tabindex="0" role="checkbox" aria-checked="false" onclick="toggle('chk-2')" onkeydown="handleTermsKey(event, () => toggle('chk-2'))">
+            <div class="terms-check" id="chk-2">✓</div>
+            <div class="terms-label"><strong>[필수]</strong> 개인정보 처리방침 동의</div>
+            <button type="button" class="terms-toggle" aria-expanded="false" aria-controls="terms-panel-privacy" aria-label="개인정보 처리방침 내용 보기" onclick="event.stopPropagation();toggleTermsPanel('privacy', this)" onkeydown="event.stopPropagation()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+            </button>
+          </div>
+          <div class="terms-panel" id="terms-panel-privacy"><div class="terms-panel-inner" id="terms-panel-privacy-inner"></div></div>
         </div>
-        <div class="terms-row" onclick="toggle('chk-3')">
-          <div class="terms-check" id="chk-3"></div>
+        <div class="terms-row" tabindex="0" role="checkbox" aria-checked="false" onclick="toggle('chk-3')" onkeydown="handleTermsKey(event, () => toggle('chk-3'))">
+          <div class="terms-check" id="chk-3">✓</div>
           <div class="terms-label"><strong>[선택]</strong> 마케팅 정보 수신 동의</div>
         </div>
       </div>
-      <button class="btn-primary" onclick="goStep(2)"><img src="../assets/ai-style/clov_logo_half_leaf_cartoon_transparent.png" alt="" style="width:16px;height:16px;object-fit:contain;vertical-align:-3px;margin-right:5px;">Clov. 시작하기</button>
+      <button class="btn-primary" onclick="goStep(2)">Clov. 시작하기</button>
       <button class="btn-secondary" onclick="goStep(0)">← 이전으로</button>
     </div>
 
@@ -290,51 +302,48 @@
     <div class="step-view" id="step-2">
       <div class="profile-setup">
         <div class="profile-title">프로필은 무엇으로 하실건가요?</div>
-        <div class="profile-desc">친구들이 알아볼 수 있는 사진과<br>Clov.에서 사용할 닉네임을 정해주세요.</div>
+        <div class="profile-desc">친구들이 알아볼 수 있는<br>사진을 골라주세요.</div>
         <div class="profile-picker">
-          <div class="profile-preview" id="profile-preview"><img src="../assets/ai-style/clov_logo_half_leaf_cartoon_transparent.png" alt="" style="width:60%;height:60%;object-fit:contain;"></div>
+          <div class="profile-preview" id="profile-preview"><img src="../assets/ai-style/clov_logo_half_leaf_cartoon_transparent.png" alt="" style="width:80%;height:80%;object-fit:contain;"></div>
           <label class="profile-upload" aria-label="프로필 이미지 등록">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"/><circle cx="12" cy="13" r="3.5"/></svg>
             <input type="file" id="profile-image" accept="image/*" onchange="previewProfileImage(event)" />
           </label>
         </div>
-        <div class="nickname-card" id="profile-card">
-          <div class="profile-flip-inner">
-            <div class="profile-face front">
-              <button class="birth-open-btn" type="button" onclick="openBirthCard()" aria-label="생년월일 카드로 이동"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></button>
-              <div class="input-group has-hint" style="margin:42px 0 0">
-                <label class="input-label" for="nickname">닉네임</label>
-                <div class="input-wrap">
-                  <span class="input-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-6.5 8-6.5s8 2.5 8 6.5"/></svg></span>
-                  <input type="text" id="nickname" placeholder="친구들이 부를 이름" autocomplete="nickname" oninput="checkNickname(false)" onblur="checkNickname(true)" />
-                </div>
-                <div class="input-hint" id="nickname-hint"></div>
-              </div>
-            </div>
-            <div class="profile-face back">
-              <button class="birth-back-btn" type="button" onclick="openNicknameCard()" aria-label="닉네임 입력으로 돌아가기">←</button>
-              <div class="birth-card-title">생년월일을 알려주세요.</div>
-              <div class="birth-card-desc">특별한 준비를 위해서 꼭 필요합니다!</div>
-              <div class="input-group has-hint" style="margin-bottom:0">
-                <label class="input-label" for="birthdate">생년월일</label>
-                <div class="input-wrap">
-                  <span class="input-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>
-                  <input type="text" id="birthdate" placeholder="YYYY-MM-DD" autocomplete="bday" readonly onclick="openBirthModal()" />
-                </div>
-                <div class="input-hint" id="birthdate-hint"></div>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
-      <button class="btn-primary" onclick="goStep(3)" style="margin-top:22px">프로필 저장하기 →</button>
+      <button class="btn-primary" onclick="goStep(3)" style="margin-top:22px">다음</button>
       <button class="btn-secondary" onclick="goStep(1)">← 이전으로</button>
     </div>
 
     <!-- STEP 3 -->
     <div class="step-view" id="step-3">
+      <div class="profile-setup">
+        <div class="profile-title">닉네임과 생년월일을 알려주세요</div>
+        <div class="profile-desc">친구들에게 보여질 이름과<br>생일(선택)을 정해주세요.</div>
+        <div class="profile-fields-box" style="text-align:left">
+          <div class="input-group">
+            <label class="input-label" for="nickname">닉네임</label>
+            <div class="input-wrap">
+              <span class="input-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-6.5 8-6.5s8 2.5 8 6.5"/></svg></span>
+              <input type="text" id="nickname" placeholder="친구들이 부를 이름" autocomplete="nickname" onkeydown="enterNext(event,null,() => goStep(4))" />
+            </div>
+          </div>
+          <div class="input-group" style="margin-top:14px">
+            <label class="input-label" for="birthdate">생년월일 <span class="birth-optional-tag">선택</span></label>
+            <div class="input-wrap">
+              <span class="input-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>
+              <input type="text" id="birthdate" placeholder="YYYY-MM-DD" autocomplete="bday" readonly onclick="openBirthModal()" />
+            </div>
+          </div>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="goStep(4)" style="margin-top:22px">프로필 저장하기 →</button>
+      <button class="btn-secondary" onclick="goStep(2)">← 이전으로</button>
+    </div>
+
+    <!-- STEP 4 -->
+    <div class="step-view" id="step-4">
       <div class="success-wrap">
-        <div class="confetti">🎉 🍀 🌸</div>
         <div class="success-icon">✓</div>
         <div class="success-title">가입 완료!</div>
         <div class="success-sub"><span id="welcome-name">클로버</span>님의 우정공간이 준비됐어요.<br>이제 친구를 초대하고 첫 약속을 만들어 볼까요? 🌱</div>
@@ -390,21 +399,35 @@
   </div>
 </div>
 
+<div class="birth-modal" id="birth-nudge-modal" onclick="if(event.target === this) closeBirthNudge()">
+  <div class="birth-modal-box nudge-modal-box">
+    <div class="nudge-title">잠깐!</div>
+    <div class="nudge-desc">생년월일을 입력하지 않았어요.<br>선택사항이지만 Clov.와 친구들의 축하를 받을 수 없게 돼요.</div>
+    <button class="btn-primary" type="button" onclick="closeBirthNudge();openBirthModal()">지금 설정하기</button>
+    <button class="btn-secondary" type="button" onclick="closeBirthNudge();goStep(4,{skipBirthNudge:true})">다음에 할게요</button>
+  </div>
+</div>
+
 <script>
-  function goStep(n) {
+  function goStep(n, opts) {
+    opts = opts || {};
     if (n === 1 && !validateStep0()) return;
     if (n === 2 && !validateStep1()) return;
-    if (n === 3 && !validateStep2()) return;
+    if (n === 4 && !validateStep3()) return;
+    if (n === 4 && !opts.skipBirthNudge && !document.getElementById('birthdate').value.trim()) {
+      openBirthNudge();
+      return;
+    }
     document.querySelectorAll('.step-view').forEach(el => el.classList.remove('active'));
     document.getElementById('step-' + n).classList.add('active');
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < 5; i++) {
       const d = document.getElementById('dot' + i);
       d.classList.remove('active','done');
       if (i < n)  d.classList.add('done');
       if (i === n) d.classList.add('active');
     }
     document.getElementById('social-section').style.display = n === 0 ? 'block' : 'none';
-    if (n === 3) {
+    if (n === 4) {
       const nickName = document.getElementById('nickname').value.trim();
       const email = document.getElementById('email').value.trim();
       const emailName = email.split('@')[0];
@@ -421,67 +444,19 @@
     }
   }
   function validateStep0() {
-    if (!checkEmail(true, true)) { shake('email'); return false; }
-    if (!checkPhone(true, true)) { shake('phone'); return false; }
-    if (!checkPassword(true, true)) { shake('pw'); return false; }
+    const emailOk = /\S+@\S+\.\S+/.test(document.getElementById('email').value.trim());
+    if (!emailOk) { shake('email'); return false; }
+    const pwOk = getPasswordChecks(document.getElementById('pw').value).ok;
+    if (!pwOk) { shake('pw'); return false; }
     return true;
   }
-  function setHint(id, text, show, error) {
-    const hint = document.getElementById(id);
-    hint.textContent = text;
-    hint.classList.toggle('show', show);
-    hint.classList.toggle('is-error', error);
-  }
-  function checkEmail(done, required = false) {
-    const value = document.getElementById('email').value.trim();
-    const ok = /\S+@\S+\.\S+/.test(value);
-    if (!value && !required) {
-      setHint('email-hint', '', false, false);
-      return true;
-    }
-    if (ok || !done) {
-      setHint('email-hint', '', false, false);
-      return ok || !done;
-    }
-    setHint('email-hint', value ? '올바른 이메일 형식으로 입력해주세요.' : '이메일을 입력해주세요.', true, true);
-    return false;
-  }
-  function checkPhone(force, required = false) {
-    const phone = document.getElementById('phone');
-    const value = phone.value.trim();
-    const ok = /^010-\d{4}-\d{4}$/.test(value);
-    if (!value && !required) {
-      setHint('phone-hint', '', false, false);
-      return true;
-    }
-    if (ok || !force) {
-      setHint('phone-hint', '', false, false);
-      return ok || !force;
-    }
-    setHint('phone-hint', value ? '010-1234-5678 형식으로 입력해주세요.' : '전화번호를 입력해주세요.', true, true);
-    return false;
-  }
-  function formatPhoneInput(input) {
-    const digits = input.value.replace(/\D/g, '').slice(0, 11);
-    if (digits.length <= 3) input.value = digits;
-    else if (digits.length <= 7) input.value = `${digits.slice(0, 3)}-${digits.slice(3)}`;
-    else input.value = `${digits.slice(0, 3)}-${digits.slice(3, 7)}-${digits.slice(7)}`;
-  }
-  function checkPassword(done, required = false) {
-    const value = document.getElementById('pw').value;
-    const ok = value.length >= 8;
-    if (!value && !required) {
-      const visible = document.getElementById('pw').type === 'text';
-      setHint('pw-hint', visible ? '조심하세요! 비밀번호가 보여요!' : '', visible, false);
-      return true;
-    }
-    if (ok || !done) {
-      const visible = document.getElementById('pw').type === 'text';
-      setHint('pw-hint', visible ? '조심하세요! 비밀번호가 보여요!' : '', visible, false);
-      return ok || !done;
-    }
-    setHint('pw-hint', value ? '비밀번호는 8자 이상 입력해주세요.' : '비밀번호를 입력해주세요.', true, true);
-    return false;
+  function getPasswordChecks(value) {
+    const hasLetter = /[A-Za-z]/.test(value);
+    const hasNumber = /[0-9]/.test(value);
+    const hasSpecial = /[^A-Za-z0-9]/.test(value);
+    const typeCount = [hasLetter, hasNumber, hasSpecial].filter(Boolean).length;
+    const lengthOk = value.length >= 8 && value.length <= 20;
+    return { lengthOk, comboOk: typeCount >= 2, ok: lengthOk && typeCount >= 2 };
   }
   function validateStep1() {
     const ok = ['chk-1','chk-2'].every(id => document.getElementById(id).classList.contains('checked'));
@@ -492,19 +467,79 @@
     }
     return ok;
   }
-  function validateStep2() {
-    if (!checkNickname(true, true)) { shake('nickname'); return false; }
-    document.getElementById('profile-card').classList.add('flipped');
-    if (!checkBirthdate(true, true)) { openBirthModal(); return false; }
+  function validateStep3() {
+    const nicknameOk = /^[가-힣A-Za-z0-9]{1,12}$/.test(document.getElementById('nickname').value.trim());
+    if (!nicknameOk) { shake('nickname'); return false; }
     return true;
   }
-  function openBirthCard() {
-    if (!checkNickname(true, true)) { shake('nickname'); return; }
-    document.getElementById('profile-card').classList.add('flipped');
-  }
-  function openNicknameCard() {
-    document.getElementById('profile-card').classList.remove('flipped');
-    setTimeout(() => document.getElementById('nickname')?.focus(), 420);
+  const TERMS_CONTENT = {
+    service: {
+      body: `
+        <h4>제1조 (목적)</h4>
+        <p>이 약관은 [회사명](이하 "회사")가 제공하는 친구 기록 서비스 "Clov."(이하 "서비스")의 이용과 관련하여 회사와 회원 간의 권리, 의무 및 책임사항, 기타 필요한 사항을 규정함을 목적으로 합니다.</p>
+        <h4>제2조 (용어의 정의)</h4>
+        <p>① "서비스"란 회사가 제공하는 약속·기록·편지 등 친구 간 추억 기록 관련 제반 서비스를 의미합니다.<br>② "회원"이란 이 약관에 동의하고 회사와 이용계약을 체결하여 서비스를 이용하는 자를 말합니다.<br>③ "게시물"이란 회원이 서비스 이용 과정에서 게시한 문자, 사진, 파일 등 일체의 정보를 말합니다.</p>
+        <h4>제3조 (약관의 효력 및 변경)</h4>
+        <p>① 이 약관은 서비스 화면에 게시하거나 기타의 방법으로 회원에게 공지함으로써 효력이 발생합니다.<br>② 회사는 「약관의 규제에 관한 법률」, 「정보통신망 이용촉진 및 정보보호 등에 관한 법률」 등 관계 법령을 위배하지 않는 범위에서 이 약관을 개정할 수 있으며, 개정 시 적용일자 및 개정사유를 명시하여 적용일 7일 전(회원에게 불리한 변경은 30일 전)부터 서비스 내 공지합니다.<br>③ 회원이 개정 약관의 적용에 동의하지 않는 경우 이용계약을 해지할 수 있으며, 공지 후에도 계속 서비스를 이용하면 개정 약관에 동의한 것으로 봅니다.</p>
+        <h4>제4조 (이용계약의 성립)</h4>
+        <p>이용계약은 회원이 되고자 하는 자가 약관 내용에 동의한 후 회사가 정한 가입 절차를 완료하고, 회사가 이를 승낙함으로써 성립합니다. 회사는 실명이 아니거나 타인의 명의를 이용한 경우, 허위 정보를 기재한 경우 승낙을 거부하거나 사후에 이용계약을 해지할 수 있습니다.</p>
+        <h4>제5조 (회사의 의무)</h4>
+        <p>회사는 관련 법령과 이 약관이 금지하거나 미풍양속에 반하는 행위를 하지 않으며, 계속적·안정적으로 서비스를 제공하기 위해 노력합니다. 또한 회원의 개인정보를 관련 법령에 따라 보호합니다.</p>
+        <h4>제6조 (회원의 의무)</h4>
+        <p>회원은 다음 각 호의 행위를 해서는 안 됩니다.<br>1. 타인의 정보 도용 또는 허위 정보 등록<br>2. 회사 또는 제3자의 저작권 등 지식재산권 침해<br>3. 회사의 서비스 운영을 고의로 방해하는 행위<br>4. 공공질서 및 미풍양속에 반하는 내용의 게시물 유포<br>5. 관계 법령에 위반되는 행위</p>
+        <h4>제7조 (서비스의 제공 및 변경·중단)</h4>
+        <p>① 회사는 연중무휴, 1일 24시간 서비스 제공을 원칙으로 하되, 시스템 점검 등 운영상 필요한 경우 서비스의 전부 또는 일부를 일시 중단할 수 있습니다.<br>② 회사는 서비스의 내용을 변경할 수 있으며, 이 경우 변경 내용을 사전에 공지합니다.</p>
+        <h4>제8조 (계약해지 및 이용제한)</h4>
+        <p>회원은 언제든지 서비스 내 설정 메뉴를 통해 이용계약 해지(회원 탈퇴)를 신청할 수 있으며, 회사는 관련 법령이 정하는 바에 따라 이를 즉시 처리합니다. 회원이 제6조를 위반한 경우 회사는 사전 통지 후 이용을 제한하거나 계약을 해지할 수 있습니다.</p>
+        <h4>제9조 (면책조항)</h4>
+        <p>회사는 천재지변 또는 이에 준하는 불가항력, 회원의 귀책사유로 인한 서비스 이용 장애에 대해서는 책임을 지지 않습니다.</p>
+        <h4>제10조 (분쟁해결 및 관할법원)</h4>
+        <p>이 약관과 관련하여 회사와 회원 간에 발생한 분쟁에 대해서는 대한민국 법을 적용하며, 소송이 제기될 경우 민사소송법상의 관할법원에 제기합니다.</p>
+        <p style="margin-top:14px;color:var(--muted);font-size:.72rem;">부칙 — 이 약관은 2026년 7월 8일부터 적용됩니다.</p>
+      `
+    },
+    privacy: {
+      body: `
+        <p>[회사명](이하 "회사")는 「개인정보보호법」 등 관계 법령을 준수하며, 다음과 같이 개인정보 처리방침을 수립·공개합니다.</p>
+        <h4>1. 수집하는 개인정보 항목 및 수집방법</h4>
+        <p>① 회원가입 시 다음 정보를 수집합니다.<br>- 필수: 이메일, 비밀번호, 닉네임<br>- 선택: 생년월일, 프로필 사진<br>② 서비스 이용 과정에서 접속 로그, 쿠키, 접속 IP 정보, 기기정보가 자동으로 생성되어 수집될 수 있습니다.<br>③ 수집 방법: 회원가입 화면을 통한 이용자의 직접 입력, 서비스 이용 과정의 자동 수집.</p>
+        <h4>2. 개인정보의 수집 및 이용목적</h4>
+        <p>회사는 수집한 개인정보를 다음의 목적을 위해 이용합니다.<br>1. 회원 식별 및 본인 확인, 부정 이용 방지<br>2. 약속·기록·편지 등 서비스 제공 및 콘텐츠 저장<br>3. 생일 등 기념일 안내 기능 제공(생년월일 입력 시)<br>4. 서비스 개선을 위한 통계 분석<br>5. (선택 동의 시) 이벤트·소식 등 마케팅 정보 안내</p>
+        <h4>3. 개인정보의 보유 및 이용기간</h4>
+        <p>회사는 원칙적으로 개인정보 수집·이용 목적이 달성된 후에는 해당 정보를 지체 없이 파기합니다. 다만 「전자상거래 등에서의 소비자보호에 관한 법률」 등 관계 법령의 규정에 의해 보존할 필요가 있는 경우 회사는 관계 법령에서 정한 일정한 기간 동안 회원정보를 보관합니다.</p>
+        <h4>4. 개인정보의 파기절차 및 방법</h4>
+        <p>회원 탈퇴 등 개인정보의 처리 목적이 달성된 개인정보는 지체 없이 파기합니다. 전자적 파일 형태의 정보는 복구할 수 없는 기술적 방법을 사용하여 삭제하며, 종이 문서에 기록된 개인정보는 분쇄하거나 소각합니다.</p>
+        <h4>5. 개인정보의 제3자 제공</h4>
+        <p>회사는 이용자의 개인정보를 원칙적으로 외부에 제공하지 않습니다. 다만 이용자가 사전에 동의하였거나 법령의 규정에 의거한 경우는 예외로 합니다.</p>
+        <h4>6. 개인정보 처리위탁</h4>
+        <p>회사는 원활한 서비스 제공을 위하여 필요한 경우 개인정보 처리업무를 외부에 위탁할 수 있으며, 위탁 시에는 위탁받는 자 및 위탁업무 내용을 사전에 공지합니다.</p>
+        <h4>7. 이용자 및 법정대리인의 권리와 행사방법</h4>
+        <p>이용자는 언제든지 등록되어 있는 자신의 개인정보를 조회, 수정할 수 있으며 가입 해지를 요청할 수 있습니다. 개인정보 조회, 수정을 위해서는 설정 화면을, 가입 해지(동의 철회)를 위해서는 회원탈퇴 메뉴를 이용할 수 있습니다.</p>
+        <h4>8. 쿠키의 설치·운영 및 거부</h4>
+        <p>회사는 이용자에게 맞춤화된 서비스를 제공하기 위해 쿠키를 사용할 수 있습니다. 이용자는 웹브라우저 옵션 설정을 통해 쿠키 저장을 거부할 수 있으며, 이 경우 서비스 이용에 일부 어려움이 있을 수 있습니다.</p>
+        <h4>9. 개인정보의 안전성 확보조치</h4>
+        <p>회사는 개인정보의 안전성 확보를 위해 비밀번호 암호화, 접근권한 관리, 접속기록 보관 등 기술적·관리적 조치를 취하고 있습니다.</p>
+        <h4>10. 개인정보 보호책임자</h4>
+        <p>회사는 개인정보 처리에 관한 업무를 총괄해서 책임지는 개인정보 보호책임자를 지정하고 있습니다.<br>- 성명: [담당자명]<br>- 연락처: [이메일 주소] / [전화번호]</p>
+        <h4>11. 정책 변경에 따른 공지</h4>
+        <p>이 개인정보 처리방침은 법령·정책 또는 보안기술의 변경에 따라 내용이 추가·삭제 및 수정될 수 있으며, 변경 시 서비스 내 공지사항을 통해 시행 7일 전부터 공지합니다.</p>
+        <p style="margin-top:14px;color:var(--muted);font-size:.72rem;">공고일자: 2026년 7월 8일 · 시행일자: 2026년 7월 8일</p>
+      `
+    }
+  };
+  function toggleTermsPanel(kind, btn) {
+    const panel = document.getElementById('terms-panel-' + kind);
+    const inner = document.getElementById('terms-panel-' + kind + '-inner');
+    if (!inner.innerHTML) inner.innerHTML = TERMS_CONTENT[kind].body;
+    const willOpen = !panel.classList.contains('open');
+    document.querySelectorAll('.terms-panel.open').forEach(p => {
+      p.classList.remove('open');
+      document.querySelector(`.terms-toggle[aria-controls="${p.id}"]`)?.classList.remove('open');
+      document.querySelector(`.terms-toggle[aria-controls="${p.id}"]`)?.setAttribute('aria-expanded', 'false');
+    });
+    panel.classList.toggle('open', willOpen);
+    btn.classList.toggle('open', willOpen);
+    btn.setAttribute('aria-expanded', String(willOpen));
   }
   function openBirthModal() {
     syncBirthSelects();
@@ -513,41 +548,18 @@
   function closeBirthModal() {
     document.getElementById('birth-modal').classList.remove('open');
   }
+  function openBirthNudge() {
+    document.getElementById('birth-nudge-modal').classList.add('open');
+  }
+  function closeBirthNudge() {
+    document.getElementById('birth-nudge-modal').classList.remove('open');
+  }
   function saveBirthModal() {
     const y = document.getElementById('birth-year').value;
     const m = document.getElementById('birth-month').value;
     const d = document.getElementById('birth-day').value;
     document.getElementById('birthdate').value = `${y}-${m}-${d}`;
-    checkBirthdate(true, true);
     closeBirthModal();
-  }
-  function checkNickname(done, required = false) {
-    const value = document.getElementById('nickname').value.trim();
-    const ok = /^[가-힣A-Za-z0-9]{1,12}$/.test(value);
-    if (!value && !required) {
-      setHint('nickname-hint', '', false, false);
-      return true;
-    }
-    if (ok || !done) {
-      setHint('nickname-hint', '', false, false);
-      return ok || !done;
-    }
-    setHint('nickname-hint', value ? '닉네임은 한글, 영문, 숫자 1~12자로 입력해주세요.' : '닉네임을 입력해주세요.', true, true);
-    return false;
-  }
-  function checkBirthdate(done, required = false) {
-    const value = document.getElementById('birthdate').value.trim();
-    const ok = /^(19|20)\d{2}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(value);
-    if (!value && !required) {
-      setHint('birthdate-hint', '', false, false);
-      return true;
-    }
-    if (ok || !done) {
-      setHint('birthdate-hint', '', false, false);
-      return ok || !done;
-    }
-    setHint('birthdate-hint', value ? 'YYYY-MM-DD 형식으로 입력해주세요.' : '생년월일을 입력해주세요.', true, true);
-    return false;
   }
   function initBirthSelects() {
     const year = document.getElementById('birth-year');
@@ -578,6 +590,13 @@
     };
     reader.readAsDataURL(file);
   }
+  function enterNext(e, nextId, submitFn) {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    const next = nextId && document.getElementById(nextId);
+    if (next) { next.focus(); return; }
+    if (submitFn) submitFn();
+  }
   function shake(id) {
     const el = document.getElementById(id);
     el.style.animation = 'none';
@@ -585,11 +604,14 @@
     el.focus();
   }
   function calcStrength(val) {
+    const checks = getPasswordChecks(val);
+    document.getElementById('pw-rule-length').classList.toggle('met', checks.lengthOk);
+    document.getElementById('pw-rule-combo').classList.toggle('met', checks.comboOk);
     let s = 0;
     if (val.length >= 8)  s++;
+    if (checks.comboOk)   s++;
     if (val.length >= 12) s++;
-    if (/[A-Z]/.test(val) || /[0-9]/.test(val)) s++;
-    if (/[^a-zA-Z0-9]/.test(val)) s++;
+    if (/[^A-Za-z0-9]/.test(val) && checks.comboOk) s++;
     const cls = s <= 1 ? 'on-weak' : s <= 2 ? 'on-mid' : 'on-strong';
     for (let i = 0; i < 4; i++) {
       const seg = document.getElementById('seg' + i);
@@ -603,10 +625,12 @@
     const isVisible = el.type === 'text';
     el.type = isVisible ? 'password' : 'text';
     if (hint) {
-      hint.textContent = isVisible ? '' : '조심하세요! 비밀번호가 보여요!';
-      hint.classList.toggle('show', !isVisible);
-      hint.classList.toggle('warning', !isVisible);
-      hint.classList.remove('is-error');
+      if (isVisible) {
+        hint.classList.remove('show');
+      } else {
+        hint.textContent = '조심하세요! 비밀번호가 보여요!';
+        hint.classList.add('show');
+      }
     }
     if (button) {
       button.classList.toggle('is-visible', !isVisible);
@@ -614,51 +638,55 @@
       button.setAttribute('aria-label', isVisible ? '비밀번호 보이기' : '비밀번호 숨기기');
     }
   }
+  function handleTermsKey(e, action) {
+    if (e.key === ' ' || e.key === 'Spacebar') {
+      e.preventDefault();
+      action();
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      goStep(2);
+    }
+  }
   function toggle(id) {
-    document.getElementById(id).classList.toggle('checked');
+    const chk = document.getElementById(id);
+    chk.classList.toggle('checked');
+    chk.parentElement.setAttribute('aria-checked', String(chk.classList.contains('checked')));
     updateAllCheck();
   }
   function toggleAll() {
     const all = document.getElementById('chk-all');
     const will = !all.classList.contains('checked');
     all.classList.toggle('checked');
+    all.parentElement.setAttribute('aria-checked', String(will));
+    if (will) pulseCheck(all);
     ['chk-1','chk-2','chk-3'].forEach(id => {
       const el = document.getElementById(id);
       will ? el.classList.add('checked') : el.classList.remove('checked');
+      el.parentElement.setAttribute('aria-checked', String(will));
     });
+  }
+  function pulseCheck(el) {
+    el.style.animation = 'none';
+    requestAnimationFrame(() => { el.style.animation = 'chkPop .55s cubic-bezier(.34,1.56,.64,1)'; });
+    const ripple = document.createElement('span');
+    ripple.className = 'chk-ripple';
+    el.appendChild(ripple);
+    ripple.addEventListener('animationend', () => ripple.remove());
   }
   function updateAllCheck() {
     const ok = ['chk-1','chk-2','chk-3'].every(id => document.getElementById(id).classList.contains('checked'));
     const a = document.getElementById('chk-all');
     ok ? a.classList.add('checked') : a.classList.remove('checked');
+    a.parentElement.setAttribute('aria-checked', String(ok));
   }
   function playLogoEvent() {
     const logo = document.getElementById('logoIcon');
     const messages = ['오늘도 추억 한 잎 저장', 'Clov.가 조용히 자라는 중', '친구와의 약속을 기다려요', '작은 기록도 오래 남아요'];
-    const rare = Math.random() < .1;
     logo.querySelector('.logo-pop')?.remove();
-    if (!rare) {
-      const pop = document.createElement('span');
-      pop.className = 'logo-pop';
-      pop.textContent = messages[Math.floor(Math.random() * messages.length)];
-      logo.appendChild(pop);
-      return;
-    }
-    playCardCrack();
-  }
-  function playCardCrack() {
-    const card = document.querySelector('.card');
-    if (card.classList.contains('cracking')) return;
-    const text = document.createElement('div');
-    text.className = 'crack-text';
-    text.textContent = '으아악..';
-    card.appendChild(text);
-    card.classList.add('cracking');
-    setTimeout(() => { text.textContent = 'Clov.가 사라진줄 알았나요? 😊'; }, 2100);
-    setTimeout(() => {
-      card.classList.remove('cracking');
-      text.remove();
-    }, 4300);
+    const pop = document.createElement('span');
+    pop.className = 'logo-pop';
+    pop.textContent = messages[Math.floor(Math.random() * messages.length)];
+    logo.appendChild(pop);
   }
   updateAllCheck();
 </script>

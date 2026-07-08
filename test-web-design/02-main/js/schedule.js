@@ -476,35 +476,55 @@
             compressStagePhoto(file, dataUrl => {
                 photos[stageKey] = dataUrl;
 
-                try {
-                    localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
-                } catch (error) {
+                const trySave = () => {
+                    try {
+                        localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
+                        return true;
+                    } catch (error) {
+                        return false;
+                    }
+                };
+
+                const onSaved = () => {
+                    renderScheduleList('dt');
+                    renderScheduleList('mb');
+                    // 약속 여정 모달/여권 상세에서 업로드한 경우 그쪽도 함께 갱신
+                    if (typeof refreshScheduleJourneyAndDetail === 'function') refreshScheduleJourneyAndDetail();
+
+                    const stage = buildGrowthStages(schedule).find(item => item.key === stageKey);
+                    const isComplete = getScheduleProofCount(schedule) === 4;
+                    if (isComplete) {
+                        showProofResultModal({
+                            title: '인생 4컷 완성!',
+                            message: '네 단계의 인증샷이 모두 모였어요.<br>이제 인생네컷으로 만들어 볼까요?',
+                            complete: true
+                        });
+                        celebrateFourCutComplete();
+                    } else {
+                        showProofResultModal({
+                            title: '인증사진 업로드',
+                            message: `${escapeHtml(stage ? stage.name : '단계')} 인증사진이 업로드됐어요.`
+                        });
+                    }
+                };
+
+                if (trySave()) { onSaved(); return; }
+
+                // 저장 실패(용량 초과) → 기존에 저장된 원본 사진들을 재압축해 공간을 확보하고 1회 재시도
+                const recover = typeof compactStoredPhotos === 'function' ? compactStoredPhotos() : Promise.resolve();
+                recover.then(() => {
+                    if (trySave()) {
+                        onSaved();
+                        return;
+                    }
                     delete photos[stageKey];
+                    renderScheduleList('dt');
+                    renderScheduleList('mb');
                     showProofResultModal({
                         title: '저장 공간이 부족해요',
-                        message: '이미지를 더 작은 파일로 다시 올려주세요.'
+                        message: '기존 사진을 정리해도 공간이 부족해요.<br>오래된 사진을 지운 뒤 다시 시도해주세요.'
                     });
-                    return;
-                }
-
-                renderScheduleList('dt');
-                renderScheduleList('mb');
-
-                const stage = buildGrowthStages(schedule).find(item => item.key === stageKey);
-                const isComplete = getScheduleProofCount(schedule) === 4;
-                if (isComplete) {
-                    showProofResultModal({
-                        title: '인생 4컷 완성!',
-                        message: '네 단계의 인증샷이 모두 모였어요.<br>이제 인생네컷으로 만들어 볼까요?',
-                        complete: true
-                    });
-                    celebrateFourCutComplete();
-                } else {
-                    showProofResultModal({
-                        title: '인증사진 업로드',
-                        message: `${escapeHtml(stage ? stage.name : '단계')} 인증사진이 업로드됐어요.`
-                    });
-                }
+                });
             });
         }
 

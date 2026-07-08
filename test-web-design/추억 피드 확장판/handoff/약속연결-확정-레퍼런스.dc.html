@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Gothic+A1:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;background:#20261a;background-image:radial-gradient(circle at 18% 0%,rgba(90,122,62,.16),transparent 46%);font-family:'Gothic A1',sans-serif;-webkit-font-smoothing:antialiased;color:#eef0e2}
+  a{color:#9ccc65;text-decoration:none}a:hover{color:#c3e59a}
+  .wrap{max-width:1180px;margin:0 auto;padding:52px 40px 90px}
+  .sec-h{font:900 22px 'Gothic A1',sans-serif;color:#f4f4ea;margin:0 0 6px}
+  .sec-k{font:700 11px 'Space Mono',monospace;letter-spacing:2.5px;color:#9ccc65;margin-bottom:8px}
+  .sec-d{font:400 14px/1.65 'Gothic A1',sans-serif;color:rgba(238,240,226,.66);max-width:840px;margin:0 0 22px}
+  .divider{height:1px;background:rgba(238,240,226,.12);margin:56px 0}
+  .row{display:flex;flex-wrap:wrap;gap:34px;align-items:flex-start}
+  .cap{font:700 12px 'Gothic A1',sans-serif;color:#8b9a66;margin:10px 0 0}
+</style>
+</helmet>
+
+<div class="wrap">
+
+  <div style="font:700 11px 'Space Mono',monospace;letter-spacing:3px;color:#9ccc65;margin-bottom:10px">CLOV · 추억피드 · 확정 디자인 레퍼런스</div>
+  <h1 style="font:900 30px/1.25 'Gothic A1',sans-serif;margin:0 0 12px;color:#f4f4ea">약속 연결 + 스크랩북 도장 — 확정본</h1>
+  <p style="font:400 15px/1.7 'Gothic A1',sans-serif;margin:0;color:rgba(238,240,226,.72);max-width:860px">구현 스펙은 <code style="font-family:'Space Mono',monospace;color:#c3e59a">추억피드-약속연결-스펙.md</code> 참고. 이 문서는 확정된 화면의 비주얼 레퍼런스입니다. 도장 에셋: <code style="font-family:'Space Mono',monospace;color:#c3e59a">assets/stamps/memory-complete-stamp.png</code>.</p>
+
+  <div class="divider"></div>
+
+  <!-- ① 도장 상태 규칙 -->
+  <div class="sec-k">SECTION 01</div>
+  <div class="sec-h">약속 영수증 도장 규칙 — 4가지 상태</div>
+  <p class="sec-d">D-Day 도장은 상태와 무관하게 <b style="color:#f0b7ae">빨강 고정 · 영구 유지</b>(원본 기록). 4컷 완성 시 <b style="color:#a7d585">추억 완성 도장</b>을 교체가 아니라 <b>추가</b>. 일정 없으면 FREE MEMORY.</p>
+  <div class="row">
+    <!-- 상태1 -->
+    <div>
+      <div style="position:relative;width:250px;background:#faf6ee;padding:20px 20px 24px;box-shadow:0 10px 24px rgba(28,26,23,.24);font-family:'Space Mono',monospace;color:#1c1a17">
+        <div style="text-align:center;font:700 12px 'Space Mono',monospace;letter-spacing:2.5px;padding-bottom:10px;border-bottom:1px dashed rgba(28,26,23,.3)">CLOV. MEMORIES</div>
+        <div style="display:flex;justify-content:center;padding:18px 0 10px"><div style="border:3px solid #c0392b;color:#c0392b;padding:5px 16px;border-radius:7px;text-align:center;transform:rotate(-4deg);box-shadow:0 0 0 3px #faf6ee,0 0 0 4px rgba(192,57,43,.22)"><span style="display:block;font:700 7px 'Space Mono',monospace;letter-spacing:1px">함께할 그날까지</span><span style="display:block;font:700 30px/1 'Space Mono',monospace">D-26</span></div></div>
+        <div style="text-align:center;font:900 15px 'Gothic A1',sans-serif;margin-bottom:8px">제주 여행 계획</div>
+        <div style="font:400 10px/1.9 'Space Mono',monospace;border-top:1px dashed rgba(28,26,23,.3);border-bottom:1px dashed rgba(28,26,23,.3);padding:5px 0"><div style="display:flex;justify-content:space-between"><span style="color:rgba(28,26,23,.5)">DATE</span><span>2026.08.02</span></div><div style="display:flex;justify-content:space-between"><span style="color:rgba(28,26,23,.5)">4컷</span><span style="color:rgba(28,26,23,.55)">0/4</span></div></div>
+        <div style="height:16px;margin-top:12px;background-image:repeating-linear-gradient(90deg,#1c1a17 0 2px,transparent 2px 4px)"></div>
+      </div>
+      <div class="cap">① 일정만 연결 · 만남 전 → D-Day만</div>
+    </div>
+    <!-- 상태2 -->
+    <div>
+      <div style="position:relative;width:250px;background:#faf6ee;padding:20px 20px 24px;box-shadow:0 10px 24px rgba(28,26,23,.24);font-family:'Space Mono',monospace;color:#1c1a17">
+        <div style="text-align:center;font:700 12px 'Space Mono',monospace;letter-spacing:2.5px;padding-bottom:10px;border-bottom:1px dashed rgba(28,26,23,.3)">CLOV. MEMORIES</div>
+        <div style="position:relative;display:flex;justify-content:center;padding:16px 0 10px;min-height:80px"><div style="border:3px solid #c0392b;color:#c0392b;padding:5px 16px;border-radius:7px;text-align:center;transform:rotate(-4deg);box-shadow:0 0 0 3px #faf6ee,0 0 0 4px rgba(192,57,43,.22)"><span style="display:block;font:700 7px 'Space Mono',monospace;letter-spacing:1px">함께 보낸 그날</span><span style="display:block;font:700 30px/1 'Space Mono',monospace">D+2</span></div>
+          <div style="position:absolute;top:4px;right:6px;width:70px;height:70px;border-radius:12px;border:2px dashed rgba(28,26,23,.4);color:rgba(28,26,23,.44);transform:rotate(-6deg);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:repeating-linear-gradient(45deg,rgba(28,26,23,.03) 0 6px,transparent 6px 12px)"><div style="font:900 13px/1.15 'Gothic A1',sans-serif">4컷<br>기록 대기</div><div style="font:700 5px 'Space Mono',monospace;letter-spacing:1px;margin-top:4px">PENDING</div></div>
+        </div>
+        <div style="text-align:center;font:900 15px 'Gothic A1',sans-serif;margin-bottom:8px">홍대 전시회</div>
+        <div style="font:400 10px/1.9 'Space Mono',monospace;border-top:1px dashed rgba(28,26,23,.3);border-bottom:1px dashed rgba(28,26,23,.3);padding:5px 0"><div style="display:flex;justify-content:space-between"><span style="color:rgba(28,26,23,.5)">DATE</span><span>2026.07.05</span></div><div style="display:flex;justify-content:space-between"><span style="color:rgba(28,26,23,.5)">4컷</span><span style="color:#8a6d2f;font-weight:700">2/4</span></div></div>
+        <div style="height:16px;margin-top:12px;background-image:repeating-linear-gradient(90deg,#1c1a17 0 2px,transparent 2px 4px)"></div>
+      </div>
+      <div class="cap">② 4컷 미완성 → D-Day + 대기 도장</div>
+    </div>
+    <!-- 상태3 -->
+    <div>
+      <div style="position:relative;width:250px;background:#faf6ee;padding:20px 20px 24px;box-shadow:0 10px 24px rgba(28,26,23,.24);font-family:'Space Mono',monospace;color:#1c1a17;overflow:hidden">
+        <div style="text-align:center;font:700 12px 'Space Mono',monospace;letter-spacing:2.5px;padding-bottom:10px;border-bottom:1px dashed rgba(28,26,23,.3)">CLOV. MEMORIES</div>
+        <div style="display:flex;justify-content:center;padding:18px 0 10px"><div style="border:3px solid #c0392b;color:#c0392b;padding:5px 16px;border-radius:7px;text-align:center;transform:rotate(-4deg);box-shadow:0 0 0 3px #faf6ee,0 0 0 4px rgba(192,57,43,.22)"><span style="display:block;font:700 7px 'Space Mono',monospace;letter-spacing:1px">함께 보낸 그날</span><span style="display:block;font:700 30px/1 'Space Mono',monospace">D+22</span></div></div>
+        <div style="text-align:center;font:900 15px 'Gothic A1',sans-serif;margin-bottom:8px">성수 스터디 카페</div>
+        <div style="font:400 10px/1.9 'Space Mono',monospace;border-top:1px dashed rgba(28,26,23,.3);border-bottom:1px dashed rgba(28,26,23,.3);padding:5px 0"><div style="display:flex;justify-content:space-between"><span style="color:rgba(28,26,23,.5)">DATE</span><span>2026.06.15</span></div><div style="display:flex;justify-content:space-between"><span style="color:rgba(28,26,23,.5)">4컷</span><span style="color:#2e5233;font-weight:700">4/4 ✓</span></div></div>
+        <div style="height:16px;margin-top:12px;background-image:repeating-linear-gradient(90deg,#1c1a17 0 2px,transparent 2px 4px)"></div>
+        <img src="assets/stamps/memory-complete-stamp.png" alt="추억 완성" style="position:absolute;right:-10px;bottom:6px;width:140px;height:auto;transform:rotate(-12deg);mix-blend-mode:multiply;opacity:.9;pointer-events:none">
+      </div>
+      <div class="cap">③ 4컷 완성 → D-Day + 완성 도장(추가)</div>
+    </div>
+    <!-- 상태4 -->
+    <div>
+      <div style="position:relative;width:250px;background:#faf6ee;padding:20px 20px 24px;box-shadow:0 10px 24px rgba(28,26,23,.24);font-family:'Space Mono',monospace;color:#1c1a17">
+        <div style="text-align:center;font:700 12px 'Space Mono',monospace;letter-spacing:2.5px;padding-bottom:10px;border-bottom:1px dashed rgba(28,26,23,.3)">CLOV. MEMORIES</div>
+        <div style="display:flex;justify-content:center;padding:16px 0 10px"><div style="border:3px double #2e5233;color:#2e5233;padding:8px 18px;border-radius:9px;text-align:center;transform:rotate(-3deg)"><div style="font:900 24px/1 'Gothic A1',sans-serif">FREE</div><div style="font:700 11px 'Space Mono',monospace;letter-spacing:5px;margin-top:3px;padding-left:5px">MEMORY</div></div></div>
+        <div style="text-align:center;font:900 15px 'Gothic A1',sans-serif;margin-bottom:8px">동네 골목 산책</div>
+        <div style="font:400 10px/1.9 'Space Mono',monospace;border-top:1px dashed rgba(28,26,23,.3);border-bottom:1px dashed rgba(28,26,23,.3);padding:5px 0"><div style="display:flex;justify-content:space-between"><span style="color:rgba(28,26,23,.5)">DATE</span><span style="color:rgba(28,26,23,.55)">날짜 없음</span></div><div style="display:flex;justify-content:space-between"><span style="color:rgba(28,26,23,.5)">TYPE</span><span>FREE MEMORY</span></div></div>
+        <div style="height:16px;margin-top:12px;background-image:repeating-linear-gradient(90deg,#1c1a17 0 2px,transparent 2px 4px)"></div>
+      </div>
+      <div class="cap">④ 일정 없음 → FREE MEMORY</div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ② 글쓰기 모달 -->
+  <div class="sec-k">SECTION 02</div>
+  <div class="sec-h">추억 기록하기(글쓰기) 모달 — 약속 연결</div>
+  <p class="sec-d">기존 모달의 <b>함께한 친구</b> 아래에 <b style="color:#a7d585">약속 연결</b> 섹션 추가. 일정계획에서 가져와 <code style="font-family:'Space Mono',monospace;color:#c3e59a">scheduleId</code> 저장 · 안 하면 자유 기록 · <code style="font-family:'Space Mono',monospace;color:#c3e59a">＋새 약속</code> 폴백. 왼쪽=기본(가져오기 전), 오른쪽=연결됨.</p>
+  <div class="row">
+    <div>
+      <div style="width:400px;padding:20px 22px;border-radius:20px;background:radial-gradient(120% 80% at 12% 0%,#3b4726 0%,#28311b 48%,#1e2414 100%);box-shadow:0 22px 48px rgba(6,14,4,.5)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><span style="font:800 16px 'Gothic A1',sans-serif;color:#a9bd82">✏️ 추억 기록하기</span><span style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.1);color:#cdd8b4;display:grid;place-items:center;font-size:15px">×</span></div>
+        <div style="font:800 12px 'Gothic A1',sans-serif;color:#c9dc9e;margin-bottom:7px">함께한 친구</div>
+        <div style="display:flex;gap:8px;margin-bottom:16px"><span style="display:inline-flex;align-items:center;gap:6px;padding:4px 11px 4px 4px;border-radius:999px;border:1.5px solid #6f8c48;font:700 12px 'Gothic A1',sans-serif;color:#dfe9c8"><span style="width:22px;height:22px;border-radius:50%;background:#5f7d3c;color:#fff;display:grid;place-items:center;font-size:10px">솔</span>솔</span><span style="display:inline-flex;align-items:center;gap:6px;padding:4px 11px 4px 4px;border-radius:999px;border:1.5px solid #6f8c48;font:700 12px 'Gothic A1',sans-serif;color:#dfe9c8"><span style="width:22px;height:22px;border-radius:50%;background:#5f7d3c;color:#fff;display:grid;place-items:center;font-size:10px">민</span>민</span></div>
+        <div style="padding:14px;border-radius:12px;background:rgba(255,255,255,.03);border:1px solid rgba(147,177,99,.22);margin-bottom:18px">
+          <div style="font:800 12px 'Gothic A1',sans-serif;color:#c9dc9e;margin-bottom:9px">약속 연결 <span style="color:#8b9a66;font-weight:700">(선택 · 일정계획)</span></div>
+          <div style="display:flex;align-items:center;gap:9px;padding:12px 13px;border:1.5px dashed #52642f;border-radius:9px;color:#c2d795;font:800 13px 'Gothic A1',sans-serif">🗓️ 일정계획에서 약속 가져오기</div>
+          <div style="margin-top:8px;font:400 11px 'Gothic A1',sans-serif;color:#8b9a66">연결 안 하면 <b style="color:#c2d795">자유 기록(FREE MEMORY)</b>으로 저장돼요</div>
+        </div>
+        <div style="width:100%;box-sizing:border-box;padding:13px 0;border-radius:12px;background:#8cbf5f;color:#22300f;font:800 14px 'Gothic A1',sans-serif;text-align:center">기록 남기기 ✓</div>
+      </div>
+      <div class="cap">기본 — 가져오기 전</div>
+    </div>
+    <div>
+      <div style="width:400px;padding:20px 22px;border-radius:20px;background:radial-gradient(120% 80% at 12% 0%,#3b4726 0%,#28311b 48%,#1e2414 100%);box-shadow:0 22px 48px rgba(6,14,4,.5)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><span style="font:800 16px 'Gothic A1',sans-serif;color:#a9bd82">✏️ 추억 기록하기</span><span style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.1);color:#cdd8b4;display:grid;place-items:center;font-size:15px">×</span></div>
+        <div style="font:800 12px 'Gothic A1',sans-serif;color:#c9dc9e;margin-bottom:9px">약속 연결 <span style="color:#8b9a66;font-weight:700">(선택 · 일정계획)</span></div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
+          <div style="position:relative;background:#faf6ee;border-radius:8px;padding:9px 12px;display:flex;gap:12px;align-items:center;outline:2.5px solid #93b163;outline-offset:1px;box-shadow:0 3px 9px rgba(0,0,0,.26);font-family:'Space Mono',monospace">
+            <div style="min-width:56px;display:flex;justify-content:center"><div style="border:2px solid #c0392b;color:#c0392b;padding:2px 8px;border-radius:5px;transform:rotate(-4deg);font:700 16px 'Space Mono',monospace">D+22</div></div>
+            <div style="flex:1;border-left:1px dashed rgba(28,26,23,.28);padding-left:12px"><div style="font-family:'Gothic A1',sans-serif;font-weight:900;font-size:13px;color:#1c1a17">성수 스터디 카페</div><div style="font:700 10px 'Gothic A1',sans-serif;color:#2e5233;margin-top:2px">인생4컷 4/4 ✓</div></div>
+            <div style="position:absolute;top:-8px;right:-8px;width:22px;height:22px;border-radius:50%;background:#2e5233;color:#fff;display:grid;place-items:center;font-size:12px">✓</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:10px;background:rgba(147,177,99,.16);border:1px solid rgba(147,177,99,.42);margin-bottom:18px"><span style="border:1.5px solid #c0392b;color:#c0392b;border-radius:5px;padding:2px 8px;font:700 13px 'Space Mono',monospace;background:#faf6ee">D+22</span><span style="flex:1;font:700 13px 'Gothic A1',sans-serif;color:#eaf3df">성수 스터디 카페 <span style="color:#a7d585;font-weight:800">· 연결됨</span></span><span style="color:#c2d795;font:700 11px 'Gothic A1',sans-serif">변경</span><span style="color:#c2d795;font:700 11px 'Gothic A1',sans-serif;text-decoration:underline;text-underline-offset:3px">해제</span></div>
+        <div style="width:100%;box-sizing:border-box;padding:13px 0;border-radius:12px;background:#8cbf5f;color:#22300f;font:800 14px 'Gothic A1',sans-serif;text-align:center">기록 남기기 ✓</div>
+      </div>
+      <div class="cap">연결됨 — 칩 + 변경/해제</div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ③ 상세 여권 -->
+  <div class="sec-k">SECTION 03</div>
+  <div class="sec-h">추억 상세 — MEMORY PASSPORT</div>
+  <p class="sec-d">피드 폴라로이드 클릭 → 이 상세. 대표사진 1장 크게 + 썸네일 스트립(최대 30·<code style="font-family:'Space Mono',monospace;color:#c3e59a">+N</code>·사진 클릭 시 슬라이드 갤러리), 옆에 <code style="font-family:'Space Mono',monospace;color:#c3e59a">scheduleId</code> 참조 영수증 + 완성 도장. 하단 <b>친구 한 줄 메시지</b>는 그대로 유지.</p>
+  <div style="width:600px;background:linear-gradient(180deg,#fff,#f8fbf9);border-radius:16px;box-shadow:0 24px 54px rgba(8,28,22,.3);overflow:hidden">
+    <div style="position:relative;padding:16px 22px 13px;background:linear-gradient(135deg,#12301d,#1b4332)">
+      <div style="font:700 8px 'Space Mono',monospace;letter-spacing:3px;color:rgba(231,217,166,.85)">★ CLOV MEMORY PASSPORT ★</div>
+      <div style="font:900 22px 'Gothic A1',sans-serif;color:#f6f2e6;margin-top:5px">성수 스터디 카페</div>
+      <div style="font:700 8px 'Space Mono',monospace;letter-spacing:2px;color:rgba(231,217,166,.7);margin-top:4px">REPUBLIC OF CLOVER · 우정 여권</div>
+      <span style="position:absolute;top:16px;right:20px;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.14);color:#f6f2e6;display:grid;place-items:center;font-size:16px">×</span>
+    </div>
+    <div style="padding:20px 22px;display:flex;gap:18px;align-items:flex-start">
+      <div style="flex:1;min-width:0">
+        <div style="position:relative;width:100%;aspect-ratio:4/3;border-radius:4px;overflow:hidden;background:#dfe4dc"><x-import component-from-global-scope="image-slot" from="./image-slot.js" id="ref-main" shape="rect" placeholder="대표사진" hint-size="100%,100%"></x-import>
+          <span style="position:absolute;top:9px;left:9px;padding:4px 9px;border-radius:999px;background:rgba(18,48,29,.82);color:#e7d9a6;font:700 10px 'Space Mono',monospace;letter-spacing:1px">01 / 30</span>
+          <span style="position:absolute;top:50%;left:9px;transform:translateY(-50%);width:28px;height:28px;border-radius:50%;background:rgba(18,48,29,.72);color:#fff;display:grid;place-items:center;font-size:14px">‹</span>
+          <span style="position:absolute;top:50%;right:9px;transform:translateY(-50%);width:28px;height:28px;border-radius:50%;background:rgba(18,48,29,.72);color:#fff;display:grid;place-items:center;font-size:14px">›</span>
+        </div>
+        <div style="display:flex;gap:7px;margin-top:9px">
+          <div style="flex:0 0 46px;height:46px;border-radius:5px;background:#dfe4dc;outline:2px solid #1b4332;outline-offset:1px"></div>
+          <div style="flex:0 0 46px;height:46px;border-radius:5px;background:#dfe4dc"></div>
+          <div style="flex:0 0 46px;height:46px;border-radius:5px;background:#dfe4dc"></div>
+          <div style="flex:0 0 46px;height:46px;border-radius:5px;background:#dfe4dc"></div>
+          <div style="flex:0 0 46px;height:46px;border-radius:5px;background:#eef2ec;display:flex;align-items:center;justify-content:center;font:800 12px 'Gothic A1',sans-serif;color:#4a5a48">+25</div>
+        </div>
+      </div>
+      <div style="flex:0 0 186px;position:relative;background:#faf6ee;padding:15px 16px 17px;box-shadow:0 8px 20px rgba(28,26,23,.18);font-family:'Space Mono',monospace;color:#1c1a17;overflow:hidden">
+        <div style="text-align:center;font:700 9px 'Space Mono',monospace;letter-spacing:2px;padding-bottom:8px;border-bottom:1px dashed rgba(28,26,23,.3)">CLOV. MEMORIES</div>
+        <div style="display:flex;justify-content:center;padding:13px 0 8px"><span style="border:2.5px solid #c0392b;color:#c0392b;border-radius:6px;padding:3px 14px;font:700 25px 'Space Mono',monospace">D+22</span></div>
+        <div style="text-align:center;font:900 14px 'Gothic A1',sans-serif">성수 스터디 카페</div>
+        <div style="font:400 9.5px/1.9 'Space Mono',monospace;border-top:1px dashed rgba(28,26,23,.3);margin-top:8px;padding-top:6px"><div style="display:flex;justify-content:space-between"><span style="color:rgba(28,26,23,.5)">DATE</span><span>2026.06.15</span></div><div style="display:flex;justify-content:space-between"><span style="color:rgba(28,26,23,.5)">4컷</span><span style="color:#2e5233;font-weight:700">4/4 ✓</span></div></div>
+        <div style="height:14px;margin-top:9px;background-image:repeating-linear-gradient(90deg,#1c1a17 0 1.5px,transparent 1.5px 3px)"></div>
+        <img src="assets/stamps/memory-complete-stamp.png" alt="추억 완성" style="position:absolute;right:-12px;bottom:2px;width:132px;height:auto;transform:rotate(-12deg);mix-blend-mode:multiply;opacity:.9;pointer-events:none">
+      </div>
+    </div>
+    <div style="padding:2px 22px 6px;display:flex;gap:26px">
+      <div><div style="font:700 8px 'Space Mono',monospace;letter-spacing:1.5px;color:#9aa39a">STATUS</div><div style="display:inline-flex;align-items:center;gap:6px;margin-top:4px;padding:5px 11px;border-radius:999px;background:#e7f0df;color:#2e5233;font:800 12px 'Gothic A1',sans-serif"><span style="width:7px;height:7px;border-radius:50%;background:#2e5233"></span>달성 · 인생4컷 완성</div></div>
+      <div><div style="font:700 8px 'Space Mono',monospace;letter-spacing:1.5px;color:#9aa39a">PHOTOS</div><div style="font:800 15px 'Gothic A1',sans-serif;color:#24382f;margin-top:3px">30장 기록</div></div>
+    </div>
+    <div style="padding:10px 22px 0"><div style="font:700 8px 'Space Mono',monospace;letter-spacing:1.5px;color:#9aa39a">REMARKS</div><div style="font:400 13.5px/1.6 'Gothic A1',sans-serif;color:#24382f;margin-top:3px">문제 풀고 커피 마시며 집중한 날. 네 컷 다 모았다 — 이제 추억으로 남긴다.</div></div>
+    <div style="margin:12px 22px 0;padding:8px 12px;background:#f1f4ec;border-top:2px solid #1b4332;font:700 9px/1.7 'Space Mono',monospace;letter-spacing:1px;color:#6b7a68;white-space:nowrap;overflow:hidden">MEM&lt;CLOV&lt;&lt;SEONGSU&lt;STUDY&lt;CAFE&lt;&lt;&lt;20260615&lt;4CUT4OF4</div>
+    <!-- 친구 한 줄 메시지 (유지) -->
+    <div style="padding:14px 22px 20px">
+      <div style="margin-top:6px;padding-top:14px;border-top:1px solid rgba(216,235,226,.9)">
+        <div style="font:800 13px 'Gothic A1',sans-serif;color:#6d8075;margin-bottom:10px">친구 한 줄 메시지</div>
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 0"><span style="width:26px;height:26px;border-radius:50%;background:#1b4332;color:#fff;display:grid;place-items:center;font:800 11px 'Gothic A1',sans-serif">나</span><span style="min-width:28px;font:700 12px 'Gothic A1',sans-serif;color:#24382f">나</span><span style="flex:1;font:400 13px 'Gothic A1',sans-serif;color:#24382f">문제 하나 풀어서 뿌듯</span><span style="font:700 11px 'Gothic A1',sans-serif;color:#6d8075">수정</span><span style="font:700 11px 'Gothic A1',sans-serif;color:#6d8075">삭제</span></div>
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 0"><span style="width:26px;height:26px;border-radius:50%;background:#1b4332;color:#fff;display:grid;place-items:center;font:800 11px 'Gothic A1',sans-serif">솔</span><span style="min-width:28px;font:700 12px 'Gothic A1',sans-serif;color:#24382f">솔</span><span style="flex:1;font-style:italic;font-size:12px;color:#6d8075">아직 메시지 없음</span></div>
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 0"><span style="width:26px;height:26px;border-radius:50%;background:#1b4332;color:#fff;display:grid;place-items:center;font:800 11px 'Gothic A1',sans-serif">민</span><span style="min-width:28px;font:700 12px 'Gothic A1',sans-serif;color:#24382f">민</span><span style="flex:1;font:400 13px 'Gothic A1',sans-serif;color:#24382f">조용해서 집중 잘 됐다</span></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:16px;padding-top:14px;border-top:1px solid rgba(216,235,226,.9)"><span style="font-size:12px;color:#6d8075">친구는 메시지만 남길 수 있어요</span><span style="flex:1;background:#86a559;color:#fff;padding:12px 0;border-radius:10px;font:700 14px 'Gothic A1',sans-serif;text-align:center">닫기</span></div>
+    </div>
+  </div>
+  <div class="cap" style="color:#8b9a66">＊ 연결 없으면 영수증 자리에 FREE MEMORY 스탬프 · 친구 메시지 영역은 손대지 않음</div>
+
+  <div class="divider"></div>
+
+  <!-- ④ 피드 -->
+  <div class="sec-k">SECTION 04</div>
+  <div class="sec-h">추억 피드 (변경 없음)</div>
+  <p class="sec-d">폴라로이드 카드 그대로 유지 · 클릭 → <code style="font-family:'Space Mono',monospace;color:#c3e59a">openMemoryDetail(postId)</code> → 위 상세 오픈.</p>
+  <div style="width:250px;background:#fff;border-radius:14px;box-shadow:0 16px 36px rgba(8,28,22,.28);overflow:hidden">
+    <div style="position:relative;height:180px;background:#dfe4dc"><x-import component-from-global-scope="image-slot" from="./image-slot.js" id="ref-feed" shape="rect" placeholder="사진" hint-size="100%,100%"></x-import><span style="position:absolute;top:10px;left:10px;padding:4px 9px;border-radius:8px;background:rgba(255,255,255,.92);color:#2e5233;font:800 11px 'Gothic A1',sans-serif">솔의 기록</span><span style="position:absolute;bottom:10px;right:10px;padding:4px 9px;border-radius:999px;background:rgba(255,255,255,.92);color:#2e5233;font:700 10px 'Gothic A1',sans-serif">● 자세히</span></div>
+    <div style="padding:13px 15px 16px"><div style="font:900 16px 'Gothic A1',sans-serif;color:#20342a;margin-bottom:5px">성수 스터디 카페</div><div style="font:400 12px 'Gothic A1',sans-serif;color:#5a6b5a">문제 풀고 커피 마시며 집중한 날.</div><div style="display:flex;gap:6px;margin-top:11px"><span style="font:700 10px 'Gothic A1',sans-serif;background:#e7f0df;color:#2e5233;border-radius:5px;padding:3px 8px">#소중한순간</span><span style="font:700 10px 'Gothic A1',sans-serif;background:#eef2ec;color:#6d8075;border-radius:5px;padding:3px 8px">#친구기록</span></div></div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

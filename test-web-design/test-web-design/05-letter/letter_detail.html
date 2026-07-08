@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clov - 행운 편지 보기</title>
+    <style>
+                :root {
+            --bg-color: #cbdad2;
+            --card-bg: #ffffff;
+            --text-color: #2c3e35;
+            --text-muted: #61766a;
+            --border-color: #eef2f0;
+            --primary-green: #1b4332;
+            --accent-green: #52b788;
+            --btn-hover: #357a58;
+            --input-bg: #fafbfc;
+            --btn-secondary-bg: rgba(0,0,0,0.05);
+        }
+
+        body.dark-mode {
+            --bg-color: #090d0a;
+            --card-bg: #151f18;
+            --text-color: #f0fdf4;
+            --text-muted: #86efac;
+            --border-color: #1e2f24;
+            --primary-green: #007c2e;
+            --accent-green: #4ade80;
+            --btn-hover: #16a34a;
+            --input-bg: #0d1510;
+            --btn-secondary-bg: rgba(255,255,255,0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 32px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            animation: fadeUp 0.6s ease-out;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 16px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--accent-green);
+        }
+
+        .back-btn {
+            background: transparent;
+            color: var(--text-muted);
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .back-btn:hover {
+            color: #fff;
+        }
+
+        .letter-content {
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 32px;
+            font-size: 18px;
+            line-height: 1.6;
+            margin-bottom: 24px;
+            position: relative;
+        }
+        
+        .letter-from {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+
+        .letter-text {
+            white-space: pre-wrap;
+        }
+
+        .btn-action-sm {
+            background: var(--btn-secondary-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.3s;
+            flex: 1;
+        }
+
+        .btn-action-sm:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .btn-favorite {
+            color: var(--text-muted);
+        }
+        .btn-favorite.active {
+            color: var(--yellow-color);
+            border-color: var(--yellow-color);
+        }
+
+        .btn-delete {
+            color: var(--delete-red);
+        }
+
+    </style>
+    <link rel="stylesheet" href="../02-main/css/global-theme.css">
+    <script id="dark-mode-init">
+        const urlParamsTheme = new URLSearchParams(window.location.search);
+        const themeParam = urlParamsTheme.get('theme');
+        let isDark = false;
+        
+        if (themeParam === 'dark') {
+            isDark = true;
+        } else if (themeParam === 'light') {
+            isDark = false;
+        } else {
+            isDark = localStorage.getItem('clov_darkMode') === 'true';
+        }
+
+        if (isDark) {
+            document.documentElement.classList.add('dark-mode');
+            window.addEventListener('DOMContentLoaded', () => {
+                document.body.classList.add('dark-mode');
+            });
+        }
+    </script>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>💌 편지 읽기</h1>
+        <button class="back-btn" onclick="goBack()">✕ 닫기</button>
+    </div>
+
+    <div class="letter-content">
+        <div class="letter-from" id="letter-from">From. 친구</div>
+        <div class="letter-text" id="letter-text">내용이 없습니다.</div>
+    </div>
+
+    <div class="actions" id="actions-container">
+        <!-- 동적으로 버튼 생성 -->
+    </div>
+</div>
+
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const groupId = urlParams.get('groupId') || 'friend';
+    const letterIndex = parseInt(urlParams.get('index'));
+
+    let groupsData = JSON.parse(localStorage.getItem('clov_groupsData'));
+    if (!groupsData || !groupsData[groupId] || isNaN(letterIndex)) {
+        alert("데이터를 찾을 수 없습니다.");
+        goBack();
+    }
+
+    const currentGroup = groupsData[groupId];
+    const letter = currentGroup.letters[letterIndex];
+
+    if (!letter) {
+        alert("해당 편지를 찾을 수 없습니다.");
+        goBack();
+    }
+
+    document.getElementById('letter-from').innerText = `From. ${letter.from}`;
+    document.getElementById('letter-text').innerText = letter.text;
+
+    const actionsContainer = document.getElementById('actions-container');
+    let actionHtml = '';
+
+    // 즐겨찾기 버튼
+    actionHtml += `<button class="btn-action-sm btn-favorite ${letter.favorite ? 'active' : ''}" onclick="toggleFavorite()">⭐ 즐겨찾기</button>`;
+    if (letter.isMine) {
+        actionHtml += `<button class="btn-action-sm" onclick="editLetter()">✏️ 수정</button>`;
+        actionHtml += `<button class="btn-action-sm btn-delete" onclick="deleteLetter()">🗑️ 삭제</button>`;
+    }
+    actionsContainer.innerHTML = actionHtml;
+
+        function renderPage() {
+        document.getElementById('letter-text').innerText = letter.text;
+        const actionsContainer = document.getElementById('actions-container');
+        let actionHtml = '';
+        actionHtml += `<button class="btn-action-sm btn-favorite ${letter.favorite ? 'active' : ''}" onclick="toggleFavorite()">⭐ 즐겨찾기</button>`;
+        if (letter.isMine) {
+            actionHtml += `<button class="btn-action-sm" onclick="editLetter()">✏️ 수정</button>`;
+            actionHtml += `<button class="btn-action-sm btn-delete" onclick="deleteLetter()">🗑️ 삭제</button>`;
+        }
+        actionsContainer.innerHTML = actionHtml;
+        isEditing = false;
+    }
+
+    function toggleFavorite() {
+        letter.favorite = !letter.favorite;
+        localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
+        renderPage();
+    }
+
+    let isEditing = false;
+    let originalText = "";
+
+    function editLetter() {
+        if (isEditing) return;
+        isEditing = true;
+        
+        const textContainer = document.getElementById('letter-text');
+        originalText = letter.text;
+        
+        textContainer.innerHTML = `<textarea id="edit-letter-textarea" style="width:100%; height: 150px; padding: 12px; border: 1px solid var(--input-border); border-radius: 8px; background: var(--input-bg); color: var(--text-color); resize: vertical; font-size: 15px; font-family: inherit;">${letter.text}</textarea>`;
+        
+        const actionsContainer = document.getElementById('actions-container');
+        actionsContainer.innerHTML = `
+            <button class="btn-action-sm" onclick="saveLetter()" style="background: var(--primary-green); color: white;">💾 저장</button>
+            <button class="btn-action-sm btn-delete" onclick="cancelEdit()">❌ 취소</button>
+        `;
+    }
+
+    function saveLetter() {
+        const textarea = document.getElementById('edit-letter-textarea');
+        if (!textarea) return;
+        
+        const newText = textarea.value.trim();
+        if (newText !== "") {
+            letter.text = newText;
+            localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
+            window.location.reload();
+        } else {
+            alert("내용을 입력해주세요.");
+        }
+    }
+
+    function cancelEdit() {
+        renderPage();
+    }
+
+    function deleteLetter() {
+        if (confirm("정말 이 행운 편지를 삭제하시겠습니까?")) {
+            currentGroup.letters.splice(letterIndex, 1);
+            localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
+            goBack();
+        }
+    }
+
+    function goBack() {
+        window.location.href = `../02-main/index.html?selectedGroup=${groupId}&theme=${isDark ? 'dark' : 'light'}`;
+    }
+</script>
+</body>
+</html>
+
+
+
+
+
