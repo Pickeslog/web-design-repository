@@ -765,6 +765,205 @@
             closeScheduleJourneyModal();
         });
 
+        // ── 우정공간 사진 모아보기 (추억피드 격자 아이콘 → 애플 갤러리 스타일) ──
+        // 현재 방(활성 그룹)의 모든 추억 사진을 검색·정렬(최신/오래된순)·월별 섹션으로 모아본다.
+        // 격자 사진 클릭 → 전체화면 라이트박스(이전/다음/카운터/"이 추억 보기").
+        let spaceGalleryState = { open: false, allItems: [], items: [], lightbox: -1, search: '', sort: 'new' };
+
+        // 게시글 날짜("2026.07.08" 등)를 정렬용 숫자 + 월 그룹 키/라벨로 파싱
+        function parseSpacePhotoDate(dateStr) {
+            const m = String(dateStr || '').match(/(\d{4})\D+(\d{1,2})(?:\D+(\d{1,2}))?/);
+            if (!m) return { num: -1, key: 'none', label: '날짜 미상' };
+            const y = +m[1], mo = +m[2], d = +(m[3] || 1);
+            return { num: y * 10000 + mo * 100 + d, key: y + '-' + String(mo).padStart(2, '0'), label: y + '년 ' + mo + '월' };
+        }
+
+        function collectSpacePhotos() {
+            const posts = (groupsData[activeGroup] && groupsData[activeGroup].posts) || [];
+            const items = [];
+            posts.forEach((post, postIndex) => {
+                const np = normalizeMemoryPost(post);
+                const tags = (typeof getMemoryHashtags === 'function') ? getMemoryHashtags(np).join(' ') : ((np.tags || []).join(' '));
+                const names = (np.participants || []).map(p => p.name).join(' ');
+                const searchText = [np.title, np.text, tags, names].join(' ').toLowerCase();
+                const dt = parseSpacePhotoDate(np.date);
+                (np.photos || []).forEach(url => {
+                    if (url) items.push({ url, postIndex, title: np.title, date: np.date, searchText, dateNum: dt.num, monthKey: dt.key, monthLabel: dt.label });
+                });
+            });
+            return items;
+        }
+
+        // 검색어 필터 + 정렬을 적용한 현재 보이는 사진 목록 (라이트박스도 이 목록을 넘겨본다)
+        function getSpaceGalleryVisible() {
+            const q = spaceGalleryState.search.trim().toLowerCase();
+            const items = spaceGalleryState.allItems.filter(it => !q || it.searchText.indexOf(q) !== -1);
+            items.sort((a, b) => {
+                const aBad = a.dateNum < 0, bBad = b.dateNum < 0;
+                if (aBad !== bBad) return aBad ? 1 : -1; // 날짜 미상은 항상 맨 뒤
+                return spaceGalleryState.sort === 'old' ? a.dateNum - b.dateNum : b.dateNum - a.dateNum;
+            });
+            return items;
+        }
+
+        function ensureSpaceGalleryEl() {
+            const overlay = document.getElementById('space-photo-gallery-overlay');
+            if (!overlay || overlay._sgBound) return overlay;
+            overlay._sgBound = true;
+            overlay.addEventListener('click', event => {
+                if (event.target === overlay) {
+                    if (spaceGalleryState.lightbox >= 0) closeSpaceLightbox();
+                    else closeSpacePhotoGallery();
+                }
+            });
+            return overlay;
+        }
+
+        // 헤더(검색·정렬 컨트롤)는 열 때 1회, 본문(월별 섹션)은 검색/정렬마다 갱신 → 검색 입력 포커스 유지
+        function renderSpaceGallery() {
+            const overlay = ensureSpaceGalleryEl();
+            if (!overlay) return;
+            overlay.innerHTML = `
+                <div class="sg-head">
+                    <div class="sg-head-titles">
+                        <div class="sg-title">우정공간 사진</div>
+                        <div class="sg-count" id="sg-count"></div>
+                    </div>
+                    <div class="sg-search">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                        <input class="sg-search-input" id="sg-search-input" type="search" autocomplete="off" placeholder="사진 검색 (제목·내용·태그·친구)" value="${escapeHtml(spaceGalleryState.search)}" oninput="setSpaceGallerySearch(this.value)">
+                        <button type="button" class="sg-search-clear" onclick="setSpaceGallerySearch('')" aria-label="검색어 지우기" ${spaceGalleryState.search ? '' : 'hidden'}>×</button>
+                    </div>
+                    <div class="sg-sort" role="group" aria-label="정렬 순서">
+                        <button type="button" data-sort="new" class="${spaceGalleryState.sort === 'new' ? 'active' : ''}" onclick="setSpaceGallerySort('new')">최신순</button>
+                        <button type="button" data-sort="old" class="${spaceGalleryState.sort === 'old' ? 'active' : ''}" onclick="setSpaceGallerySort('old')">오래된순</button>
+                    </div>
+                    <button type="button" class="sg-close" onclick="closeSpacePhotoGallery()" aria-label="닫기">×</button>
+                </div>
+                <div class="sg-body" id="sg-body"></div>
+                <div id="sg-lightbox-host"></div>
+            `;
+            renderSpaceGalleryBody();
+            renderSpaceLightbox();
+        }
+
+        function renderSpaceGalleryBody() {
+            const body = document.getElementById('sg-body');
+            if (!body) return;
+            const visible = getSpaceGalleryVisible();
+            spaceGalleryState.items = visible;
+
+            const countEl = document.getElementById('sg-count');
+            if (countEl) countEl.textContent = visible.length + '장' + (spaceGalleryState.search.trim() ? ' · 검색결과' : '');
+
+            if (!visible.length) {
+                body.innerHTML = `<div class="sg-empty"><span class="sg-empty-clover">${spaceGalleryState.search.trim() ? '🔍' : '🍀'}</span>${spaceGalleryState.search.trim() ? '검색 결과가 없어요.' : '아직 이 우정공간에 올라온 사진이 없어요.'}</div>`;
+                return;
+            }
+
+            // 정렬된 순서를 유지하며 월별 섹션으로 묶는다 (셀 클릭 인덱스는 visible 배열 기준)
+            const groups = [];
+            let cur = null;
+            visible.forEach((it, idx) => {
+                if (!cur || cur.key !== it.monthKey) { cur = { key: it.monthKey, label: it.monthLabel, cells: [] }; groups.push(cur); }
+                cur.cells.push({ it, idx });
+            });
+
+            body.innerHTML = groups.map(g => `
+                <section class="sg-section">
+                    <div class="sg-section-head">${escapeHtml(g.label)}<span class="sg-section-count">${g.cells.length}</span></div>
+                    <div class="sg-grid">
+                        ${g.cells.map(c => `
+                            <button type="button" class="sg-cell" onclick="openSpaceLightbox(${c.idx})" aria-label="${escapeHtml(c.it.title)} 사진 크게 보기">
+                                <img src="${escapeHtml(c.it.url)}" loading="lazy" alt="${escapeHtml(c.it.title)}">
+                            </button>`).join('')}
+                    </div>
+                </section>
+            `).join('');
+        }
+
+        function renderSpaceLightbox() {
+            const host = document.getElementById('sg-lightbox-host');
+            if (!host) return;
+            const items = spaceGalleryState.items;
+            const lb = spaceGalleryState.lightbox;
+            if (lb < 0 || !items[lb]) { host.innerHTML = ''; return; }
+            host.innerHTML = `
+                <div class="sg-lightbox">
+                    <div class="sg-lb-counter">${lb + 1} / ${items.length}</div>
+                    <button type="button" class="sg-lb-close" onclick="closeSpaceLightbox()" aria-label="닫기">×</button>
+                    <div class="sg-lb-stage">
+                        ${items.length > 1 ? `<button type="button" class="sg-lb-arrow sg-lb-prev" onclick="spaceLightboxNav(-1)" aria-label="이전">‹</button>` : ''}
+                        <img src="${escapeHtml(items[lb].url)}" alt="${escapeHtml(items[lb].title)}">
+                        ${items.length > 1 ? `<button type="button" class="sg-lb-arrow sg-lb-next" onclick="spaceLightboxNav(1)" aria-label="다음">›</button>` : ''}
+                    </div>
+                    <div class="sg-lb-info">
+                        <span class="sg-lb-title">${escapeHtml(items[lb].title)} · ${escapeHtml(String(items[lb].date || ''))}</span>
+                        <button type="button" class="sg-lb-open" onclick="openSpaceMemoryFromGallery(${items[lb].postIndex})">이 추억 보기 ›</button>
+                    </div>
+                </div>`;
+        }
+
+        function openSpacePhotoGallery() {
+            const overlay = ensureSpaceGalleryEl();
+            if (!overlay) return;
+            spaceGalleryState = { open: true, allItems: collectSpacePhotos(), items: [], lightbox: -1, search: '', sort: 'new' };
+            renderSpaceGallery();
+            overlay.classList.add('open');
+        }
+
+        function closeSpacePhotoGallery() {
+            const overlay = document.getElementById('space-photo-gallery-overlay');
+            if (overlay) overlay.classList.remove('open');
+            spaceGalleryState = { open: false, allItems: [], items: [], lightbox: -1, search: '', sort: 'new' };
+        }
+
+        function setSpaceGallerySearch(value) {
+            spaceGalleryState.search = value;
+            const clear = document.querySelector('.sg-search-clear');
+            if (clear) clear.hidden = !value;
+            const input = document.getElementById('sg-search-input');
+            if (input && input.value !== value) input.value = value; // 지우기 버튼으로 비운 경우 반영
+            renderSpaceGalleryBody(); // 본문만 갱신 → 검색 입력 포커스 유지
+        }
+
+        function setSpaceGallerySort(sort) {
+            spaceGalleryState.sort = sort;
+            document.querySelectorAll('.sg-sort button').forEach(b => b.classList.toggle('active', b.dataset.sort === sort));
+            renderSpaceGalleryBody();
+        }
+
+        function openSpaceLightbox(index) {
+            spaceGalleryState.lightbox = index;
+            renderSpaceLightbox();
+        }
+
+        function closeSpaceLightbox() {
+            spaceGalleryState.lightbox = -1;
+            renderSpaceLightbox();
+        }
+
+        function spaceLightboxNav(direction) {
+            const n = spaceGalleryState.items.length;
+            if (n < 2 || spaceGalleryState.lightbox < 0) return;
+            spaceGalleryState.lightbox = (spaceGalleryState.lightbox + direction + n) % n;
+            renderSpaceLightbox();
+        }
+
+        // 라이트박스에서 "이 추억 보기" → 갤러리 닫고 해당 게시글 상세(여권) 열기
+        function openSpaceMemoryFromGallery(postIndex) {
+            closeSpacePhotoGallery();
+            if (typeof openMemoryDetail === 'function') openMemoryDetail(postIndex);
+        }
+
+        // Esc: 라이트박스가 열려 있으면 라이트박스만, 아니면 갤러리를 닫는다 (열림 상태에서만 반응)
+        document.addEventListener('keydown', event => {
+            if (event.key !== 'Escape' || !spaceGalleryState.open) return;
+            event.stopImmediatePropagation();
+            if (spaceGalleryState.lightbox >= 0) closeSpaceLightbox();
+            else closeSpacePhotoGallery();
+        });
+
         function updateMemoryPost() {
             const post = getCurrentMemoryPost();
             if (!post) return;
