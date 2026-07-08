@@ -998,7 +998,7 @@
 
         .polaroid-card {
             background: var(--card-bg);
-            padding: 10px 10px 52px;
+            padding: 10px 10px 10px;
             border-radius: 3px;
             box-shadow:
                 0 2px 4px rgba(0, 0, 0, 0.10),
@@ -1176,6 +1176,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            margin-top: 10px;
             margin-bottom: 4px;
         }
 

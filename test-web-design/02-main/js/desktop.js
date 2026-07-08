@@ -1804,7 +1804,61 @@ document.getElementById = function(id) {
             if (!grp) return;
             if (typeof grp.levelProgress !== 'number') grp.levelProgress = 0;
             if (typeof grp.level !== 'number') grp.level = friendshipLevel || 1;
-            if (grp.level >= CLOV_MAX_LEVEL) return;
+            if (grp.level >= CLOV_MAX_LEVEL) {
+                if (source === 'post' || source === 'schedule_add' || source === 'schedule_done') {
+                    let cx = window.innerWidth / 2;
+                    let cy = window.innerHeight / 2;
+                    const mascotEl = document.getElementById('croby-sprite');
+                    if (mascotEl) {
+                        const rect = mascotEl.getBoundingClientRect();
+                        cx = rect.left + rect.width / 2;
+                        cy = rect.top + rect.height / 2;
+                    }
+
+                    for (let i = 0; i < 12; i++) {
+                        const sparkle = document.createElement('div');
+                        sparkle.style.position = 'fixed';
+                        sparkle.style.left = cx + 'px';
+                        sparkle.style.top = cy + 'px';
+                        sparkle.style.transform = 'translate(-50%, -50%)';
+                        sparkle.style.zIndex = '99999';
+                        sparkle.style.pointerEvents = 'none';
+                        sparkle.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#fcb902" width="20" height="20"><path fill-rule="evenodd" d="M9 4.5a.75.75 0 0 1 .721.544l.813 2.846a3.75 3.75 0 0 0 2.576 2.576l2.846.813a.75.75 0 0 1 0 1.442l-2.846.813a3.75 3.75 0 0 0-2.576 2.576l-.813 2.846a.75.75 0 0 1-1.442 0l-.813-2.846a3.75 3.75 0 0 0-2.576-2.576l-2.846-.813a.75.75 0 0 1 0-1.442l2.846-.813A3.75 3.75 0 0 0 7.466 7.89l.813-2.846A.75.75 0 0 1 9 4.5ZM18 1.5a.75.75 0 0 1 .728.568l.258 1.036c.236.94.97 1.674 1.91 1.91l1.036.258a.75.75 0 0 1 0 1.456l-1.036.258c-.94.236-1.674.97-1.91 1.91l-.258 1.036a.75.75 0 0 1-1.456 0l-.258-1.036a2.625 2.625 0 0 0-1.91-1.91l-1.036-.258a.75.75 0 0 1 0-1.456l1.036-.258a2.625 2.625 0 0 0 1.91-1.91l.258-1.036A.75.75 0 0 1 18 1.5ZM16.5 15a.75.75 0 0 1 .712.513l.394 1.183c.15.447.5.799.948.948l1.183.395a.75.75 0 0 1 0 1.422l-1.183.395c-.447.15-.799.5-.948.948l-.395 1.183a.75.75 0 0 1-1.422 0l-.395-1.183a1.5 1.5 0 0 0-.948-.948l-1.183-.395a.75.75 0 0 1 0-1.422l1.183-.395c.447-.15.799-.5.948-.948l.395-1.183A.75.75 0 0 1 16.5 15Z" clip-rule="evenodd" /></svg>`;
+                        document.body.appendChild(sparkle);
+
+                        // 마스코트에서 좌측 상단(화면 중심부)으로 길고 넓게 퍼지도록 계산 (약 170도 ~ 290도)
+                        const baseAngle = Math.PI * 0.95 + Math.random() * (Math.PI * 0.65);
+                        const distance = 200 + Math.random() * 400; // 화면 중심부까지 멀리 뻗어나가도록 거리 증가
+                        const spreadX = Math.cos(baseAngle) * distance;
+                        const spreadY = Math.sin(baseAngle) * distance;
+                        
+                        // 퍼지는 속도는 2초, 서서히 사라지는 시간은 1초 (총 3초)
+                        const spreadDuration = 2000;
+
+                        sparkle.animate([
+                            { transform: 'translate(-50%, -50%) scale(0.5) rotate(0deg)' },
+                            { transform: `translate(calc(-50% + ${spreadX}px), calc(-50% + ${spreadY}px)) scale(1.5) rotate(${Math.random() * 360}deg)` }
+                        ], { duration: spreadDuration, easing: 'ease-out', fill: 'forwards' });
+
+                        sparkle.animate([
+                            { opacity: 1, offset: 0 },
+                            { opacity: 1, offset: 0.66 }, // 2초 시점까지 유지
+                            { opacity: 0, offset: 1 }     // 이후 1초 동안 사라짐
+                        ], { duration: 3000, fill: 'forwards' });
+
+                        setTimeout(() => { if (sparkle.parentNode) sparkle.parentNode.removeChild(sparkle); }, 3000);
+                    }
+
+                    if (window.ClovMascot && typeof window.ClovMascot.say === 'function') {
+                        let msg = "";
+                        if (source === 'post') msg = "우리의 추억이 반짝거려! ✨";
+                        else if (source === 'schedule_add') msg = "새로운 약속! 무척 기대된다 ✨";
+                        else if (source === 'schedule_done') msg = "멋진 인생4컷! 반짝거려 ✨";
+                        window.ClovMascot.say(msg, 3500);
+                    }
+                }
+                return;
+            }
 
             const oldLevel = grp.level;
             const oldTier = clovLevelTierIndex(oldLevel);
@@ -1997,7 +2051,53 @@ document.getElementById = function(id) {
                 friendshipLevel = CLOV_MAX_LEVEL;
                 localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
                 updateFriendshipUI();
-                clovToast('🏆 이미 우리 우정은 최고치(777)에 도달했어요!', 'info');
+                
+                if (grp.xpClicksToday >= CLOV_MAX_CLICKS_PER_DAY) {
+                    clovToast('오늘의 우정 교감을 다 채웠어요! 내일 다시 함께해요', 'info');
+                    return;
+                }
+                grp.xpClicksToday += 1;
+                localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
+
+                let cx = window.innerWidth / 2;
+                let cy = window.innerHeight / 2;
+                const mascotEl = document.getElementById('croby-sprite');
+                if (mascotEl) {
+                    const rect = mascotEl.getBoundingClientRect();
+                    cx = rect.left + rect.width / 2;
+                    cy = rect.top + rect.height / 2;
+                }
+
+                for (let i = 0; i < 7; i++) {
+                    const heart = document.createElement('div');
+                    heart.style.position = 'fixed';
+                    heart.style.left = cx + 'px';
+                    heart.style.top = cy + 'px';
+                    heart.style.transform = 'translate(-50%, -50%)';
+                    heart.style.zIndex = '99999';
+                    heart.style.pointerEvents = 'none';
+                    heart.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="#FF4D4D" class="bi bi-suit-heart-fill" viewBox="0 0 16 16"><path d="M4 1c2.21 0 4 1.755 4 3.92C8 2.755 9.79 1 12 1s4 1.755 4 3.92c0 3.263-3.234 4.414-7.608 9.608a.513.513 0 0 1-.784 0C3.234 9.334 0 8.183 0 4.92 0 2.755 1.79 1 4 1"/></svg>`;
+                    document.body.appendChild(heart);
+
+                    const spreadX = (Math.random() - 0.5) * 120;
+                    const spreadY = -60 - Math.random() * 100;
+                    const duration = 1000 + Math.random() * 800;
+
+                    heart.animate([
+                        { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
+                        { transform: `translate(calc(-50% + ${spreadX}px), calc(-50% + ${spreadY}px)) scale(1.8)`, opacity: 0 }
+                    ], { duration: duration, easing: 'ease-out', fill: 'forwards' });
+
+                    setTimeout(() => { if (heart.parentNode) heart.parentNode.removeChild(heart); }, duration);
+                }
+
+                if (window.ClovMascot && typeof window.ClovMascot.say === 'function') {
+                    window.ClovMascot.say('사랑이 넘치는 우리 우정! 하트를 받았어 ❤️', 3000);
+                }
+
+                if (grp.xpClicksToday >= CLOV_MAX_CLICKS_PER_DAY) {
+                    clovToast('오늘의 교감을 다 채웠어요!', 'info');
+                }
                 return;
             }
 
@@ -2686,16 +2786,20 @@ document.getElementById = function(id) {
                     // 새 일정 등록 XP 지급
                     if (typeof grantXP === 'function') {
                         grantXP(CLOV_XP_SCHEDULE_ADD, 'schedule_add');
-                        setTimeout(() => {
-                            if (typeof clovToast === 'function')
-                                clovToast(`약속 등록 +${CLOV_XP_SCHEDULE_ADD} XP`, 'success');
-                        }, 500);
                     }
                 }
 
                 updateScheduleUI();
                 closeModal(`${prefix}-schedule-modal`);
-                clovToast('🍀 D-day가 저장되었어요!', 'success');
+                if (typeof showProofResultModal === 'function') {
+                    showProofResultModal({
+                        title: '일정 저장 완료',
+                        message: '일정이 성공적으로 저장되었습니다.',
+                        primaryText: '확인'
+                    });
+                } else {
+                    clovToast('🍀 D-day가 저장되었어요!', 'success');
+                }
             }
         }
 
@@ -4367,7 +4471,11 @@ document.getElementById = function(id) {
                 closeMonthPicker();
             }
             if (event.target.classList.contains('modal-overlay')) {
-                event.target.style.display = 'none';
+                // 작성 중 내용 유실 방지를 위해 추억/일정 작성 모달은 바깥 클릭으로 닫히지 않도록 예외 처리
+                const ignoreIds = ['dt-post-modal', 'mb-post-modal', 'dt-schedule-modal', 'mb-schedule-modal'];
+                if (!ignoreIds.includes(event.target.id)) {
+                    event.target.style.display = 'none';
+                }
             }
         }
 

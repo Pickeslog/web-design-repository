@@ -15,7 +15,11 @@
                 closeMonthPicker();
             }
             if (event.target.classList.contains('modal-overlay')) {
-                event.target.style.display = 'none';
+                // 작성 중 내용 유실 방지를 위해 추억/일정 작성 모달은 바깥 클릭으로 닫히지 않도록 예외 처리
+                const ignoreIds = ['dt-post-modal', 'mb-post-modal', 'dt-schedule-modal', 'mb-schedule-modal'];
+                if (!ignoreIds.includes(event.target.id)) {
+                    event.target.style.display = 'none';
+                }
             }
         }
 

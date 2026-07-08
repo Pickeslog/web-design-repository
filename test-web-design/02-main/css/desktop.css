@@ -39,7 +39,12 @@
             /* 우정 대시보드 배너의 배경은 시간에 따라 동적으로 결정됨 */
         }
 
+        body.dark-mode input {
+            color-scheme: dark;
+        }
+
         body.dark-mode {
+            color-scheme: dark;
             /* 미드나잇 올리브 팔레트 — 아이보리 라이트모드와 어울리도록 기존 네온 그린 계열 대신 올리브 톤으로 변경 */
             --primary-green: #5a7a3e;
             /* 로고/제목에 쓰이는 차분한 올리브 그린 */
@@ -1309,7 +1314,7 @@
 
         .polaroid-card {
             background: var(--card-bg);
-            padding: 10px 10px 52px;
+            padding: 10px 10px 10px;
             border-radius: 3px;
             box-shadow:
                 0 2px 4px rgba(0, 0, 0, 0.10),
@@ -1487,6 +1492,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            margin-top: 10px;
             margin-bottom: 4px;
         }
 
@@ -8956,7 +8962,7 @@ body { padding: 0 !important; margin: 0 !important; overflow: hidden !important;
 .rich-editor-container {
     border: 1px solid var(--input-border);
     border-radius: 12px;
-    background: #ffffff;
+    background: var(--input-bg);
     overflow: hidden;
     transition: border-color 0.2s;
 }
@@ -8970,7 +8976,7 @@ body { padding: 0 !important; margin: 0 !important; overflow: hidden !important;
     align-items: center;
     gap: 4px;
     padding: 8px 12px;
-    background: rgba(27, 67, 50, 0.04);
+    background: var(--card-bg);
     border-bottom: 1px solid var(--input-border);
 }
 

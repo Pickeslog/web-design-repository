@@ -122,10 +122,14 @@
                 if (typeof grantXP === 'function') {
                     const xpAdd = typeof CLOV_XP_SCHEDULE_ADD !== 'undefined' ? CLOV_XP_SCHEDULE_ADD : 3;
                     grantXP(xpAdd, 'schedule_add');
-                    setTimeout(() => {
-                        if (typeof clovToast === 'function')
-                            clovToast(`약속 등록 +&nbsp;XP`, 'success');
-                    }, 500);
+                }
+                
+                if (typeof showProofResultModal === 'function') {
+                    showProofResultModal({
+                        title: '일정 저장 완료',
+                        message: '일정이 성공적으로 저장되었습니다.',
+                        primaryText: '확인'
+                    });
                 } else {
                     clovToast('D-day가 저장되었어요!', 'success');
                 }
