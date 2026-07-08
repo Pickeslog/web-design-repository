@@ -355,7 +355,9 @@
         const DATA_VERSION = '4';
         let groupsData = JSON.parse(localStorage.getItem('clov_groupsData'));
         if (!groupsData || localStorage.getItem('clov_dataVersion') !== DATA_VERSION) {
-            groupsData = defaultGroupsData;
+            // 깊은 복사로 초기화한다. (참조를 그대로 쓰면 대표사진 등을 바꿀 때 원본 defaultGroupsData까지
+            //  오염돼 '기본 사진' 복원 기준이 무너진다.)
+            groupsData = JSON.parse(JSON.stringify(defaultGroupsData));
             localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
             localStorage.setItem('clov_dataVersion', DATA_VERSION);
         } else {

@@ -2164,9 +2164,14 @@
 
             saveBtn.addEventListener('click', () => {
                 if (tempPhotoDataUrl) {
+                    // 사용자가 올린 사진을 '기본 사진'(customPhoto)으로 보관하고 대표사진으로 건다.
+                    // → 사용자설정 "대표 사진 > 기본 사진"이 이 업로드 사진을 가리키게 되고,
+                    //   프리셋을 골랐다가 다시 '기본 사진'을 눌러도 내가 올린 사진으로 복원된다.
                     groupsData[activeGroup].photo = tempPhotoDataUrl;
+                    groupsData[activeGroup].customPhoto = tempPhotoDataUrl;
                     localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
                     updateDashboardPhotos();
+                    if (typeof updateMainPhotoThemeUI === 'function') updateMainPhotoThemeUI();
                 }
                 overlay.style.display = 'none';
                 resetModal();

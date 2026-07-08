@@ -256,7 +256,9 @@
       '.profile-pw-toggle.is-visible .pwt-icon-eye-off{display:inline-flex;}' +
       // 계정 탈퇴 버튼: 파괴적 액션이라 빨강 톤으로 강조 (기본=빨강 글자·테두리, hover=빨강 채움)
       '.profile-footer-btn.danger{color:#dc2626;border-color:rgba(220,38,38,.5);transition:background-color .15s ease,color .15s ease,border-color .15s ease;}' +
-      '.profile-footer-btn.danger:hover{background:#dc2626;border-color:#dc2626;color:#fff;}';
+      '.profile-footer-btn.danger:hover{background:#dc2626;border-color:#dc2626;color:#fff;}' +
+      // 대표 사진 '기본 사진(내 사진)' 항목의 업로드 썸네일
+      '#dt-mainphoto-theme-list .mainphoto-thumb{width:22px;height:22px;border-radius:5px;object-fit:cover;margin-right:8px;vertical-align:middle;flex-shrink:0;}';
     document.head.appendChild(s);
   }
 
@@ -386,6 +388,9 @@
     if (typeof groupsData === 'undefined' || typeof activeGroup === 'undefined' || !groupsData[activeGroup]) return;
     var currentPhoto = groupsData[activeGroup].photo;
     var defaultPhoto = (typeof defaultGroupsData !== 'undefined' && defaultGroupsData[activeGroup]) ? defaultGroupsData[activeGroup].photo : '';
+    var customPhoto = groupsData[activeGroup].customPhoto || '';
+    // '기본 사진'이 가리키는 실제 이미지: 사용자가 올린 사진이 있으면 그것, 없으면 그룹 원래 사진
+    var basePhoto = customPhoto || defaultPhoto;
     // '기본 사진'과 등록소 항목이 우연히 같은 이미지를 가리킬 수 있어(예: 기본값 자체를 등록소 사진으로
     // 바꾼 경우), 둘 다 동시에 켜지지 않도록 등록소 쪽 구체적인 항목을 우선한다.
     var matchedRegistryId = null;
@@ -395,7 +400,21 @@
     document.querySelectorAll('#dt-mainphoto-theme-list .theme-option').forEach(function (li) {
       var id = li.dataset.mainphotoTheme;
       if (id === 'default') {
-        li.classList.toggle('active', !matchedRegistryId && currentPhoto === defaultPhoto);
+        li.classList.toggle('active', !matchedRegistryId && currentPhoto === basePhoto);
+        // 사용자가 올린 사진이 있으면 '기본 사진' 항목에 그 썸네일과 '내 사진' 라벨을 보여준다
+        var label = li.querySelector('.settings-list-label');
+        if (label) label.textContent = customPhoto ? '내 사진' : '기본 사진';
+        var thumb = li.querySelector('.mainphoto-thumb');
+        if (customPhoto) {
+          if (!thumb) {
+            thumb = document.createElement('img');
+            thumb.className = 'mainphoto-thumb';
+            li.insertBefore(thumb, li.firstChild);
+          }
+          thumb.src = customPhoto;
+        } else if (thumb) {
+          thumb.remove();
+        }
       } else {
         li.classList.toggle('active', id === matchedRegistryId);
       }
@@ -406,8 +425,10 @@
     if (typeof groupsData === 'undefined' || typeof activeGroup === 'undefined' || !groupsData[activeGroup]) return;
     var photoUrl, name, icon;
     if (id === 'default') {
-      photoUrl = (typeof defaultGroupsData !== 'undefined' && defaultGroupsData[activeGroup]) ? defaultGroupsData[activeGroup].photo : '';
-      name = '기본 사진';
+      // '기본 사진' = 사용자가 올린 사진(customPhoto)이 있으면 그것, 없으면 그룹 원래 사진
+      var defPhoto = (typeof defaultGroupsData !== 'undefined' && defaultGroupsData[activeGroup]) ? defaultGroupsData[activeGroup].photo : '';
+      photoUrl = groupsData[activeGroup].customPhoto || defPhoto;
+      name = groupsData[activeGroup].customPhoto ? '내 사진' : '기본 사진';
       icon = '🖼️';
     } else {
       var mp = window.CLOV_MAIN_PHOTOS[id];
