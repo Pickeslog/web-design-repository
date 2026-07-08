@@ -42,7 +42,7 @@
             <div class="profile-modal-head">
                 <div>
                     <span class="profile-modal-kicker">SETTINGS</span>
-                    <h3>사용자설정</h3>
+                    <h3>사용자 설정</h3>
                 </div>
                 <button class="profile-modal-close" type="button" onclick="closeModal('dt-profile-modal')" aria-label="닫기">×</button>
             </div>
@@ -73,21 +73,18 @@
                     <div class="settings-pane" id="dt-settings-pane-account">
                         <div class="profile-form-section">
                             <div class="profile-section-title">기본 정보</div>
-                            <div class="modal-form-group field-wrap">
-                                <label class="field-label">프로필 사진</label>
-                                <div class="profile-avatar-upload">
-                                    <button class="profile-avatar-upload-circle" id="dt-profile-avatar-circle-2" type="button" onclick="triggerProfileAvatarUpload()" aria-label="프로필 사진 변경">
-                                        <span id="dt-profile-avatar-initial-2">김</span>
-                                        <img id="dt-profile-avatar-img-2" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" alt="프로필 사진">
-                                    </button>
-                                    <span class="profile-avatar-upload-hint">클릭하여 사진을 변경하세요</span>
-                                    <input type="file" id="dt-profile-avatar-file" accept="image/*" onchange="handleProfileAvatarUpload(event)">
+                            <div class="basic-info-row">
+                                <button class="profile-avatar-upload-circle" id="dt-profile-avatar-circle-2" type="button" onclick="triggerProfileAvatarUpload()" aria-label="프로필 사진 변경">
+                                    <span id="dt-profile-avatar-initial-2">김</span>
+                                    <img id="dt-profile-avatar-img-2" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" alt="프로필 사진">
+                                </button>
+                                <div class="modal-form-group field-wrap basic-info-name">
+                                    <label class="field-label" for="dt-profile-name">이름 / 닉네임</label>
+                                    <input class="text-input" type="text" id="dt-profile-name" placeholder="예: 김예린" maxlength="16" oninput="updateProfilePreview()">
                                 </div>
+                                <input type="file" id="dt-profile-avatar-file" accept="image/*" onchange="handleProfileAvatarUpload(event)">
                             </div>
-                            <div class="modal-form-group field-wrap">
-                                <label class="field-label" for="dt-profile-name">이름 / 닉네임</label>
-                                <input class="text-input" type="text" id="dt-profile-name" placeholder="예: 김예린" maxlength="16" oninput="updateProfilePreview()">
-                            </div>
+                            <div class="basic-info-hint">프로필 사진을 클릭하면 변경할 수 있어요</div>
                         </div>
 
                         <div class="profile-form-section">
@@ -132,22 +129,16 @@
                     <div class="settings-pane" id="dt-settings-pane-theme" style="display:none;">
                         <div class="profile-form-section">
                             <div class="profile-section-title">테마</div>
-                            <ul class="settings-list theme-option-list" id="dt-theme-option-list">
-                                <li class="theme-option" data-mode="light" onclick="setThemeMode('light')">
-                                    <span class="settings-list-label">라이트모드</span>
-                                </li>
-                                <li class="theme-option" data-mode="dark" onclick="setThemeMode('dark')">
-                                    <span class="settings-list-label">다크모드</span>
-                                </li>
+                            <ul class="settings-list theme-swatch-list" id="dt-theme-option-list">
+                                <li class="theme-option theme-swatch-box theme-swatch-box--light" data-mode="light" title="라이트모드" aria-label="라이트모드" onclick="setThemeMode('light')"></li>
+                                <li class="theme-option theme-swatch-box theme-swatch-box--dark" data-mode="dark" title="다크모드" aria-label="다크모드" onclick="setThemeMode('dark')"></li>
                             </ul>
                         </div>
 
                         <div class="profile-form-section">
                             <div class="profile-section-title">바탕화면</div>
-                            <ul class="settings-list theme-option-list" id="dt-appbg-theme-list">
-                                <li class="theme-option" data-appbg-theme="default" onclick="setAppBackground('default')">
-                                    <span class="settings-list-label">우드 &amp; 클로버 (기본)</span>
-                                </li>
+                            <ul class="settings-list theme-swatch-list" id="dt-appbg-theme-list">
+                                <li class="theme-option theme-swatch-box theme-swatch-box--image" data-appbg-theme="default" style="background-image:url('${MAIN_BASE}assets/background-icons/01-wood-clover.png')" title="우드 & 클로버 (기본)" aria-label="우드 & 클로버 (기본)" onclick="setAppBackground('default')"></li>
                                 <!-- 추가 바탕화면은 CLOV_APP_BACKGROUNDS 등록소에서 renderAppBackgroundOptions()가 채운다 -->
                             </ul>
                         </div>
@@ -155,10 +146,7 @@
                         <div class="profile-form-section">
                             <div class="profile-section-title">대시보드 배경</div>
                             <ul class="settings-list theme-option-list" id="dt-bg-theme-list">
-                                <li class="theme-option" data-bg-theme="field" onclick="setBgTheme('field')">
-                                    <span class="settings-list-label">클로버 들판</span>
-                                </li>
-                                <!-- 나머지 벽지는 desktop.js의 V5_WALLPAPERS 등록소에서 renderBgWallpaperOptions()가 채운다 -->
+                                <!-- 벽지 목록은 desktop.js의 V5_WALLPAPERS 등록소에서 renderBgWallpaperOptions()가 채운다 -->
                             </ul>
                         </div>
 
@@ -177,18 +165,6 @@
                             <ul class="settings-list theme-option-list" id="dt-cover-theme-list">
                                 <li class="theme-option is-disabled">
                                     <span class="settings-list-label">준비중</span>
-                                </li>
-                            </ul>
-                        </div>
-
-                        <div class="profile-form-section">
-                            <div class="profile-section-title">마스코트 캐릭터</div>
-                            <ul class="settings-list theme-option-list" id="dt-mascot-theme-list">
-                                <li class="theme-option" data-mascot-theme="croby" onclick="setMascotCharacter('croby')">
-                                    <span class="settings-list-label">크로비</span>
-                                </li>
-                                <li class="theme-option" data-mascot-theme="robot" onclick="setMascotCharacter('robot')">
-                                    <span class="settings-list-label">로봇</span>
                                 </li>
                             </ul>
                         </div>
@@ -214,6 +190,21 @@
                                 <li class="theme-option" data-evidence-theme="coverflow" onclick="setEvidenceCardTheme('coverflow')">
                                     <span class="settings-list-label">겹침 카드</span>
                                 </li>
+                                <li class="theme-option" data-evidence-theme="diary" onclick="setEvidenceCardTheme('diary')">
+                                    <span class="settings-list-label">일기장</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="profile-form-section">
+                            <div class="profile-section-title">마스코트 캐릭터</div>
+                            <ul class="settings-list theme-option-list" id="dt-mascot-theme-list">
+                                <li class="theme-option" data-mascot-theme="croby" onclick="setMascotCharacter('croby')">
+                                    <span class="settings-list-label">크로비</span>
+                                </li>
+                                <li class="theme-option" data-mascot-theme="robot" onclick="setMascotCharacter('robot')">
+                                    <span class="settings-list-label">로봇</span>
+                                </li>
                             </ul>
                         </div>
                     </div>
@@ -222,7 +213,7 @@
 
             <div class="profile-modal-actions" id="dt-profile-modal-actions">
                 <div class="profile-modal-actions-row" id="dt-profile-actions-account">
-                    <button class="btn-sub profile-footer-btn secondary" type="button" onclick="confirmDeleteProfileAccount()">계정 탈퇴</button>
+                    <button class="btn-sub profile-footer-btn secondary danger" type="button" onclick="confirmDeleteProfileAccount()">계정 탈퇴</button>
                     <div class="profile-modal-action-group">
                         <button class="btn-sub profile-footer-btn secondary" type="button" onclick="closeModal('dt-profile-modal')">취소</button>
                         <button class="btn-main profile-footer-btn primary" type="button" onclick="saveProfileModal()">저장하기</button>
@@ -256,7 +247,10 @@
       '.profile-pw-toggle{display:inline-flex;align-items:center;justify-content:center;}' +
       '.profile-pw-toggle .pwt-icon-eye-off{display:none;}' +
       '.profile-pw-toggle.is-visible .pwt-icon-eye{display:none;}' +
-      '.profile-pw-toggle.is-visible .pwt-icon-eye-off{display:inline-flex;}';
+      '.profile-pw-toggle.is-visible .pwt-icon-eye-off{display:inline-flex;}' +
+      // 계정 탈퇴 버튼: 파괴적 액션이라 빨강 톤으로 강조 (기본=빨강 글자·테두리, hover=빨강 채움)
+      '.profile-footer-btn.danger{color:#dc2626;border-color:rgba(220,38,38,.5);transition:background-color .15s ease,color .15s ease,border-color .15s ease;}' +
+      '.profile-footer-btn.danger:hover{background:#dc2626;border-color:#dc2626;color:#fff;}';
     document.head.appendChild(s);
   }
 
@@ -435,31 +429,31 @@
     name: 'LP 우드 데스크',
     icon: '💿',
     image: MAIN_BASE + 'background-concepts/clov_lp_background_concept_1920x1080.png',
-  };
-  window.CLOV_APP_BACKGROUNDS['lp-album-collection'] = {
-    name: 'LP 앨범 컬렉션',
-    icon: '🎶',
-    image: MAIN_BASE + 'background-concepts/clov_lp_background_concept_02_1920x1080.png',
+    iconImage: MAIN_BASE + 'assets/background-icons/02-lp-wood-desk.png',
   };
   window.CLOV_APP_BACKGROUNDS['clover-coast'] = {
     name: '클로버 해안 엽서',
     icon: '🌊',
     image: MAIN_BASE + 'background-concepts/clov_lp_background_concept_03_coast_1920x1080.png',
+    iconImage: MAIN_BASE + 'assets/background-icons/03-clover-beach.png',
   };
   window.CLOV_APP_BACKGROUNDS['neon-clover-city'] = {
     name: '네온 클로버 시티',
     icon: '🌆',
     image: MAIN_BASE + 'background-concepts/clov_spiderverse_city_background_1920x1080.png',
+    iconImage: MAIN_BASE + 'assets/background-icons/04-neon-clover-city.png',
   };
   window.CLOV_APP_BACKGROUNDS['minimal-clover'] = {
     name: '미니멀 클로버',
     icon: '🍃',
     image: MAIN_BASE + 'background-concepts/clov_minimal_monographic_background_1920x1080.png',
+    iconImage: MAIN_BASE + 'assets/background-icons/05-minimal-clover.png',
   };
   window.CLOV_APP_BACKGROUNDS['botanical-blueprint'] = {
     name: '보태니컬 클로버 청사진',
     icon: '📐',
     image: MAIN_BASE + 'background-concepts/clov_botanical_blueprint_background_1920x1080.png',
+    iconImage: MAIN_BASE + 'assets/background-icons/06-pencil-clover.png',
   };
 
   function getAppBackground() {
@@ -474,10 +468,12 @@
       if (list.querySelector('[data-appbg-theme="' + id + '"]')) return;
       var bg = window.CLOV_APP_BACKGROUNDS[id];
       var li = document.createElement('li');
-      li.className = 'theme-option';
+      li.className = 'theme-option theme-swatch-box theme-swatch-box--image';
       li.dataset.appbgTheme = id;
+      li.title = bg.name;
+      li.setAttribute('aria-label', bg.name);
+      li.style.backgroundImage = "url('" + bg.iconImage + "')";
       li.onclick = function () { setAppBackground(id); };
-      li.innerHTML = '<span class="settings-list-label">' + bg.name + '</span>';
       list.appendChild(li);
     });
   }
@@ -514,10 +510,10 @@
     clovToast(icon + ' ' + name + ' 바탕화면으로 바꿨어요!', 'success');
   }
 
-  /* ── 배경 테마 (클로버 들판 + V5_WALLPAPERS 등록소) — 해당 UI가 없는 페이지에선 설정값만 저장 ── */
+  /* ── 배경 테마 (V5_WALLPAPERS 등록소) — 해당 UI가 없는 페이지에선 설정값만 저장 ── */
   function getBgTheme() {
-    var theme = localStorage.getItem('clov_bgTheme') || 'field';
-    if (theme === 'photo') theme = 'lp-turntable'; // 구버전 저장값 마이그레이션
+    var theme = localStorage.getItem('clov_bgTheme') || 'lp-turntable';
+    if (theme === 'photo' || theme === 'field') theme = 'lp-turntable'; // 구버전 저장값(photo/클로버 들판) 마이그레이션
     return theme;
   }
 
@@ -560,8 +556,8 @@
     applyBgTheme(theme);
     updateBgThemeUI();
     var wp = window.V5_WALLPAPERS && window.V5_WALLPAPERS[theme];
-    var name = theme === 'field' ? '클로버 들판' : (wp ? wp.name : theme);
-    var icon = theme === 'field' ? '🌿' : (wp ? wp.icon : '🎨');
+    var name = wp ? wp.name : theme;
+    var icon = wp ? wp.icon : '🎨';
     clovToast(icon + ' ' + name + ' 배경으로 바꿨어요!', 'success');
   }
 
@@ -591,7 +587,7 @@
 
   /* ── 참여자별 추억 증거 카드 테마 (빨랫줄 / 겹침 카드) — 해당 UI가 없는 페이지에선 설정값만 저장 ── */
   function getEvidenceCardTheme() {
-    return localStorage.getItem('clov_evidenceCardTheme') || 'wire';
+    return localStorage.getItem('clov_evidenceCardTheme') || 'coverflow';
   }
 
   function updateEvidenceCardThemeUI() {
@@ -605,7 +601,7 @@
     localStorage.setItem('clov_evidenceCardTheme', theme);
     updateEvidenceCardThemeUI();
     if (typeof renderEvidenceViewers === 'function') renderEvidenceViewers();
-    clovToast(theme === 'coverflow' ? '📸 겹침 카드 테마로 바꿨어요!' : '🧷 빨랫줄 테마로 바꿨어요!', 'success');
+    clovToast(theme === 'coverflow' ? '📸 겹침 카드 테마로 바꿨어요!' : (theme === 'diary' ? '📔 일기장 테마로 바꿨어요!' : '🧷 빨랫줄 테마로 바꿨어요!'), 'success');
   }
 
   /* ── 계정 탭 ── */
@@ -702,9 +698,31 @@
   }
 
   function confirmDeleteProfileAccount() {
-    clovConfirm('정말 계정을 탈퇴하시겠습니까?', function () {
+    clovConfirm('정말 탈퇴하시겠어요? 계정은 삭제되지만 남긴 추억·편지·폴라로이드는 그대로 보존돼요. 작성자 표기만 \'언노운\'으로 익명화됩니다.', function () {
+      try { localStorage.setItem('clov_withdrawn', '1'); } catch (e) {}
+      // 저장된 추억 데이터의 내 작성자 표기를 즉시 익명화해 영속화
+      if (typeof groupsData !== 'undefined' && typeof normalizeMemoryPost === 'function') {
+        Object.keys(groupsData).forEach(function (g) {
+          (groupsData[g].posts || []).forEach(function (post) { normalizeMemoryPost(post); });
+        });
+        if (typeof saveGroupsData === 'function') saveGroupsData();
+      }
       closeModal('dt-profile-modal');
-    }, { icon: '🚪', type: 'error', confirmText: '탈퇴', cancelText: '취소' });
+      if (typeof renderFeeds === 'function') renderFeeds();
+      clovToast('계정을 탈퇴했어요 · 남긴 기록은 \'언노운\'으로 보존돼요', 'info');
+
+      // 기록 보존/익명화는 위에서 이미 영속화됨 → 마지막에 로그아웃 + 로그인 페이지로 이동
+      // (탈퇴가 실제로 "나가는" 흐름이 되도록. 데이터 삭제는 하지 않는다.)
+      if (window.ClovAuth && typeof ClovAuth.clearAccessToken === 'function') {
+        ClovAuth.clearAccessToken();
+      } else {
+        localStorage.removeItem('accessToken');
+        sessionStorage.removeItem('accessToken');
+      }
+      setTimeout(function () {
+        window.location.href = '../01-auth/login.html';
+      }, 1400);
+    }, { icon: (window.CLOV_ICONS && CLOV_ICONS.logout) || '🚪', type: 'error', confirmText: '탈퇴하기', cancelText: '취소' });
   }
 
   function triggerProfileAvatarUpload() {
@@ -772,6 +790,10 @@
   window.applyBgTheme = applyBgTheme;
   window.updateBgThemeUI = updateBgThemeUI;
   window.setBgTheme = setBgTheme;
+  window.getMascotCharacter = getMascotCharacter;
+  window.applyMascotCharacter = applyMascotCharacter;
+  window.updateMascotCharacterUI = updateMascotCharacterUI;
+  window.setMascotCharacter = setMascotCharacter;
   window.getCoverTheme = getCoverTheme;
   window.applyCoverTheme = applyCoverTheme;
   window.updateCoverThemeUI = updateCoverThemeUI;
@@ -786,10 +808,6 @@
   window.getEvidenceCardTheme = getEvidenceCardTheme;
   window.updateEvidenceCardThemeUI = updateEvidenceCardThemeUI;
   window.setEvidenceCardTheme = setEvidenceCardTheme;
-  window.getMascotCharacter = getMascotCharacter;
-  window.applyMascotCharacter = applyMascotCharacter;
-  window.updateMascotCharacterUI = updateMascotCharacterUI;
-  window.setMascotCharacter = setMascotCharacter;
   window.loadProfileModalData = loadProfileModalData;
   window.updateProfilePreview = updateProfilePreview;
   window.toggleProfilePassword = toggleProfilePassword;
