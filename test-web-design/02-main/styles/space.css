@@ -685,7 +685,7 @@
 
         .polaroid-card {
             background: var(--card-bg);
-            padding: 10px 10px 52px;
+            padding: 10px 10px 10px; /* 규비(kimgyubi) 이식: 하단 빈 여백(52px) 제거해 카드가 콘텐츠에 딱 맞게 */
             border-radius: 3px;
             box-shadow:
                 0 2px 4px rgba(0, 0, 0, 0.10),

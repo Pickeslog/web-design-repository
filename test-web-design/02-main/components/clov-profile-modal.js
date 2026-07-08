@@ -95,7 +95,7 @@
                             </div>
                             <div class="modal-form-group field-wrap">
                                 <label class="field-label" for="dt-profile-birth">생년월일</label>
-                                <input class="text-input" type="date" id="dt-profile-birth">
+                                <input class="text-input" type="date" id="dt-profile-birth" onclick="this.showPicker && this.showPicker()">
                             </div>
                         </div>
 

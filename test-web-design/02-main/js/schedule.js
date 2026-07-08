@@ -121,17 +121,35 @@
                 updateScheduleUI();
                 closeModal(`${prefix}-schedule-modal`);
                 clovToast('🍀 D-day가 저장되었어요!', 'success');
+                if (typeof grantXP === 'function') {
+                    const xpAdd = typeof CLOV_XP_SCHEDULE_ADD !== 'undefined' ? CLOV_XP_SCHEDULE_ADD : 3;
+                    grantXP(xpAdd, 'schedule_add');
+                }
             }
         }
 
         function deleteSchedule(scheduleId) {
             clovConfirm('정말 이 약속을 삭제하시겠습니까?', () => {
                 const schedules = groupsData[activeGroup].schedules || [];
+                const deletedSch = schedules.find(s => s.id === scheduleId);
+
+                let xpToRevoke = typeof CLOV_XP_SCHEDULE_ADD !== 'undefined' ? CLOV_XP_SCHEDULE_ADD : 3;
+                if (deletedSch) {
+                    const completeCount = typeof getScheduleProofCount === 'function' ? getScheduleProofCount(deletedSch) : 0;
+                    if (completeCount === 4) {
+                        xpToRevoke += (typeof CLOV_XP_SCHEDULE_COMPLETE !== 'undefined' ? CLOV_XP_SCHEDULE_COMPLETE : 15);
+                    }
+                }
+
                 groupsData[activeGroup].schedules = schedules.filter(s => s.id !== scheduleId);
                 if (selectedScheduleIds[activeGroup] === scheduleId) selectedScheduleIds[activeGroup] = null;
                 saveGroupsData();
                 updateScheduleUI();
                 clovToast('일정이 삭제되었어요.', 'success');
+
+                if (typeof revokeXP === 'function') {
+                    revokeXP(xpToRevoke);
+                }
             }, { icon: (window.CLOV_ICONS && CLOV_ICONS.trash) || '🗑️', type: 'error', confirmText: '삭제', cancelText: '취소' });
         }
 
@@ -411,6 +429,16 @@
             burst.style.left = (iconRect.left - boxRect.left + iconRect.width / 2) + 'px';
             burst.style.top = (iconRect.top - boxRect.top + iconRect.height / 2) + 'px';
             spawnConfettiBurst(burst, { spread: 130 }); // 색상은 spawnConfettiBurst 기본값(여름 팔레트) 사용
+
+            // 인생4컷 완성 = 일정 완료 → XP 지급
+            if (typeof grantXP === 'function') {
+                const xpDone = typeof CLOV_XP_SCHEDULE_COMPLETE !== 'undefined' ? CLOV_XP_SCHEDULE_COMPLETE : 15;
+                grantXP(xpDone, 'schedule_done');
+                setTimeout(() => {
+                    if (typeof clovToast === 'function')
+                        clovToast(`인생4컷 완성! 일정 달성 +&nbsp;XP`, 'success');
+                }, 800);
+            }
         }
 
         function showLockedStagePhotoModal() {

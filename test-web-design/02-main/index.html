@@ -4,7 +4,7 @@
     <title>Clov. - 디자인 미리보기 &amp; 프로토타입</title>
     <link rel="icon" type="image/png" href="../assets/ai-style/clov_logo_half_leaf_cartoon_transparent.png">
     <link rel="stylesheet" href="styles/base.css?v=1">
-    <link rel="stylesheet" href="styles/space.css?v=14">
+    <link rel="stylesheet" href="styles/space.css?v=15">
     <link rel="stylesheet" href="styles/feed.css?v=4">
     <link rel="stylesheet" href="styles/letter.css?v=1">
     <link rel="stylesheet" href="styles/schedule.css?v=1">
@@ -13,7 +13,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Gothic+A1:wght@400;500;700;800;900&display=swap" rel="stylesheet">
 <script src="components/clov-header.js?v=11"></script>
 <script src="components/clov-modal.js?v=1"></script>
-<script src="components/clov-profile-modal.js?v=19"></script>
+<script src="components/clov-profile-modal.js?v=20"></script>
 <script src="pages/space-page.js?v=1"></script>
 <script src="pages/feed-page.js?v=2"></script>
 <script src="pages/letter-page.js?v=1"></script>
@@ -290,7 +290,7 @@ body.dark-mode .member-highlight-card > div:last-child {
                             </div>
                             <div class="modal-form-group">
                                 <label>언제로 D-day를 맞출까요?</label>
-                                <input type="date" id="dt-input-schedule-date">
+                                <input type="date" id="dt-input-schedule-date" onclick="this.showPicker && this.showPicker()">
                             </div>
                             <div class="modal-form-group">
                                 <label>본문 <span style="color:var(--text-muted);font-weight:400;">(선택)</span></label>
@@ -431,15 +431,15 @@ body.dark-mode .member-highlight-card > div:last-child {
 
 
 
-<script src="js/data.js?v=3"></script>
+<script src="js/data.js?v=5"></script>
 <script src="js/utils.js?v=5"></script>
-<script src="js/space.js?v=13"></script>
+<script src="js/space.js?v=15"></script>
 <script src="js/feed.js?v=2"></script>
 <script src="js/letter.js?v=1"></script>
-<script src="js/schedule.js?v=3"></script>
+<script src="js/schedule.js?v=4"></script>
 <script src="js/fourcut.js?v=3"></script>
 <script src="js/v5-banner.js?v=1"></script>
-<script src="js/croby-mascot.js?v=2"></script>
+<script src="js/croby-mascot.js?v=3"></script>
 <script src="js/nav.js?v=1"></script>
 <script src="js/init.js?v=2"></script>
 <!-- Photo Upload Modal -->
@@ -927,7 +927,7 @@ body.dark-mode .wm-submit { color: #0a0f0c; }
       var newFormHtml = _wmNewFormOpen
         ? '<div class="wm-sched-new-form">' +
             '<input type="text" class="wm-input" id="wm-new-sched-title" maxlength="25" placeholder="약속 이름 (예: 성수 카페 투어)">' +
-            '<input type="date" class="wm-input" id="wm-new-sched-date">' +
+            '<input type="date" class="wm-input" id="wm-new-sched-date" onclick="this.showPicker && this.showPicker()">' +
             '<div class="wm-sched-new-actions">' +
               '<button type="button" class="mp-connect-cancel" onclick="wmCloseNewScheduleForm()">취소</button>' +
               '<button type="button" class="wm-sched-new-add" onclick="wmCreateSchedule()">추가</button>' +
@@ -1065,6 +1065,19 @@ body.dark-mode .wm-submit { color: #0a0f0c; }
       activeEvidenceIndexes[activeGroup] = 0;
       saveGroupsData();
       renderFeeds();
+
+      // 추억 기록 시 경험치 지급 (kimgyubi XP 이식). 이 경로는 ClovData.addPost를 거치지 않으므로
+      // 여기서 직접 grantXP('post')를 호출한다. XP 계산식은 addPost와 동일(기본+사진+정성 보너스).
+      if (typeof grantXP === 'function') {
+        var postXp = (typeof CLOV_XP_POST_BASE !== 'undefined') ? CLOV_XP_POST_BASE : 25;
+        var perPhoto = (typeof CLOV_XP_POST_PER_PHOTO !== 'undefined') ? CLOV_XP_POST_PER_PHOTO : 1;
+        var maxPhoto = (typeof CLOV_XP_POST_PHOTO_MAX !== 'undefined') ? CLOV_XP_POST_PHOTO_MAX : 10;
+        postXp += Math.min((newPost.photos ? newPost.photos.length : 0) * perPhoto, maxPhoto);
+        var textLen = (newPost.text || '').replace(/<[^>]*>/g, '').length;
+        if (textLen >= 100) postXp += (typeof CLOV_XP_POST_TEXT_100 !== 'undefined') ? CLOV_XP_POST_TEXT_100 : 10;
+        else if (textLen >= 50) postXp += (typeof CLOV_XP_POST_TEXT_50 !== 'undefined') ? CLOV_XP_POST_TEXT_50 : 5;
+        grantXP(postXp, 'post');
+      }
     }
     window.closeWriteModal();
   };

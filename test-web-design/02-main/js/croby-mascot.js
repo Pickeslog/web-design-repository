@@ -397,6 +397,13 @@
       clearInterval(typeTimer); typeTimer = null; typingFor = '';
       overrideSprite = null;
       render();
+    },
+    // 외부(경험치 시스템 등)에서 마스코트 말풍선에 프로그램 메시지를 띄우는 공개 API
+    say: function (text, ms) {
+      if (mode === 'sleepy') setMode('default'); // 자고 있으면 깨움
+      showSay(text, typeof ms === 'number' ? ms : 3500);
     }
   };
+  // 경험치 코드가 window.ClovMascot.say(...)로 호출하므로 동일 객체를 별칭으로 노출
+  window.ClovMascot = window.CrobyMascot;
 })();
