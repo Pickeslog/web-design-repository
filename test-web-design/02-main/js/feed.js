@@ -40,15 +40,20 @@
         }
 
         // 검색어가 제목·부제·본문·날짜·태그·참여자 이름·참여자 메시지 중 하나라도 포함되면 true
+        // 태그는 화면에 실제로 보이는 해시태그(getMemoryHashtags)로 검색해야 사용자가 본 대로 찾을 수 있다.
+        // (원본 post.tags는 '2명 기록' 같은 레거시 값이거나 #가 없어 화면 표기와 달라 검색이 안 걸렸다.)
         function postMatchesFeedSearch(post, query) {
             if (!query) return true;
+            const displayTags = (typeof getMemoryHashtags === 'function') ? getMemoryHashtags(post) : (post.tags || []);
+            const q = query.replace(/^#/, ''); // 사용자가 '#한강'으로 검색해도 '한강'으로 매칭되게
             const haystack = [
                 post.title, post.subtitle, post.text, post.date,
+                ...displayTags,
                 ...(post.tags || []),
                 ...((post.participants || []).map(participant => participant.name)),
                 ...((post.messages || []).map(message => message.text))
-            ].filter(Boolean).join(' ').toLowerCase();
-            return haystack.includes(query);
+            ].filter(Boolean).join(' ').toLowerCase().replace(/#/g, '');
+            return haystack.includes(q);
         }
 
         function getPostMonthKey(post) {

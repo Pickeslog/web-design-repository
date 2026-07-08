@@ -1364,25 +1364,33 @@
             });
         }
 
+        // 필름 스트립의 현재 프레임을 스트립 '내부에서 가로로만' 중앙 정렬한다.
+        // (scrollIntoView는 페이지 세로 스크롤까지 건드려서, 새로고침 시 우정공간이
+        //  증거 카드 섹션으로 강제 이동하는 문제가 있었다 → 컨테이너 scrollLeft만 조정.)
+        function centerCurrentFilmFrame() {
+            document.querySelectorAll('.cline-film-frame.is-current').forEach(frame => {
+                const framesEl = frame.closest('.cline-film-frames');
+                if (!framesEl || !framesEl.clientWidth) return; // 아직 레이아웃 전이면 건너뜀
+                // 부드러운 애니메이션(scrollTo behavior:smooth)은 로드 시 여러 렌더와 겹쳐 상쇄되므로
+                // scrollLeft 직접 대입(즉시)으로 확실하게 가로 중앙 정렬한다.
+                framesEl.scrollLeft = Math.max(0, frame.offsetLeft - (framesEl.clientWidth - frame.offsetWidth) / 2);
+            });
+        }
+
         function renderEvidenceViewers() {
             const dtZone = document.getElementById('dt-space-memory-zone');
             const mbZone = document.getElementById('mb-space-memory-zone');
             if (dtZone) dtZone.innerHTML = renderEvidenceViewer('desktop');
             if (mbZone) mbZone.innerHTML = renderEvidenceViewer('mobile');
             initEvidenceInteractions();
-            requestAnimationFrame(() => {
-                document.querySelectorAll('.cline-film-frame.is-current').forEach(frame => {
-                    frame.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-                });
-            });
+            // rAF + 짧은 타임아웃 폴백: 로드 직후엔 필름 스트립 레이아웃 폭이 아직 안 잡혀
+            // 가로 중앙 정렬이 안 먹을 수 있어, 레이아웃이 안정된 뒤 한 번 더 맞춘다.
+            requestAnimationFrame(centerCurrentFilmFrame);
+            setTimeout(centerCurrentFilmFrame, 180);
             if (!window._evidenceResizeBound) {
                 window._evidenceResizeBound = true;
                 window.addEventListener('resize', () => {
-                    requestAnimationFrame(() => {
-                        document.querySelectorAll('.cline-film-frame.is-current').forEach(frame => {
-                            frame.scrollIntoView({ behavior: 'instant', block: 'nearest', inline: 'center' });
-                        });
-                    });
+                    requestAnimationFrame(centerCurrentFilmFrame);
                 });
             }
         }
