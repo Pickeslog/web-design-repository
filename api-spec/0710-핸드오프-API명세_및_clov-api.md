@@ -106,5 +106,22 @@
 
 ---
 
-## 5. 커밋 상태
+## 5. openapi.yaml (클로드 디자인 생성본) — 리뷰 & 수정할 것
+
+- 위치: [openapi.yaml](openapi.yaml) — 클로드 디자인(claude.ai)이 우리 `01-resource-map`·`00-conventions`·`04-erd-and-ddl` 근거로 생성.
+- **평가: 완성도 높은 초안(~85%)**. 전 리소스 커버, `$ref`/공통 responses/예시 깔끔. 확정 결정(D1 가입승인·D3 FREE MEMORY·정원8명·작성자본인·page/size·도장4상태·XP서버계산) 반영됨.
+- **단일 계약으로 승격 전 맞출 불일치 (중요도순):**
+
+| # | 항목 | 조치 |
+|---|---|---|
+| ① 🔴 | **응답 봉투 불일치** — clov-api AGENTS는 `{success:true,data}` / `{success:false,error}` 강제인데 yaml은 엔티티 raw 반환 + `Error={error{...}}`(success 없음). 우리 00-conventions가 봉투 없이 쓴 탓. | **둘 중 하나로 통일**(구현 레포 기준 `{success,data}` 권장). yaml 전체 응답 래핑 + 00-conventions도 수정 |
+| ② 🟡 | **DDL에 없는 필드** — `Room.vehicle`(plane/bus/ship/train), `Room.intro`(60자)가 yaml엔 있는데 04-DDL `friendship_rooms`엔 없음 | DDL에 컬럼 추가 or yaml에서 제거 결정 |
+| ③ 🟡 | **`nullable: true`는 OpenAPI 3.1 비표준** (JSON Schema 2020-12 → `type:[string,"null"]`) | codegen 쓸 거면 치환 |
+| ④ 🟡 | **소셜 OAuth 엔드포인트 누락** — D6은 이메일+소셜인데 `/oauth2/authorization/{provider}` 계열 없음 | 명시 추가(리다이렉트 플로우) |
+| ⑤ 🟢 | **ID 타입 string vs DDL BIGINT** | 문자열화 vs 정수노출 결정 |
+
+- 소소: `/users/{userId}` 공개프로필 누락, `Room.inviteCode`(방당1코드) ↔ `/invites`(발급목록) 모델 겹침.
+- **다음**: ①(봉투)·②(vehicle/intro 컬럼)·④(OAuth) 정리 → openapi.yaml을 clov-api/clov-web 단일 계약으로 승격 → codegen(Spring DTO/Controller, React api/hooks).
+
+## 6. 커밋 상태
 - **아직 아무것도 커밋 안 함.** `web-design-repository`(git 아님), `clov-api`·`clov-web`(git repo)의 변경은 워킹트리에만 있음. 집에서 리뷰 후 커밋할 것.
