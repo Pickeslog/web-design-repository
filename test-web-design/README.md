@@ -65,15 +65,17 @@ test-web-design/
 
 ---
 
-## 공통 디자인 토큰 (`02-main/css/desktop.css`)
+## 공통 디자인 토큰 (`02-main/styles/base.css`)
+
+라이트는 아이보리·포레스트 그린, 다크는 "미드나잇 올리브" 팔레트.
 
 | 토큰 | 라이트 | 다크 |
 |---|---|---|
-| `--primary-green` | `#1b4332` | `#007c2e` |
-| `--accent-green` | `#52b788` | `#00bd45` |
-| `--btn-primary-bg` | `#357a58` | `#1da858` |
-| `--card-bg` | `#ffffff` | `#151f18` |
-| `--text-color` | `#2c3e35` | `#f0fdf4` |
+| `--primary-green` | `#1b4332` | `#5a7a3e` |
+| `--accent-green` | `#52b788` | `#9ccc65` |
+| `--btn-primary-bg` | `#357a58` | (base.css 참조) |
+| `--card-bg` | `#ffffff` | `#1e2016` |
+| `--text-color` | `#2c3e35` | `#eef0e2` |
 
 ---
 
@@ -81,13 +83,13 @@ test-web-design/
 
 1. **자기 파트 폴더만 수정** — 다른 폴더 파일은 건드리지 않는다
 2. **`_archive/` 건드리지 않음** — 구버전 참고용이지 작업 폴더 아님
-3. **공통 CSS/JS 수정 필요 시** — 팀장에게 먼저 알린다 (`02-main/css/`, `02-main/js/`)
+3. **공통 CSS/JS 수정 필요 시** — 팀장에게 먼저 알린다 (`02-main/styles/`, `02-main/js/`, `02-main/components/`)
 4. **각 HTML 파일 옆에 같은 이름의 `.md` 파일** — 화면 명세서 작성 시 활용
 
 ---
 
 ## 문서 위치
 
-- 화면 명세서 소스: `_docs/web-design-repository/screen-spec-source/`
-- 팀 작업 가이드: `_docs/web-design-repository/team-guides/`
-- 6/30 작업 보고서: `_docs/0630-통합_작업_요약보고서.md`
+- 화면 명세서 소스: `../screen-spec-source/`
+- 팀 작업 가이드: `../team-guides/`
+- 작업 보고서·진행 기록: `_docs/`(날짜별)

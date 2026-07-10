@@ -117,21 +117,15 @@
                     selectedScheduleIds[activeGroup] = newSch.id;
                 }
 
+                saveGroupsData();
                 updateScheduleUI();
                 closeModal(`${prefix}-schedule-modal`);
+                if (typeof showProofResultModal === 'function') {
+                    showProofResultModal({ title: 'D-day 저장 완료', message: '새로운 약속이 일정에 등록됐어요.' });
+                }
                 if (typeof grantXP === 'function') {
                     const xpAdd = typeof CLOV_XP_SCHEDULE_ADD !== 'undefined' ? CLOV_XP_SCHEDULE_ADD : 3;
                     grantXP(xpAdd, 'schedule_add');
-                }
-                
-                if (typeof showProofResultModal === 'function') {
-                    showProofResultModal({
-                        title: '일정 저장 완료',
-                        message: '일정이 성공적으로 저장되었습니다.',
-                        primaryText: '확인'
-                    });
-                } else {
-                    clovToast('D-day가 저장되었어요!', 'success');
                 }
             }
         }
@@ -140,7 +134,7 @@
             clovConfirm('정말 이 약속을 삭제하시겠습니까?', () => {
                 const schedules = groupsData[activeGroup].schedules || [];
                 const deletedSch = schedules.find(s => s.id === scheduleId);
-                
+
                 let xpToRevoke = typeof CLOV_XP_SCHEDULE_ADD !== 'undefined' ? CLOV_XP_SCHEDULE_ADD : 3;
                 if (deletedSch) {
                     const completeCount = typeof getScheduleProofCount === 'function' ? getScheduleProofCount(deletedSch) : 0;
@@ -151,13 +145,14 @@
 
                 groupsData[activeGroup].schedules = schedules.filter(s => s.id !== scheduleId);
                 if (selectedScheduleIds[activeGroup] === scheduleId) selectedScheduleIds[activeGroup] = null;
+                saveGroupsData();
                 updateScheduleUI();
-                clovToast('🗑️ 일정이 삭제되었어요.', 'info');
-                
+                clovToast('일정이 삭제되었어요.', 'success');
+
                 if (typeof revokeXP === 'function') {
                     revokeXP(xpToRevoke);
                 }
-            }, { icon: '🗑️', type: 'error', confirmText: '삭제', cancelText: '취소' });
+            }, { icon: (window.CLOV_ICONS && CLOV_ICONS.trash) || '🗑️', type: 'error', confirmText: '삭제', cancelText: '취소' });
         }
 
         function updateScheduleUI() {
@@ -404,7 +399,7 @@
             const messageEl = document.getElementById('dt-proof-result-message');
             const primary = document.getElementById('dt-proof-result-primary');
             const secondary = document.getElementById('dt-proof-result-secondary');
-            if (!modal || !titleEl || !messageEl || !primary || !secondary) {
+            if (!modal || !titleEl || !messageEl || !primary) {
                 clovAlert(title, { icon: '💬', type: 'info' });
                 return;
             }
@@ -412,10 +407,12 @@
             titleEl.textContent = title;
             messageEl.innerHTML = message;
             primary.textContent = primaryText || (complete ? '인생네컷 만들기' : '확인');
-            secondary.textContent = secondaryText || (complete ? '나중에 하기' : '취소');
+            if (secondary) {
+                secondary.textContent = secondaryText || (complete ? '나중에 하기' : '취소');
+                secondary.onclick = onSecondary || closeProofResultModal;
+                secondary.style.display = (showSecondary || complete) ? 'block' : 'none';
+            }
             primary.onclick = onPrimary || closeProofResultModal;
-            secondary.onclick = onSecondary || closeProofResultModal;
-            secondary.style.display = (showSecondary || complete) ? 'block' : 'none';
             modal.style.display = 'flex';
         }
 
@@ -473,28 +470,32 @@
                 return;
             }
 
-            showProofResultModal({
-                title: '업로드 전 확인',
-                message: `${escapeHtml(stage ? stage.name : '단계')} 인증사진은 한 번 업로드하면 변경할 수 없어요.<br>이 사진으로 등록할까요?`,
-                primaryText: '사진 선택하기',
-                secondaryText: '취소',
-                showSecondary: true,
-                onPrimary: () => {
-                    closeProofResultModal();
-                    const input = document.getElementById(inputId);
-                    if (!input) return;
-                    input.value = '';
-                    input.click();
-                }
-            });
+            if (typeof triggerCustomPhotoUpload === 'function') {
+                triggerCustomPhotoUpload('인증 사진 업로드', (file, dataUrl) => {
+                    processStagePhotoFile(scheduleId, stageKey, file);
+                });
+            } else {
+                showProofResultModal({
+                    title: '업로드 전 확인',
+                    message: `${escapeHtml(stage ? stage.name : '단계')} 인증사진은 한 번 업로드하면 변경할 수 없어요.<br>이 사진으로 등록할까요?`,
+                    primaryText: '사진 선택하기',
+                    secondaryText: '취소',
+                    showSecondary: true,
+                    onPrimary: () => {
+                        closeProofResultModal();
+                        const input = document.getElementById(inputId);
+                        if (!input) return;
+                        input.value = '';
+                        input.click();
+                    }
+                });
+            }
         }
 
-        function uploadStagePhoto(scheduleId, stageKey, input) {
-            const file = input.files && input.files[0];
+        function processStagePhotoFile(scheduleId, stageKey, file) {
             if (!file) return;
             if (!file.type.startsWith('image/')) {
                 clovAlert('이미지 파일(JPG, PNG, GIF, WEBP 등)만 업로드할 수 있습니다.', { icon: '⚠️', type: 'warn' });
-                input.value = '';
                 return;
             }
 
@@ -503,7 +504,6 @@
             const photos = getGrowthStagePhotos(schedule);
 
             if (photos[stageKey]) {
-                input.value = '';
                 showLockedStagePhotoModal();
                 return;
             }
@@ -511,36 +511,62 @@
             compressStagePhoto(file, dataUrl => {
                 photos[stageKey] = dataUrl;
 
-                try {
-                    localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
-                } catch (error) {
+                const trySave = () => {
+                    try {
+                        localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
+                        return true;
+                    } catch (error) {
+                        return false;
+                    }
+                };
+
+                const onSaved = () => {
+                    renderScheduleList('dt');
+                    renderScheduleList('mb');
+                    // 약속 여정 모달/여권 상세에서 업로드한 경우 그쪽도 함께 갱신
+                    if (typeof refreshScheduleJourneyAndDetail === 'function') refreshScheduleJourneyAndDetail();
+
+                    const stage = buildGrowthStages(schedule).find(item => item.key === stageKey);
+                    const isComplete = getScheduleProofCount(schedule) === 4;
+                    if (isComplete) {
+                        showProofResultModal({
+                            title: '인생 4컷 완성!',
+                            message: '네 단계의 인증샷이 모두 모였어요.<br>이제 인생네컷으로 만들어 볼까요?',
+                            complete: true
+                        });
+                        celebrateFourCutComplete();
+                    } else {
+                        showProofResultModal({
+                            title: '인증사진 업로드',
+                            message: `${escapeHtml(stage ? stage.name : '단계')} 인증사진이 업로드됐어요.`
+                        });
+                    }
+                };
+
+                if (trySave()) { onSaved(); return; }
+
+                // 저장 실패(용량 초과) → 기존에 저장된 원본 사진들을 재압축해 공간을 확보하고 1회 재시도
+                const recover = typeof compactStoredPhotos === 'function' ? compactStoredPhotos() : Promise.resolve();
+                recover.then(() => {
+                    if (trySave()) {
+                        onSaved();
+                        return;
+                    }
                     delete photos[stageKey];
+                    renderScheduleList('dt');
+                    renderScheduleList('mb');
                     showProofResultModal({
                         title: '저장 공간이 부족해요',
-                        message: '이미지를 더 작은 파일로 다시 올려주세요.'
+                        message: '기존 사진을 정리해도 공간이 부족해요.<br>오래된 사진을 지운 뒤 다시 시도해주세요.'
                     });
-                    return;
-                }
-
-                renderScheduleList('dt');
-                renderScheduleList('mb');
-
-                const stage = buildGrowthStages(schedule).find(item => item.key === stageKey);
-                const isComplete = getScheduleProofCount(schedule) === 4;
-                if (isComplete) {
-                    showProofResultModal({
-                        title: '인생 4컷 완성!',
-                        message: '네 단계의 인증샷이 모두 모였어요.<br>이제 인생네컷으로 만들어 볼까요?',
-                        complete: true
-                    });
-                    celebrateFourCutComplete();
-                } else {
-                    showProofResultModal({
-                        title: '인증사진 업로드',
-                        message: `${escapeHtml(stage ? stage.name : '단계')} 인증사진이 업로드됐어요.`
-                    });
-                }
+                });
             });
+        }
+
+        function uploadStagePhoto(scheduleId, stageKey, input) {
+            const file = input.files && input.files[0];
+            input.value = '';
+            processStagePhotoFile(scheduleId, stageKey, file);
         }
 
         function scrollGrowthCards(viewType, direction) {
@@ -839,6 +865,7 @@
                 const sch = groupsData[activeGroup].schedules.find(s => s.id === scheduleId);
                 if (sch) {
                     sch.content = newContent;
+                    saveGroupsData();
                 }
 
                 // 데스크톱 <-> 모바일 양방향 실시간 동기화

@@ -294,7 +294,7 @@ body.dark-mode .wm-submit { color: #0a0f0c; }
     </div>
     <div class="wm-body">
       <div class="wm-field">
-        <span class="wm-label">사진 (선택, 최대 30장)</span>
+        <span class="wm-label">사진 (선택, 최대 6장)</span>
         <div class="wm-photo-strip" id="wm-photo-strip"></div>
         <input type="file" id="wm-img-input" accept="image/*" multiple style="display:none"
                onchange="previewWriteImg(this)">
@@ -333,7 +333,7 @@ body.dark-mode .wm-submit { color: #0a0f0c; }
   /* ===== 글쓰기 모달 ===== */
   (function() {
     var _wmPhotos = [];
-    var WM_PHOTO_LIMIT = 30;
+    var WM_PHOTO_LIMIT = 6;
 
     window.openWriteModal = function() {
       _wmPhotos = [];
@@ -377,39 +377,22 @@ body.dark-mode .wm-submit { color: #0a0f0c; }
       var loadedCount = 0;
       toLoad.forEach(function(file) {
         if (!file.type.startsWith('image/')) { loadedCount += 1; return; }
-        if (typeof window.compressImage === 'function') {
-          window.compressImage(file, 800, 800, 0.6).then(function(dataUrl) {
-            _wmPhotos.push(dataUrl);
-            loadedCount += 1;
-            if (loadedCount === toLoad.length) {
-              input.value = '';
-              _renderPhotoStrip();
-              if (typeof showProofResultModal === 'function') {
-                showProofResultModal({
-                  title: '이미지 업로드 완료',
-                  message: toLoad.length + '장의 사진이 추가됐어요.'
-                });
-              }
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          _wmPhotos.push(e.target.result);
+          loadedCount += 1;
+          if (loadedCount === toLoad.length) {
+            input.value = '';
+            _renderPhotoStrip();
+            if (typeof showProofResultModal === 'function') {
+              showProofResultModal({
+                title: '이미지 업로드 완료',
+                message: toLoad.length + '장의 사진이 추가됐어요.'
+              });
             }
-          });
-        } else {
-          var reader = new FileReader();
-          reader.onload = function(e) {
-            _wmPhotos.push(e.target.result);
-            loadedCount += 1;
-            if (loadedCount === toLoad.length) {
-              input.value = '';
-              _renderPhotoStrip();
-              if (typeof showProofResultModal === 'function') {
-                showProofResultModal({
-                  title: '이미지 업로드 완료',
-                  message: toLoad.length + '장의 사진이 추가됐어요.'
-                });
-              }
-            }
-          };
-          reader.readAsDataURL(file);
-        }
+          }
+        };
+        reader.readAsDataURL(file);
       });
     };
     // 참여자 칩은 "함께한 친구"만 고른다. 게시자(나)는 항상 자동 포함되므로 칩 목록에는 넣지 않는다.
@@ -471,20 +454,11 @@ body.dark-mode .wm-submit { color: #0a0f0c; }
         participants: participants,
         tags: tags,
       };
-      if (window._clov && typeof window._clov.addPost === 'function') {
-        window._clov.addPost(newPost);
-        if (typeof window._clov.refreshFeed === 'function') {
-          window._clov.refreshFeed();
-        }
-      } else {
-        var ag = localStorage.getItem('clov_activeGroup') || 'friend';
-        var stored = {};
-        try { stored = JSON.parse(localStorage.getItem('clov_groupsData')) || {}; } catch(e){}
-        if (!stored[ag]) stored[ag] = { posts: [] };
-        if (!stored[ag].posts) stored[ag].posts = [];
-        stored[ag].posts.unshift(newPost);
-        localStorage.setItem('clov_groupsData', JSON.stringify(stored));
-        if (typeof renderFeeds === 'function') renderFeeds();
+      if (typeof groupsData !== 'undefined' && groupsData[activeGroup]) {
+        groupsData[activeGroup].posts.unshift(newPost);
+        activeEvidenceIndexes[activeGroup] = 0;
+        saveGroupsData();
+        renderFeeds();
       }
       window.closeWriteModal();
     };

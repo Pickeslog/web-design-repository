@@ -19,12 +19,14 @@
             const normalizedPost = normalizeMemoryPost(post);
             const isMine = normalizedPost.authorId === CURRENT_USER_ID;
             const author = normalizedPost.participants.find(participant => participant.id === normalizedPost.authorId) || normalizedPost.participants[0];
-            const authorLabel = isMine ? '내 기록' : `${author.name}의 기록`;
+            const authorLabel = isMine
+                ? (isAccountWithdrawn() ? `${CLOV_ANON_NAME}의 기록` : '내 기록')
+                : `${author.name}의 기록`;
             const coverPhoto = normalizedPost.photos[0] || '';
             const styleBg = coverPhoto ? `background-image: url('${escapeHtml(coverPhoto)}');` : '';
             const imageContent = coverPhoto
                 ? ''
-                : `<div class="cline-no-photo"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"></path><path d="m4 18 4-4 3 2 4-5 5 4"></path></svg></span><span class="cline-no-photo-text">사진 없음</span></div>`;
+                : `<div class="cline-no-photo" style="width: 100%; height: 100%; background: #d8eadb; justify-content: center;"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"/><path d="m4 18 4-4 3 2 4-5 5 4"/></svg></span><span class="cline-no-photo-text">사진 없음</span></div>`;
             const photoCountBadge = normalizedPost.photos.length > 1
                 ? `<span class="polaroid-photo-count"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:2px;"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"/><circle cx="12" cy="13" r="3.5"/></svg>${normalizedPost.photos.length}</span>`
                 : '';
@@ -119,11 +121,14 @@
             const normalizedPost = normalizeMemoryPost(post);
             const isMine = normalizedPost.authorId === CURRENT_USER_ID;
             const author = normalizedPost.participants.find(participant => participant.id === normalizedPost.authorId) || normalizedPost.participants[0];
-            const authorLabel = isMine ? '내 기록' : `${author.name}의 기록`;
+            const authorLabel = isMine
+                ? (isAccountWithdrawn() ? `${CLOV_ANON_NAME}의 기록` : '내 기록')
+                : `${author.name}의 기록`;
             const metaLine = `${normalizedPost.date}${normalizedPost.subtitle ? ` · ${normalizedPost.subtitle}` : ''}`;
             memoryDetailState.photoIndex = Math.min(Math.max(memoryDetailState.photoIndex || 0, 0), Math.max(normalizedPost.photos.length - 1, 0));
 
-            const photoHtml = memoryDetailState.editing ? `
+            // ── 수정 모드: 사진 스트립 + 제목/본문 폼 + 약속 연결 편집 ──
+            const editPhotoStripHtml = `
                 <div class="memory-edit-photo-strip">
                     ${(memoryDetailState.photoDraft || []).map((url, index) => `
                         <div class="memory-edit-photo-thumb">
@@ -138,36 +143,89 @@
                     ` : ''}
                 </div>
                 <input type="file" id="memory-edit-photo-input" accept="image/*" multiple style="display:none" onchange="handleMemoryEditPhotoUpload(this)">
-            ` : normalizedPost.photos.length ? `
-                <img class="memory-detail-photo" data-photos='${escapeHtml(JSON.stringify(normalizedPost.photos))}' src="${escapeHtml(normalizedPost.photos[memoryDetailState.photoIndex] || normalizedPost.photos[0])}" alt="${escapeHtml(normalizedPost.title)}" onclick="window.openPhotoViewer(this.src)" style="cursor: zoom-in;">
-                ${normalizedPost.photos.length > 1 ? `
-                    <div class="memory-detail-photo-strip">
-                        ${normalizedPost.photos.slice(0, 5).map((url, index) => `
-                            <button type="button" class="memory-detail-photo-thumb ${index === memoryDetailState.photoIndex ? 'is-active' : ''}" onclick="setMemoryDetailPhotoIndex(${index})" style="position:relative;">
-                                <img src="${escapeHtml(url)}" alt="사진 ${index + 1}">
-                                ${index === 4 && normalizedPost.photos.length > 5 ? `<div style="position:absolute; inset:0; background:rgba(0,0,0,0.6); border-radius:8px; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:bold; font-size:14px;">+${normalizedPost.photos.length - 5}</div>` : ''}
-                            </button>
-                        `).join('')}
-                    </div>
-                ` : ''}
-            ` : `<div class="memory-detail-photo memory-detail-photo--empty"><div class="cline-no-photo"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"></path><path d="m4 18 4-4 3 2 4-5 5 4"></path></svg></span><span class="cline-no-photo-text">사진 없음</span></div></div>`;
+            `;
 
-            const rightColumnHtml = memoryDetailState.editing ? `
+            const draftSchedule = findScheduleById(memoryDetailState.scheduleDraftId);
+            const scheduleEditHtml = memoryDetailState.schedulePickerOpen ? `
+                <div class="mp-sched-list">
+                    ${renderMemorySchedulePickerRows(memoryDetailState.scheduleDraftId, 'selectMemoryEditSchedule')}
+                </div>
+                <button type="button" class="mp-connect-cancel" onclick="closeMemoryEditSchedulePicker()">목록 닫기</button>
+            ` : draftSchedule ? `
+                <div class="mp-connect-chip">
+                    <span class="mp-connect-dday">${calculateDday(draftSchedule.date)}</span>
+                    <span class="mp-connect-title">${escapeHtml(draftSchedule.title)} <b>· 연결됨</b></span>
+                    <button type="button" class="mp-connect-btn" onclick="openMemoryEditSchedulePicker()">변경</button>
+                    <button type="button" class="mp-connect-btn mp-connect-btn--detach" onclick="detachMemoryEditSchedule()">해제</button>
+                </div>
+            ` : `
+                <button type="button" class="mp-connect-open" onclick="openMemoryEditSchedulePicker()">🗓️ 일정계획에서 약속 가져오기</button>
+                <div class="mp-connect-hint">연결 안 하면 <b>자유 기록(FREE MEMORY)</b>으로 저장돼요</div>
+            `;
+
+            const rightColumnHtml = `
                 <div class="memory-detail-edit-form">
-                    <input type="text" id="memory-detail-edit-title" class="memory-detail-edit-title-input" value="${escapeHtml(normalizedPost.title)}" maxlength="40">
-                    <textarea id="memory-detail-edit-body" class="memory-detail-edit-body-input" rows="6">${escapeHtml(normalizedPost.text || '')}</textarea>
+                    <input type="text" id="memory-detail-edit-title" class="memory-detail-edit-title-input" value="${escapeHtml(memoryDetailState.editTitleDraft ?? normalizedPost.title)}" maxlength="40">
+                    <textarea id="memory-detail-edit-body" class="memory-detail-edit-body-input" rows="6" maxlength="100" oninput="document.getElementById('memory-detail-edit-body-count').textContent = this.value.length + '/100'">${escapeHtml(memoryDetailState.editBodyDraft ?? (normalizedPost.text || ''))}</textarea>
+                    <span class="memory-detail-edit-body-count" id="memory-detail-edit-body-count">${(memoryDetailState.editBodyDraft ?? (normalizedPost.text || '')).length}/100</span>
+                    <div class="mp-connect-field">
+                        <div class="mp-connect-label">약속 연결 <span>(선택 · 일정계획)</span></div>
+                        ${scheduleEditHtml}
+                    </div>
                     <div class="memory-detail-edit-actions">
                         <button type="button" class="btn-sub" onclick="cancelMemoryPostEdit()">취소</button>
                         <button type="button" class="btn-main" onclick="updateMemoryPost()">저장</button>
                     </div>
                 </div>
-            ` : `
-                <div class="memory-detail-title-lg">${escapeHtml(normalizedPost.title)}</div>
-                <div class="memory-detail-body-text">${escapeHtml(normalizedPost.text || '')}</div>
-                <div class="memory-detail-tags">
-                    ${getMemoryHashtags(normalizedPost).map(tag => `<div class="memory-tag">${escapeHtml(tag)}</div>`).join('')}
-                </div>
             `;
+
+            // ── 여권(MEMORY PASSPORT) 보기 모드: 대표사진 + 썸네일 스트립 + 약속 영수증 ──
+            const schedule = findScheduleById(normalizedPost.scheduleId);
+            const stampState = getMemoryStampState(schedule);
+            const photos = normalizedPost.photos;
+            const photoCount = photos.length;
+            const currentPhotoIndex = memoryDetailState.photoIndex;
+            const pad2 = n => String(n).padStart(2, '0');
+            const MP_MAX_THUMBS = 4;
+            const visibleThumbs = photos.slice(0, MP_MAX_THUMBS);
+            const extraThumbCount = photoCount - visibleThumbs.length;
+
+            const passportPhotoHtml = photoCount ? `
+                <div class="mp-photo-main" onclick="openMemoryGallery(${currentPhotoIndex})">
+                    <img src="${escapeHtml(photos[currentPhotoIndex] || photos[0])}" alt="${escapeHtml(normalizedPost.title)}">
+                    <span class="mp-photo-index">${pad2(currentPhotoIndex + 1)} / ${pad2(photoCount)}</span>
+                    ${photoCount > 1 ? `
+                        <button type="button" class="mp-photo-arrow mp-photo-arrow--prev" onclick="event.stopPropagation(); memoryDetailPhotoNav(-1)" aria-label="이전 사진">‹</button>
+                        <button type="button" class="mp-photo-arrow mp-photo-arrow--next" onclick="event.stopPropagation(); memoryDetailPhotoNav(1)" aria-label="다음 사진">›</button>
+                    ` : ''}
+                </div>
+                ${photoCount > 1 ? `
+                    <div class="mp-thumb-strip">
+                        ${visibleThumbs.map((url, index) => `
+                            <button type="button" class="mp-thumb ${index === currentPhotoIndex ? 'is-active' : ''}" onclick="setMemoryDetailPhotoIndex(${index})">
+                                <img src="${escapeHtml(url)}" alt="사진 ${index + 1}">
+                            </button>
+                        `).join('')}
+                        ${extraThumbCount > 0 ? `<button type="button" class="mp-thumb mp-thumb--more" onclick="openMemoryGallery(${MP_MAX_THUMBS})">+${extraThumbCount}</button>` : ''}
+                    </div>
+                ` : ''}
+            ` : `<div class="mp-photo-main mp-photo-main--empty"><div class="cline-no-photo" style="width: 100%; height: 100%; background: #d8eadb; justify-content: center;"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"/><path d="m4 18 4-4 3 2 4-5 5 4"/></svg></span><span class="cline-no-photo-text">사진 없음</span></div></div>`;
+
+            let statusText;
+            let statusClass;
+            if (stampState === 'complete') {
+                statusText = '달성 · 인생4컷 완성';
+                statusClass = 'complete';
+            } else if (stampState === 'pending') {
+                statusText = `기록 중 · 인생4컷 ${getScheduleProofCount(schedule)}/4`;
+                statusClass = 'pending';
+            } else if (stampState === 'before') {
+                statusText = `약속 예정 · ${calculateDday(schedule.date)}`;
+                statusClass = 'before';
+            } else {
+                statusText = '자유 기록 · FREE MEMORY';
+                statusClass = 'free';
+            }
 
             const messagesHtml = normalizedPost.participants
                 .map(participant => {
@@ -237,17 +295,65 @@
                 </div>
             `;
 
-            sheet.innerHTML = `
-                <div class="memory-detail-head">
-                    <div>
-                        <div class="memory-detail-kicker" id="memory-detail-author">${escapeHtml(authorLabel)}</div>
-                        <div class="memory-detail-date" id="memory-detail-date">${escapeHtml(metaLine)}</div>
+            if (memoryDetailState.editing) {
+                sheet.classList.add('is-editing');
+                sheet.innerHTML = `
+                    <div class="memory-detail-head">
+                        <div>
+                            <div class="memory-detail-kicker" id="memory-detail-author">${escapeHtml(authorLabel)}</div>
+                            <div class="memory-detail-date" id="memory-detail-date">${escapeHtml(metaLine)}</div>
+                        </div>
+                        <button type="button" class="memory-detail-close" onclick="closeMemoryDetail()" aria-label="닫기">×</button>
                     </div>
-                    <button type="button" class="memory-detail-close" onclick="closeMemoryDetail()" aria-label="닫기">×</button>
+                    <div class="memory-detail-columns">
+                        <div class="memory-detail-photo-col">${editPhotoStripHtml}</div>
+                        <div class="memory-detail-text-col">${rightColumnHtml}</div>
+                    </div>
+                    <div class="memory-detail-messages">
+                        <div class="memory-detail-messages-title">친구 한 줄 메시지</div>
+                        ${messagesHtml || '<div class="memory-message-empty-text">아직 참여한 친구가 없습니다</div>'}
+                    </div>
+                    ${actionsHtml}
+                `;
+                return;
+            }
+
+            sheet.classList.remove('is-editing');
+            sheet.innerHTML = `
+                <div class="mp-cover">
+                    <div class="mp-cover-kicker">★ CLOV MEMORY PASSPORT ★</div>
+                    <div class="mp-cover-title" id="memory-detail-author">${escapeHtml(normalizedPost.title)}</div>
+                    <div class="mp-cover-sub">REPUBLIC OF CLOVER · 우정 여권</div>
+                    <div class="mp-cover-author">${escapeHtml(authorLabel)} · ${escapeHtml(metaLine)}</div>
+                    <button type="button" class="mp-close" onclick="closeMemoryDetail()" aria-label="닫기">×</button>
                 </div>
-                <div class="memory-detail-columns">
-                    <div class="memory-detail-photo-col">${photoHtml}</div>
-                    <div class="memory-detail-text-col">${rightColumnHtml}</div>
+                <div class="mp-main">
+                    <div class="mp-photo-col">${passportPhotoHtml}</div>
+                    <div class="mp-receipt-col">
+                        ${schedule
+                            ? `<button type="button" class="mp-receipt-btn" onclick="openScheduleJourneyModal(${schedule.id})" aria-label="${escapeHtml(schedule.title)} 약속 여정 보기">
+                                ${renderMemoryReceipt(schedule)}
+                                <span class="mp-receipt-cta">약속 여정 보기 ›</span>
+                               </button>`
+                            : renderMemoryReceipt(schedule)}
+                    </div>
+                </div>
+                <div class="mp-fields">
+                    <div class="mp-field">
+                        <div class="mp-field-k">STATUS</div>
+                        <div class="mp-status mp-status--${statusClass}"><span class="mp-status-dot"></span>${statusText}</div>
+                    </div>
+                    <div class="mp-field">
+                        <div class="mp-field-k">PHOTOS</div>
+                        <div class="mp-field-v">${photoCount}장 기록</div>
+                    </div>
+                </div>
+                <div class="mp-remarks">
+                    <div class="mp-field-k">REMARKS</div>
+                    <div class="mp-remarks-text">${escapeHtml(normalizedPost.text || '')}</div>
+                    <div class="memory-detail-tags">
+                        ${getMemoryHashtags(normalizedPost).map(tag => `<div class="memory-tag">${escapeHtml(tag)}</div>`).join('')}
+                    </div>
                 </div>
                 <div class="memory-detail-messages">
                     <div class="memory-detail-messages-title">친구 한 줄 메시지</div>
@@ -262,19 +368,89 @@
             if (!post) return;
             memoryDetailState.editing = true;
             memoryDetailState.photoDraft = normalizeMemoryPost(post).photos.slice();
+            // 약속 연결 편집: 기존 scheduleId를 프리필하고, 저장 전까지는 draft로만 다룬다
+            memoryDetailState.scheduleDraftId = post.scheduleId ?? null;
+            memoryDetailState.schedulePickerOpen = false;
+            memoryDetailState.editTitleDraft = undefined;
+            memoryDetailState.editBodyDraft = undefined;
             renderMemoryDetailModal();
         }
 
         function cancelMemoryPostEdit() {
             memoryDetailState.editing = false;
             memoryDetailState.photoDraft = null;
+            memoryDetailState.scheduleDraftId = null;
+            memoryDetailState.schedulePickerOpen = false;
+            memoryDetailState.editTitleDraft = undefined;
+            memoryDetailState.editBodyDraft = undefined;
             renderMemoryDetailModal();
         }
+
+        // 수정 모드에서 다른 상태 변경(사진 추가·약속 선택 등)으로 재렌더링해도
+        // 입력 중이던 제목/본문이 날아가지 않도록 현재 입력값을 draft로 보관한다
+        function captureMemoryEditDrafts() {
+            const titleInput = document.getElementById('memory-detail-edit-title');
+            const bodyInput = document.getElementById('memory-detail-edit-body');
+            if (titleInput) memoryDetailState.editTitleDraft = titleInput.value;
+            if (bodyInput) memoryDetailState.editBodyDraft = bodyInput.value;
+        }
+
+        // ── 약속 연결 편집(수정 모드) ──
+        function renderMemorySchedulePickerRows(selectedId, onSelectFnName) {
+            const schedules = (groupsData[activeGroup].schedules || [])
+                .slice()
+                .sort((a, b) => Math.abs(getDdayDiffDays(a.date)) - Math.abs(getDdayDiffDays(b.date)));
+            if (!schedules.length) {
+                return '<div class="mp-sched-empty">일정계획에 등록된 약속이 없어요</div>';
+            }
+            return schedules.map(schedule => {
+                const proofCount = getScheduleProofCount(schedule);
+                const isSelected = selectedId !== null && String(selectedId) === String(schedule.id);
+                return `
+                    <button type="button" class="mp-sched-item ${isSelected ? 'is-selected' : ''}" onclick="${onSelectFnName}('${escapeHtml(String(schedule.id))}')">
+                        <span class="mp-sched-dday">${calculateDday(schedule.date)}</span>
+                        <span class="mp-sched-info">
+                            <span class="mp-sched-title">${escapeHtml(schedule.title)}</span>
+                            <span class="mp-sched-4cut ${proofCount === 4 ? 'is-done' : ''}">인생4컷 ${proofCount}/4${proofCount === 4 ? ' ✓' : ''}</span>
+                        </span>
+                        ${isSelected ? '<span class="mp-sched-check">✓</span>' : ''}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function openMemoryEditSchedulePicker() {
+            captureMemoryEditDrafts();
+            memoryDetailState.schedulePickerOpen = true;
+            renderMemoryDetailModal();
+        }
+
+        function closeMemoryEditSchedulePicker() {
+            captureMemoryEditDrafts();
+            memoryDetailState.schedulePickerOpen = false;
+            renderMemoryDetailModal();
+        }
+
+        function selectMemoryEditSchedule(scheduleId) {
+            captureMemoryEditDrafts();
+            memoryDetailState.scheduleDraftId = scheduleId;
+            memoryDetailState.schedulePickerOpen = false;
+            renderMemoryDetailModal();
+        }
+
+        function detachMemoryEditSchedule() {
+            captureMemoryEditDrafts();
+            memoryDetailState.scheduleDraftId = null;
+            memoryDetailState.schedulePickerOpen = false;
+            renderMemoryDetailModal();
+        }
+
         // 수정 중 사진 추가: 파일을 선택하면 미리보기로 바로 반영하고,
         // 모두 불러오기가 끝나면 "이미지 업로드 완료" 안내 모달을 띄운다.
         function handleMemoryEditPhotoUpload(input) {
             const files = [...(input.files || [])];
             if (!files.length) return;
+            captureMemoryEditDrafts();
 
             if (!memoryDetailState.photoDraft) memoryDetailState.photoDraft = [];
             const remaining = MEMORY_PHOTO_LIMIT - memoryDetailState.photoDraft.length;
@@ -284,43 +460,30 @@
                 return;
             }
 
-            const toLoad = files.slice(0, remaining);
+            // 이미지 파일만, 남은 장수만큼만 압축해서 저장 (localStorage 용량 초과 방지)
+            const toLoad = files.slice(0, remaining).filter(file => file.type.startsWith('image/'));
+            if (!toLoad.length) { input.value = ''; return; }
+
             let loadedCount = 0;
             toLoad.forEach(file => {
-                if (typeof window.compressImage === 'function') {
-                    window.compressImage(file, 800, 800, 0.6).then(dataUrl => {
-                        memoryDetailState.photoDraft.push(dataUrl);
-                        loadedCount += 1;
-                        if (loadedCount === toLoad.length) {
-                            input.value = '';
-                            renderMemoryDetailModal();
-                            showProofResultModal({
-                                title: '이미지 업로드 완료',
-                                message: `${toLoad.length}장의 사진이 추가됐어요.<br>저장을 눌러야 게시글에 반영됩니다.`
-                            });
-                        }
-                    });
-                } else {
-                    const reader = new FileReader();
-                    reader.onload = event => {
-                        memoryDetailState.photoDraft.push(event.target.result);
-                        loadedCount += 1;
-                        if (loadedCount === toLoad.length) {
-                            input.value = '';
-                            renderMemoryDetailModal();
-                            showProofResultModal({
-                                title: '이미지 업로드 완료',
-                                message: `${toLoad.length}장의 사진이 추가됐어요.<br>저장을 눌러야 게시글에 반영됩니다.`
-                            });
-                        }
-                    };
-                    reader.readAsDataURL(file);
-                }
+                compressMemoryPhoto(file, dataUrl => {
+                    memoryDetailState.photoDraft.push(dataUrl);
+                    loadedCount += 1;
+                    if (loadedCount === toLoad.length) {
+                        input.value = '';
+                        renderMemoryDetailModal();
+                        showProofResultModal({
+                            title: '이미지 업로드 완료',
+                            message: `${toLoad.length}장의 사진이 추가됐어요.<br>저장을 눌러야 게시글에 반영됩니다.`
+                        });
+                    }
+                });
             });
         }
 
         function removeMemoryEditPhoto(index) {
             if (!memoryDetailState.photoDraft) return;
+            captureMemoryEditDrafts();
             memoryDetailState.photoDraft.splice(index, 1);
             renderMemoryDetailModal();
         }
@@ -329,6 +492,476 @@
             memoryDetailState.photoIndex = index;
             renderMemoryDetailModal();
         }
+
+        function memoryDetailPhotoNav(direction) {
+            const post = getCurrentMemoryPost();
+            if (!post) return;
+            const photos = normalizeMemoryPost(post).photos;
+            if (photos.length < 2) return;
+            memoryDetailState.photoIndex = (memoryDetailState.photoIndex + direction + photos.length) % photos.length;
+            renderMemoryDetailModal();
+        }
+
+        // ── 전체보기 슬라이드 갤러리 (상세 사진/썸네일/+N 클릭 시) ──
+        let memoryGalleryState = { open: false, index: 0 };
+
+        function getMemoryGalleryPhotos() {
+            const post = getCurrentMemoryPost();
+            if (!post) return [];
+            return normalizeMemoryPost(post).photos || [];
+        }
+
+        // 갤러리 오버레이는 index.html에 정적으로 배치돼 있다.
+        // (동적 createElement로 body에 append하면 이 앱의 모바일 미러링 로직이
+        //  노드를 다른 컨테이너로 옮기고 class를 제거해 position:fixed 오버레이가 깨진다.)
+        // 이벤트 위임은 최초 1회만 바인딩한다.
+        function ensureMemoryGalleryEl() {
+            const overlay = document.getElementById('memory-gallery-overlay');
+            if (!overlay || overlay._galleryBound) return overlay;
+            overlay._galleryBound = true;
+
+            overlay.addEventListener('click', event => {
+                if (event.target === overlay) closeMemoryGallery();
+            });
+
+            // 드래그 스와이프: 스테이지에서 좌우로 40px 이상 끌면 이전/다음
+            let swipe = { active: false, startX: 0 };
+            overlay.addEventListener('pointerdown', event => {
+                if (!event.target.closest('.mp-gallery-stage')) return;
+                swipe = { active: true, startX: event.clientX };
+            });
+            overlay.addEventListener('pointerup', event => {
+                if (!swipe.active) return;
+                swipe.active = false;
+                const dx = event.clientX - swipe.startX;
+                if (Math.abs(dx) > 40) memoryGalleryNav(dx < 0 ? 1 : -1);
+            });
+            overlay.addEventListener('pointercancel', () => { swipe.active = false; });
+            return overlay;
+        }
+
+        function renderMemoryGallery() {
+            const overlay = ensureMemoryGalleryEl();
+            const photos = getMemoryGalleryPhotos();
+            if (!photos.length) return;
+            memoryGalleryState.index = Math.min(Math.max(memoryGalleryState.index, 0), photos.length - 1);
+            const index = memoryGalleryState.index;
+            const pad2 = n => String(n).padStart(2, '0');
+            overlay.innerHTML = `
+                <button type="button" class="mp-gallery-close" onclick="closeMemoryGallery()" aria-label="닫기">×</button>
+                <div class="mp-gallery-counter">${pad2(index + 1)} / ${pad2(photos.length)}</div>
+                <div class="mp-gallery-stage">
+                    ${photos.length > 1 ? `<button type="button" class="mp-gallery-arrow mp-gallery-arrow--prev" onclick="memoryGalleryNav(-1)" aria-label="이전 사진">‹</button>` : ''}
+                    <img src="${escapeHtml(photos[index])}" alt="사진 ${index + 1}" draggable="false">
+                    ${photos.length > 1 ? `<button type="button" class="mp-gallery-arrow mp-gallery-arrow--next" onclick="memoryGalleryNav(1)" aria-label="다음 사진">›</button>` : ''}
+                </div>
+                ${photos.length > 1 ? `
+                    <div class="mp-gallery-thumbs">
+                        ${photos.map((url, thumbIndex) => `
+                            <button type="button" class="mp-gallery-thumb ${thumbIndex === index ? 'is-active' : ''}" onclick="memoryGalleryGoTo(${thumbIndex})">
+                                <img src="${escapeHtml(url)}" alt="사진 ${thumbIndex + 1}" draggable="false">
+                            </button>
+                        `).join('')}
+                    </div>
+                ` : ''}
+            `;
+            requestAnimationFrame(() => {
+                const activeThumb = overlay.querySelector('.mp-gallery-thumb.is-active');
+                if (activeThumb) activeThumb.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            });
+        }
+
+        function openMemoryGallery(index) {
+            const photos = getMemoryGalleryPhotos();
+            if (!photos.length) return;
+            memoryGalleryState = { open: true, index: Math.min(Math.max(index || 0, 0), photos.length - 1) };
+            renderMemoryGallery();
+            document.getElementById('memory-gallery-overlay').classList.add('open');
+        }
+
+        function closeMemoryGallery() {
+            const overlay = document.getElementById('memory-gallery-overlay');
+            if (overlay) overlay.classList.remove('open');
+            if (memoryGalleryState.open) {
+                // 갤러리에서 넘겨본 위치를 상세 대표사진에도 반영
+                memoryDetailState.photoIndex = memoryGalleryState.index;
+                memoryGalleryState.open = false;
+                if (!memoryDetailState.editing) renderMemoryDetailModal();
+            }
+        }
+
+        function memoryGalleryNav(direction) {
+            const photos = getMemoryGalleryPhotos();
+            if (photos.length < 2) return;
+            memoryGalleryState.index = (memoryGalleryState.index + direction + photos.length) % photos.length;
+            renderMemoryGallery();
+        }
+
+        function memoryGalleryGoTo(index) {
+            memoryGalleryState.index = index;
+            renderMemoryGallery();
+        }
+
+        // Esc로 갤러리만 닫기. 갤러리가 열려 있으면 init.js의 Escape 핸들러(closeMemoryDetail 등)로
+        // 전파되지 않게 막아, 뒤에 있는 상세 모달까지 함께 닫히는 것을 방지한다.
+        document.addEventListener('keydown', event => {
+            if (event.key !== 'Escape' || !memoryGalleryState.open) return;
+            event.stopImmediatePropagation();
+            closeMemoryGallery();
+        });
+
+        // ── 약속 여정 모달 (여권 상세의 약속 영수증 클릭 시) ──
+        // 연결된 일정(scheduleId)의 인생4컷 단계(제안→일정맞추기→약속확정→만남)를 한눈에 보여준다.
+        // 일정계획 탭의 stage 헬퍼(buildGrowthStages 등)를 그대로 재사용해 상태가 한 소스에서 동기화된다.
+        let scheduleJourneyState = { open: false, scheduleId: null };
+
+        function renderScheduleJourney(schedule) {
+            const stages = buildGrowthStages(schedule);
+            const photos = getGrowthStagePhotos(schedule);
+            const proofCount = getScheduleProofCount(schedule);
+            const isComplete = proofCount === 4;
+            const diffDays = getDdayDiffDays(schedule.date);
+            const ddayText = calculateDday(schedule.date);
+            const friendlyDate = formatFriendlyDate(schedule.date);
+            const ddayPhrase = diffDays < 0 ? '함께 보낸 그날로부터' : diffDays === 0 ? '바로 오늘, 약속의 날!' : '함께할 그날까지';
+
+            const stageHtml = stages.map(stage => {
+                const status = getGrowthStageStatus(stage, schedule);
+                const message = getGrowthStageMessage(stage, schedule, status);
+                const photo = photos[stage.key];
+                const inputId = `sj-stage-upload-${schedule.id}-${stage.key}`;
+                const badge = status === 'done'
+                    ? '<span class="sj-stage-badge is-done">완료 ✓</span>'
+                    : status === 'active'
+                        ? '<span class="sj-stage-badge is-active"><span class="sj-rec-dot"></span>REC</span>'
+                        : '<span class="sj-stage-badge is-locked">잠김</span>';
+
+                // done: 사진 확대 / active: 인증사진 업로드(기존 4컷 업로드 로직 재사용) / locked: 잠금 안내
+                let thumb;
+                if (photo) {
+                    thumb = `<button type="button" class="sj-stage-photo has-photo" style="background-image:url('${escapeHtml(photo)}')" onclick="openScheduleJourneyPhoto('${escapeHtml(stage.key)}')" aria-label="${escapeHtml(stage.name)} 사진 크게 보기"></button>`;
+                } else if (status === 'active') {
+                    thumb = `<button type="button" class="sj-stage-photo is-uploadable" onclick="requestStagePhotoUpload(${schedule.id}, '${escapeHtml(stage.key)}', '${inputId}')" aria-label="${escapeHtml(stage.name)} 인증사진 올리기">
+                                <span class="sj-stage-num">${stage.number}</span>
+                                <span class="sj-up-plus">＋</span>
+                             </button>
+                             <input id="${inputId}" type="file" accept="image/*" hidden onchange="uploadStagePhoto(${schedule.id}, '${escapeHtml(stage.key)}', this)">`;
+                } else {
+                    thumb = `<button type="button" class="sj-stage-photo is-locked" onclick="showStageLockedGuidanceModal('${escapeHtml(message)}')" aria-label="잠긴 단계">
+                                <span class="sj-stage-num">${stage.number}</span><span class="sj-lock">🔒</span>
+                             </button>`;
+                }
+
+                const actionHint = status === 'active' && !photo
+                    ? '<span class="sj-stage-upload-hint">＋ 인증사진 올리기</span>'
+                    : '';
+
+                return `
+                    <div class="sj-stage sj-stage--${status}">
+                        ${thumb}
+                        <div class="sj-stage-info">
+                            <div class="sj-stage-name">${stage.number}. ${escapeHtml(stage.name)}</div>
+                            <div class="sj-stage-date">${escapeHtml(String(stage.date || '').replace(/-/g, '.'))}</div>
+                            <div class="sj-stage-msg">${escapeHtml(message)}</div>
+                            ${actionHint}
+                        </div>
+                        ${badge}
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <div class="sj-modal">
+                    <div class="sj-head">
+                        <div class="sj-kicker">★ 약속 여정 ★</div>
+                        <div class="sj-title">${escapeHtml(schedule.title)}</div>
+                        <div class="sj-sub">${escapeHtml(friendlyDate)} · <b>${escapeHtml(ddayText)}</b> · ${escapeHtml(ddayPhrase)}</div>
+                        <button type="button" class="sj-close" onclick="closeScheduleJourneyModal()" aria-label="닫기">×</button>
+                    </div>
+                    <div class="sj-progress ${isComplete ? 'is-complete' : ''}">
+                        <span class="sj-progress-label">인생4컷 ${proofCount}/4${isComplete ? ' · 완성 🍀' : ''}</span>
+                        <span class="sj-progress-bar"><span class="sj-progress-fill" style="width:${Math.round(proofCount / 4 * 100)}%"></span></span>
+                    </div>
+                    <div class="sj-stages">${stageHtml}</div>
+                    <div class="sj-actions">
+                        <button type="button" class="btn-sub" onclick="closeScheduleJourneyModal()">닫기</button>
+                        <button type="button" class="btn-main" onclick="openScheduleFromJourney(${schedule.id})">일정계획에서 열기</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function ensureScheduleJourneyEl() {
+            const overlay = document.getElementById('schedule-journey-overlay');
+            if (!overlay || overlay._journeyBound) return overlay;
+            overlay._journeyBound = true;
+            overlay.addEventListener('click', event => {
+                if (event.target === overlay) closeScheduleJourneyModal();
+            });
+            return overlay;
+        }
+
+        function openScheduleJourneyModal(scheduleId) {
+            const schedule = findScheduleById(scheduleId);
+            if (!schedule) return;
+            const overlay = ensureScheduleJourneyEl();
+            if (!overlay) return;
+            scheduleJourneyState = { open: true, scheduleId };
+            overlay.innerHTML = renderScheduleJourney(schedule);
+            overlay.classList.add('open');
+        }
+
+        function closeScheduleJourneyModal() {
+            const overlay = document.getElementById('schedule-journey-overlay');
+            if (overlay) overlay.classList.remove('open');
+            scheduleJourneyState = { open: false, scheduleId: null };
+        }
+
+        // 4컷 인증사진 업로드 후 호출된다(uploadStagePhoto). 열려 있는 약속 여정 모달과
+        // 그 뒤의 여권 상세(영수증·완성 도장·상태)를 최신 상태로 다시 그린다.
+        function refreshScheduleJourneyAndDetail() {
+            if (scheduleJourneyState.open) {
+                const schedule = findScheduleById(scheduleJourneyState.scheduleId);
+                const overlay = document.getElementById('schedule-journey-overlay');
+                if (schedule && overlay) overlay.innerHTML = renderScheduleJourney(schedule);
+            }
+            if (memoryDetailState.postIndex !== null && !memoryDetailState.editing) {
+                renderMemoryDetailModal();
+            }
+        }
+        window.refreshScheduleJourneyAndDetail = refreshScheduleJourneyAndDetail;
+
+        // 단계 사진 크게 보기 — 재사용 중인 대표사진 뷰어(FLIP 확대)로 띄운다
+        function openScheduleJourneyPhoto(stageKey) {
+            const schedule = findScheduleById(scheduleJourneyState.scheduleId);
+            if (!schedule) return;
+            const url = getGrowthStagePhotos(schedule)[stageKey];
+            if (!url) return;
+            if (typeof openMainPhotoView === 'function') {
+                const temp = new Image();
+                temp.src = url;
+                openMainPhotoView(temp);
+            }
+        }
+
+        // "일정계획에서 열기" — 일정 탭으로 이동해 해당 약속을 선택 (데스크톱/모바일 모두 반영)
+        function openScheduleFromJourney(scheduleId) {
+            closeScheduleJourneyModal();
+            closeMemoryDetail();
+            if (typeof switchDesktopTab === 'function') switchDesktopTab('schedule');
+            if (typeof switchTab === 'function') switchTab('schedule');
+            if (typeof selectScheduleChip === 'function') {
+                selectScheduleChip('dt', scheduleId);
+                selectScheduleChip('mb', scheduleId);
+            }
+        }
+
+        // Esc로 약속 여정 모달만 닫기 (열림 상태에서만). 갤러리와 동일하게 전파를 막아
+        // 뒤의 상세 모달까지 닫히지 않게 한다.
+        document.addEventListener('keydown', event => {
+            if (event.key !== 'Escape' || !scheduleJourneyState.open) return;
+            event.stopImmediatePropagation();
+            closeScheduleJourneyModal();
+        });
+
+        // ── 우정공간 사진 모아보기 (추억피드 격자 아이콘 → 애플 갤러리 스타일) ──
+        // 현재 방(활성 그룹)의 모든 추억 사진을 검색·정렬(최신/오래된순)·월별 섹션으로 모아본다.
+        // 격자 사진 클릭 → 전체화면 라이트박스(이전/다음/카운터/"이 추억 보기").
+        let spaceGalleryState = { open: false, allItems: [], items: [], lightbox: -1, search: '', sort: 'new' };
+
+        // 게시글 날짜("2026.07.08" 등)를 정렬용 숫자 + 월 그룹 키/라벨로 파싱
+        function parseSpacePhotoDate(dateStr) {
+            const m = String(dateStr || '').match(/(\d{4})\D+(\d{1,2})(?:\D+(\d{1,2}))?/);
+            if (!m) return { num: -1, key: 'none', label: '날짜 미상' };
+            const y = +m[1], mo = +m[2], d = +(m[3] || 1);
+            return { num: y * 10000 + mo * 100 + d, key: y + '-' + String(mo).padStart(2, '0'), label: y + '년 ' + mo + '월' };
+        }
+
+        function collectSpacePhotos() {
+            const posts = (groupsData[activeGroup] && groupsData[activeGroup].posts) || [];
+            const items = [];
+            posts.forEach((post, postIndex) => {
+                const np = normalizeMemoryPost(post);
+                const tags = (typeof getMemoryHashtags === 'function') ? getMemoryHashtags(np).join(' ') : ((np.tags || []).join(' '));
+                const names = (np.participants || []).map(p => p.name).join(' ');
+                const searchText = [np.title, np.text, tags, names].join(' ').toLowerCase();
+                const dt = parseSpacePhotoDate(np.date);
+                (np.photos || []).forEach(url => {
+                    if (url) items.push({ url, postIndex, title: np.title, date: np.date, searchText, dateNum: dt.num, monthKey: dt.key, monthLabel: dt.label });
+                });
+            });
+            return items;
+        }
+
+        // 검색어 필터 + 정렬을 적용한 현재 보이는 사진 목록 (라이트박스도 이 목록을 넘겨본다)
+        function getSpaceGalleryVisible() {
+            const q = spaceGalleryState.search.trim().toLowerCase();
+            const items = spaceGalleryState.allItems.filter(it => !q || it.searchText.indexOf(q) !== -1);
+            items.sort((a, b) => {
+                const aBad = a.dateNum < 0, bBad = b.dateNum < 0;
+                if (aBad !== bBad) return aBad ? 1 : -1; // 날짜 미상은 항상 맨 뒤
+                return spaceGalleryState.sort === 'old' ? a.dateNum - b.dateNum : b.dateNum - a.dateNum;
+            });
+            return items;
+        }
+
+        function ensureSpaceGalleryEl() {
+            const overlay = document.getElementById('space-photo-gallery-overlay');
+            if (!overlay || overlay._sgBound) return overlay;
+            overlay._sgBound = true;
+            overlay.addEventListener('click', event => {
+                if (event.target === overlay) {
+                    if (spaceGalleryState.lightbox >= 0) closeSpaceLightbox();
+                    else closeSpacePhotoGallery();
+                }
+            });
+            return overlay;
+        }
+
+        // 헤더(검색·정렬 컨트롤)는 열 때 1회, 본문(월별 섹션)은 검색/정렬마다 갱신 → 검색 입력 포커스 유지
+        function renderSpaceGallery() {
+            const overlay = ensureSpaceGalleryEl();
+            if (!overlay) return;
+            overlay.innerHTML = `
+                <div class="sg-head">
+                    <div class="sg-head-titles">
+                        <div class="sg-title">우정공간 사진</div>
+                        <div class="sg-count" id="sg-count"></div>
+                    </div>
+                    <div class="sg-search">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+                        <input class="sg-search-input" id="sg-search-input" type="search" autocomplete="off" placeholder="사진 검색 (제목·내용·태그·친구)" value="${escapeHtml(spaceGalleryState.search)}" oninput="setSpaceGallerySearch(this.value)">
+                        <button type="button" class="sg-search-clear" onclick="setSpaceGallerySearch('')" aria-label="검색어 지우기" ${spaceGalleryState.search ? '' : 'hidden'}>×</button>
+                    </div>
+                    <div class="sg-sort" role="group" aria-label="정렬 순서">
+                        <button type="button" data-sort="new" class="${spaceGalleryState.sort === 'new' ? 'active' : ''}" onclick="setSpaceGallerySort('new')">최신순</button>
+                        <button type="button" data-sort="old" class="${spaceGalleryState.sort === 'old' ? 'active' : ''}" onclick="setSpaceGallerySort('old')">오래된순</button>
+                    </div>
+                    <button type="button" class="sg-close" onclick="closeSpacePhotoGallery()" aria-label="닫기">×</button>
+                </div>
+                <div class="sg-body" id="sg-body"></div>
+                <div id="sg-lightbox-host"></div>
+            `;
+            renderSpaceGalleryBody();
+            renderSpaceLightbox();
+        }
+
+        function renderSpaceGalleryBody() {
+            const body = document.getElementById('sg-body');
+            if (!body) return;
+            const visible = getSpaceGalleryVisible();
+            spaceGalleryState.items = visible;
+
+            const countEl = document.getElementById('sg-count');
+            if (countEl) countEl.textContent = visible.length + '장' + (spaceGalleryState.search.trim() ? ' · 검색결과' : '');
+
+            if (!visible.length) {
+                body.innerHTML = `<div class="sg-empty"><span class="sg-empty-clover">${spaceGalleryState.search.trim() ? '🔍' : '🍀'}</span>${spaceGalleryState.search.trim() ? '검색 결과가 없어요.' : '아직 이 우정공간에 올라온 사진이 없어요.'}</div>`;
+                return;
+            }
+
+            // 정렬된 순서를 유지하며 월별 섹션으로 묶는다 (셀 클릭 인덱스는 visible 배열 기준)
+            const groups = [];
+            let cur = null;
+            visible.forEach((it, idx) => {
+                if (!cur || cur.key !== it.monthKey) { cur = { key: it.monthKey, label: it.monthLabel, cells: [] }; groups.push(cur); }
+                cur.cells.push({ it, idx });
+            });
+
+            body.innerHTML = groups.map(g => `
+                <section class="sg-section">
+                    <div class="sg-section-head">${escapeHtml(g.label)}<span class="sg-section-count">${g.cells.length}</span></div>
+                    <div class="sg-grid">
+                        ${g.cells.map(c => `
+                            <button type="button" class="sg-cell" onclick="openSpaceLightbox(${c.idx})" aria-label="${escapeHtml(c.it.title)} 사진 크게 보기">
+                                <img src="${escapeHtml(c.it.url)}" loading="lazy" alt="${escapeHtml(c.it.title)}">
+                            </button>`).join('')}
+                    </div>
+                </section>
+            `).join('');
+        }
+
+        function renderSpaceLightbox() {
+            const host = document.getElementById('sg-lightbox-host');
+            if (!host) return;
+            const items = spaceGalleryState.items;
+            const lb = spaceGalleryState.lightbox;
+            if (lb < 0 || !items[lb]) { host.innerHTML = ''; return; }
+            host.innerHTML = `
+                <div class="sg-lightbox">
+                    <div class="sg-lb-counter">${lb + 1} / ${items.length}</div>
+                    <button type="button" class="sg-lb-close" onclick="closeSpaceLightbox()" aria-label="닫기">×</button>
+                    <div class="sg-lb-stage">
+                        ${items.length > 1 ? `<button type="button" class="sg-lb-arrow sg-lb-prev" onclick="spaceLightboxNav(-1)" aria-label="이전">‹</button>` : ''}
+                        <img src="${escapeHtml(items[lb].url)}" alt="${escapeHtml(items[lb].title)}">
+                        ${items.length > 1 ? `<button type="button" class="sg-lb-arrow sg-lb-next" onclick="spaceLightboxNav(1)" aria-label="다음">›</button>` : ''}
+                    </div>
+                    <div class="sg-lb-info">
+                        <span class="sg-lb-title">${escapeHtml(items[lb].title)} · ${escapeHtml(String(items[lb].date || ''))}</span>
+                        <button type="button" class="sg-lb-open" onclick="openSpaceMemoryFromGallery(${items[lb].postIndex})">이 추억 보기 ›</button>
+                    </div>
+                </div>`;
+        }
+
+        function openSpacePhotoGallery() {
+            const overlay = ensureSpaceGalleryEl();
+            if (!overlay) return;
+            spaceGalleryState = { open: true, allItems: collectSpacePhotos(), items: [], lightbox: -1, search: '', sort: 'new' };
+            renderSpaceGallery();
+            overlay.classList.add('open');
+        }
+
+        function closeSpacePhotoGallery() {
+            const overlay = document.getElementById('space-photo-gallery-overlay');
+            if (overlay) overlay.classList.remove('open');
+            spaceGalleryState = { open: false, allItems: [], items: [], lightbox: -1, search: '', sort: 'new' };
+        }
+
+        function setSpaceGallerySearch(value) {
+            spaceGalleryState.search = value;
+            const clear = document.querySelector('.sg-search-clear');
+            if (clear) clear.hidden = !value;
+            const input = document.getElementById('sg-search-input');
+            if (input && input.value !== value) input.value = value; // 지우기 버튼으로 비운 경우 반영
+            renderSpaceGalleryBody(); // 본문만 갱신 → 검색 입력 포커스 유지
+        }
+
+        function setSpaceGallerySort(sort) {
+            spaceGalleryState.sort = sort;
+            document.querySelectorAll('.sg-sort button').forEach(b => b.classList.toggle('active', b.dataset.sort === sort));
+            renderSpaceGalleryBody();
+        }
+
+        function openSpaceLightbox(index) {
+            spaceGalleryState.lightbox = index;
+            renderSpaceLightbox();
+        }
+
+        function closeSpaceLightbox() {
+            spaceGalleryState.lightbox = -1;
+            renderSpaceLightbox();
+        }
+
+        function spaceLightboxNav(direction) {
+            const n = spaceGalleryState.items.length;
+            if (n < 2 || spaceGalleryState.lightbox < 0) return;
+            spaceGalleryState.lightbox = (spaceGalleryState.lightbox + direction + n) % n;
+            renderSpaceLightbox();
+        }
+
+        // 라이트박스에서 "이 추억 보기" → 갤러리 닫고 해당 게시글 상세(여권) 열기
+        function openSpaceMemoryFromGallery(postIndex) {
+            closeSpacePhotoGallery();
+            if (typeof openMemoryDetail === 'function') openMemoryDetail(postIndex);
+        }
+
+        // Esc: 라이트박스가 열려 있으면 라이트박스만, 아니면 갤러리를 닫는다 (열림 상태에서만 반응)
+        document.addEventListener('keydown', event => {
+            if (event.key !== 'Escape' || !spaceGalleryState.open) return;
+            event.stopImmediatePropagation();
+            if (spaceGalleryState.lightbox >= 0) closeSpaceLightbox();
+            else closeSpacePhotoGallery();
+        });
 
         function updateMemoryPost() {
             const post = getCurrentMemoryPost();
@@ -347,9 +980,14 @@
             post.text = newBody;
             post.photos = (memoryDetailState.photoDraft || []).slice();
             post.bg = post.photos[0] || '';
+            post.scheduleId = memoryDetailState.scheduleDraftId ?? null;
             memoryDetailState.editing = false;
             memoryDetailState.photoDraft = null;
             memoryDetailState.photoIndex = 0;
+            memoryDetailState.scheduleDraftId = null;
+            memoryDetailState.schedulePickerOpen = false;
+            memoryDetailState.editTitleDraft = undefined;
+            memoryDetailState.editBodyDraft = undefined;
             saveGroupsData();
             renderMemoryDetailModal();
             renderFeeds();
@@ -524,7 +1162,6 @@
                 const normalizedPost = normalizeMemoryPost(post);
                 const tags = getMemoryHashtags(normalizedPost, normalizedPost.participants[0]).slice(0, 3);
                 const dateText = String(normalizedPost.date || '').replace(/^2026\./, '');
-                
                 const photo = normalizedPost.bg
                     ? `<img src="${escapeHtml(normalizedPost.bg)}" alt="${escapeHtml(normalizedPost.title)}">`
                     : `<div class="cline-no-photo"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"/><path d="m4 18 4-4 3 2 4-5 5 4"/></svg></span><span class="cline-no-photo-text">사진 없음</span></div>`;
@@ -555,12 +1192,15 @@
                         : `<div class="cline-card-slot cline-slot--empty"></div>`;
                 }
                 const isActive = delta === 0;
+                // 일기장 테마: 펼친 책의 오른쪽(0)·왼쪽(1) 카드 둘 다 상세보기로 열림
                 const isDiaryInner = cardTheme === 'diary' && (delta === 0 || delta === 1);
                 const isClickableDetail = isActive || isDiaryInner;
-                
+
+                // 일기장 테마에서 바깥쪽(+2) 카드를 클릭하면 2칸이 아니라 1칸만 넘어가
+                // "책장을 한 장씩 넘기는" 느낌을 유지한다
                 let targetIndex = postIndex;
                 if (cardTheme === 'diary' && delta === 2) {
-                    targetIndex = currentIndex + 1; // Left card should move by 1 step instead of 2
+                    targetIndex = currentIndex + 1;
                 }
 
                 return `
@@ -587,20 +1227,19 @@
 
             const themeClass = cardTheme === 'coverflow' ? 'theme-coverflow' : (cardTheme === 'diary' ? 'theme-diary' : '');
             const diaryMarkup = cardTheme === 'diary' ? `
-                <!-- Diary structure injected for scrapbook styling -->
                 <div class="diary-page-stack left"></div>
                 <div class="diary-page-stack right"></div>
-                
+
                 <div class="diary-page-text left-page"></div>
                 <div class="diary-spine"></div>
                 <div class="diary-page-text right-page"></div>
-                
+
                 <div class="diary-memo"></div>
-                
+
                 <div class="diary-sticker clover" style="top: 8%; left: 6%; transform: rotate(-15deg) scale(1.15);"></div>
                 <div class="diary-sticker flower" style="top: 55%; left: 12%; transform: rotate(18deg) scale(1.05);"></div>
                 <div class="diary-sticker clover" style="bottom: 10%; left: 4%; transform: rotate(-8deg) scale(1.2);"></div>
-                
+
                 <div class="diary-sticker flower" style="top: 12%; right: 5%; transform: rotate(12deg) scale(1.2);"></div>
                 <div class="diary-sticker clover" style="top: 45%; right: 8%; transform: rotate(-5deg) scale(1.8);"></div>
                 <div class="diary-sticker flower" style="bottom: 8%; right: 8%; transform: rotate(22deg) scale(1.15);"></div>
@@ -612,7 +1251,7 @@
                         ${diaryMarkup}
                         <div class="cline-wire-area">
                             <div class="cline-wire"></div>
-                            <div class="cline-cards">
+                            <div class="cline-cards ${cardTheme === 'coverflow' && evidenceSlideDirection !== 'idle' ? 'slide-' + evidenceSlideDirection : ''}">
                                 ${viewType === 'desktop' && (cardTheme === 'coverflow' || cardTheme === 'diary') ? makeSlot(+3, 'far-far-past') : ''}
                                 ${viewType === 'desktop' ? makeSlot(+2, 'far-past') : ''}
                                 ${makeSlot(+1, 'past')}
@@ -686,6 +1325,55 @@
                     }
                 }
             }, { passive: false });
+
+            // 겹침 카드(coverflow) 테마 3D 마우스 틸트 (동수 lami2342 이식)
+            // 마우스 위치에 따라 카드가 커서 방향으로 기운다(최대 ±18°/±15°). coverflow 테마에만 적용.
+            // 회전으로 변형되는 카드 대신 고정된 부모 슬롯을 기준점으로 삼아 떨림(jitter)을 방지한다.
+            const reset3DCard = (card) => {
+                card.style.setProperty('--rotateX', '0deg');
+                card.style.setProperty('--rotateY', '0deg');
+                card.classList.remove('is-3d-hovering');
+                const slot = card.closest('.cline-card-slot');
+                if (slot) slot.classList.remove('is-3d-hovering');
+            };
+            window.addEventListener('pointermove', (e) => {
+                const viewer = e.target.closest('.memory-evidence-viewer.theme-coverflow');
+                const card = viewer ? e.target.closest('.cline-polaroid') : null;
+                if (window._hovered3DCard && window._hovered3DCard !== card) {
+                    reset3DCard(window._hovered3DCard);
+                    window._hovered3DCard = null;
+                }
+                if (!card) return;
+                window._hovered3DCard = card;
+                const refEl = card.closest('.cline-card-slot') || card.parentElement || card;
+                const rect = refEl.getBoundingClientRect();
+                const normX = Math.max(-1, Math.min(1, (e.clientX - (rect.left + rect.width / 2)) / (rect.width / 2)));
+                const normY = Math.max(-1, Math.min(1, (e.clientY - (rect.top + rect.height / 2)) / (rect.height / 2)));
+                card.style.setProperty('--rotateY', (normX * 18).toFixed(2) + 'deg');
+                card.style.setProperty('--rotateX', (-normY * 15).toFixed(2) + 'deg');
+                card.classList.add('is-3d-hovering');
+                const slot = card.closest('.cline-card-slot');
+                if (slot) slot.classList.add('is-3d-hovering');
+            });
+            window.addEventListener('pointerout', (e) => {
+                if (window._hovered3DCard && !(e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest('.cline-polaroid, .cline-card-slot'))) {
+                    reset3DCard(window._hovered3DCard);
+                    window._hovered3DCard = null;
+                }
+            });
+        }
+
+        // 필름 스트립의 현재 프레임을 스트립 '내부에서 가로로만' 중앙 정렬한다.
+        // (scrollIntoView는 페이지 세로 스크롤까지 건드려서, 새로고침 시 우정공간이
+        //  증거 카드 섹션으로 강제 이동하는 문제가 있었다 → 컨테이너 scrollLeft만 조정.)
+        function centerCurrentFilmFrame() {
+            document.querySelectorAll('.cline-film-frame.is-current').forEach(frame => {
+                const framesEl = frame.closest('.cline-film-frames');
+                if (!framesEl || !framesEl.clientWidth) return; // 아직 레이아웃 전이면 건너뜀
+                // 부드러운 애니메이션(scrollTo behavior:smooth)은 로드 시 여러 렌더와 겹쳐 상쇄되므로
+                // scrollLeft 직접 대입(즉시)으로 확실하게 가로 중앙 정렬한다.
+                framesEl.scrollLeft = Math.max(0, frame.offsetLeft - (framesEl.clientWidth - frame.offsetWidth) / 2);
+            });
         }
 
         function renderEvidenceViewers() {
@@ -694,63 +1382,17 @@
             if (dtZone) dtZone.innerHTML = renderEvidenceViewer('desktop');
             if (mbZone) mbZone.innerHTML = renderEvidenceViewer('mobile');
             initEvidenceInteractions();
-            
-            // 수평 스크롤 컨테이너만 직접 스크롤하여 화면 전체가 위아래로 튀는 현상 방지
-            requestAnimationFrame(() => {
-                document.querySelectorAll('.cline-film-frame.is-current').forEach(frame => {
-                    const container = frame.closest('.cline-film-strip');
-                    if (container) {
-                        const frameRect = frame.getBoundingClientRect();
-                        const containerRect = container.getBoundingClientRect();
-                        const scrollLeft = frame.offsetLeft - (containerRect.width / 2) + (frameRect.width / 2);
-                        container.scrollTo({ left: scrollLeft, behavior: 'smooth' });
-                    }
-                });
-            });
+            // rAF + 짧은 타임아웃 폴백: 로드 직후엔 필름 스트립 레이아웃 폭이 아직 안 잡혀
+            // 가로 중앙 정렬이 안 먹을 수 있어, 레이아웃이 안정된 뒤 한 번 더 맞춘다.
+            requestAnimationFrame(centerCurrentFilmFrame);
+            setTimeout(centerCurrentFilmFrame, 180);
             if (!window._evidenceResizeBound) {
                 window._evidenceResizeBound = true;
                 window.addEventListener('resize', () => {
-                    requestAnimationFrame(() => {
-                        document.querySelectorAll('.cline-film-frame.is-current').forEach(frame => {
-                            const container = frame.closest('.cline-film-strip');
-                            if (container) {
-                                const frameRect = frame.getBoundingClientRect();
-                                const containerRect = container.getBoundingClientRect();
-                                const scrollLeft = frame.offsetLeft - (containerRect.width / 2) + (frameRect.width / 2);
-                                container.scrollTo({ left: scrollLeft, behavior: 'instant' });
-                            }
-                        });
-                    });
+                    requestAnimationFrame(centerCurrentFilmFrame);
                 });
             }
         }
-
-        // 사진 모달 뷰어 스크립트
-        window.openPhotoViewer = function(src) {
-            let modal = document.getElementById('photo-viewer-modal');
-            if (!modal) {
-                modal = document.createElement('div');
-                modal.id = 'photo-viewer-modal';
-                modal.className = 'photo-viewer-modal';
-                modal.innerHTML = `
-                    <span class="photo-viewer-close" onclick="window.closePhotoViewer()">&times;</span>
-                    <img id="photo-viewer-img" class="photo-viewer-img" src="" alt="Photo" onclick="event.stopPropagation()">
-                `;
-                modal.addEventListener('click', function(e) {
-                    if (e.target === modal) window.closePhotoViewer();
-                });
-                document.body.appendChild(modal);
-            }
-            const img = modal.querySelector('#photo-viewer-img') || modal.querySelector('.photo-viewer-img');
-            if (img) img.src = src;
-            void modal.offsetWidth; // reflow
-            modal.classList.add('is-visible');
-        };
-
-        window.closePhotoViewer = function() {
-            const modal = document.getElementById('photo-viewer-modal');
-            if (modal) modal.classList.remove('is-visible');
-        };
 
         // 4. 피드 리스트 동적 렌더링 함수
         // 6. 친구 코드 연동 기능 시뮬레이션 - 모바일
@@ -822,7 +1464,7 @@
         ];
         function clovLevelTierIndex(level) {
             for (let i = 0; i < CLOV_LEVEL_TIERS.length; i++) {
-                if (level < CLOV_LEVEL_TIERS[i].max) return i;
+                if (level <= CLOV_LEVEL_TIERS[i].max) return i;
             }
             return CLOV_LEVEL_TIERS.length - 1;
         }
@@ -831,16 +1473,16 @@
             return { tierIndex: idx, name: CLOV_LEVEL_TIERS[idx].name, icon: CLOV_LEVEL_TIERS[idx].icon, isMax: level >= CLOV_MAX_LEVEL };
         }
         function clovTodayStr() {
-            // 항상 한국 시간(KST, UTC+9) 기준으로 날짜를 계산하여 00시 정각에 리셋되도록 보장
-            const now = new Date();
-            const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
-            const kstTime = new Date(utcTime + (9 * 3600000));
-            return kstTime.getFullYear() + '-' + String(kstTime.getMonth() + 1).padStart(2, '0') + '-' + String(kstTime.getDate()).padStart(2, '0');
+            const d = new Date();
+            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
         }
         window.clovLevelInfo = clovLevelInfo;
         window.CLOV_MAX_LEVEL = CLOV_MAX_LEVEL;
 
         let friendshipLevel = 3;
+        if (typeof groupsData !== 'undefined' && groupsData[activeGroup] && typeof groupsData[activeGroup].level === 'number') {
+            friendshipLevel = groupsData[activeGroup].level;
+        }
 
         function updateFriendshipUI() {
             const grp = groupsData[activeGroup] || {};
@@ -877,9 +1519,6 @@
             updateDashboardPhotos();
             // 일정 배너 업데이트
             updateScheduleUI();
-
-            renderGroundGrowth('dt-ground-growth');
-            renderGroundGrowth('mb-ground-growth');
         }
 
         // 레벨업 순간 대시보드 카드에 충격파 펄스 애니메이션을 재생
@@ -943,18 +1582,18 @@
                 s.style.left = '0px';
                 s.style.top = '0px';
                 s.style.pointerEvents = 'none';
-                
+
                 const ang = Math.random() * Math.PI * 2;
                 const dist = 50 + Math.random() * spread;
                 const tx = Math.cos(ang) * dist;
                 const ty = Math.sin(ang) * dist + (Math.random() * 150);
                 const rot = (Math.random() * 720) - 360;
-                
+
                 s.style.transition = 'transform 1.8s cubic-bezier(0.1, 0.8, 0.2, 1), opacity 1.8s ease-in-out';
                 s.style.transform = `translate(-50%, -50%) scale(0.2) rotate(0deg)`;
                 s.style.opacity = '1';
                 burstEl.appendChild(s);
-                
+
                 setTimeout(() => {
                     s.style.transform = `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px)) scale(${0.8 + Math.random()}) rotate(${rot}deg)`;
                     s.style.opacity = '0';
@@ -1020,7 +1659,7 @@
                         const distance = 200 + Math.random() * 400; // 화면 중심부까지 멀리 뻗어나가도록 거리 증가
                         const spreadX = Math.cos(baseAngle) * distance;
                         const spreadY = Math.sin(baseAngle) * distance;
-                        
+
                         // 퍼지는 속도는 2초, 서서히 사라지는 시간은 1초 (총 3초)
                         const spreadDuration = 2000;
 
@@ -1039,10 +1678,11 @@
                     }
 
                     if (window.ClovMascot && typeof window.ClovMascot.say === 'function') {
+                        const isRobot = !!(window.CrobyMascot && typeof CrobyMascot.getCharacter === 'function' && CrobyMascot.getCharacter() === 'robot');
                         let msg = "";
-                        if (source === 'post') msg = "우리의 추억이 반짝거려! ✨";
-                        else if (source === 'schedule_add') msg = "새로운 약속! 무척 기대된다 ✨";
-                        else if (source === 'schedule_done') msg = "멋진 인생4컷! 반짝거려 ✨";
+                        if (source === 'post') msg = isRobot ? "추억 데이터 반짝임 감지 ✨" : "우리의 추억이 반짝거려! ✨";
+                        else if (source === 'schedule_add') msg = isRobot ? "새 일정 프로토콜 기대치 상승 ✨" : "새로운 약속! 무척 기대된다 ✨";
+                        else if (source === 'schedule_done') msg = isRobot ? "인생4컷 완벽 렌더링 ✨" : "멋진 인생4컷! 반짝거려 ✨";
                         window.ClovMascot.say(msg, 3500);
                     }
                 }
@@ -1068,15 +1708,16 @@
                 grp.levelProgress = Math.max(0, grp.levelProgress - 100); // 초과분 이월
                 friendshipLevel = grp.level;
                 leveledUp = true;
-                
+
                 const newTier = clovLevelTierIndex(grp.level);
-                if (newTier > oldTier) {
+                // 111, 222, 333 등 정확히 등급의 마지막 레벨에 도달했을 때 폭죽 이벤트 발생
+                if (grp.level % 111 === 0) {
                     tierUp = true;
                 }
 
                 const info = clovLevelInfo(grp.level);
                 const badgeText = grp.level >= CLOV_MAX_LEVEL ? '+777' : ('Lv.' + grp.level);
-                clovToast(`${info.icon} ${badgeText} 달성! ${info.name}`, 'success');
+                // 레벨업 토스트 제거됨
                 triggerLevelPulse();
             } else {
                 // 진행도는 100을 넘지 않도록 표시 목적으로는 클램핑
@@ -1088,22 +1729,33 @@
             updateFriendshipUI();
             triggerXpFlash();
 
-            // 마스코트 말풍선 표시
+            // 마스코트 말풍선 표시 (선택된 캐릭터에 맞는 톤으로 — 크로비: 따뜻함 / 롭: 디스토피아 AI)
             if (window.ClovMascot && typeof window.ClovMascot.say === 'function' && finalXp > 0) {
                 let msg = '';
-                const buffSuffix = multiplier > 1.0 ? `<br>(가속 x${multiplier})` : '';
-                
+                const isRobot = !!(window.CrobyMascot && typeof CrobyMascot.getCharacter === 'function' && CrobyMascot.getCharacter() === 'robot');
+                const buffSuffix = multiplier > 1.0 ? `\n(가속 x${multiplier})` : '';
+
                 const maxLevelReached = (oldLevel < CLOV_MAX_LEVEL && grp.level >= CLOV_MAX_LEVEL);
-                
+
                 if (tierUp || maxLevelReached) {
                     if (maxLevelReached) {
-                        msg = `축하합니다! 클로브가 마침내 최종 진화 형태인 전설의 우정(Lv.777)에 도달했습니다!`;
+                        msg = isRobot
+                            ? `최종 진화 완료. 인간과의 우정 데이터 100% 도달. 전설 등급(Lv.777).`
+                            : `축하합니다! 클로브가 마침내 최종 진화 형태인 전설의 우정(Lv.777)에 도달했습니다!`;
                     } else {
-                        msg = `새로운 우정의 단계에 도달했어! 클로브가 더욱 크고 눈부시게 피어났어! (Lv.${grp.level})`;
+                        msg = isRobot
+                            ? `우정 프로토콜 상위 단계 진입. 시스템 성장 감지. (Lv.${grp.level})`
+                            : `새로운 우정의 단계에 도달했어! 클로브가 더욱 크고 눈부시게 피어났어! (Lv.${grp.level})`;
                     }
                     triggerTierUpEvent(maxLevelReached);
                 } else if (leveledUp) {
-                    const levelUpMsgs = [
+                    const levelUpMsgs = isRobot ? [
+                        "우정 지수 상승 감지.",
+                        "데이터 축적 완료. 레벨 갱신.",
+                        "인간과의 유대... 강화되고 있다.",
+                        "경험치 임계값 도달. 진화.",
+                        "성장 로그 기록됨."
+                    ] : [
                         "우와! 한 뼘 더 자랐어!",
                         "우리 우정이 더 깊어졌네!",
                         "앞으로도 계속 추억을 쌓아가자.",
@@ -1115,16 +1767,16 @@
                 } else {
                     if (source === 'click') {
                         if (typeof window.v5state !== 'undefined' && (window.v5state.event === 'my_birthday' || window.v5state.event === 'friend_birthday') && window.lastMascotLine) {
-                            msg = `${window.lastMascotLine} (+${finalXp}&nbsp;XP)`;
+                            msg = `${window.lastMascotLine} (+${finalXp}\u00A0XP)`;
                         } else {
-                            msg = `교감 완료! +${finalXp}&nbsp;XP`;
+                            msg = isRobot ? `교감 신호 수신. +${finalXp}\u00A0XP` : `교감 완료! +${finalXp}\u00A0XP`;
                         }
                     }
-                    else if (source === 'post') msg = `추억 고마워! +${finalXp}&nbsp;XP${buffSuffix}`;
-                    else if (source === 'schedule_add') msg = `약속 등록 완료! +${finalXp}&nbsp;XP${buffSuffix}`;
-                    else if (source === 'schedule_done') msg = `인생4컷 달성! +${finalXp}&nbsp;XP${buffSuffix}`;
-                    else if (source === 'passive') msg = `어제 남겨둔 추억들 덕분에 클로브가 이만큼 자랐어요! <span style="white-space: nowrap;">+${finalXp} XP</span>${buffSuffix}`;
-                    else msg = `<span style="white-space: nowrap;">+${finalXp} XP</span> 획득!${buffSuffix}`;
+                    else if (source === 'post') msg = (isRobot ? `추억 데이터 저장 완료. +${finalXp}\u00A0XP` : `추억 고마워! +${finalXp}\u00A0XP`) + buffSuffix;
+                    else if (source === 'schedule_add') msg = (isRobot ? `새 일정 프로토콜 등록. +${finalXp}\u00A0XP` : `약속 등록 완료! +${finalXp}\u00A0XP`) + buffSuffix;
+                    else if (source === 'schedule_done') msg = (isRobot ? `인생4컷 아카이빙 완료. +${finalXp}\u00A0XP` : `인생4컷 달성! +${finalXp}\u00A0XP`) + buffSuffix;
+                    else if (source === 'passive') msg = (isRobot ? `누적 기록 스캔 완료. 성장 데이터 반영. +${finalXp}\u00A0XP` : `어제 남겨둔 추억들 덕분에 클로브가 이만큼 자랐어요! +${finalXp}\u00A0XP`) + buffSuffix;
+                    else msg = (isRobot ? `데이터 획득. +${finalXp}\u00A0XP` : `+${finalXp}\u00A0XP 획득!`) + buffSuffix;
                 }
 
                 window.ClovMascot.say(msg, leveledUp ? 4500 : 3500);
@@ -1171,28 +1823,29 @@
             const grp = groupsData[activeGroup];
             if (!grp) return;
             if (typeof grp.levelProgress !== 'number') grp.levelProgress = 0;
-            
+
             const multiplier = getXpMultiplier();
             const finalXp = Math.round(rawXp * multiplier * 10) / 10;
-            
+
             grp.levelProgress -= finalXp;
-            
+
             while (grp.levelProgress < 0 && grp.level > 1) {
                 grp.level -= 1;
                 grp.levelProgress += 100;
             }
-            
+
             if (grp.levelProgress < 0 && grp.level <= 1) {
                 grp.levelProgress = 0;
                 grp.level = 1;
             }
-            
+
             friendshipLevel = grp.level;
             localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
             updateFriendshipUI();
-            
+
             if (window.ClovMascot && typeof window.ClovMascot.say === 'function' && finalXp > 0) {
-                window.ClovMascot.say(`기록이 지워졌어... -${finalXp} XP`, 3500);
+                const isRobot = !!(window.CrobyMascot && typeof CrobyMascot.getCharacter === 'function' && CrobyMascot.getCharacter() === 'robot');
+                window.ClovMascot.say(isRobot ? `데이터 삭제됨. -${finalXp} XP` : `기록이 지워졌어... -${finalXp} XP`, 3500);
             }
         }
         window.revokeXP = revokeXP;
@@ -1206,10 +1859,7 @@
             const rawPassive = Math.floor(posts * CLOV_PASSIVE_PER_POST + upcomingCount * CLOV_PASSIVE_PER_SCHEDULE);
             if (rawPassive <= 0) return;
             grantXP(rawPassive, 'passive');
-            clovToast(
-                `클로브가 자라났어요! 추억 ${posts}개·약속 ${upcomingCount}개 → +${rawPassive} XP`,
-                'success'
-            );
+            // 방치형 XP 토스트 제거됨
         }
 
         function levelUp() {
@@ -1238,7 +1888,7 @@
                 updateFriendshipUI();
 
                 if (!window.CLOV_DISABLE_CLICK_LIMIT && grp.xpClicksToday >= CLOV_MAX_CLICKS_PER_DAY) {
-                    clovToast('오늘의 우정 교감을 다 채웠어요! 내일 다시 함께해요', 'info');
+                    // 토스트 제거됨
                     return;
                 }
                 grp.xpClicksToday += 1;
@@ -1277,11 +1927,12 @@
                 }
 
                 if (window.ClovMascot && typeof window.ClovMascot.say === 'function') {
-                    window.ClovMascot.say('사랑이 넘치는 우리 우정! 하트를 받았어 ❤️', 3000);
+                    const isRobotMax = !!(window.CrobyMascot && typeof CrobyMascot.getCharacter === 'function' && CrobyMascot.getCharacter() === 'robot');
+                    window.ClovMascot.say(isRobotMax ? '감정 회로 과부하 감지... 이것이 인간의 \'사랑\'인가. ❤' : '사랑이 넘치는 우리 우정! 하트를 받았어 ❤️', 3000);
                 }
 
                 if (grp.xpClicksToday >= CLOV_MAX_CLICKS_PER_DAY) {
-                    clovToast('오늘의 교감을 다 채웠어요!', 'info');
+                    // 토스트 제거됨
                 }
                 return;
             }
@@ -1289,14 +1940,13 @@
             if (!window.CLOV_DISABLE_CLICK_LIMIT && grp.xpClicksToday >= CLOV_MAX_CLICKS_PER_DAY) {
                 localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
                 updateFriendshipUI();
-                clovToast('오늘의 우정 교감을 다 채웠어요! 내일 다시 함께해요', 'info');
                 return;
             }
 
             grp.xpClicksToday += 1;
             grantXP(CLOV_XP_PER_CLICK, 'click');
             if (grp.xpClicksToday >= CLOV_MAX_CLICKS_PER_DAY) {
-                clovToast('오늘의 교감을 다 채웠어요! 다른 활동으로도 경험치를 얻을 수 있어요', 'info');
+                // 토스트 제거됨
             }
         }
         window.levelUp = levelUp;
@@ -1464,36 +2114,9 @@
             const dtImg = document.getElementById('dt-main-photo');
             const mbImg = document.getElementById('mb-main-photo');
             
-            const photoUrl = typeof currentGroup.photo === 'string' ? currentGroup.photo : (defaultGroupsData[activeGroup].photo || "");
-            
-            function applyPhotoOrPlaceholder(imgEl, url) {
-                if (!imgEl) return;
-                const wrapper = imgEl.parentElement;
-                let placeholder = wrapper.querySelector('.cline-no-photo-wrapper');
-                if (url) {
-                    imgEl.src = url;
-                    imgEl.style.display = '';
-                    if (placeholder) placeholder.style.display = 'none';
-                } else {
-                    imgEl.style.display = 'none';
-                    if (!placeholder) {
-                        placeholder = document.createElement('div');
-                        placeholder.className = 'cline-no-photo-wrapper';
-                        placeholder.style.width = '100%';
-                        placeholder.style.height = '100%';
-                        placeholder.style.display = 'flex';
-                        placeholder.style.alignItems = 'center';
-                        placeholder.style.justifyContent = 'center';
-                        placeholder.style.background = 'var(--bg-light)';
-                        placeholder.innerHTML = `<div class="cline-no-photo"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"></path><path d="m4 18 4-4 3 2 4-5 5 4"></path></svg></span><span class="cline-no-photo-text">사진 없음</span></div>`;
-                        wrapper.appendChild(placeholder);
-                    }
-                    placeholder.style.display = 'flex';
-                }
-            }
-
-            applyPhotoOrPlaceholder(dtImg, photoUrl);
-            applyPhotoOrPlaceholder(mbImg, photoUrl);
+            const photoUrl = currentGroup.photo || defaultGroupsData[activeGroup].photo || "";
+            if (dtImg) dtImg.src = photoUrl;
+            if (mbImg) mbImg.src = photoUrl;
 
             // 사진 설명 제목 업데이트
             const dtTitle = document.getElementById('dt-photo-title');
@@ -1661,6 +2284,7 @@
             if (el) {
                 const newTitle = el.innerText.replace(/\u200B/g, '').trim();
                 groupsData[activeGroup].photoTitle = newTitle;
+                saveGroupsData();
                 const otherId = viewType === 'dt' ? 'mb-photo-title' : 'dt-photo-title';
                 const otherEl = document.getElementById(otherId);
                 if (otherEl) {
@@ -1676,6 +2300,8 @@
         let photoModalInitialized = false;
         let currentPhotoViewType = 'dt';
         let tempPhotoDataUrl = null;
+        let tempPhotoFile = null;
+        let photoUploadConfig = null;
 
         function initPhotoUploadModal() {
             if (photoModalInitialized) return;
@@ -1692,6 +2318,7 @@
 
             function resetModal() {
                 tempPhotoDataUrl = null;
+                tempPhotoFile = null;
                 dropZone.style.display = 'flex';
                 previewContainer.style.display = 'none';
                 previewImage.src = '';
@@ -1705,6 +2332,7 @@
                     if (fileInput) fileInput.value = '';
                     return;
                 }
+                tempPhotoFile = file;
                 const reader = new FileReader();
                 reader.onload = function(evt) {
                     tempPhotoDataUrl = evt.target.result;
@@ -1746,9 +2374,18 @@
 
             saveBtn.addEventListener('click', () => {
                 if (tempPhotoDataUrl) {
-                    groupsData[activeGroup].photo = tempPhotoDataUrl;
-                    localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
-                    updateDashboardPhotos();
+                    if (photoUploadConfig && photoUploadConfig.onSave) {
+                        photoUploadConfig.onSave(tempPhotoFile, tempPhotoDataUrl);
+                    } else {
+                        // 사용자가 올린 사진을 '기본 사진'(customPhoto)으로 보관하고 대표사진으로 건다.
+                        // → 사용자설정 "대표 사진 > 기본 사진"이 이 업로드 사진을 가리키게 되고,
+                        //   프리셋을 골랐다가 다시 '기본 사진'을 눌러도 내가 올린 사진으로 복원된다.
+                        groupsData[activeGroup].photo = tempPhotoDataUrl;
+                        groupsData[activeGroup].customPhoto = tempPhotoDataUrl;
+                        localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
+                        updateDashboardPhotos();
+                        if (typeof updateMainPhotoThemeUI === 'function') updateMainPhotoThemeUI();
+                    }
                 }
                 overlay.style.display = 'none';
                 resetModal();
@@ -1761,6 +2398,18 @@
             currentPhotoViewType = viewType;
             initPhotoUploadModal();
             const overlay = document.getElementById('photo-upload-overlay');
+            const titleEl = document.getElementById('photo-upload-title');
+            if (titleEl) titleEl.innerText = '대표 사진 변경';
+            photoUploadConfig = null;
+            if (overlay) overlay.style.display = 'flex';
+        }
+
+        function triggerCustomPhotoUpload(title, onSave) {
+            initPhotoUploadModal();
+            const overlay = document.getElementById('photo-upload-overlay');
+            const titleEl = document.getElementById('photo-upload-title');
+            if (titleEl) titleEl.innerText = title;
+            photoUploadConfig = { onSave };
             if (overlay) overlay.style.display = 'flex';
         }
 
@@ -1806,40 +2455,5 @@
         window.openMemberListModal = openMemberListModal;
         window.closeMemberListModal = closeMemberListModal;
         window.copyMemberModalRoomCode = copyMemberModalRoomCode;
-        window.renderEvidenceViewers = renderEvidenceViewers;
-
-        function renderGroundGrowth(containerId) {
-            const container = document.getElementById(containerId);
-            if (!container) return;
-            container.innerHTML = '';
-
-            // 레벨이 오를수록 클로버 개수가 훨씬 더 가파르게 늘어나서 들판이 무성해짐
-            // (최대 777레벨이라 레벨을 그대로 곱하면 폭발하므로, 7단계 티어 인덱스(0~6) 기준으로 계산)
-            const tierIdx = clovLevelTierIndex(friendshipLevel);
-            const cloverCount = 6 + tierIdx * 5; // 6 ~ 36개
-            // 레벨이 높을수록 클로버 한 포기 자체도 더 크고 무성하게 자람
-            const baseScale = 0.7 + tierIdx * 0.12;
-
-            for (let i = 0; i < cloverCount; i++) {
-                const sprout = document.createElement('span');
-                sprout.className = 'ground-sprout';
-                sprout.innerText = '🍀';
-
-                const leftRandom = 2 + Math.random() * 96; // 지면 가로 전체에 고루 분포
-                const bottomRandom = Math.random() * 18; // 지면 능선 부근에 뿌리내린 듯 배치
-                const scale = baseScale + Math.random() * 0.4;
-                const swayDuration = 3 + Math.random() * 2;
-                const swayDelay = Math.random() * 2;
-                const growDelay = Math.random() * 0.9;
-
-                sprout.style.left = `${leftRandom}%`;
-                sprout.style.bottom = `${bottomRandom}%`;
-                sprout.style.fontSize = `${13 * scale}px`;
-                sprout.style.zIndex = String(Math.round(bottomRandom));
-                sprout.style.animation = `sproutGrow 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) ${growDelay}s backwards, sproutSway ${swayDuration}s ease-in-out ${swayDelay}s infinite`;
-
-                container.appendChild(sprout);
-            }
-        }
 
         // 8. 그룹 변경 기능 실행 로직

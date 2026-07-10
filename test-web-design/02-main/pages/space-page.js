@@ -5,34 +5,8 @@
                                 <div class="dashboard-card" id="dt-dashboard" style="padding:0; overflow:hidden; border-radius:18px;">
 <div class="v5-scene" id="dt-v5scene" data-time="day" data-season="summer" data-level="3" data-event="none" data-bg-theme="field">
                                         <div class="scene-sky"></div>
-                                        <div class="scene-stars" id="dt-v5stars"></div>
-                                        <div class="scene-celestial" id="dt-v5cel"></div>
-                                        <div class="scene-clouds">
-                                            <div class="cloud" style="width:84px;height:23px;top:11%;animation-duration:34s;animation-delay:-6s;"></div>
-                                            <div class="cloud" style="width:56px;height:16px;top:5%;animation-duration:26s;animation-delay:-18s;opacity:.72;"></div>
-                                            <div class="cloud" style="width:44px;height:13px;top:23%;animation-duration:20s;animation-delay:-3s;opacity:.60;"></div>
-                                        </div>
-                                        <div class="scene-mountains">
-                                            <svg viewBox="0 0 820 100" preserveAspectRatio="none">
-                                                <path id="dt-v5mtnFar" d="M0,100 L75,65 L148,76 L228,52 L318,68 L408,44 L490,60 L572,40 L650,56 L718,46 L776,62 L820,50 L820,100 Z" fill="rgba(130,175,140,0.88)"></path>
-                                                <path id="dt-v5mtnNear" d="M0,100 L88,72 L195,65 L320,76 L435,60 L555,70 L668,58 L768,68 L820,63 L820,100 Z" fill="rgba(58,118,78,0.96)"></path>
-                                            </svg>
-                                        </div>
-                                        <div class="scene-ground" id="dt-v5ground"></div>
-                                        <div class="scene-clover-field" id="dt-v5clovers"></div>
                                         <div class="season-particles" id="dt-v5particles"></div>
                                         <div class="scene-balloons" id="dt-v5balloons"></div>
-                                        <div class="scene-haze"></div>
-                                        <div class="v5-lp-loop" aria-hidden="true">
-                                            <div class="v5-lp-card">
-                                                <img class="v5-lp-photo" src="../assets/ai-style/clov_LP.png" alt="">
-                                                <div class="v5-lp-record">
-                                                    <span class="v5-lp-record-label"></span>
-                                                </div>
-                                                <span class="v5-lp-tonearm"></span>
-                                                <span class="v5-lp-needle"></span>
-                                            </div>
-                                        </div>
                                         <div class="v5-photo-rec" id="dt-v5photorec" onclick="v5PhotoRecClick(this)" title="클릭하면 우정 레벨업!">
                                             <div class="v5-photo-rec-shine"></div>
                                         </div>
@@ -108,7 +82,14 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <div id="dt-schedule-banner-container" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px;"></div>
+                                    <section class="dashboard-schedule-section" style="margin-top: 20px;">
+                                        <div class="section-title">
+                                            <div class="section-actions">
+                                                <button class="btn-action-sm btn-schedule-new" type="button" onclick="openScheduleModal('dt')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;"><path d="M12 5v14M5 12h14"/></svg>새 D-day 만들기</button>
+                                            </div>
+                                        </div>
+                                        <div id="dt-schedule-banner-container" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;"></div>
+                                    </section>
                                 </div>
                                 <section class="space-memory-preview">
                                     <div class="section-title">

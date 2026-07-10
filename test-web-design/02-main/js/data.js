@@ -1,21 +1,3 @@
-// --- Null Pointer Safe Patch ---
-const _origGetEl = document.getElementById.bind(document);
-const _dummyContainer = document.createElement('div');
-_dummyContainer.style.display = 'none';
-document.getElementById = function(id) {
-    let el = _origGetEl(id);
-    if (!el) {
-        el = document.createElement('div');
-        el.id = id;
-        if (document.body) {
-            if (!_dummyContainer.parentNode) document.body.appendChild(_dummyContainer);
-            _dummyContainer.appendChild(el);
-        }
-    }
-    return el;
-};
-// -------------------------------
-
         // 추억피드 게시글의 "나" 식별자. 참여자 id·게시자(authorId) 판정에 공용으로 사용한다.
         const CURRENT_USER_ID = 'me';
 
@@ -23,6 +5,8 @@ document.getElementById = function(id) {
         let activeGroup = 'friend'; // 기본값: 단짝친구
         let activeFeedFilter = 'all';
         let activeFeedMonth = 'all';
+        let activeFeedSort = 'new';   // 'new' = 최신순 / 'old' = 오래된순
+        let activeFeedSearch = '';    // 소문자·trim된 검색어 (빈 문자열이면 검색 안 함)
         let monthPickerYear = new Date().getFullYear();
         let activeEvidenceIndexes = {
             friend: 0,
@@ -100,6 +84,7 @@ document.getElementById = function(id) {
                         subtitle: "성수동 카페",
                         text: "문제 풀고 커피 마시며 집중한 날.",
                         bg: "https://picsum.photos/seed/cafe1/400/300",
+                        scheduleId: 61501,
                         authorId: "sol",
                         participants: [
                             { name: "나", icon: "나", text: "문제 하나 풀어서 뿌듯" },
@@ -370,7 +355,9 @@ document.getElementById = function(id) {
         const DATA_VERSION = '4';
         let groupsData = JSON.parse(localStorage.getItem('clov_groupsData'));
         if (!groupsData || localStorage.getItem('clov_dataVersion') !== DATA_VERSION) {
-            groupsData = defaultGroupsData;
+            // 깊은 복사로 초기화한다. (참조를 그대로 쓰면 대표사진 등을 바꿀 때 원본 defaultGroupsData까지
+            //  오염돼 '기본 사진' 복원 기준이 무너진다.)
+            groupsData = JSON.parse(JSON.stringify(defaultGroupsData));
             localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
             localStorage.setItem('clov_dataVersion', DATA_VERSION);
         } else {
@@ -444,19 +431,21 @@ document.getElementById = function(id) {
                     }
 
                     grantXP(postXp, 'post');
-                    const bonusStr = bonusDetails.length ? ' (' + bonusDetails.join(' · ') + ')' : '';
-                    setTimeout(() => {
-                        if (typeof clovToast === 'function')
-                            clovToast(`추억 기록 +&nbsp;XP${bonusStr}`, 'success');
-                    }, 600);
+                    // XP 토스트 제거됨
+                    if (typeof showProofResultModal === 'function') {
+                        setTimeout(() => {
+                            showProofResultModal({ title: '게시글 작성 완료', message: '새로운 추억이 피드에 등록됐어요.' });
+                        }, 300);
+                    }
                 } else {
-                    if (typeof clovToast === 'function') {
-                        clovToast('새 추억 피드가 성공적으로 등록되었습니다!', 'success');
+                    if (typeof showProofResultModal === 'function') {
+                        setTimeout(() => {
+                            showProofResultModal({ title: '게시글 작성 완료', message: '새로운 추억이 피드에 등록됐어요.' });
+                        }, 300);
                     }
                 }
-
                 if (typeof addUnreadNotification === 'function') {
-                    addUnreadNotification('새로운 추억', '새로운 추억 피드가 등록되었어요!');
+                    addUnreadNotification('✨ 새로운 추억', '새로운 추억 피드가 등록되었어요!');
                 }
             },
             refreshFeed: function() {
@@ -472,6 +461,26 @@ document.getElementById = function(id) {
         };
 
         const lifeFourCutScheduleExamples = [
+            {
+                // 약속 연결 데모: 추억피드 "성수 스터디 카페" 게시글(scheduleId: 61501)이 참조하는
+                // 완료된 약속 — 인생4컷 4/4 완성 → 상세 영수증에 '추억 완성' 도장이 찍힌다.
+                id: 61501,
+                title: "성수 스터디 카페",
+                date: "2026-06-15",
+                content: `<h3>📚 성수 스터디 카페</h3>
+<ul>
+  <li><strong>제안하기:</strong> 시험 전 집중 스터디 제안</li>
+  <li><strong>일정 맞추기:</strong> 오후 1시 성수역 3번 출구</li>
+  <li><strong>약속 확정:</strong> 카페 자리 예약 캡처 공유</li>
+  <li><strong>만남:</strong> 문제 풀고 커피 마시며 집중</li>
+</ul>`,
+                stagePhotos: {
+                    proposal: "https://picsum.photos/seed/study-p1/480/360",
+                    coordinate: "https://picsum.photos/seed/study-p2/480/360",
+                    confirm: "https://picsum.photos/seed/study-p3/480/360",
+                    meet: "https://picsum.photos/seed/study-p4/480/360"
+                }
+            },
             {
                 id: 70101,
                 title: "홍대 전시회 나들이",
@@ -555,4 +564,23 @@ document.getElementById = function(id) {
         }
 
         ensureLifeFourCutScheduleExamples();
+
+        // 약속 연결 데모 1회 이관: 저장된(localStorage) 데이터의 "성수 스터디 카페" 게시글에
+        // scheduleId가 아직 없으면 데모 일정(61501)을 연결해준다. (이미 null로 해제한 경우는 건드리지 않음)
+        function ensureMemoryScheduleLinkExamples() {
+            const friendGroup = groupsData.friend;
+            if (!friendGroup || !Array.isArray(friendGroup.posts)) return;
+            let changed = false;
+            friendGroup.posts.forEach(post => {
+                if (post.title === "성수 스터디 카페" && typeof post.scheduleId === 'undefined') {
+                    post.scheduleId = 61501;
+                    changed = true;
+                }
+            });
+            if (changed) {
+                localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
+            }
+        }
+
+        ensureMemoryScheduleLinkExamples();
 

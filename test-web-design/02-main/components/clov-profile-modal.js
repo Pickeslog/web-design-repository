@@ -73,21 +73,18 @@
                     <div class="settings-pane" id="dt-settings-pane-account">
                         <div class="profile-form-section">
                             <div class="profile-section-title">기본 정보</div>
-                            <div class="modal-form-group field-wrap">
-                                <label class="field-label">프로필 사진</label>
-                                <div class="profile-avatar-upload">
-                                    <button class="profile-avatar-upload-circle" id="dt-profile-avatar-circle-2" type="button" onclick="triggerProfileAvatarUpload()" aria-label="프로필 사진 변경">
-                                        <span id="dt-profile-avatar-initial-2">김</span>
-                                        <img id="dt-profile-avatar-img-2" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" alt="프로필 사진">
-                                    </button>
-                                    <span class="profile-avatar-upload-hint">클릭하여 사진을 변경하세요</span>
-                                    <input type="file" id="dt-profile-avatar-file" accept="image/*" onchange="handleProfileAvatarUpload(event)">
+                            <div class="basic-info-row">
+                                <button class="profile-avatar-upload-circle" id="dt-profile-avatar-circle-2" type="button" onclick="triggerProfileAvatarUpload()" aria-label="프로필 사진 변경">
+                                    <span id="dt-profile-avatar-initial-2">김</span>
+                                    <img id="dt-profile-avatar-img-2" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==" alt="프로필 사진">
+                                </button>
+                                <div class="modal-form-group field-wrap basic-info-name">
+                                    <label class="field-label" for="dt-profile-name">이름 / 닉네임</label>
+                                    <input class="text-input" type="text" id="dt-profile-name" placeholder="예: 김예린" maxlength="16" oninput="updateProfilePreview()">
                                 </div>
+                                <input type="file" id="dt-profile-avatar-file" accept="image/*" onchange="handleProfileAvatarUpload(event)">
                             </div>
-                            <div class="modal-form-group field-wrap">
-                                <label class="field-label" for="dt-profile-name">이름 / 닉네임</label>
-                                <input class="text-input" type="text" id="dt-profile-name" placeholder="예: 김예린" maxlength="16" oninput="updateProfilePreview()">
-                            </div>
+                            <div class="basic-info-hint">프로필 사진을 클릭하면 변경할 수 있어요</div>
                         </div>
 
                         <div class="profile-form-section">
@@ -98,7 +95,7 @@
                             </div>
                             <div class="modal-form-group field-wrap">
                                 <label class="field-label" for="dt-profile-birth">생년월일</label>
-                                <input class="text-input" type="date" id="dt-profile-birth">
+                                <input class="text-input" type="date" id="dt-profile-birth" onclick="this.showPicker && this.showPicker()">
                             </div>
                         </div>
 
@@ -155,10 +152,7 @@
                         <div class="profile-form-section">
                             <div class="profile-section-title">대시보드 배경</div>
                             <ul class="settings-list theme-option-list" id="dt-bg-theme-list">
-                                <li class="theme-option" data-bg-theme="field" onclick="setBgTheme('field')">
-                                    <span class="settings-list-label">클로버 들판</span>
-                                </li>
-                                <!-- 나머지 벽지는 desktop.js의 V5_WALLPAPERS 등록소에서 renderBgWallpaperOptions()가 채운다 -->
+                                <!-- 벽지 목록은 desktop.js의 V5_WALLPAPERS 등록소에서 renderBgWallpaperOptions()가 채운다 -->
                             </ul>
                         </div>
 
@@ -207,13 +201,25 @@
                                 </li>
                             </ul>
                         </div>
+
+                        <div class="profile-form-section">
+                            <div class="profile-section-title">마스코트 캐릭터</div>
+                            <ul class="settings-list theme-option-list" id="dt-mascot-theme-list">
+                                <li class="theme-option" data-mascot-theme="croby" onclick="setMascotCharacter('croby')">
+                                    <span class="settings-list-label">크로비</span>
+                                </li>
+                                <li class="theme-option" data-mascot-theme="robot" onclick="setMascotCharacter('robot')">
+                                    <span class="settings-list-label">로봇</span>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
                 </section>
             </div>
 
             <div class="profile-modal-actions" id="dt-profile-modal-actions">
                 <div class="profile-modal-actions-row" id="dt-profile-actions-account">
-                    <button class="btn-sub profile-footer-btn secondary" type="button" onclick="confirmDeleteProfileAccount()">계정 탈퇴</button>
+                    <button class="btn-sub profile-footer-btn secondary danger" type="button" onclick="confirmDeleteProfileAccount()">계정 탈퇴</button>
                     <div class="profile-modal-action-group">
                         <button class="btn-sub profile-footer-btn secondary" type="button" onclick="closeModal('dt-profile-modal')">취소</button>
                         <button class="btn-main profile-footer-btn primary" type="button" onclick="saveProfileModal()">저장하기</button>
@@ -247,7 +253,12 @@
       '.profile-pw-toggle{display:inline-flex;align-items:center;justify-content:center;}' +
       '.profile-pw-toggle .pwt-icon-eye-off{display:none;}' +
       '.profile-pw-toggle.is-visible .pwt-icon-eye{display:none;}' +
-      '.profile-pw-toggle.is-visible .pwt-icon-eye-off{display:inline-flex;}';
+      '.profile-pw-toggle.is-visible .pwt-icon-eye-off{display:inline-flex;}' +
+      // 계정 탈퇴 버튼: 파괴적 액션이라 빨강 톤으로 강조 (기본=빨강 글자·테두리, hover=빨강 채움)
+      '.profile-footer-btn.danger{color:#dc2626;border-color:rgba(220,38,38,.5);transition:background-color .15s ease,color .15s ease,border-color .15s ease;}' +
+      '.profile-footer-btn.danger:hover{background:#dc2626;border-color:#dc2626;color:#fff;}' +
+      // 대표 사진 '기본 사진(내 사진)' 항목의 업로드 썸네일
+      '#dt-mainphoto-theme-list .mainphoto-thumb{width:22px;height:22px;border-radius:5px;object-fit:cover;margin-right:8px;vertical-align:middle;flex-shrink:0;}';
     document.head.appendChild(s);
   }
 
@@ -376,7 +387,12 @@
     renderMainPhotoOptions();
     if (typeof groupsData === 'undefined' || typeof activeGroup === 'undefined' || !groupsData[activeGroup]) return;
     var currentPhoto = groupsData[activeGroup].photo;
-    
+    var defaultPhoto = (typeof defaultGroupsData !== 'undefined' && defaultGroupsData[activeGroup]) ? defaultGroupsData[activeGroup].photo : '';
+    var customPhoto = groupsData[activeGroup].customPhoto || '';
+    // '기본 사진'이 가리키는 실제 이미지: 사용자가 올린 사진이 있으면 그것, 없으면 그룹 원래 사진
+    var basePhoto = customPhoto || defaultPhoto;
+    // '기본 사진'과 등록소 항목이 우연히 같은 이미지를 가리킬 수 있어(예: 기본값 자체를 등록소 사진으로
+    // 바꾼 경우), 둘 다 동시에 켜지지 않도록 등록소 쪽 구체적인 항목을 우선한다.
     var matchedRegistryId = null;
     Object.keys(window.CLOV_MAIN_PHOTOS).forEach(function (id) {
       if (window.CLOV_MAIN_PHOTOS[id].image === currentPhoto) matchedRegistryId = id;
@@ -384,7 +400,21 @@
     document.querySelectorAll('#dt-mainphoto-theme-list .theme-option').forEach(function (li) {
       var id = li.dataset.mainphotoTheme;
       if (id === 'default') {
-        li.classList.toggle('active', currentPhoto === '');
+        li.classList.toggle('active', !matchedRegistryId && currentPhoto === basePhoto);
+        // 사용자가 올린 사진이 있으면 '기본 사진' 항목에 그 썸네일과 '내 사진' 라벨을 보여준다
+        var label = li.querySelector('.settings-list-label');
+        if (label) label.textContent = customPhoto ? '내 사진' : '기본 사진';
+        var thumb = li.querySelector('.mainphoto-thumb');
+        if (customPhoto) {
+          if (!thumb) {
+            thumb = document.createElement('img');
+            thumb.className = 'mainphoto-thumb';
+            li.insertBefore(thumb, li.firstChild);
+          }
+          thumb.src = customPhoto;
+        } else if (thumb) {
+          thumb.remove();
+        }
       } else {
         li.classList.toggle('active', id === matchedRegistryId);
       }
@@ -395,8 +425,10 @@
     if (typeof groupsData === 'undefined' || typeof activeGroup === 'undefined' || !groupsData[activeGroup]) return;
     var photoUrl, name, icon;
     if (id === 'default') {
-      photoUrl = '';
-      name = '기본 사진(사진 없음)';
+      // '기본 사진' = 사용자가 올린 사진(customPhoto)이 있으면 그것, 없으면 그룹 원래 사진
+      var defPhoto = (typeof defaultGroupsData !== 'undefined' && defaultGroupsData[activeGroup]) ? defaultGroupsData[activeGroup].photo : '';
+      photoUrl = groupsData[activeGroup].customPhoto || defPhoto;
+      name = groupsData[activeGroup].customPhoto ? '내 사진' : '기본 사진';
       icon = '🖼️';
     } else {
       var mp = window.CLOV_MAIN_PHOTOS[id];
@@ -503,10 +535,10 @@
     clovToast(icon + ' ' + name + ' 바탕화면으로 바꿨어요!', 'success');
   }
 
-  /* ── 배경 테마 (클로버 들판 + V5_WALLPAPERS 등록소) — 해당 UI가 없는 페이지에선 설정값만 저장 ── */
+  /* ── 배경 테마 (V5_WALLPAPERS 등록소) — 해당 UI가 없는 페이지에선 설정값만 저장 ── */
   function getBgTheme() {
-    var theme = localStorage.getItem('clov_bgTheme') || 'field';
-    if (theme === 'photo') theme = 'lp-turntable'; // 구버전 저장값 마이그레이션
+    var theme = localStorage.getItem('clov_bgTheme') || 'lp-turntable';
+    if (theme === 'photo' || theme === 'field') theme = 'lp-turntable'; // 구버전 저장값(photo/클로버 들판) 마이그레이션
     return theme;
   }
 
@@ -549,14 +581,38 @@
     applyBgTheme(theme);
     updateBgThemeUI();
     var wp = window.V5_WALLPAPERS && window.V5_WALLPAPERS[theme];
-    var name = theme === 'field' ? '클로버 들판' : (wp ? wp.name : theme);
-    var icon = theme === 'field' ? '🌿' : (wp ? wp.icon : '🎨');
+    var name = wp ? wp.name : theme;
+    var icon = wp ? wp.icon : '🎨';
     clovToast(icon + ' ' + name + ' 배경으로 바꿨어요!', 'success');
+  }
+
+  /* ── 마스코트 캐릭터 (크로비 / 로봇) — 실제 스프라이트 전환은 js/croby-mascot.js의
+     window.CrobyMascot.setCharacter()가 담당하고, 여기서는 저장값 관리와 옵션 UI만 맡는다. ── */
+  function getMascotCharacter() {
+    return localStorage.getItem('clov_mascotCharacter') === 'robot' ? 'robot' : 'croby';
+  }
+
+  function applyMascotCharacter(id) {
+    if (window.CrobyMascot && typeof CrobyMascot.setCharacter === 'function') CrobyMascot.setCharacter(id);
+  }
+
+  function updateMascotCharacterUI() {
+    var id = getMascotCharacter();
+    document.querySelectorAll('#dt-mascot-theme-list .theme-option').forEach(function (li) {
+      li.classList.toggle('active', li.dataset.mascotTheme === id);
+    });
+  }
+
+  function setMascotCharacter(id) {
+    localStorage.setItem('clov_mascotCharacter', id);
+    applyMascotCharacter(id);
+    updateMascotCharacterUI();
+    clovToast(id === 'robot' ? '로봇 마스코트로 바꿨어요!' : '크로비로 바꿨어요!', 'success');
   }
 
   /* ── 참여자별 추억 증거 카드 테마 (빨랫줄 / 겹침 카드) — 해당 UI가 없는 페이지에선 설정값만 저장 ── */
   function getEvidenceCardTheme() {
-    return localStorage.getItem('clov_evidenceCardTheme') || 'wire';
+    return localStorage.getItem('clov_evidenceCardTheme') || 'coverflow';
   }
 
   function updateEvidenceCardThemeUI() {
@@ -570,7 +626,6 @@
     localStorage.setItem('clov_evidenceCardTheme', theme);
     updateEvidenceCardThemeUI();
     if (typeof renderEvidenceViewers === 'function') renderEvidenceViewers();
-    else if (typeof window.renderEvidenceViewers === 'function') window.renderEvidenceViewers();
     clovToast(theme === 'coverflow' ? '📸 겹침 카드 테마로 바꿨어요!' : (theme === 'diary' ? '📔 일기장 테마로 바꿨어요!' : '🧷 빨랫줄 테마로 바꿨어요!'), 'success');
   }
 
@@ -668,9 +723,31 @@
   }
 
   function confirmDeleteProfileAccount() {
-    clovConfirm('정말 계정을 탈퇴하시겠습니까?', function () {
+    clovConfirm('정말 탈퇴하시겠어요? 계정은 삭제되지만 남긴 추억·편지·폴라로이드는 그대로 보존돼요. 작성자 표기만 \'언노운\'으로 익명화됩니다.', function () {
+      try { localStorage.setItem('clov_withdrawn', '1'); } catch (e) {}
+      // 저장된 추억 데이터의 내 작성자 표기를 즉시 익명화해 영속화
+      if (typeof groupsData !== 'undefined' && typeof normalizeMemoryPost === 'function') {
+        Object.keys(groupsData).forEach(function (g) {
+          (groupsData[g].posts || []).forEach(function (post) { normalizeMemoryPost(post); });
+        });
+        if (typeof saveGroupsData === 'function') saveGroupsData();
+      }
       closeModal('dt-profile-modal');
-    }, { icon: '🚪', type: 'error', confirmText: '탈퇴', cancelText: '취소' });
+      if (typeof renderFeeds === 'function') renderFeeds();
+      clovToast('계정을 탈퇴했어요 · 남긴 기록은 \'언노운\'으로 보존돼요', 'info');
+
+      // 기록 보존/익명화는 위에서 이미 영속화됨 → 마지막에 로그아웃 + 로그인 페이지로 이동
+      // (탈퇴가 실제로 "나가는" 흐름이 되도록. 데이터 삭제는 하지 않는다.)
+      if (window.ClovAuth && typeof ClovAuth.clearAccessToken === 'function') {
+        ClovAuth.clearAccessToken();
+      } else {
+        localStorage.removeItem('accessToken');
+        sessionStorage.removeItem('accessToken');
+      }
+      setTimeout(function () {
+        window.location.href = '../01-auth/login.html';
+      }, 1400);
+    }, { icon: (window.CLOV_ICONS && CLOV_ICONS.logout) || '🚪', type: 'error', confirmText: '탈퇴하기', cancelText: '취소' });
   }
 
   function triggerProfileAvatarUpload() {
@@ -722,7 +799,7 @@
     var themeActions = document.getElementById('dt-profile-actions-theme');
     if (accountActions) accountActions.style.display = pane === 'account' ? '' : 'none';
     if (themeActions) themeActions.style.display = pane === 'theme' ? '' : 'none';
-    if (pane === 'theme') { updateThemeOptionUI(); updateAppBackgroundUI(); updateBgThemeUI(); updateCoverThemeUI(); updateMainPhotoThemeUI(); updateLetterBoxThemeUI(); updateEvidenceCardThemeUI(); }
+    if (pane === 'theme') { updateThemeOptionUI(); updateAppBackgroundUI(); updateBgThemeUI(); updateCoverThemeUI(); updateMainPhotoThemeUI(); updateLetterBoxThemeUI(); updateEvidenceCardThemeUI(); updateMascotCharacterUI(); }
   }
 
   /* ── 전역 등록 (주입된 HTML의 onclick 속성이 전역 스코프에서 호출하므로 필요) ── */
@@ -738,6 +815,10 @@
   window.applyBgTheme = applyBgTheme;
   window.updateBgThemeUI = updateBgThemeUI;
   window.setBgTheme = setBgTheme;
+  window.getMascotCharacter = getMascotCharacter;
+  window.applyMascotCharacter = applyMascotCharacter;
+  window.updateMascotCharacterUI = updateMascotCharacterUI;
+  window.setMascotCharacter = setMascotCharacter;
   window.getCoverTheme = getCoverTheme;
   window.applyCoverTheme = applyCoverTheme;
   window.updateCoverThemeUI = updateCoverThemeUI;

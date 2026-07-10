@@ -7,6 +7,55 @@
             renderFeeds();
         }
 
+        function setFeedSort(sortName) {
+            activeFeedSort = sortName === 'old' ? 'old' : 'new';
+            document.querySelectorAll('.feed-sort-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.sort === activeFeedSort);
+            });
+            renderFeeds();
+        }
+
+        function setFeedSearch(query) {
+            activeFeedSearch = String(query || '').trim().toLowerCase();
+            document.querySelectorAll('.feed-search-clear').forEach(btn => {
+                btn.hidden = !activeFeedSearch;
+            });
+            renderFeeds();
+        }
+
+        function clearFeedSearch() {
+            activeFeedSearch = '';
+            document.querySelectorAll('.feed-search-input').forEach(input => { input.value = ''; });
+            document.querySelectorAll('.feed-search-clear').forEach(btn => { btn.hidden = true; });
+            renderFeeds();
+        }
+
+        // 정렬용 전체 날짜 키("YYYY-MM-DD"). 일자가 없으면 "-00"으로 채우고, 파싱 불가는 빈 문자열
+        function getPostDateKey(post) {
+            const raw = String(post.date || '').replace(/\./g, '-');
+            const full = raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+            if (full) return `${full[1]}-${full[2]}-${full[3]}`;
+            const ym = raw.match(/^(\d{4})-(\d{2})/);
+            return ym ? `${ym[1]}-${ym[2]}-00` : '';
+        }
+
+        // 검색어가 제목·부제·본문·날짜·태그·참여자 이름·참여자 메시지 중 하나라도 포함되면 true
+        // 태그는 화면에 실제로 보이는 해시태그(getMemoryHashtags)로 검색해야 사용자가 본 대로 찾을 수 있다.
+        // (원본 post.tags는 '2명 기록' 같은 레거시 값이거나 #가 없어 화면 표기와 달라 검색이 안 걸렸다.)
+        function postMatchesFeedSearch(post, query) {
+            if (!query) return true;
+            const displayTags = (typeof getMemoryHashtags === 'function') ? getMemoryHashtags(post) : (post.tags || []);
+            const q = query.replace(/^#/, ''); // 사용자가 '#한강'으로 검색해도 '한강'으로 매칭되게
+            const haystack = [
+                post.title, post.subtitle, post.text, post.date,
+                ...displayTags,
+                ...(post.tags || []),
+                ...((post.participants || []).map(participant => participant.name)),
+                ...((post.messages || []).map(message => message.text))
+            ].filter(Boolean).join(' ').toLowerCase().replace(/#/g, '');
+            return haystack.includes(q);
+        }
+
         function getPostMonthKey(post) {
             const rawDate = String(post.date || '').replace(/\./g, '-');
             const match = rawDate.match(/^(\d{4})-(\d{2})/);
@@ -80,22 +129,38 @@
                     if (activeFeedMonth !== 'all' && getPostMonthKey(normalizedPost) !== activeFeedMonth) {
                         return false;
                     }
-                    if (activeFeedFilter === 'others') {
-                        return normalizedPost.participants.some(participant => participant.type !== 'mine');
+                    if (activeFeedFilter === 'others' && !normalizedPost.participants.some(participant => participant.type !== 'mine')) {
+                        return false;
+                    }
+                    if (activeFeedSearch && !postMatchesFeedSearch(normalizedPost, activeFeedSearch)) {
+                        return false;
                     }
                     return true;
                 });
-            const htmlContent = filteredPosts.length > 0
-                ? filteredPosts
+
+            // 날짜 기준 정렬(최신순/오래된순). 날짜 파싱 불가 항목은 항상 맨 뒤로.
+            const sortedPosts = filteredPosts.slice().sort((a, b) => {
+                const da = getPostDateKey(a);
+                const db = getPostDateKey(b);
+                if (da === db) return 0;
+                if (!da) return 1;
+                if (!db) return -1;
+                return activeFeedSort === 'old' ? da.localeCompare(db) : db.localeCompare(da);
+            });
+
+            const htmlContent = sortedPosts.length > 0
+                ? sortedPosts
                     .map(post => renderMemoryCard(post, currentPosts.indexOf(post)))
                     .join('')
-                : `<div class="feed-empty-state">선택한 조건에 맞는 추억이 아직 없습니다.<br>새 추억을 남기면 이 월별 보관함에 바로 정리됩니다.</div>`;
+                : `<div class="feed-empty-state">${activeFeedSearch
+                    ? '검색어와 일치하는 추억이 없습니다.<br>다른 단어로 찾아보세요.'
+                    : '선택한 조건에 맞는 추억이 아직 없습니다.<br>새 추억을 남기면 이 월별 보관함에 바로 정리됩니다.'}</div>`;
 
             zones.forEach(zone => {
                 if (zone) zone.innerHTML = htmlContent;
             });
 
-            renderFeedMonthControls(currentPosts, filteredPosts.length);
+            renderFeedMonthControls(currentPosts, sortedPosts.length);
             renderEvidenceViewers();
         }
 
@@ -147,6 +212,7 @@
                 tags: getSelectedPostTags('mb')
             });
             activeEvidenceIndexes[activeGroup] = 0;
+            saveGroupsData();
 
             // 입력 필드 초기화 및 팝업 닫기
             titleInput.value = '';
@@ -156,8 +222,10 @@
 
             // 리렌더링 후 완료 알림
             setFeedFilter('all');
-            clovToast('🎉 새 추억 피드가 등록되었습니다!', 'success');
             if(typeof addUnreadNotification === 'function') addUnreadNotification('✨ 새로운 추억', '친구가 새로운 추억 피드를 남겼어요!');
+            if (typeof showProofResultModal === 'function') {
+                showProofResultModal({ title: '게시글 작성 완료', message: '새로운 추억이 피드에 등록됐어요.' });
+            }
           }
 
         // 5-2. 기획서 CRUD 명세 구현 (새 글 추가 함수 - 데스크톱)
@@ -185,6 +253,7 @@
                 tags: getSelectedPostTags('dt')
             });
             activeEvidenceIndexes[activeGroup] = 0;
+            saveGroupsData();
 
             // 입력 필드 초기화 및 팝업 닫기
             titleInput.value = '';
@@ -194,7 +263,9 @@
 
             // 리렌더링 후 완료 알림
             setFeedFilter('all');
-            clovToast('🎉 새 추억 피드가 등록되었습니다!', 'success');
+            if (typeof showProofResultModal === 'function') {
+                showProofResultModal({ title: '게시글 작성 완료', message: '새로운 추억이 피드에 등록됐어요.' });
+            }
             
             // 직접 DOM 조작하여 빨간 배지 띄우기
             const dtNavNoti = document.getElementById('dt-nav-noti');

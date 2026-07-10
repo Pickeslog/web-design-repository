@@ -267,7 +267,7 @@ body.dark-mode .clov-hdr-dropdown li:hover { background: var(--nav-item-bg-activ
       { label: ICON_USERS + ' 방 변경하기',    onclick: "openModal('dt-group-modal')" },
       { label: ICON_SHARE + ' 현재 방 코드 공유하기', onclick: "openModal('dt-invite-modal')" },
       { label: ICON_SETTINGS + ' 사용자설정',    onclick: "openProfileModal();document.getElementById('clov-hdr-drop').classList.remove('open')" },
-      { label: '로그아웃',        onclick: "window.location.href='../01-auth/login.html'" },
+      { label: '로그아웃',        onclick: "ClovHeader.logout()" },
     ];
 
     return '<div class="clov-hdr-left">'
@@ -306,7 +306,22 @@ body.dark-mode .clov-hdr-dropdown li:hover { background: var(--nav-item-bg-activ
   }
 
   /* ── 공개 API ─────────────────────────────────────────── */
+  // 로그아웃: 로그인 유지 토큰을 지운 뒤 로그인 화면으로 이동한다.
+  // (토큰을 안 지우면 login.html이 '로그인 유지' 판정으로 방 목록(makerooms)으로 되돌려보낸다.)
+  function logout() {
+    try {
+      if (window.ClovAuth && typeof ClovAuth.clearAccessToken === 'function') {
+        ClovAuth.clearAccessToken();
+      } else {
+        localStorage.removeItem('accessToken');
+        sessionStorage.removeItem('accessToken');
+      }
+    } catch (e) {}
+    window.location.href = MAIN_BASE + '../01-auth/login.html';
+  }
+
   window.ClovHeader = {
+    logout: logout,
     init: function (cfg) {
       injectCSS();
       initTheme(cfg);

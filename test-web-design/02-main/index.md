@@ -83,18 +83,18 @@ Clov의 핵심 화면. 방 목록에서 방을 선택하면 진입한다.
 
 ## V5 씬 배너 (`#dt-v5scene`)
 
-`data-time`, `data-season`, `data-level`, `data-event` 속성으로 배경 동적 변경.
+배경은 사용자설정 "대시보드 배경"에서 고른 벽지(`V5_WALLPAPERS` 등록소, 예: LP 턴테이블)를
+`.scene-sky`에 계절별 사진으로 깐다. `data-season`은 파티클/레벨바 색에 사용된다.
+
+> 과거의 절차적 "클로버 들판(field)" 배경(산·하늘·별·클로버밭 등 레이어)은 미사용으로 제거됨.
+> 배너는 이제 사진 벽지 방식만 사용한다.
 
 | 레이어 | 역할 |
 |---|---|
-| `.scene-sky` | 하늘 배경 |
-| `.scene-stars` | 별 |
-| `.scene-celestial` | 해/달 |
-| `.scene-clouds` | 구름 (3개, 각기 다른 animation-duration) |
-| `.scene-mountains` | 산 |
-| `.scene-clover-field` | 클로버밭 |
-| `.scene-particles` | 파티클 |
-| `.scene-balloons` | 풍선 |
+| `.scene-sky` | 배경 벽지(사진) 컨테이너 |
+| `.season-particles` | 계절 파티클 (꽃잎/반딧불/낙엽/눈) |
+| `.scene-balloons` | 풍선 (생일 이벤트) |
+| `.v5-photo-rec` | LP 턴테이블 벽지 전용 레코드판 |
 
 HUD 요소: 함께한 날수(`D+N일째`), 레벨 진행 바(`.lv-pill`)
 

@@ -467,40 +467,8 @@ document.getElementById = function(id) {
                     console.error("저장 실패", e);
                 }
 
-                // ── 게시글 작성 XP 계산 및 지급
-                if (typeof grantXP === 'function') {
-                    let postXp = CLOV_XP_POST_BASE; // 기본 +25
-                    const bonusDetails = [];
-
-                    // 사진 보너스: 1장당 +1 XP (최대 +10)
-                    const photoCount = Array.isArray(newPost.photos) ? newPost.photos.length
-                                     : (newPost.bg ? 1 : 0);
-                    const photoBonus = Math.min(photoCount * CLOV_XP_POST_PER_PHOTO, CLOV_XP_POST_PHOTO_MAX);
-                    if (photoBonus > 0) {
-                        postXp += photoBonus;
-                        bonusDetails.push(`사진 ${photoCount}장 +${photoBonus}`);
-                    }
-
-                    // 텍스트 보너스: 50자↑ +5 / 100자↑ +10 (중복 아님, 최대 하나만)
-                    const textLen = (newPost.content || newPost.body || newPost.text || '').replace(/<[^>]*>/g, '').length;
-                    if (textLen >= 100) {
-                        postXp += CLOV_XP_POST_TEXT_100;
-                        bonusDetails.push(`정성 기록 +${CLOV_XP_POST_TEXT_100}`);
-                    } else if (textLen >= 50) {
-                        postXp += CLOV_XP_POST_TEXT_50;
-                        bonusDetails.push(`기록 +${CLOV_XP_POST_TEXT_50}`);
-                    }
-
-                    grantXP(postXp, 'post');
-                    const bonusStr = bonusDetails.length ? ' (' + bonusDetails.join(' · ') + ')' : '';
-                    setTimeout(() => {
-                        if (typeof clovToast === 'function')
-                            clovToast(`추억 기록 +${postXp} XP${bonusStr}`, 'success');
-                    }, 600);
-                }
-
                 if (typeof clovToast === 'function') {
-                    clovToast('🎉 새 추억 피드가 성공적으로 등록되었습니다!', 'success');
+                    // clovToast removed as per user request
                 }
                 if (typeof addUnreadNotification === 'function') {
                     addUnreadNotification('✨ 새로운 추억', '새로운 추억 피드가 등록되었어요!');
@@ -708,7 +676,14 @@ document.getElementById = function(id) {
         }
 
         function saveGroupsData() {
-            localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
+            try {
+                localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
+            } catch (error) {
+                // 저장 공간 초과(QuotaExceeded) 등 — 조용히 실패하지 않고 사용자에게 알린다
+                if (typeof clovToast === 'function') {
+                    clovToast('⚠️ 변경사항 저장에 실패했어요. 저장 공간을 확인해주세요.', 'warn');
+                }
+            }
         }
 
         // post.participants는 "누가 함께했는가"만 나타낸다. 각자의 전체 기록(participants[].text)은
@@ -754,7 +729,7 @@ document.getElementById = function(id) {
             return post;
         }
 
-        const MEMORY_PHOTO_LIMIT = 30;
+        const MEMORY_PHOTO_LIMIT = 6;
 
         function setFeedFilter(filterName) {
             activeFeedFilter = filterName;
@@ -848,7 +823,7 @@ document.getElementById = function(id) {
             const styleBg = coverPhoto ? `background-image: url('${escapeHtml(coverPhoto)}');` : '';
             const imageContent = coverPhoto
                 ? ''
-                : `<div class="cline-no-photo"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"></path><path d="m4 18 4-4 3 2 4-5 5 4"></path></svg></span><span class="cline-no-photo-text">사진 없음</span></div>`;
+                : `<div class="cline-no-photo" style="width: 100%; height: 100%; background: #d8eadb; justify-content: center;"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"/><path d="m4 18 4-4 3 2 4-5 5 4"/></svg></span><span class="cline-no-photo-text">사진 없음</span></div>`;
             const photoCountBadge = normalizedPost.photos.length > 1
                 ? `<span class="polaroid-photo-count"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:2px;"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"/><circle cx="12" cy="13" r="3.5"/></svg>${normalizedPost.photos.length}</span>`
                 : '';
@@ -963,18 +938,17 @@ document.getElementById = function(id) {
                 </div>
                 <input type="file" id="memory-edit-photo-input" accept="image/*" multiple style="display:none" onchange="handleMemoryEditPhotoUpload(this)">
             ` : normalizedPost.photos.length ? `
-                <img class="memory-detail-photo" data-photos='${escapeHtml(JSON.stringify(normalizedPost.photos))}' src="${escapeHtml(normalizedPost.photos[memoryDetailState.photoIndex] || normalizedPost.photos[0])}" alt="${escapeHtml(normalizedPost.title)}" onclick="openMainPhotoView(this)" style="cursor: zoom-in;">
+                <img class="memory-detail-photo" src="${escapeHtml(normalizedPost.photos[memoryDetailState.photoIndex] || normalizedPost.photos[0])}" alt="${escapeHtml(normalizedPost.title)}">
                 ${normalizedPost.photos.length > 1 ? `
                     <div class="memory-detail-photo-strip">
-                        ${normalizedPost.photos.slice(0, 5).map((url, index) => `
-                            <button type="button" class="memory-detail-photo-thumb ${index === memoryDetailState.photoIndex ? 'is-active' : ''}" onclick="setMemoryDetailPhotoIndex(${index})" style="position:relative;">
+                        ${normalizedPost.photos.map((url, index) => `
+                            <button type="button" class="memory-detail-photo-thumb ${index === memoryDetailState.photoIndex ? 'is-active' : ''}" onclick="setMemoryDetailPhotoIndex(${index})">
                                 <img src="${escapeHtml(url)}" alt="사진 ${index + 1}">
-                                ${index === 4 && normalizedPost.photos.length > 5 ? `<div style="position:absolute; inset:0; background:rgba(0,0,0,0.6); border-radius:8px; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:bold; font-size:14px;">+${normalizedPost.photos.length - 5}</div>` : ''}
                             </button>
                         `).join('')}
                     </div>
                 ` : ''}
-            ` : `<div class="memory-detail-photo memory-detail-photo--empty"><div class="cline-no-photo"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"></path><path d="m4 18 4-4 3 2 4-5 5 4"></path></svg></span><span class="cline-no-photo-text">사진 없음</span></div></div>`;
+            ` : `<div class="memory-detail-photo memory-detail-photo--empty"><div class="cline-no-photo" style="width: 100%; height: 100%; background: #d8eadb; justify-content: center;"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"/><path d="m4 18 4-4 3 2 4-5 5 4"/></svg></span><span class="cline-no-photo-text">사진 없음</span></div></div>`;
 
             const rightColumnHtml = memoryDetailState.editing ? `
                 <div class="memory-detail-edit-form">
@@ -1308,7 +1282,8 @@ document.getElementById = function(id) {
                 `;
             }
 
-            function renderClinePolaroid(post, postIndex, isActive) {
+            function renderClinePolaroid(post, postIndex, isActive, isClickableDetail) {
+                if (typeof isClickableDetail === 'undefined') isClickableDetail = isActive;
                 const normalizedPost = normalizeMemoryPost(post);
                 const tags = getMemoryHashtags(normalizedPost, normalizedPost.participants[0]).slice(0, 3);
                 const dateText = String(normalizedPost.date || '').replace(/^2026\./, '');
@@ -1317,7 +1292,7 @@ document.getElementById = function(id) {
                     : `<div class="cline-no-photo"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"/><path d="m4 18 4-4 3 2 4-5 5 4"/></svg></span><span class="cline-no-photo-text">사진 없음</span></div>`;
 
                 return `
-                    <article class="cline-polaroid ${isActive ? 'is-active' : ''}" onclick="event.stopPropagation(); ${isActive ? `openMemoryDetail(${postIndex})` : `setEvidenceIndex(${postIndex})`}">
+                    <article class="cline-polaroid ${isActive ? 'is-active' : ''}" onclick="event.stopPropagation(); ${isClickableDetail ? `openMemoryDetail(${postIndex})` : `setEvidenceIndex(${postIndex})`}">
                         <div class="cline-card-header">
                             ${renderAvatars(normalizedPost)}
                             <span class="cline-header-date">${escapeHtml(dateText)}</span>
@@ -1337,16 +1312,27 @@ document.getElementById = function(id) {
             function makeSlot(delta, slotCls) {
                 const postIndex = currentIndex + delta;
                 if (postIndex < 0 || postIndex >= total) {
-                    return cardTheme === 'coverflow'
+                    return (cardTheme === 'coverflow' || cardTheme === 'diary')
                         ? `<div class="cline-card-slot cline-slot--empty cline-slot--${slotCls} is-empty"></div>`
                         : `<div class="cline-card-slot cline-slot--empty"></div>`;
                 }
                 const isActive = delta === 0;
+                // 일기장 테마: 펼친 책의 오른쪽(0)·왼쪽(1) 카드 둘 다 상세보기로 열림
+                const isDiaryInner = cardTheme === 'diary' && (delta === 0 || delta === 1);
+                const isClickableDetail = isActive || isDiaryInner;
+
+                // 일기장 테마에서 바깥쪽(+2) 카드를 클릭하면 2칸이 아니라 1칸만 넘어가
+                // "책장을 한 장씩 넘기는" 느낌을 유지한다
+                let targetIndex = postIndex;
+                if (cardTheme === 'diary' && delta === 2) {
+                    targetIndex = currentIndex + 1;
+                }
+
                 return `
                     <div class="cline-card-slot cline-slot--${slotCls} ${isActive ? 'is-active' : ''}"
-                         ${!isActive ? `onclick="event.stopPropagation(); setEvidenceIndex(${postIndex})"` : ''}>
-                        ${cardTheme === 'coverflow' ? '' : clothespinSvg}
-                        ${renderClinePolaroid(posts[postIndex], postIndex, isActive)}
+                         ${!isClickableDetail ? `onclick="event.stopPropagation(); setEvidenceIndex(${targetIndex})"` : ''}>
+                        ${(cardTheme === 'coverflow' || cardTheme === 'diary') ? '' : clothespinSvg}
+                        ${renderClinePolaroid(posts[postIndex], targetIndex, isActive, isClickableDetail)}
                     </div>
                 `;
             }
@@ -1364,19 +1350,40 @@ document.getElementById = function(id) {
                 `;
             }).join('');
 
+            const themeClass = cardTheme === 'coverflow' ? 'theme-coverflow' : (cardTheme === 'diary' ? 'theme-diary' : '');
+            const diaryMarkup = cardTheme === 'diary' ? `
+                <div class="diary-page-stack left"></div>
+                <div class="diary-page-stack right"></div>
+
+                <div class="diary-page-text left-page"></div>
+                <div class="diary-spine"></div>
+                <div class="diary-page-text right-page"></div>
+
+                <div class="diary-memo"></div>
+
+                <div class="diary-sticker clover" style="top: 8%; left: 6%; transform: rotate(-15deg) scale(1.15);"></div>
+                <div class="diary-sticker flower" style="top: 55%; left: 12%; transform: rotate(18deg) scale(1.05);"></div>
+                <div class="diary-sticker clover" style="bottom: 10%; left: 4%; transform: rotate(-8deg) scale(1.2);"></div>
+
+                <div class="diary-sticker flower" style="top: 12%; right: 5%; transform: rotate(12deg) scale(1.2);"></div>
+                <div class="diary-sticker clover" style="top: 45%; right: 8%; transform: rotate(-5deg) scale(1.8);"></div>
+                <div class="diary-sticker flower" style="bottom: 8%; right: 8%; transform: rotate(22deg) scale(1.15);"></div>
+            ` : '';
+
             return `
-                <div class="memory-evidence-viewer cline-viewer ${viewType === 'mobile' ? 'mobile-evidence' : 'desktop-evidence'} ${cardTheme === 'coverflow' ? 'theme-coverflow' : ''}">
+                <div class="memory-evidence-viewer cline-viewer ${viewType === 'mobile' ? 'mobile-evidence' : 'desktop-evidence'} ${themeClass}">
                     <div class="cline-stage">
+                        ${diaryMarkup}
                         <div class="cline-wire-area">
                             <div class="cline-wire"></div>
                             <div class="cline-cards">
-                                ${viewType === 'desktop' && cardTheme === 'coverflow' ? makeSlot(+3, 'far-far-past') : ''}
+                                ${viewType === 'desktop' && (cardTheme === 'coverflow' || cardTheme === 'diary') ? makeSlot(+3, 'far-far-past') : ''}
                                 ${viewType === 'desktop' ? makeSlot(+2, 'far-past') : ''}
                                 ${makeSlot(+1, 'past')}
                                 ${makeSlot(0, 'current')}
                                 ${makeSlot(-1, 'newer')}
                                 ${viewType === 'desktop' ? makeSlot(-2, 'far-newer') : ''}
-                                ${viewType === 'desktop' && cardTheme === 'coverflow' ? makeSlot(-3, 'far-far-newer') : ''}
+                                ${viewType === 'desktop' && (cardTheme === 'coverflow' || cardTheme === 'diary') ? makeSlot(-3, 'far-far-newer') : ''}
                             </div>
                         </div>
                     </div>
@@ -1558,6 +1565,7 @@ document.getElementById = function(id) {
                 tags: getSelectedPostTags('mb')
             });
             activeEvidenceIndexes[activeGroup] = 0;
+            saveGroupsData();
 
             // 입력 필드 초기화 및 팝업 닫기
             titleInput.value = '';
@@ -1567,8 +1575,10 @@ document.getElementById = function(id) {
 
             // 리렌더링 후 완료 알림
             setFeedFilter('all');
-            clovToast('🎉 새 추억 피드가 등록되었습니다!', 'success');
             if(typeof addUnreadNotification === 'function') addUnreadNotification('✨ 새로운 추억', '친구가 새로운 추억 피드를 남겼어요!');
+            if (typeof showProofResultModal === 'function') {
+                showProofResultModal({ title: '게시글 작성 완료', message: '새로운 추억이 피드에 등록됐어요.' });
+            }
           }
 
         // 5-2. 기획서 CRUD 명세 구현 (새 글 추가 함수 - 데스크톱)
@@ -1596,6 +1606,7 @@ document.getElementById = function(id) {
                 tags: getSelectedPostTags('dt')
             });
             activeEvidenceIndexes[activeGroup] = 0;
+            saveGroupsData();
 
             // 입력 필드 초기화 및 팝업 닫기
             titleInput.value = '';
@@ -1605,7 +1616,9 @@ document.getElementById = function(id) {
 
             // 리렌더링 후 완료 알림
             setFeedFilter('all');
-            clovToast('🎉 새 추억 피드가 등록되었습니다!', 'success');
+            if (typeof showProofResultModal === 'function') {
+                showProofResultModal({ title: '게시글 작성 완료', message: '새로운 추억이 피드에 등록됐어요.' });
+            }
             
             // 직접 DOM 조작하여 빨간 배지 띄우기
             const dtNavNoti = document.getElementById('dt-nav-noti');
@@ -1654,39 +1667,14 @@ document.getElementById = function(id) {
 
         // 7. 우정 레벨 및 클로버 비주얼 인터랙션 제어
         //
-        // ═══════════════════════════════════════════════════════════════
-        //  새로운 XP 시스템 (활동 기반 + 성장 가속도 + 방치형 보상)
-        // ═══════════════════════════════════════════════════════════════
-        // 최대 777레벨. 111레벨씩 7개 티어. 최대 레벨 도달 시 "+777" 고정.
+        // 레벨 시스템: 최대 777레벨. 레벨 하나하나에 이름을 붙일 수 없으므로(777개!),
+        // 111레벨씩 7개 티어로 묶어서 이름/아이콘을 부여한다 (777 = 111 × 7).
+        // 클릭 1번 = 12.5%(=1/8), 하루 최대 8번까지만 경험치가 오르고 그 이후 클릭은
+        // 배너 인터랙션(회전+색종이)은 그대로 재생되지만 경험치는 더 늘지 않는다.
+        // 최대 레벨(777)에 도달하면 배지 표기가 "Lv.777"이 아니라 "+777"로 고정된다.
         const CLOV_MAX_LEVEL = 777;
-
-        // ── 마스코트 교감 (하루 3회 제한, 1회 +2 XP)
-        const CLOV_XP_PER_CLICK = 2;        // 1회 클릭당 XP
-        const CLOV_MAX_CLICKS_PER_DAY = 3;  // 하루 최대 교감 횟수
-
-        // ── 게시글 작성 XP
-        const CLOV_XP_POST_BASE      = 25;  // 기본 게시글 작성
-        const CLOV_XP_POST_PER_PHOTO = 1;   // 사진 1장당 보너스 (최대 10)
-        const CLOV_XP_POST_PHOTO_MAX = 10;  // 사진 보너스 상한
-        const CLOV_XP_POST_TEXT_50   = 5;   // 50자 이상 텍스트 보너스
-        const CLOV_XP_POST_TEXT_100  = 10;  // 100자 이상 텍스트 보너스
-
-        // ── 일정 XP
-        const CLOV_XP_SCHEDULE_ADD      = 3;   // 일정 등록
-        const CLOV_XP_SCHEDULE_COMPLETE = 15;  // 일정 완료(인생4컷)
-
-        // ── 방치형 자동 보상 계수 (매일 첫 접속 시)
-        const CLOV_PASSIVE_PER_POST     = 0.5; // 누적 게시글 1개당
-        const CLOV_PASSIVE_PER_SCHEDULE = 1.0; // 다가올 일정 1개당
-
-        // ── 성장 가속도 (누적 게시글 수 기준 XP 배율)
-        const CLOV_XP_MULTIPLIERS = [
-            { min: 0,   multiplier: 1.0 },
-            { min: 30,  multiplier: 1.2 },
-            { min: 50,  multiplier: 1.5 },
-            { min: 70,  multiplier: 2.0 },
-            { min: 100, multiplier: 3.0 },
-        ];
+        const CLOV_XP_PER_CLICK = 12.5; // 8번 클릭 = 100%
+        const CLOV_MAX_CLICKS_PER_DAY = 8;
         const CLOV_LEVEL_TIERS = [
             { max: 111, name: '씨앗의 우정',         icon: '🌱' },
             { max: 222, name: '새싹의 우정',         icon: '🌿' },
@@ -1707,241 +1695,11 @@ document.getElementById = function(id) {
             return { tierIndex: idx, name: CLOV_LEVEL_TIERS[idx].name, icon: CLOV_LEVEL_TIERS[idx].icon, isMax: level >= CLOV_MAX_LEVEL };
         }
         function clovTodayStr() {
-            // 항상 한국 시간(KST, UTC+9) 기준으로 날짜를 계산하여 00시 정각에 리셋되도록 보장
-            const now = new Date();
-            const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
-            const kstTime = new Date(utcTime + (9 * 3600000));
-            return kstTime.getFullYear() + '-' + String(kstTime.getMonth() + 1).padStart(2, '0') + '-' + String(kstTime.getDate()).padStart(2, '0');
+            const d = new Date();
+            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
         }
         window.clovLevelInfo = clovLevelInfo;
         window.CLOV_MAX_LEVEL = CLOV_MAX_LEVEL;
-
-        // ── 현재 그룹의 성장 가속도 배율 계산
-        function getXpMultiplier() {
-            const grp = groupsData[activeGroup] || {};
-            const postCount = (grp.posts || []).length;
-            let mul = 1.0;
-            for (const tier of CLOV_XP_MULTIPLIERS) {
-                if (postCount >= tier.min) mul = tier.multiplier;
-            }
-            return mul;
-        }
-
-        // ── XP를 실제 levelProgress에 더하고 레벨업 판정까지 처리하는 중앙 함수
-        // rawXp: 배율 적용 전 순수 XP값
-        // source: 'click' | 'post' | 'schedule_add' | 'schedule_done' | 'passive'
-        function createBurst(x, y, particleCount, spread) {
-            const burstEl = document.createElement('div');
-            burstEl.style.position = 'fixed';
-            burstEl.style.width = '0px';
-            burstEl.style.height = '0px';
-            burstEl.style.overflow = 'visible';
-            burstEl.style.left = x + 'px';
-            burstEl.style.top = y + 'px';
-            burstEl.style.transform = 'translate(-50%, -50%)';
-            burstEl.style.zIndex = '99999';
-            document.body.appendChild(burstEl);
-
-            const colors = ['#4ade80', '#22c55e', '#16a34a', '#facc15', '#fef08a', '#86efac', '#ffaa00', '#ff00aa'];
-            for (let i = 0; i < particleCount; i++) {
-                const s = document.createElement('span');
-                s.style.position = 'absolute';
-                const size = 10 + Math.random() * 15;
-                s.style.width = size + 'px';
-                s.style.height = size + 'px';
-                s.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-                s.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
-                s.style.left = '0px';
-                s.style.top = '0px';
-                s.style.pointerEvents = 'none';
-                
-                const ang = Math.random() * Math.PI * 2;
-                const dist = 50 + Math.random() * spread;
-                const tx = Math.cos(ang) * dist;
-                const ty = Math.sin(ang) * dist + (Math.random() * 150);
-                const rot = (Math.random() * 720) - 360;
-                
-                s.style.transition = 'transform 1.8s cubic-bezier(0.1, 0.8, 0.2, 1), opacity 1.8s ease-in-out';
-                s.style.transform = `translate(-50%, -50%) scale(0.2) rotate(0deg)`;
-                s.style.opacity = '1';
-                burstEl.appendChild(s);
-                
-                setTimeout(() => {
-                    s.style.transform = `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px)) scale(${0.8 + Math.random()}) rotate(${rot}deg)`;
-                    s.style.opacity = '0';
-                }, 10);
-            }
-            setTimeout(() => { if (burstEl.parentNode) burstEl.parentNode.removeChild(burstEl); }, 2500);
-        }
-
-        function triggerTierUpEvent(isMaxLevel = false) {
-            let cx = window.innerWidth / 2;
-            let cy = window.innerHeight / 2;
-            const mascotEl = document.getElementById('croby-sprite');
-            if (mascotEl) {
-                const rect = mascotEl.getBoundingClientRect();
-                cx = rect.left + rect.width / 2;
-                cy = rect.top + rect.height / 2;
-            }
-
-            if (isMaxLevel) {
-                const w = window.innerWidth;
-                const h = window.innerHeight;
-                createBurst(w/2, h/2, 200, 600); // 정중앙 거대 폭죽
-                setTimeout(() => createBurst(w*0.2, h*0.3, 100, 300), 400); // 좌측 상단
-                setTimeout(() => createBurst(w*0.8, h*0.3, 100, 300), 800); // 우측 상단
-                setTimeout(() => createBurst(w*0.3, h*0.7, 100, 300), 1200); // 좌측 하단
-                setTimeout(() => createBurst(w*0.7, h*0.7, 100, 300), 1600); // 우측 하단
-                setTimeout(() => createBurst(cx, cy, 150, 400), 2000); // 마스코트 마무리 폭죽
-            } else {
-                createBurst(cx, cy, 100, 400); // 일반 승급 마스코트 폭죽
-            }
-        }
-
-        // ── XP를 실제 levelProgress에 더하고 레벨업 판정까지 처리하는 중앙 함수
-        function grantXP(rawXp, source) {
-            const grp = groupsData[activeGroup];
-            if (!grp) return;
-            if (typeof grp.levelProgress !== 'number') grp.levelProgress = 0;
-            if (typeof grp.level !== 'number') grp.level = friendshipLevel || 1;
-            if (grp.level >= CLOV_MAX_LEVEL) {
-                if (source === 'post' || source === 'schedule_add' || source === 'schedule_done') {
-                    let cx = window.innerWidth / 2;
-                    let cy = window.innerHeight / 2;
-                    const mascotEl = document.getElementById('croby-sprite');
-                    if (mascotEl) {
-                        const rect = mascotEl.getBoundingClientRect();
-                        cx = rect.left + rect.width / 2;
-                        cy = rect.top + rect.height / 2;
-                    }
-
-                    for (let i = 0; i < 12; i++) {
-                        const sparkle = document.createElement('div');
-                        sparkle.style.position = 'fixed';
-                        sparkle.style.left = cx + 'px';
-                        sparkle.style.top = cy + 'px';
-                        sparkle.style.transform = 'translate(-50%, -50%)';
-                        sparkle.style.zIndex = '99999';
-                        sparkle.style.pointerEvents = 'none';
-                        sparkle.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#fcb902" width="20" height="20"><path fill-rule="evenodd" d="M9 4.5a.75.75 0 0 1 .721.544l.813 2.846a3.75 3.75 0 0 0 2.576 2.576l2.846.813a.75.75 0 0 1 0 1.442l-2.846.813a3.75 3.75 0 0 0-2.576 2.576l-.813 2.846a.75.75 0 0 1-1.442 0l-.813-2.846a3.75 3.75 0 0 0-2.576-2.576l-2.846-.813a.75.75 0 0 1 0-1.442l2.846-.813A3.75 3.75 0 0 0 7.466 7.89l.813-2.846A.75.75 0 0 1 9 4.5ZM18 1.5a.75.75 0 0 1 .728.568l.258 1.036c.236.94.97 1.674 1.91 1.91l1.036.258a.75.75 0 0 1 0 1.456l-1.036.258c-.94.236-1.674.97-1.91 1.91l-.258 1.036a.75.75 0 0 1-1.456 0l-.258-1.036a2.625 2.625 0 0 0-1.91-1.91l-1.036-.258a.75.75 0 0 1 0-1.456l1.036-.258a2.625 2.625 0 0 0 1.91-1.91l.258-1.036A.75.75 0 0 1 18 1.5ZM16.5 15a.75.75 0 0 1 .712.513l.394 1.183c.15.447.5.799.948.948l1.183.395a.75.75 0 0 1 0 1.422l-1.183.395c-.447.15-.799.5-.948.948l-.395 1.183a.75.75 0 0 1-1.422 0l-.395-1.183a1.5 1.5 0 0 0-.948-.948l-1.183-.395a.75.75 0 0 1 0-1.422l1.183-.395c.447-.15.799-.5.948-.948l.395-1.183A.75.75 0 0 1 16.5 15Z" clip-rule="evenodd" /></svg>`;
-                        document.body.appendChild(sparkle);
-
-                        // 마스코트에서 좌측 상단(화면 중심부)으로 길고 넓게 퍼지도록 계산 (약 170도 ~ 290도)
-                        const baseAngle = Math.PI * 0.95 + Math.random() * (Math.PI * 0.65);
-                        const distance = 200 + Math.random() * 400; // 화면 중심부까지 멀리 뻗어나가도록 거리 증가
-                        const spreadX = Math.cos(baseAngle) * distance;
-                        const spreadY = Math.sin(baseAngle) * distance;
-                        
-                        // 퍼지는 속도는 2초, 서서히 사라지는 시간은 1초 (총 3초)
-                        const spreadDuration = 2000;
-
-                        sparkle.animate([
-                            { transform: 'translate(-50%, -50%) scale(0.5) rotate(0deg)' },
-                            { transform: `translate(calc(-50% + ${spreadX}px), calc(-50% + ${spreadY}px)) scale(1.5) rotate(${Math.random() * 360}deg)` }
-                        ], { duration: spreadDuration, easing: 'ease-out', fill: 'forwards' });
-
-                        sparkle.animate([
-                            { opacity: 1, offset: 0 },
-                            { opacity: 1, offset: 0.66 }, // 2초 시점까지 유지
-                            { opacity: 0, offset: 1 }     // 이후 1초 동안 사라짐
-                        ], { duration: 3000, fill: 'forwards' });
-
-                        setTimeout(() => { if (sparkle.parentNode) sparkle.parentNode.removeChild(sparkle); }, 3000);
-                    }
-
-                    if (window.ClovMascot && typeof window.ClovMascot.say === 'function') {
-                        let msg = "";
-                        if (source === 'post') msg = "우리의 추억이 반짝거려! ✨";
-                        else if (source === 'schedule_add') msg = "새로운 약속! 무척 기대된다 ✨";
-                        else if (source === 'schedule_done') msg = "멋진 인생4컷! 반짝거려 ✨";
-                        window.ClovMascot.say(msg, 3500);
-                    }
-                }
-                return;
-            }
-
-            const oldLevel = grp.level;
-            const oldTier = clovLevelTierIndex(oldLevel);
-
-            // 기본 교감(click) 외에는 모두 성장 가속도 적용 (방치형, 게시글, 일정 등)
-            const multiplier = (source === 'click') ? 1.0 : getXpMultiplier();
-            const finalXp = Math.round(rawXp * multiplier * 10) / 10;
-
-            // Math.min 제한 없이 더한 뒤 레벨업 판정
-            grp.levelProgress = grp.levelProgress + finalXp;
-
-            let leveledUp = false;
-            let tierUp = false;
-
-            // 레벨업 판정 (100% 이상 달성 시)
-            if (grp.levelProgress >= 100 && grp.level < CLOV_MAX_LEVEL) {
-                grp.level = Math.min(CLOV_MAX_LEVEL, grp.level + 1);
-                grp.levelProgress = Math.max(0, grp.levelProgress - 100); // 초과분 이월
-                friendshipLevel = grp.level;
-                leveledUp = true;
-                
-                const newTier = clovLevelTierIndex(grp.level);
-                if (newTier > oldTier) {
-                    tierUp = true;
-                }
-
-                const info = clovLevelInfo(grp.level);
-                const badgeText = grp.level >= CLOV_MAX_LEVEL ? '+777' : ('Lv.' + grp.level);
-                clovToast(`${info.icon} ${badgeText} 달성! ${info.name}`, 'success');
-                triggerLevelPulse();
-            } else {
-                // 진행도는 100을 넘지 않도록 표시 목적으로는 클램핑
-                grp.levelProgress = Math.min(99.9, grp.levelProgress);
-                friendshipLevel = grp.level;
-            }
-
-            localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
-            updateFriendshipUI();
-            triggerXpFlash();
-
-            // 마스코트 말풍선 표시
-            if (window.ClovMascot && typeof window.ClovMascot.say === 'function' && finalXp > 0) {
-                let msg = '';
-                const buffSuffix = multiplier > 1.0 ? `<br>(가속 x${multiplier})` : '';
-                
-                const maxLevelReached = (oldLevel < CLOV_MAX_LEVEL && grp.level >= CLOV_MAX_LEVEL);
-                
-                if (tierUp || maxLevelReached) {
-                    if (maxLevelReached) {
-                        msg = `축하합니다! 클로브가 마침내 최종 진화 형태인 전설의 우정(Lv.777)에 도달했습니다!`;
-                    } else {
-                        msg = `새로운 우정의 단계에 도달했어! 클로브가 더욱 크고 눈부시게 피어났어! (Lv.${grp.level})`;
-                    }
-                    triggerTierUpEvent(maxLevelReached);
-                } else if (leveledUp) {
-                    const levelUpMsgs = [
-                        "우와! 한 뼘 더 자랐어!",
-                        "우리 우정이 더 깊어졌네!",
-                        "앞으로도 계속 추억을 쌓아가자.",
-                        "경험치가 가득 찼어! 레벨업!",
-                        "더 멋진 클로버로 자라고 있어!"
-                    ];
-                    const randMsg = levelUpMsgs[Math.floor(Math.random() * levelUpMsgs.length)];
-                    msg = `${randMsg} (Lv.${grp.level})`;
-                } else {
-                    if (source === 'click') {
-                        if (typeof window.v5state !== 'undefined' && (window.v5state.event === 'my_birthday' || window.v5state.event === 'friend_birthday') && window.lastMascotLine) {
-                            msg = `${window.lastMascotLine} (+${finalXp}&nbsp;XP)`;
-                        } else {
-                            msg = `교감 완료! +${finalXp}&nbsp;XP`;
-                        }
-                    }
-                    else if (source === 'post') msg = `추억 고마워! +${finalXp}&nbsp;XP${buffSuffix}`;
-                    else if (source === 'schedule_add') msg = `약속 등록 완료! +${finalXp}&nbsp;XP${buffSuffix}`;
-                    else if (source === 'schedule_done') msg = `인생4컷 달성! +${finalXp}&nbsp;XP${buffSuffix}`;
-                    else if (source === 'passive') msg = `어제 남겨둔 추억들 덕분에 클로브가 이만큼 자랐어요! <span style="white-space: nowrap;">+${finalXp} XP</span>${buffSuffix}`;
-                    else msg = `<span style="white-space: nowrap;">+${finalXp} XP</span> 획득!${buffSuffix}`;
-                }
-
-                window.ClovMascot.say(msg, leveledUp ? 4500 : 3500);
-            }
-        }
-        window.grantXP = grantXP;
 
         let friendshipLevel = 3;
 
@@ -1980,9 +1738,6 @@ document.getElementById = function(id) {
             updateDashboardPhotos();
             // 일정 배너 업데이트
             updateScheduleUI();
-
-            renderGroundGrowth('dt-ground-growth');
-            renderGroundGrowth('mb-ground-growth');
         }
 
         // 레벨업 순간 대시보드 카드에 충격파 펄스 애니메이션을 재생
@@ -2011,107 +1766,62 @@ document.getElementById = function(id) {
             });
         }
 
-        // ── 방치형 '기억의 샘' 자동 보상: 날짜가 바뀐 첫 접속 시 자동 적용
-        function applyPassiveXP(grp) {
-            const posts = (grp.posts || []).length;
-            const today = clovTodayStr();
-            const schedules = grp.schedules || [];
-            const upcomingCount = schedules.filter(s => s.date >= today).length;
-            const rawPassive = Math.floor(posts * CLOV_PASSIVE_PER_POST + upcomingCount * CLOV_PASSIVE_PER_SCHEDULE);
-            if (rawPassive <= 0) return;
-            grantXP(rawPassive, 'passive');
-            clovToast(
-                `클로브가 자라났어요! 추억 ${posts}개·약속 ${upcomingCount}개 → +${rawPassive} XP`,
-                'success'
-            );
-        }
-
         function levelUp() {
-            // 클릭할 때마다 배너가 통통 튀는 느낌을 매번 준다
+            // 실제 레벨업 여부와 상관없이, 클릭할 때마다 배너가 통통 튀는 느낌을 매번 준다
             triggerLevelPulse();
 
             const grp = groupsData[activeGroup];
-            if (!grp) return;
             const today = clovTodayStr();
             if (typeof grp.levelProgress !== 'number') grp.levelProgress = 0;
             if (typeof grp.xpClicksToday !== 'number') grp.xpClicksToday = 0;
             if (typeof grp.level !== 'number') grp.level = friendshipLevel;
             if (!grp.xpDate) grp.xpDate = today;
 
-            // 날짜가 바뀌었을 때: 방치형 보상 지급 후 클릭 카운트 리셋
+            // 날짜가 바뀌었으면: 어제 게이지가 100%까지 다 찼었는지 확인해서 그때 비로소 레벨업을 확정한다.
+            // (게이지가 8번째 클릭에 꽉 찬 순간 바로 다음 레벨로 넘어가 버리면 "가득 찬 상태"를 볼 틈이 없어서,
+            //  오늘은 가득 찬 채로 유지하고, 내일 첫 클릭에서 레벨업 + 게이지 리셋이 함께 일어나도록 미룬다.)
+            let leveledUp = false;
             if (grp.xpDate !== today) {
+                if (grp.levelProgress >= 100 && grp.level < CLOV_MAX_LEVEL) {
+                    grp.level = Math.min(CLOV_MAX_LEVEL, grp.level + 1);
+                    grp.levelProgress = 0;
+                    leveledUp = true;
+                }
                 grp.xpDate = today;
                 grp.xpClicksToday = 0;
-                applyPassiveXP(grp);
             }
             friendshipLevel = grp.level;
 
             if (grp.level >= CLOV_MAX_LEVEL) {
                 grp.level = CLOV_MAX_LEVEL;
+                grp.levelProgress = 0;
                 friendshipLevel = CLOV_MAX_LEVEL;
                 localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
                 updateFriendshipUI();
-                
-                if (grp.xpClicksToday >= CLOV_MAX_CLICKS_PER_DAY) {
-                    clovToast('오늘의 우정 교감을 다 채웠어요! 내일 다시 함께해요', 'info');
-                    return;
-                }
-                grp.xpClicksToday += 1;
-                localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
-
-                let cx = window.innerWidth / 2;
-                let cy = window.innerHeight / 2;
-                const mascotEl = document.getElementById('croby-sprite');
-                if (mascotEl) {
-                    const rect = mascotEl.getBoundingClientRect();
-                    cx = rect.left + rect.width / 2;
-                    cy = rect.top + rect.height / 2;
-                }
-
-                for (let i = 0; i < 7; i++) {
-                    const heart = document.createElement('div');
-                    heart.style.position = 'fixed';
-                    heart.style.left = cx + 'px';
-                    heart.style.top = cy + 'px';
-                    heart.style.transform = 'translate(-50%, -50%)';
-                    heart.style.zIndex = '99999';
-                    heart.style.pointerEvents = 'none';
-                    heart.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="#FF4D4D" class="bi bi-suit-heart-fill" viewBox="0 0 16 16"><path d="M4 1c2.21 0 4 1.755 4 3.92C8 2.755 9.79 1 12 1s4 1.755 4 3.92c0 3.263-3.234 4.414-7.608 9.608a.513.513 0 0 1-.784 0C3.234 9.334 0 8.183 0 4.92 0 2.755 1.79 1 4 1"/></svg>`;
-                    document.body.appendChild(heart);
-
-                    const spreadX = (Math.random() - 0.5) * 120;
-                    const spreadY = -60 - Math.random() * 100;
-                    const duration = 1000 + Math.random() * 800;
-
-                    heart.animate([
-                        { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
-                        { transform: `translate(calc(-50% + ${spreadX}px), calc(-50% + ${spreadY}px)) scale(1.8)`, opacity: 0 }
-                    ], { duration: duration, easing: 'ease-out', fill: 'forwards' });
-
-                    setTimeout(() => { if (heart.parentNode) heart.parentNode.removeChild(heart); }, duration);
-                }
-
-                if (window.ClovMascot && typeof window.ClovMascot.say === 'function') {
-                    window.ClovMascot.say('사랑이 넘치는 우리 우정! 하트를 받았어 ❤️', 3000);
-                }
-
-                if (grp.xpClicksToday >= CLOV_MAX_CLICKS_PER_DAY) {
-                    clovToast('오늘의 교감을 다 채웠어요!', 'info');
-                }
+                // 토스트 제거됨
                 return;
+            }
+
+            if (leveledUp) {
+                const info = clovLevelInfo(grp.level);
+                const badgeText = grp.level >= CLOV_MAX_LEVEL ? '+777' : ('Lv.' + grp.level);
+                // 레벨업 토스트 제거됨
             }
 
             if (grp.xpClicksToday >= CLOV_MAX_CLICKS_PER_DAY) {
                 localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
                 updateFriendshipUI();
-                clovToast('오늘의 우정 교감을 다 채웠어요! 내일 다시 함께해요', 'info');
+                if (!leveledUp) clovToast('오늘의 우정 경험치를 다 채웠어요! 내일 다시 함께해요 🍀', 'info');
                 return;
             }
 
             grp.xpClicksToday += 1;
-            grantXP(CLOV_XP_PER_CLICK, 'click');
-            if (grp.xpClicksToday >= CLOV_MAX_CLICKS_PER_DAY) {
-                clovToast('오늘의 교감을 다 채웠어요! 다른 활동으로도 경험치를 얻을 수 있어요', 'info');
+            grp.levelProgress = Math.min(100, grp.levelProgress + CLOV_XP_PER_CLICK);
+            localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
+            updateFriendshipUI();
+            triggerXpFlash();
+            if (grp.levelProgress >= 100 && grp.xpClicksToday >= CLOV_MAX_CLICKS_PER_DAY) {
+                // 토스트 제거됨
             }
         }
 
@@ -2278,36 +1988,9 @@ document.getElementById = function(id) {
             const dtImg = document.getElementById('dt-main-photo');
             const mbImg = document.getElementById('mb-main-photo');
             
-            const photoUrl = typeof currentGroup.photo === 'string' ? currentGroup.photo : (defaultGroupsData[activeGroup].photo || "");
-            
-            function applyPhotoOrPlaceholder(imgEl, url) {
-                if (!imgEl) return;
-                const wrapper = imgEl.parentElement;
-                let placeholder = wrapper.querySelector('.cline-no-photo-wrapper');
-                if (url) {
-                    imgEl.src = url;
-                    imgEl.style.display = '';
-                    if (placeholder) placeholder.style.display = 'none';
-                } else {
-                    imgEl.style.display = 'none';
-                    if (!placeholder) {
-                        placeholder = document.createElement('div');
-                        placeholder.className = 'cline-no-photo-wrapper';
-                        placeholder.style.width = '100%';
-                        placeholder.style.height = '100%';
-                        placeholder.style.display = 'flex';
-                        placeholder.style.alignItems = 'center';
-                        placeholder.style.justifyContent = 'center';
-                        placeholder.style.background = 'var(--bg-light)';
-                        placeholder.innerHTML = `<div class="cline-no-photo"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"></path><path d="m4 18 4-4 3 2 4-5 5 4"></path></svg></span><span class="cline-no-photo-text">사진 없음</span></div>`;
-                        wrapper.appendChild(placeholder);
-                    }
-                    placeholder.style.display = 'flex';
-                }
-            }
-
-            applyPhotoOrPlaceholder(dtImg, photoUrl);
-            applyPhotoOrPlaceholder(mbImg, photoUrl);
+            const photoUrl = currentGroup.photo || defaultGroupsData[activeGroup].photo || "";
+            if (dtImg) dtImg.src = photoUrl;
+            if (mbImg) mbImg.src = photoUrl;
 
             // 사진 설명 제목 업데이트
             const dtTitle = document.getElementById('dt-photo-title');
@@ -2475,6 +2158,7 @@ document.getElementById = function(id) {
             if (el) {
                 const newTitle = el.innerText.replace(/\u200B/g, '').trim();
                 groupsData[activeGroup].photoTitle = newTitle;
+                saveGroupsData();
                 const otherId = viewType === 'dt' ? 'mb-photo-title' : 'dt-photo-title';
                 const otherEl = document.getElementById(otherId);
                 if (otherEl) {
@@ -2783,22 +2467,13 @@ document.getElementById = function(id) {
                     schedules.push(newSch);
                     // 새로 만든 약속을 바로 스포트라이트로 펼쳐서 보여줌
                     selectedScheduleIds[activeGroup] = newSch.id;
-                    // 새 일정 등록 XP 지급
-                    if (typeof grantXP === 'function') {
-                        grantXP(CLOV_XP_SCHEDULE_ADD, 'schedule_add');
-                    }
                 }
 
+                saveGroupsData();
                 updateScheduleUI();
                 closeModal(`${prefix}-schedule-modal`);
                 if (typeof showProofResultModal === 'function') {
-                    showProofResultModal({
-                        title: '일정 저장 완료',
-                        message: '일정이 성공적으로 저장되었습니다.',
-                        primaryText: '확인'
-                    });
-                } else {
-                    clovToast('🍀 D-day가 저장되었어요!', 'success');
+                    showProofResultModal({ title: 'D-day 저장 완료', message: '새로운 약속이 일정에 등록됐어요.' });
                 }
             }
         }
@@ -2808,9 +2483,10 @@ document.getElementById = function(id) {
                 const schedules = groupsData[activeGroup].schedules || [];
                 groupsData[activeGroup].schedules = schedules.filter(s => s.id !== scheduleId);
                 if (selectedScheduleIds[activeGroup] === scheduleId) selectedScheduleIds[activeGroup] = null;
+                saveGroupsData();
                 updateScheduleUI();
-                clovToast('🗑️ 일정이 삭제되었어요.', 'info');
-            }, { icon: '🗑️', type: 'error', confirmText: '삭제', cancelText: '취소' });
+                clovToast('일정이 삭제되었어요.', 'success');
+            }, { icon: (window.CLOV_ICONS && CLOV_ICONS.trash) || '🗑️', type: 'error', confirmText: '삭제', cancelText: '취소' });
         }
 
         function updateScheduleUI() {
@@ -3057,7 +2733,7 @@ document.getElementById = function(id) {
             const messageEl = document.getElementById('dt-proof-result-message');
             const primary = document.getElementById('dt-proof-result-primary');
             const secondary = document.getElementById('dt-proof-result-secondary');
-            if (!modal || !titleEl || !messageEl || !primary || !secondary) {
+            if (!modal || !titleEl || !messageEl || !primary) {
                 clovAlert(title, { icon: '💬', type: 'info' });
                 return;
             }
@@ -3065,10 +2741,12 @@ document.getElementById = function(id) {
             titleEl.textContent = title;
             messageEl.innerHTML = message;
             primary.textContent = primaryText || (complete ? '인생네컷 만들기' : '확인');
-            secondary.textContent = secondaryText || (complete ? '나중에 하기' : '취소');
+            if (secondary) {
+                secondary.textContent = secondaryText || (complete ? '나중에 하기' : '취소');
+                secondary.onclick = onSecondary || closeProofResultModal;
+                secondary.style.display = (showSecondary || complete) ? 'block' : 'none';
+            }
             primary.onclick = onPrimary || closeProofResultModal;
-            secondary.onclick = onSecondary || closeProofResultModal;
-            secondary.style.display = (showSecondary || complete) ? 'block' : 'none';
             modal.style.display = 'flex';
         }
 
@@ -3088,16 +2766,7 @@ document.getElementById = function(id) {
             const boxRect = box.getBoundingClientRect();
             burst.style.left = (iconRect.left - boxRect.left + iconRect.width / 2) + 'px';
             burst.style.top = (iconRect.top - boxRect.top + iconRect.height / 2) + 'px';
-            spawnConfettiBurst(burst, { spread: 130 });
-
-            // 인생4컷 완성 = 일정 완료 → XP 지급
-            if (typeof grantXP === 'function') {
-                grantXP(CLOV_XP_SCHEDULE_COMPLETE, 'schedule_done');
-                setTimeout(() => {
-                    if (typeof clovToast === 'function')
-                        clovToast(`인생4컷 완성! 일정 달성 +${CLOV_XP_SCHEDULE_COMPLETE} XP`, 'success');
-                }, 800);
-            }
+            spawnConfettiBurst(burst, { spread: 130 }); // 색상은 spawnConfettiBurst 기본값(여름 팔레트) 사용
         }
 
         function showLockedStagePhotoModal() {
@@ -3827,6 +3496,7 @@ document.getElementById = function(id) {
                 const sch = groupsData[activeGroup].schedules.find(s => s.id === scheduleId);
                 if (sch) {
                     sch.content = newContent;
+                    saveGroupsData();
                 }
 
                 // 데스크톱 <-> 모바일 양방향 실시간 동기화
@@ -3862,40 +3532,6 @@ document.getElementById = function(id) {
         }
         window.insertScheduleSteps = insertScheduleSteps;
 
-        // 레벨이 오를수록 맨땅이었던 지면에 클로버가 하나둘 빽빽하게 자라나도록 채워주는 함수 (잡초 X, 전부 클로버)
-        function renderGroundGrowth(containerId) {
-            const container = document.getElementById(containerId);
-            if (!container) return;
-            container.innerHTML = '';
-
-            // 레벨이 오를수록 클로버 개수가 훨씬 더 가파르게 늘어나서 들판이 무성해짐
-            // (최대 777레벨이라 레벨을 그대로 곱하면 폭발하므로, 7단계 티어 인덱스(0~6) 기준으로 계산)
-            const tierIdx = clovLevelTierIndex(friendshipLevel);
-            const cloverCount = 6 + tierIdx * 5; // 6 ~ 36개
-            // 레벨이 높을수록 클로버 한 포기 자체도 더 크고 무성하게 자람
-            const baseScale = 0.7 + tierIdx * 0.12;
-
-            for (let i = 0; i < cloverCount; i++) {
-                const sprout = document.createElement('span');
-                sprout.className = 'ground-sprout';
-                sprout.innerText = '🍀';
-
-                const leftRandom = 2 + Math.random() * 96; // 지면 가로 전체에 고루 분포
-                const bottomRandom = Math.random() * 18; // 지면 능선 부근에 뿌리내린 듯 배치
-                const scale = baseScale + Math.random() * 0.4;
-                const swayDuration = 3 + Math.random() * 2;
-                const swayDelay = Math.random() * 2;
-                const growDelay = Math.random() * 0.9;
-
-                sprout.style.left = `${leftRandom}%`;
-                sprout.style.bottom = `${bottomRandom}%`;
-                sprout.style.fontSize = `${13 * scale}px`;
-                sprout.style.zIndex = String(Math.round(bottomRandom));
-                sprout.style.animation = `sproutGrow 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) ${growDelay}s backwards, sproutSway ${swayDuration}s ease-in-out ${swayDelay}s infinite`;
-
-                container.appendChild(sprout);
-            }
-        }
 
         // 8. 그룹 변경 기능 실행 로직
         function selectGroup(groupKey) {
@@ -4471,11 +4107,7 @@ document.getElementById = function(id) {
                 closeMonthPicker();
             }
             if (event.target.classList.contains('modal-overlay')) {
-                // 작성 중 내용 유실 방지를 위해 추억/일정 작성 모달은 바깥 클릭으로 닫히지 않도록 예외 처리
-                const ignoreIds = ['dt-post-modal', 'mb-post-modal', 'dt-schedule-modal', 'mb-schedule-modal'];
-                if (!ignoreIds.includes(event.target.id)) {
-                    event.target.style.display = 'none';
-                }
+                event.target.style.display = 'none';
             }
         }
 
@@ -4574,159 +4206,10 @@ document.getElementById = function(id) {
 
 /* ══════════════════════ V5 BANNER ENGINE ══════════════════════ */
 (function() {
-  const NS = 'http://www.w3.org/2000/svg';
   const PREFIXES = ['dt', 'mb'];
 
   // State
   const v5state = { level: 3, time: 'day', season: 'summer', event: 'none', friendName: '민지' };
-
-  // 레벨-이름/클로버 밀도 매핑은 이제 최대 777레벨까지 지원하는 clovLevelInfo()/
-  // clovLevelTierIndex()(desktop.js 상단, 우정 레벨 시스템 섹션)를 그대로 재사용한다.
-
-  const GROUND_COLORS = {
-    barren: { top:'#9a7a50', bot:'#664c28' },
-    spring: { top:'#7dd97e', bot:'#4a9e5c' },
-    summer: { top:'#28ae62', bot:'#186e3e' },
-    fall:   { top:'#dfc040', bot:'#b89020' },
-    winter: { top:'#c4d8d0', bot:'#96b4aa' },
-  };
-  const MTN_COLORS = {
-    spring: { far:'rgba(138,195,138,0.90)', near:'rgba(86,158,90,0.97)' },
-    summer: { far:'rgba(68,145,98,0.90)',   near:'rgba(38,115,68,0.97)' },
-    fall:   { far:'rgba(156,118,56,0.90)',  near:'rgba(122,86,36,0.97)' },
-    winter: { far:'rgba(190,210,220,0.90)', near:'rgba(148,170,184,0.97)' },
-  };
-  const CEL = {
-    morning: { w:38, h:38, top:'64%', left:'74%', bg:'radial-gradient(circle at 38% 38%, #fffde2 0%, #ffd95c 55%, #ffbe38 100%)', shadow:'0 0 28px 10px rgba(255,218,78,0.55)' },
-    day:     { w:48, h:48, top:'15%', left:'78%', bg:'radial-gradient(circle at 38% 38%, #fffae0 0%, #ffcc60 55%, #ffb038 100%)', shadow:'0 0 42px 15px rgba(255,200,68,0.45)' },
-    evening: { w:46, h:46, top:'60%', left:'13%', bg:'radial-gradient(circle at 38% 38%, #ffe8d0 0%, #ff8c28 55%, #ff5010 100%)', shadow:'0 0 38px 12px rgba(255,100,18,0.52)' },
-    night:   { w:36, h:36, top:'13%', left:'80%', bg:'radial-gradient(circle at 35% 38%, #ffffff 0%, #dce8f4 55%, #b0c8e0 100%)', shadow:'0 0 22px 7px rgba(178,210,240,0.35)',
-               craters: [{w:'28%',h:'28%',top:'18%',left:'50%'},{w:'18%',h:'18%',top:'50%',left:'22%'},{w:'12%',h:'12%',top:'36%',left:'65%'}] },
-  };
-
-  function hexRgb(h) { return [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)]; }
-  function lerpColor(h1,h2,t) {
-    const [r1,g1,b1]=hexRgb(h1), [r2,g2,b2]=hexRgb(h2);
-    return `rgb(${Math.round(r1+(r2-r1)*t)},${Math.round(g1+(g2-g1)*t)},${Math.round(b1+(b2-b1)*t)})`;
-  }
-
-  function v5updateGround(p) {
-    const el = document.getElementById(p+'-v5ground'); if(!el) return;
-    const tierIdx = clovLevelTierIndex(v5state.level);
-    const grp = (typeof groupsData !== 'undefined' && groupsData[activeGroup]) || {};
-    const withinTier = v5state.level >= CLOV_MAX_LEVEL ? 100 : (typeof grp.levelProgress === 'number' ? grp.levelProgress : 0);
-    const t = (tierIdx + withinTier / 100) / 6, B=GROUND_COLORS.barren, S=GROUND_COLORS[v5state.season];
-    el.style.background = `linear-gradient(180deg, ${lerpColor(B.top,S.top,t)} 0%, ${lerpColor(B.bot,S.bot,t)} 100%)`;
-  }
-
-  function v5updateMountains(p) {
-    const m=MTN_COLORS[v5state.season];
-    const f=document.getElementById(p+'-v5mtnFar'), n=document.getElementById(p+'-v5mtnNear');
-    if(f) f.setAttribute('fill',m.far);
-    if(n) n.setAttribute('fill',m.near);
-  }
-
-  function v5buildStars(p) {
-    const layer=document.getElementById(p+'-v5stars'); if(!layer) return;
-    layer.innerHTML='';
-    for(let i=0;i<58;i++){
-      const s=document.createElement('div'); s.className='star';
-      const sz=Math.random()*2+0.8;
-      s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*68}%;--d:${2.2+Math.random()*3.5}s;--dl:${-Math.random()*6}s;`;
-      layer.appendChild(s);
-    }
-  }
-
-  function v5updateCelestial(p) {
-    const el=document.getElementById(p+'-v5cel'); if(!el) return;
-    const c=CEL[v5state.time];
-    el.style.cssText=`width:${c.w}px;height:${c.h}px;top:${c.top};left:${c.left};transform:translate(-50%,-50%);background:${c.bg};box-shadow:${c.shadow};`;
-    el.innerHTML='';
-    if(c.craters) c.craters.forEach(cr=>{
-      const d=document.createElement('div'); d.className='crater';
-      d.style.cssText=`width:${cr.w};height:${cr.h};top:${cr.top};left:${cr.left};transform:translate(-50%,-50%);`;
-      el.appendChild(d);
-    });
-  }
-
-  function makeSVGClover(fourLeaf=false) {
-    const svg=document.createElementNS(NS,'svg'); svg.setAttribute('viewBox','0 0 40 52'); svg.setAttribute('overflow','visible'); svg.classList.add('clover-svg');
-    const stem=document.createElementNS(NS,'path'); stem.setAttribute('d','M20 26 Q18 38 20 50'); stem.setAttribute('stroke-width','2.2'); stem.setAttribute('fill','none'); stem.setAttribute('stroke-linecap','round'); stem.classList.add('clov-stem'); svg.appendChild(stem);
-    const g=document.createElementNS(NS,'g'); g.setAttribute('transform','translate(20,22)');
-    const leafD='M 0,0 L -6,-6 C -15,-15 -12,-25 -4,-23 C -1.5,-22 0,-17 0,-17 C 0,-17 1.5,-22 4,-23 C 12,-25 15,-15 6,-6 Z';
-    const chevronD='M -9,-14 C -4,-18 -1,-12 0,-15 C 1,-12 4,-18 9,-14';
-    [45,135,225,315].forEach((angle,i)=>{
-      const leaf=document.createElementNS(NS,'path'); leaf.setAttribute('d',leafD); leaf.setAttribute('transform',`rotate(${angle})`); leaf.classList.add('clov-leaf'); if(i%2===1)leaf.classList.add('shade'); g.appendChild(leaf);
-      const ch=document.createElementNS(NS,'path'); ch.setAttribute('d',chevronD); ch.setAttribute('transform',`rotate(${angle})`); ch.setAttribute('stroke-width','1.5'); ch.setAttribute('stroke-linecap','round'); ch.setAttribute('fill','none'); ch.classList.add('clov-vein'); g.appendChild(ch);
-      const mv=document.createElementNS(NS,'path'); mv.setAttribute('d','M 0,0 Q 0.5,-8 0,-14'); mv.setAttribute('transform',`rotate(${angle})`); mv.setAttribute('stroke-width','0.6'); mv.setAttribute('stroke-linecap','round'); mv.setAttribute('fill','none'); mv.setAttribute('stroke-opacity','0.45'); mv.classList.add('clov-vein'); g.appendChild(mv);
-    });
-    svg.appendChild(g); return svg;
-  }
-
-  function v5buildClovers(p) {
-    const field=document.getElementById(p+'-v5clovers'); if(!field) return;
-    field.innerHTML='';
-    // 최대 777레벨을 감당하려고 레벨 그대로가 아니라 7단계 티어 인덱스(0~6) 기준으로 밀도를 정한다.
-    const tierIdx = clovLevelTierIndex(v5state.level);
-    const cfg = { clovers: 6 + tierIdx * 5, fourLeaf: Math.max(0, Math.round((tierIdx - 1) * 1.6)) };
-
-    // 모바일은 클로버 수 절반으로 줄임
-    const isMobile = (p === 'mb');
-    const count = isMobile ? Math.ceil(cfg.clovers * 0.5) : cfg.clovers;
-    const fourLeaf = isMobile ? Math.ceil(cfg.fourLeaf * 0.5) : cfg.fourLeaf;
-
-    // 균등 배치: x축을 슬롯으로 나눠 각 슬롯 안에서 jitter (랜덤성 적당히 추가)
-    const DEPTH_BANDS = 3; // 원경/중경/근경
-    const perBand = Math.ceil(count / DEPTH_BANDS);
-    const positions = [];
-
-    for(let band = 0; band < DEPTH_BANDS; band++){
-      const bandCount = Math.min(perBand, count - positions.length);
-      if(bandCount <= 0) break;
-      // band 0 = 원경(깊음), band 2 = 근경(가까움)
-      const depthMin = band / DEPTH_BANDS;
-      const depthMax = (band + 1) / DEPTH_BANDS;
-
-      // x를 슬롯으로 균등 분할
-      const slotW = 94 / bandCount;
-      for(let i = 0; i < bandCount; i++){
-        // 20% 확률로 인접 band 깊이로 튀어 더 자연스럽게
-        let dMin = depthMin, dMax = depthMax;
-        if(Math.random() < 0.2) {
-          const jump = Math.random() < 0.5 ? -1 : 1;
-          dMin = Math.max(0, depthMin + jump * (1/DEPTH_BANDS) * 0.5);
-          dMax = Math.min(1, depthMax + jump * (1/DEPTH_BANDS) * 0.5);
-        }
-        const depth = dMin + Math.random() * (dMax - dMin);
-        const maxSz = tierIdx === 6 ? 40 : 34;
-        const sz = maxSz - depth * (maxSz - 16);
-        // x: 슬롯 중앙 + ±45% 지터 (랜덤성 강화, 뭉침은 방지)
-        const slotCenter = 3 + slotW * (i + 0.5);
-        const jitter = (Math.random() - 0.5) * slotW * 0.9;
-        const x = Math.max(2, Math.min(98, slotCenter + jitter));
-        positions.push({
-          x, depth,
-          bottom: -8 + depth * 48,
-          size: sz,
-          rot: (Math.random() - 0.5) * 42,  // 회전 범위 살짝 더 넓게
-          op: 1 - depth * 0.42,
-        });
-      }
-    }
-
-    // 깊이 내림차순 정렬 (원경 먼저 그려 근경이 위에 겹치게)
-    positions.sort((a,b) => b.depth - a.depth).forEach((pos, idx) => {
-      const wrap = document.createElement('div'); wrap.className = 'clover-wrap';
-      const h = pos.size * (44/32);
-      wrap.style.cssText = `left:${pos.x}%;bottom:${pos.bottom}px;width:${pos.size}px;height:${h}px;transform:translateX(-50%) rotate(${pos.rot}deg);opacity:${pos.op};z-index:${200 - Math.round(pos.bottom)};`;
-      const anim = document.createElement('div'); anim.className = 'clover-anim';
-      const dur = 2.8 + Math.random() * 2.5, delay = -(Math.random() * dur);
-      anim.style.setProperty('--sw', dur+'s'); anim.style.setProperty('--sd', delay+'s');
-      const svg = makeSVGClover(idx < fourLeaf);
-      svg.style.cssText = 'width:100%;height:100%;display:block;';
-      anim.appendChild(svg); wrap.appendChild(anim); field.appendChild(wrap);
-    });
-  }
 
   function v5buildParticles(p) {
     const c=document.getElementById(p+'-v5particles'); if(!c) return; c.innerHTML='';
@@ -4828,8 +4311,7 @@ document.getElementById = function(id) {
       const scene=document.getElementById(p+'-v5scene'); if(!scene) return;
       scene.dataset.time=v5state.time; scene.dataset.season=v5state.season;
       scene.dataset.level=v5state.level; scene.dataset.event=v5state.event;
-      v5updateGround(p); v5updateMountains(p); v5updateCelestial(p);
-      v5buildClovers(p); v5buildParticles(p); v5buildBalloons(p); v5updateHUD(p);
+      v5buildParticles(p); v5buildBalloons(p); v5updateHUD(p);
       v5ApplyWallpaperImage(p);
     });
   }
@@ -4862,7 +4344,7 @@ document.getElementById = function(id) {
 
   // 배경 벽지 등록소 — 여기에 항목을 추가하고 계절별 이미지 4장만 넣으면
   // 사용자설정 배경 목록과 scene-sky 적용이 자동으로 따라온다 (CSS 수정 불필요).
-  // 'field'(클로버 들판, 절차적 배경)는 항상 존재하는 기본값이라 이 목록에 넣지 않는다.
+  // 기본 배경은 이 등록소의 첫 항목(현재 'lp-turntable')이다.
   const V5_WALLPAPERS = {
     'lp-turntable': {
       name: 'LP 턴테이블',
@@ -5153,8 +4635,7 @@ document.getElementById = function(id) {
   // 패널이 위에서 동적 생성됐으므로 바로 바인딩 가능
   v5bindButtons(); v5syncButtons();
 
-  // 초기화 (별 미리 생성)
-  PREFIXES.forEach(p=>v5buildStars(p));
+  // 초기화
   v5detectNow(); v5render();
   PREFIXES.forEach(p=>v5PositionPhotoRec(p));
   window.addEventListener('resize', function(){ PREFIXES.forEach(p=>v5PositionPhotoRec(p)); });
