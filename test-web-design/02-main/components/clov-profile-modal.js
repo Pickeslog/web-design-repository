@@ -129,22 +129,39 @@
                     <div class="settings-pane" id="dt-settings-pane-theme" style="display:none;">
                         <div class="profile-form-section">
                             <div class="profile-section-title">테마</div>
-                            <ul class="settings-list theme-option-list" id="dt-theme-option-list">
-                                <li class="theme-option" data-mode="light" onclick="setThemeMode('light')">
-                                    <span class="settings-list-label">라이트모드</span>
-                                </li>
-                                <li class="theme-option" data-mode="dark" onclick="setThemeMode('dark')">
-                                    <span class="settings-list-label">다크모드</span>
-                                </li>
+                            <ul class="settings-list theme-swatch-list" id="dt-theme-option-list">
+                                <li class="theme-option theme-swatch-box theme-swatch-box--light" data-mode="light" title="라이트모드" aria-label="라이트모드" onclick="setThemeMode('light')"></li>
+                                <li class="theme-option theme-swatch-box theme-swatch-box--dark" data-mode="dark" title="다크모드" aria-label="다크모드" onclick="setThemeMode('dark')"></li>
                             </ul>
+                        </div>
+
+                        <div class="profile-form-section profile-form-section--card">
+                            <div class="paint-card-header">
+                                <div class="profile-section-title">사용자 설정</div>
+                                <div class="paint-card-actions">
+                                    <button type="button" class="paint-reset-btn" onclick="resetAppBackgroundToDefault()" title="기본 배경으로 되돌리기">↺ 기본값으로</button>
+                                    <span class="paint-swatch-hint">탭해서 나만의 색상을 칠해보세요 🎨</span>
+                                </div>
+                            </div>
+                            <div class="paint-swatch-wrap" id="dt-theme-custom-swatch" data-appbg-theme="custom" title="커스텀 색상" aria-label="커스텀 색상">
+                                <svg class="paint-blob-svg" viewBox="0 0 320 90" aria-hidden="true" onclick="togglePaintPicker(event)">
+                                    <path id="dt-paint-blob-path" class="paint-blob-path" d="M20,45 C20,20 60,10 100,15 C150,20 170,5 220,10 C270,15 300,25 300,45 C300,70 260,80 220,78 C180,76 160,85 110,82 C60,79 20,70 20,45 Z" fill="#2C5F4A"></path>
+                                </svg>
+                                <div class="paint-picker-popover" id="dt-paint-picker-popover" hidden>
+                                    <div class="paint-picker-sv" id="dt-paint-picker-sv">
+                                        <div class="paint-picker-sv-cursor" id="dt-paint-picker-sv-cursor"></div>
+                                    </div>
+                                    <div class="paint-picker-hue" id="dt-paint-picker-hue">
+                                        <div class="paint-picker-hue-cursor" id="dt-paint-picker-hue-cursor"></div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="profile-form-section">
                             <div class="profile-section-title">바탕화면</div>
-                            <ul class="settings-list theme-option-list" id="dt-appbg-theme-list">
-                                <li class="theme-option" data-appbg-theme="default" onclick="setAppBackground('default')">
-                                    <span class="settings-list-label">우드 &amp; 클로버 (기본)</span>
-                                </li>
+                            <ul class="settings-list theme-swatch-list" id="dt-appbg-theme-list">
+                                <li class="theme-option theme-swatch-box theme-swatch-box--image" data-appbg-theme="default" style="background-image:url('${MAIN_BASE}assets/background-icons/01-wood-clover.png')" title="우드 & 클로버 (기본)" aria-label="우드 & 클로버 (기본)" onclick="setAppBackground('default')"></li>
                                 <!-- 추가 바탕화면은 CLOV_APP_BACKGROUNDS 등록소에서 renderAppBackgroundOptions()가 채운다 -->
                             </ul>
                         </div>
@@ -455,6 +472,7 @@
   window.CLOV_APP_BACKGROUNDS['lp-wood-desk'] = {
     name: 'LP 우드 데스크',
     icon: '💿',
+    iconImage: MAIN_BASE + 'assets/background-icons/02-lp-wood-desk.png',
     image: MAIN_BASE + 'background-concepts/clov_lp_background_concept_1920x1080.png',
   };
   window.CLOV_APP_BACKGROUNDS['lp-album-collection'] = {
@@ -465,23 +483,98 @@
   window.CLOV_APP_BACKGROUNDS['clover-coast'] = {
     name: '클로버 해안 엽서',
     icon: '🌊',
+    iconImage: MAIN_BASE + 'assets/background-icons/03-clover-beach.png',
     image: MAIN_BASE + 'background-concepts/clov_lp_background_concept_03_coast_1920x1080.png',
   };
   window.CLOV_APP_BACKGROUNDS['neon-clover-city'] = {
     name: '네온 클로버 시티',
     icon: '🌆',
+    iconImage: MAIN_BASE + 'assets/background-icons/04-neon-clover-city.png',
     image: MAIN_BASE + 'background-concepts/clov_spiderverse_city_background_1920x1080.png',
   };
   window.CLOV_APP_BACKGROUNDS['minimal-clover'] = {
     name: '미니멀 클로버',
     icon: '🍃',
+    iconImage: MAIN_BASE + 'assets/background-icons/05-minimal-clover.png',
     image: MAIN_BASE + 'background-concepts/clov_minimal_monographic_background_1920x1080.png',
   };
   window.CLOV_APP_BACKGROUNDS['botanical-blueprint'] = {
     name: '보태니컬 클로버 청사진',
     icon: '📐',
+    iconImage: MAIN_BASE + 'assets/background-icons/06-pencil-clover.png',
     image: MAIN_BASE + 'background-concepts/clov_botanical_blueprint_background_1920x1080.png',
   };
+
+  // ── 커스텀 배경색(물감 카드) 관련 상수·색공간 변환 (chacha1650a 이식) ──
+  var CUSTOM_BG_DEFAULT_HEX = '#F5F0E6';
+  var HEX_COLOR_RE = /^#(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
+
+  function normalizeHexColor(hex) {
+    if (!hex) return null;
+    hex = hex.trim();
+    if (!HEX_COLOR_RE.test(hex)) return null;
+    if (hex.length === 4) {
+      hex = '#' + hex[1] + hex[1] + hex[2] + hex[2] + hex[3] + hex[3];
+    }
+    return hex.toUpperCase();
+  }
+  function getCustomAppBgColor() {
+    return localStorage.getItem('clov_appBgCustomColor') || CUSTOM_BG_DEFAULT_HEX;
+  }
+  function hexToRgb(hex) {
+    var n = parseInt(hex.replace('#', ''), 16);
+    return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+  }
+  function rgbToHex(r, g, b) {
+    return '#' + [r, g, b].map(function (v) {
+      v = Math.max(0, Math.min(255, Math.round(v) || 0));
+      return v.toString(16).padStart(2, '0');
+    }).join('').toUpperCase();
+  }
+  function rgbToHsv(r, g, b) {
+    r /= 255; g /= 255; b /= 255;
+    var max = Math.max(r, g, b), min = Math.min(r, g, b);
+    var h, v = max;
+    var d = max - min;
+    var s = max === 0 ? 0 : d / max;
+    if (max === min) {
+      h = 0;
+    } else {
+      if (max === r) h = (g - b) / d + (g < b ? 6 : 0);
+      else if (max === g) h = (b - r) / d + 2;
+      else h = (r - g) / d + 4;
+      h /= 6;
+    }
+    return { h: h * 360, s: s, v: v };
+  }
+  function hsvToRgb(h, s, v) {
+    h = ((h % 360) + 360) % 360 / 360;
+    var i = Math.floor(h * 6);
+    var f = h * 6 - i;
+    var p = v * (1 - s);
+    var q = v * (1 - f * s);
+    var t = v * (1 - (1 - f) * s);
+    var r, g, b;
+    switch (i % 6) {
+      case 0: r = v; g = t; b = p; break;
+      case 1: r = q; g = v; b = p; break;
+      case 2: r = p; g = v; b = t; break;
+      case 3: r = p; g = q; b = v; break;
+      case 4: r = t; g = p; b = v; break;
+      default: r = v; g = p; b = q; break;
+    }
+    return { r: Math.round(r * 255), g: Math.round(g * 255), b: Math.round(b * 255) };
+  }
+  // WCAG 상대 휘도로 배경색이 어두운지 판단해 글씨(라이트/다크) 자동 매칭에 사용
+  function isColorDark(hex) {
+    var rgb = hexToRgb(hex);
+    var toLinear = function (c) {
+      c /= 255;
+      return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    };
+    var luminance = 0.2126 * toLinear(rgb.r) + 0.7152 * toLinear(rgb.g) + 0.0722 * toLinear(rgb.b);
+    return luminance < 0.45;
+  }
 
   function getAppBackground() {
     return localStorage.getItem('clov_appBackground') || 'default';
@@ -495,44 +588,183 @@
       if (list.querySelector('[data-appbg-theme="' + id + '"]')) return;
       var bg = window.CLOV_APP_BACKGROUNDS[id];
       var li = document.createElement('li');
-      li.className = 'theme-option';
       li.dataset.appbgTheme = id;
+      li.title = bg.name;
+      li.setAttribute('aria-label', bg.name);
       li.onclick = function () { setAppBackground(id); };
-      li.innerHTML = '<span class="settings-list-label">' + bg.name + '</span>';
+      // 아이콘 PNG가 있으면 이미지 스와치, 없으면 이모지 스와치로 폴백
+      if (bg.iconImage) {
+        li.className = 'theme-option theme-swatch-box theme-swatch-box--image';
+        li.style.backgroundImage = "url('" + bg.iconImage + "')";
+      } else {
+        li.className = 'theme-option theme-swatch-box theme-swatch-box--emoji';
+        li.textContent = bg.icon || '🎨';
+      }
       list.appendChild(li);
     });
   }
 
   function applyAppBackground(id) {
     document.body.dataset.appBg = id;
-    var bg = id !== 'default' && window.CLOV_APP_BACKGROUNDS[id];
+    var bg = id !== 'default' && id !== 'custom' && window.CLOV_APP_BACKGROUNDS[id];
+    var customColor = id === 'custom' ? getCustomAppBgColor() : '';
     // body는 .window-content/.main-content(불투명 배경)에 항상 가려지므로, 실제 눈에 보이는
     // 그 두 레이어에도 같이 적용해야 화면에 반영된다.
     var targets = [document.body].concat([].slice.call(document.querySelectorAll('.window-content, .main-content')));
     targets.forEach(function (el) {
-      el.style.backgroundImage = bg && bg.image ? 'url(' + bg.image + ')' : '';
-      el.style.backgroundSize = bg && bg.image ? 'cover' : '';
-      el.style.backgroundPosition = bg && bg.image ? 'center' : '';
-      el.style.backgroundAttachment = bg && bg.image ? 'fixed' : '';
+      if (id === 'custom') {
+        // global-theme.css의 텍스처 background-image가 background-color를 덮어 색이 안 보이던 문제 —
+        // ''(스타일시트 값 복귀)가 아니라 명시적으로 'none'으로 지워야 단색이 실제로 보인다.
+        el.style.backgroundImage = 'none';
+        el.style.backgroundSize = '';
+        el.style.backgroundPosition = '';
+        el.style.backgroundAttachment = '';
+        el.style.backgroundColor = customColor;
+      } else {
+        el.style.backgroundImage = bg && bg.image ? 'url(' + bg.image + ')' : '';
+        el.style.backgroundSize = bg && bg.image ? 'cover' : '';
+        el.style.backgroundPosition = bg && bg.image ? 'center' : '';
+        el.style.backgroundAttachment = bg && bg.image ? 'fixed' : '';
+        el.style.backgroundColor = '';
+      }
     });
+    // 커스텀 색상일 땐 밝기에 맞춰 라이트/다크 글씨색을 자동 적용(가독성), 벗어나면 사용자 설정으로 복원
+    if (id === 'custom') {
+      document.body.classList.toggle('dark-mode', isColorDark(customColor));
+    } else {
+      document.body.classList.toggle('dark-mode', localStorage.getItem('clov_darkMode') === 'true');
+    }
   }
 
   function updateAppBackgroundUI() {
     renderAppBackgroundOptions();
     var id = getAppBackground();
+    var customColor = getCustomAppBgColor();
     document.querySelectorAll('#dt-appbg-theme-list .theme-option').forEach(function (li) {
       li.classList.toggle('active', li.dataset.appbgTheme === id);
     });
+    var customSwatch = document.getElementById('dt-theme-custom-swatch');
+    if (customSwatch) {
+      customSwatch.classList.toggle('active', id === 'custom');
+      customSwatch.style.setProperty('--paint-glow', customColor);
+    }
+    var blobPath = document.getElementById('dt-paint-blob-path');
+    if (blobPath) blobPath.setAttribute('fill', customColor);
   }
 
   function setAppBackground(id) {
     localStorage.setItem('clov_appBackground', id);
     applyAppBackground(id);
     updateAppBackgroundUI();
+    updateThemeOptionUI();
+    if (id === 'custom') return; // 커스텀 색상은 피커에서 조용히 적용 — 토스트 스팸 방지
     var bg = window.CLOV_APP_BACKGROUNDS[id];
     var name = id === 'default' ? '우드 & 클로버' : (bg ? bg.name : id);
     var icon = id === 'default' ? '🪵' : (bg ? bg.icon : '🎨');
     clovToast(icon + ' ' + name + ' 바탕화면으로 바꿨어요!', 'success');
+  }
+
+  // "사용자 설정" 카드의 되돌리기 버튼 — 커스텀 색상을 벗어나 기본 배경으로 복귀
+  function resetAppBackgroundToDefault() {
+    setAppBackground('default');
+  }
+
+  /* ── 물감 커스텀 색상 피커 (SV 박스 + Hue 슬라이더) — 네이티브 색상 피커 대신 직접 그림 ── */
+  var paintPickerHue = 0, paintPickerSat = 0, paintPickerVal = 0;
+  var paintPickerBound = false;
+
+  function togglePaintPicker(evt) {
+    if (evt) evt.stopPropagation();
+    var popover = document.getElementById('dt-paint-picker-popover');
+    if (!popover) return;
+    if (popover.hidden) openPaintPicker(); else closePaintPicker();
+  }
+  function openPaintPicker() {
+    var popover = document.getElementById('dt-paint-picker-popover');
+    if (!popover) return;
+    var rgb = hexToRgb(getCustomAppBgColor());
+    var hsv = rgbToHsv(rgb.r, rgb.g, rgb.b);
+    paintPickerHue = hsv.h; paintPickerSat = hsv.s; paintPickerVal = hsv.v;
+    updatePaintPickerUI();
+    popover.hidden = false;
+    bindPaintPickerEvents();
+    document.addEventListener('click', onPaintPickerOutsideClick, true);
+  }
+  function closePaintPicker() {
+    var popover = document.getElementById('dt-paint-picker-popover');
+    if (popover) popover.hidden = true;
+    document.removeEventListener('click', onPaintPickerOutsideClick, true);
+  }
+  function onPaintPickerOutsideClick(e) {
+    var wrap = document.getElementById('dt-theme-custom-swatch');
+    if (wrap && !wrap.contains(e.target)) closePaintPicker();
+  }
+  function updatePaintPickerUI() {
+    var svBox = document.getElementById('dt-paint-picker-sv');
+    var svCursor = document.getElementById('dt-paint-picker-sv-cursor');
+    var hueCursor = document.getElementById('dt-paint-picker-hue-cursor');
+    if (!svBox || !svCursor || !hueCursor) return;
+    var hueRgb = hsvToRgb(paintPickerHue, 1, 1);
+    svBox.style.backgroundColor = 'rgb(' + hueRgb.r + ',' + hueRgb.g + ',' + hueRgb.b + ')';
+    svCursor.style.left = (paintPickerSat * 100) + '%';
+    svCursor.style.top = ((1 - paintPickerVal) * 100) + '%';
+    hueCursor.style.left = (paintPickerHue / 360 * 100) + '%';
+  }
+  // 드래그 중 setAppBackground를 거치면 토스트가 쏟아지므로, 조용히 적용(저장+반영)만 한다.
+  function commitPaintPickerColor() {
+    var rgb = hsvToRgb(paintPickerHue, paintPickerSat, paintPickerVal);
+    localStorage.setItem('clov_appBgCustomColor', rgbToHex(rgb.r, rgb.g, rgb.b));
+    localStorage.setItem('clov_appBackground', 'custom');
+    applyAppBackground('custom');
+    updateAppBackgroundUI();
+    updateThemeOptionUI();
+  }
+  function handleSvPointer(e) {
+    var svBox = document.getElementById('dt-paint-picker-sv');
+    var rect = svBox.getBoundingClientRect();
+    paintPickerSat = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    paintPickerVal = 1 - Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
+    updatePaintPickerUI();
+    commitPaintPickerColor();
+  }
+  function handleHuePointer(e) {
+    var hueBox = document.getElementById('dt-paint-picker-hue');
+    var rect = hueBox.getBoundingClientRect();
+    paintPickerHue = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width)) * 360;
+    updatePaintPickerUI();
+    commitPaintPickerColor();
+  }
+  function bindPaintPickerEvents() {
+    if (paintPickerBound) return;
+    paintPickerBound = true;
+    var svBox = document.getElementById('dt-paint-picker-sv');
+    var hueBox = document.getElementById('dt-paint-picker-hue');
+    if (svBox) {
+      svBox.addEventListener('pointerdown', function (e) {
+        try { svBox.setPointerCapture(e.pointerId); } catch (err) {}
+        handleSvPointer(e);
+        var onMove = function (ev) { handleSvPointer(ev); };
+        var onUp = function () {
+          svBox.removeEventListener('pointermove', onMove);
+          svBox.removeEventListener('pointerup', onUp);
+        };
+        svBox.addEventListener('pointermove', onMove);
+        svBox.addEventListener('pointerup', onUp);
+      });
+    }
+    if (hueBox) {
+      hueBox.addEventListener('pointerdown', function (e) {
+        try { hueBox.setPointerCapture(e.pointerId); } catch (err) {}
+        handleHuePointer(e);
+        var onMove = function (ev) { handleHuePointer(ev); };
+        var onUp = function () {
+          hueBox.removeEventListener('pointermove', onMove);
+          hueBox.removeEventListener('pointerup', onUp);
+        };
+        hueBox.addEventListener('pointermove', onMove);
+        hueBox.addEventListener('pointerup', onUp);
+      });
+    }
   }
 
   /* ── 배경 테마 (V5_WALLPAPERS 등록소) — 해당 UI가 없는 페이지에선 설정값만 저장 ── */
@@ -811,6 +1043,8 @@
   window.applyAppBackground = applyAppBackground;
   window.updateAppBackgroundUI = updateAppBackgroundUI;
   window.setAppBackground = setAppBackground;
+  window.togglePaintPicker = togglePaintPicker;
+  window.resetAppBackgroundToDefault = resetAppBackgroundToDefault;
   window.getBgTheme = getBgTheme;
   window.applyBgTheme = applyBgTheme;
   window.updateBgThemeUI = updateBgThemeUI;
