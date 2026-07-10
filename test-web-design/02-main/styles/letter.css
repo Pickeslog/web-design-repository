@@ -516,9 +516,9 @@
             margin-bottom: 8px;
             padding: 12px 32px;
             font-size: 15px;
-            background: var(--primary-green);
-            color: white;
-            border-color: var(--primary-green);
+            background: var(--btn-primary-bg);
+            color: var(--button-text);
+            border-color: var(--btn-primary-bg);
         }
 
         .letter-box-summary {
