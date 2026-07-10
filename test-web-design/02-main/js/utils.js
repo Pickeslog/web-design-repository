@@ -158,14 +158,19 @@
             try { return localStorage.getItem('clov_withdrawn') === '1'; } catch (e) { return false; }
         }
 
+        // 저장 성공 시 true, 저장 공간 초과 등 실패 시 false 반환.
+        // (호출부가 실패를 감지해 롤백/안내할 수 있게 하고, 예외를 밖으로 던지지 않아
+        //  뒤따르는 로직 — 예: 모달 닫기 — 이 중단되지 않도록 한다)
         function saveGroupsData() {
             try {
                 localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
+                return true;
             } catch (error) {
                 // 저장 공간 초과(QuotaExceeded) 등 — 조용히 실패하지 않고 사용자에게 알린다
                 if (typeof clovToast === 'function') {
                     clovToast('⚠️ 변경사항 저장에 실패했어요. 저장 공간을 확인해주세요.', 'warn');
                 }
+                return false;
             }
         }
 
@@ -229,8 +234,8 @@
         // 서버가 없어 사진을 base64로 localStorage(도메인당 약 5MB)에 저장하므로,
         // 원본을 그대로 넣으면 몇 장만으로도 용량이 초과된다("저장 공간이 부족해요" 모달).
         // 갤러리에서 전체화면으로 보므로 4컷(520px)보다 큰 1080px·품질 0.7로 줄여 저장한다.
-        const MEMORY_PHOTO_MAXDIM = 1080;
-        const MEMORY_PHOTO_QUALITY = 0.7;
+        const MEMORY_PHOTO_MAXDIM = 1000;
+        const MEMORY_PHOTO_QUALITY = 0.72;
         function compressImageSrc(src, maxDim, quality, callback) {
             const img = new Image();
             img.onload = () => {

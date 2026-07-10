@@ -26,7 +26,7 @@
             const styleBg = coverPhoto ? `background-image: url('${escapeHtml(coverPhoto)}');` : '';
             const imageContent = coverPhoto
                 ? ''
-                : `<span class="memory-clover-placeholder">🍀</span><span class="memory-image-text">사진이 없는 추억은<br>클로버로 보관됩니다</span>`;
+                : `<div class="cline-no-photo"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"/><path d="m4 18 4-4 3 2 4-5 5 4"/></svg></span><span class="cline-no-photo-text">사진 없음</span></div>`;
             const photoCountBadge = normalizedPost.photos.length > 1
                 ? `<span class="polaroid-photo-count"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:2px;"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"/><circle cx="12" cy="13" r="3.5"/></svg>${normalizedPost.photos.length}</span>`
                 : '';
@@ -210,7 +210,7 @@
                         ${extraThumbCount > 0 ? `<button type="button" class="mp-thumb mp-thumb--more" onclick="openMemoryGallery(${MP_MAX_THUMBS})">+${extraThumbCount}</button>` : ''}
                     </div>
                 ` : ''}
-            ` : `<div class="mp-photo-main mp-photo-main--empty"><span class="memory-clover-placeholder">🍀</span><span class="memory-image-text">사진이 없는 추억은<br>클로버로 보관됩니다</span></div>`;
+            ` : `<div class="mp-photo-main mp-photo-main--empty"><div class="cline-no-photo"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"/><path d="m4 18 4-4 3 2 4-5 5 4"/></svg></span><span class="cline-no-photo-text">사진 없음</span></div></div>`;
 
             let statusText;
             let statusClass;
@@ -1701,9 +1701,16 @@
             let tierUp = false;
 
             // 레벨업 판정 (100% 이상 달성 시)
+            // 방치형 보상 등 한 번에 큰 XP를 받아 100%를 여러 번 넘겨도, 초과분만큼 연속 레벨업 처리한다.
+            // (기존 단일 if는 100을 한 번만 빼서 150% 같은 초과 표기 버그가 있었음)
             if (grp.levelProgress >= 100 && grp.level < CLOV_MAX_LEVEL) {
-                grp.level = Math.min(CLOV_MAX_LEVEL, grp.level + 1);
-                grp.levelProgress = Math.max(0, grp.levelProgress - 100); // 초과분 이월
+                while (grp.levelProgress >= 100 && grp.level < CLOV_MAX_LEVEL) {
+                    grp.level += 1;
+                    grp.levelProgress -= 100;
+                }
+                grp.level = Math.min(CLOV_MAX_LEVEL, grp.level);
+                grp.levelProgress = Math.max(0, grp.levelProgress); // 남은 잉여 경험치만 이월
+                if (grp.level >= CLOV_MAX_LEVEL) grp.levelProgress = Math.min(grp.levelProgress, 99.9); // 만렙 초과분 정리
                 friendshipLevel = grp.level;
                 leveledUp = true;
 
@@ -1722,7 +1729,10 @@
                 friendshipLevel = grp.level;
             }
 
-            localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
+            // 저장 공간 초과 시에도 예외를 던지지 않는 안전한 래퍼 사용
+            // (직접 setItem을 쓰면 quota 초과 시 여기서 throw되어, 호출한 saveWritePost 등이
+            //  모달 닫기 전에 중단되던 버그가 있었음)
+            saveGroupsData();
             updateFriendshipUI();
             triggerXpFlash();
 
@@ -1764,16 +1774,16 @@
                 } else {
                     if (source === 'click') {
                         if (typeof window.v5state !== 'undefined' && (window.v5state.event === 'my_birthday' || window.v5state.event === 'friend_birthday') && window.lastMascotLine) {
-                            msg = `${window.lastMascotLine} (+${finalXp}&nbsp;XP)`;
+                            msg = `${window.lastMascotLine} (+${finalXp} XP)`;
                         } else {
-                            msg = isRobot ? `교감 신호 수신. +${finalXp}&nbsp;XP` : `교감 완료! +${finalXp}&nbsp;XP`;
+                            msg = isRobot ? `교감 신호 수신. +${finalXp} XP` : `교감 완료! +${finalXp} XP`;
                         }
                     }
-                    else if (source === 'post') msg = (isRobot ? `추억 데이터 저장 완료. +${finalXp}&nbsp;XP` : `추억 고마워! +${finalXp}&nbsp;XP`) + buffSuffix;
-                    else if (source === 'schedule_add') msg = (isRobot ? `새 일정 프로토콜 등록. +${finalXp}&nbsp;XP` : `약속 등록 완료! +${finalXp}&nbsp;XP`) + buffSuffix;
-                    else if (source === 'schedule_done') msg = (isRobot ? `인생4컷 아카이빙 완료. +${finalXp}&nbsp;XP` : `인생4컷 달성! +${finalXp}&nbsp;XP`) + buffSuffix;
-                    else if (source === 'passive') msg = (isRobot ? `누적 기록 스캔 완료. 성장 데이터 반영. <span style="white-space: nowrap;">+${finalXp} XP</span>` : `어제 남겨둔 추억들 덕분에 클로브가 이만큼 자랐어요! <span style="white-space: nowrap;">+${finalXp} XP</span>`) + buffSuffix;
-                    else msg = (isRobot ? `데이터 획득. <span style="white-space: nowrap;">+${finalXp} XP</span>` : `<span style="white-space: nowrap;">+${finalXp} XP</span> 획득!`) + buffSuffix;
+                    else if (source === 'post') msg = (isRobot ? `추억 데이터 저장 완료. +${finalXp} XP` : `추억 고마워! +${finalXp} XP`) + buffSuffix;
+                    else if (source === 'schedule_add') msg = (isRobot ? `새 일정 프로토콜 등록. +${finalXp} XP` : `약속 등록 완료! +${finalXp} XP`) + buffSuffix;
+                    else if (source === 'schedule_done') msg = (isRobot ? `인생4컷 아카이빙 완료. +${finalXp} XP` : `인생4컷 달성! +${finalXp} XP`) + buffSuffix;
+                    else if (source === 'passive') msg = (isRobot ? `누적 기록 스캔 완료. 성장 데이터 반영. <span style="white-space: nowrap;">+${finalXp} XP</span>` : `어제 남겨둔 추억들 덕분에 클로브가 이만큼 자랐어요! <span style="white-space: nowrap;">+${finalXp} XP</span>`) + buffSuffix;
+                    else msg = (isRobot ? `데이터 획득. <span style="white-space: nowrap;">+${finalXp} XP</span>` : `<span style="white-space: nowrap;">+${finalXp} XP</span> 획득!`) + buffSuffix;
                 }
 
                 window.ClovMascot.say(msg, leveledUp ? 4500 : 3500);
@@ -1842,7 +1852,7 @@
 
             if (window.ClovMascot && typeof window.ClovMascot.say === 'function' && finalXp > 0) {
                 const isRobot = !!(window.CrobyMascot && typeof CrobyMascot.getCharacter === 'function' && CrobyMascot.getCharacter() === 'robot');
-                window.ClovMascot.say(isRobot ? `데이터 삭제됨. -${finalXp} XP` : `기록이 지워졌어... -${finalXp} XP`, 3500);
+                window.ClovMascot.say(isRobot ? `데이터 삭제됨. -${finalXp} XP` : `기록이 지워졌어... -${finalXp} XP`, 3500);
             }
         }
         window.revokeXP = revokeXP;

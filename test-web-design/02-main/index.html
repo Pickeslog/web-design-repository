@@ -4,9 +4,9 @@
     <title>Clov. - 디자인 미리보기 &amp; 프로토타입</title>
     <link rel="icon" type="image/png" href="../assets/ai-style/clov_logo_half_leaf_cartoon_transparent.png">
     <link rel="stylesheet" href="styles/base.css?v=3">
-    <link rel="stylesheet" href="styles/space.css?v=22">
+    <link rel="stylesheet" href="styles/space.css?v=25">
     <link rel="stylesheet" href="styles/feed.css?v=5">
-    <link rel="stylesheet" href="styles/letter.css?v=2">
+    <link rel="stylesheet" href="styles/letter.css?v=5">
     <link rel="stylesheet" href="styles/schedule.css?v=11">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,7 +14,7 @@
 <script src="components/clov-header.js?v=12"></script>
 <script src="components/clov-modal.js?v=1"></script>
 <script src="components/clov-profile-modal.js?v=21"></script>
-<script src="pages/space-page.js?v=1"></script>
+<script src="pages/space-page.js?v=2"></script>
 <script src="pages/feed-page.js?v=3"></script>
 <script src="pages/letter-page.js?v=1"></script>
 <script src="pages/schedule-page.js?v=1"></script>
@@ -388,7 +388,7 @@ body.dark-mode .member-highlight-card > div:last-child {
 
                     <div class="modal-overlay" id="dt-proof-result-modal">
                         <div class="modal-box proof-result-modal">
-                            <div class="proof-result-icon" id="dt-proof-result-icon">✓</div>
+                            <div class="proof-result-icon" id="dt-proof-result-icon"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
                             <span class="v5-photo-burst" id="dt-proof-burst"></span>
                             <h3 id="dt-proof-result-title">인증사진 업로드</h3>
                             <p id="dt-proof-result-message">인증사진이 업로드됐어요.</p>
@@ -454,8 +454,8 @@ body.dark-mode .member-highlight-card > div:last-child {
 
 
 <script src="js/data.js?v=6"></script>
-<script src="js/utils.js?v=5"></script>
-<script src="js/space.js?v=21"></script>
+<script src="js/utils.js?v=8"></script>
+<script src="js/space.js?v=25"></script>
 <script src="js/feed.js?v=3"></script>
 <script src="js/letter.js?v=1"></script>
 <script src="js/schedule.js?v=7"></script>
@@ -762,7 +762,7 @@ body.dark-mode .wm-submit { color: #0a0f0c; }
 
       <!-- 사진 (여러 장 가능) -->
       <div class="wm-field">
-        <span class="wm-label">사진 (선택, 최대 30장)</span>
+        <span class="wm-label">사진 (선택, 최대 15장)</span>
         <div class="wm-photo-strip" id="wm-photo-strip"></div>
         <input type="file" id="wm-img-input" accept="image/*" multiple style="display:none"
                onchange="previewWriteImg(this)">
@@ -815,7 +815,7 @@ body.dark-mode .wm-submit { color: #0a0f0c; }
 <script>
 (function() {
   let _wmPhotos = [];
-  const WM_PHOTO_LIMIT = 30;
+  const WM_PHOTO_LIMIT = 15;
 
   // 약속 연결 상태: 선택된 scheduleId(null=자유 기록) + 목록/새 약속 폼 열림 여부
   let _wmScheduleId = null;
@@ -1085,21 +1085,46 @@ body.dark-mode .wm-submit { color: #0a0f0c; }
     if (typeof groupsData !== 'undefined' && groupsData[activeGroup]) {
       groupsData[activeGroup].posts.unshift(newPost);
       activeEvidenceIndexes[activeGroup] = 0;
-      saveGroupsData();
-      renderFeeds();
 
-      // 추억 기록 시 경험치 지급 (kimgyubi XP 이식). 이 경로는 ClovData.addPost를 거치지 않으므로
-      // 여기서 직접 grantXP('post')를 호출한다. XP 계산식은 addPost와 동일(기본+사진+정성 보너스).
-      if (typeof grantXP === 'function') {
-        var postXp = (typeof CLOV_XP_POST_BASE !== 'undefined') ? CLOV_XP_POST_BASE : 25;
-        var perPhoto = (typeof CLOV_XP_POST_PER_PHOTO !== 'undefined') ? CLOV_XP_POST_PER_PHOTO : 1;
-        var maxPhoto = (typeof CLOV_XP_POST_PHOTO_MAX !== 'undefined') ? CLOV_XP_POST_PHOTO_MAX : 10;
-        postXp += Math.min((newPost.photos ? newPost.photos.length : 0) * perPhoto, maxPhoto);
-        var textLen = (newPost.text || '').replace(/<[^>]*>/g, '').length;
-        if (textLen >= 100) postXp += (typeof CLOV_XP_POST_TEXT_100 !== 'undefined') ? CLOV_XP_POST_TEXT_100 : 10;
-        else if (textLen >= 50) postXp += (typeof CLOV_XP_POST_TEXT_50 !== 'undefined') ? CLOV_XP_POST_TEXT_50 : 5;
-        grantXP(postXp, 'post');
-      }
+      // 용량 초과 시 토스트 없이 조용히 저장을 시도하고 성공 여부만 반환 (재시도 중 토스트 노이즈 방지)
+      var trySaveGroups = function() {
+        try { localStorage.setItem('clov_groupsData', JSON.stringify(groupsData)); return true; }
+        catch (e) { return false; }
+      };
+
+      // 저장 성공 후 처리 — 피드 갱신 + 경험치 지급 + 모달 닫기
+      var finishWriteSaved = function() {
+        renderFeeds();
+        // 추억 기록 시 경험치 지급 (kimgyubi XP 이식). 이 경로는 ClovData.addPost를 거치지 않으므로
+        // 여기서 직접 grantXP('post')를 호출한다. XP 계산식은 addPost와 동일(기본+사진+정성 보너스).
+        if (typeof grantXP === 'function') {
+          var postXp = (typeof CLOV_XP_POST_BASE !== 'undefined') ? CLOV_XP_POST_BASE : 25;
+          var perPhoto = (typeof CLOV_XP_POST_PER_PHOTO !== 'undefined') ? CLOV_XP_POST_PER_PHOTO : 1;
+          var maxPhoto = (typeof CLOV_XP_POST_PHOTO_MAX !== 'undefined') ? CLOV_XP_POST_PHOTO_MAX : 10;
+          postXp += Math.min((newPost.photos ? newPost.photos.length : 0) * perPhoto, maxPhoto);
+          var textLen = (newPost.text || '').replace(/<[^>]*>/g, '').length;
+          if (textLen >= 100) postXp += (typeof CLOV_XP_POST_TEXT_100 !== 'undefined') ? CLOV_XP_POST_TEXT_100 : 10;
+          else if (textLen >= 50) postXp += (typeof CLOV_XP_POST_TEXT_50 !== 'undefined') ? CLOV_XP_POST_TEXT_50 : 5;
+          grantXP(postXp, 'post');
+        }
+        window.closeWriteModal();
+      };
+
+      if (trySaveGroups()) { finishWriteSaved(); return; }
+
+      // 1차 저장 실패(용량 초과) → 기존에 저장된 사진들을 재압축해 공간을 회수하고 1회 재시도
+      var recover = (typeof compactStoredPhotos === 'function') ? compactStoredPhotos() : Promise.resolve();
+      recover.then(function() {
+        if (trySaveGroups()) { finishWriteSaved(); return; }
+        // 재압축해도 공간 부족 → 방금 추가한 글 롤백(유령 글 방지) + 안내 후 모달 닫기
+        groupsData[activeGroup].posts.shift();
+        renderFeeds();
+        if (typeof clovAlert === 'function') {
+          clovAlert('저장 공간이 부족해 기록을 저장하지 못했어요.\n기존 사진을 정리했는데도 공간이 부족해요. 오래된 추억이나 사진을 지운 뒤 다시 시도해 주세요.', { icon: '💾', type: 'warn' });
+        }
+        window.closeWriteModal();
+      });
+      return;
     }
     window.closeWriteModal();
   };
@@ -1519,10 +1544,34 @@ body.dark-mode .wm-submit { color: #0a0f0c; }
     var titleEl = document.getElementById('member-list-modal-title');
     if (titleEl) titleEl.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><circle cx="8" cy="8" r="3"/><path d="M2 20c0-3 2.5-5 6-5s6 2 6 5"/><circle cx="17" cy="9" r="2.3"/><path d="M15.2 14.6c2.3.5 3.6 2 3.8 4.4"/></svg>참여 멤버 상태메시지 (' + totalCount + '명)';
 
-    var mainCountEl = document.querySelector('.photo-card .cover-meta-item span');
-    if (mainCountEl && mainCountEl.textContent.indexOf('명 함께하는 중') !== -1) {
-      mainCountEl.textContent = totalCount + '명 함께하는 중';
-    }
+    document.querySelectorAll('.member-count-text').forEach(function(el) {
+      el.textContent = totalCount + '명 함께하는 중';
+    });
+
+    // 신규 참여 멤버 프로필(아바타)을 커버 상단 스택 + 카운트 옆 겹침 아바타에 반영
+    var avatarColors = ['#40916c', '#2d6a4f', '#52b788', '#74c69d', '#1b4332'];
+    document.querySelectorAll('.cover-avatar-stack').forEach(function(stack) {
+      stack.querySelectorAll('.dyn-member-avatar').forEach(function(n) { n.remove(); });
+      members.forEach(function(name, idx) {
+        var s = document.createElement('span');
+        s.className = 'cover-avatar dyn-member-avatar';
+        s.textContent = name.charAt(0);
+        s.title = name;
+        s.style.background = avatarColors[idx % avatarColors.length];
+        stack.appendChild(s);
+      });
+    });
+    document.querySelectorAll('.member-mini-avatars').forEach(function(row) {
+      row.querySelectorAll('.dyn-member-avatar').forEach(function(n) { n.remove(); });
+      members.forEach(function(name, idx) {
+        var d = document.createElement('div');
+        d.className = 'dyn-member-avatar';
+        d.textContent = name.charAt(0);
+        d.title = name;
+        d.style.cssText = 'width:30px;height:30px;border-radius:50%;background:' + avatarColors[idx % avatarColors.length] + ';color:white;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;border:1.5px solid white;margin-left:-8px;';
+        row.appendChild(d);
+      });
+    });
 
     var container = document.getElementById('dynamic-members-container');
     if (!container) return;

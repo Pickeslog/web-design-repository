@@ -63,7 +63,7 @@
                                             <div class="cover-meta-grid">
                                                 <div class="cover-meta-item member-highlight-card" onclick="openMemberListModal(event)" style="cursor: pointer; display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; background: rgba(248, 251, 249, 0.85); border: 1px solid rgba(27, 67, 50, 0.15); border-radius: 14px; box-shadow: 0 4px 14px rgba(8, 28, 22, 0.05); transition: all 0.25s ease;" title="클릭하여 참여 멤버 리스트 보기">
                                                     <div style="display: flex; align-items: center; gap: 12px;">
-                                                        <div style="display: flex; align-items: center;">
+                                                        <div class="member-mini-avatars" style="display: flex; align-items: center;">
                                                             <div style="width: 30px; height: 30px; border-radius: 50%; background: var(--primary-green); color: white; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; border: 1.5px solid white; z-index: 4;">나</div>
                                                             <div style="width: 30px; height: 30px; border-radius: 50%; background: #52b788; color: white; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; border: 1.5px solid white; margin-left: -8px; z-index: 3;">솔</div>
                                                             <div style="width: 30px; height: 30px; border-radius: 50%; background: #74c69d; color: white; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; border: 1.5px solid white; margin-left: -8px; z-index: 2;">민</div>
@@ -71,7 +71,7 @@
                                                         </div>
                                                         <div style="display: flex; flex-direction: column; gap: 1px;">
                                                             <span style="font-size: 11px; color: var(--text-muted); font-weight: 700; letter-spacing: -0.2px;">참여 멤버</span>
-                                                            <span style="font-size: 14px; font-weight: 800; color: var(--text-color);">4명 함께하는 중</span>
+                                                            <span class="member-count-text" style="font-size: 14px; font-weight: 800; color: var(--text-color);">4명 함께하는 중</span>
                                                         </div>
                                                     </div>
                                                     <div style="background: rgba(27, 67, 50, 0.08); color: var(--primary-green); font-size: 11px; font-weight: 700; padding: 6px 12px; border-radius: 16px; border: 1px solid rgba(27, 67, 50, 0.12); display: flex; align-items: center; gap: 4px;">
