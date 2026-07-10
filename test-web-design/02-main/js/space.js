@@ -1704,15 +1704,20 @@
 
             // 레벨업 판정 (100% 이상 달성 시)
             if (grp.levelProgress >= 100 && grp.level < CLOV_MAX_LEVEL) {
-                grp.level = Math.min(CLOV_MAX_LEVEL, grp.level + 1);
-                grp.levelProgress = Math.max(0, grp.levelProgress - 100); // 초과분 이월
+                while (grp.levelProgress >= 100 && grp.level < CLOV_MAX_LEVEL) {
+                    grp.level++;
+                    grp.levelProgress -= 100;
+                    if (grp.level % 111 === 0) tierUp = true;
+                }
+                grp.level = Math.min(CLOV_MAX_LEVEL, grp.level);
+                grp.levelProgress = Math.max(0, grp.levelProgress); // 초과분 이월
                 friendshipLevel = grp.level;
                 leveledUp = true;
 
                 const newTier = clovLevelTierIndex(grp.level);
                 // 111, 222, 333 등 정확히 등급의 마지막 레벨에 도달했을 때 폭죽 이벤트 발생
                 if (grp.level % 111 === 0) {
-                    tierUp = true;
+                    // tierUp은 while 루프 안에서 처리됨
                 }
 
                 const info = clovLevelInfo(grp.level);
@@ -1747,6 +1752,7 @@
                             ? `우정 프로토콜 상위 단계 진입. 시스템 성장 감지. (Lv.${grp.level})`
                             : `새로운 우정의 단계에 도달했어! 클로브가 더욱 크고 눈부시게 피어났어! (Lv.${grp.level})`;
                     }
+                    msg += buffSuffix;
                     triggerTierUpEvent(maxLevelReached);
                 } else if (leveledUp) {
                     const levelUpMsgs = isRobot ? [
@@ -1763,7 +1769,7 @@
                         "더 멋진 클로버로 자라고 있어!"
                     ];
                     const randMsg = levelUpMsgs[Math.floor(Math.random() * levelUpMsgs.length)];
-                    msg = `${randMsg} (Lv.${grp.level})`;
+                    msg = `${randMsg} (Lv.${grp.level})` + buffSuffix;
                 } else {
                     if (source === 'click') {
                         if (typeof window.v5state !== 'undefined' && (window.v5state.event === 'my_birthday' || window.v5state.event === 'friend_birthday') && window.lastMascotLine) {

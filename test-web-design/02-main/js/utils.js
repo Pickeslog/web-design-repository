@@ -228,9 +228,9 @@
         // 추억 사진 압축의 핵심(데이터URL/이미지 src → 리사이즈된 JPEG 데이터URL).
         // 서버가 없어 사진을 base64로 localStorage(도메인당 약 5MB)에 저장하므로,
         // 원본을 그대로 넣으면 몇 장만으로도 용량이 초과된다("저장 공간이 부족해요" 모달).
-        // 갤러리에서 전체화면으로 보므로 4컷(520px)보다 큰 1080px·품질 0.7로 줄여 저장한다.
-        const MEMORY_PHOTO_MAXDIM = 1080;
-        const MEMORY_PHOTO_QUALITY = 0.7;
+        // 30장 한도를 감당하기 위해 640px·품질 0.5로 줄여 저장한다. (기존 1080px 0.7에서 하향)
+        const MEMORY_PHOTO_MAXDIM = 640;
+        const MEMORY_PHOTO_QUALITY = 0.5;
         function compressImageSrc(src, maxDim, quality, callback) {
             const img = new Image();
             img.onload = () => {

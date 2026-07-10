@@ -305,17 +305,7 @@
    * duration = ms (기본 2400)
    */
   window.clovToast = function (message, type = 'success', duration = 2400) {
-    const wrap = ensureToastWrap();
-    const ICONS = { success:'✅', warn:'⚠️', error:'❌', info:'💬' };
-    const toast = document.createElement('div');
-    toast.className = `clov-toast ${type}`;
-    toast.innerHTML = `<span>${ICONS[type] || '💬'}</span><span>${message}</span>`;
-    wrap.appendChild(toast);
-
-    setTimeout(() => {
-      toast.classList.add('fade-out');
-      setTimeout(() => toast.remove(), 300);
-    }, duration);
+    return; // 사용자 요청에 따라 하단 토스트 메시지 생성 기능을 아예 제거함
   };
 
   /* 하위 호환: 이전 alert() 호출을 자동으로 교체하려면

@@ -1438,6 +1438,10 @@
             color: #9ccc65;
         }
 
+        body.dark-mode .journey-page-title {
+            color: #1c1a17;
+        }
+
         /* 약속 여정 상세 카드 — 세이지 앨범 마운트에 붙인 포토부스 영수증 (인생4컷 레일과 톤 통일) */
         .growth-detail {
             position: relative;
