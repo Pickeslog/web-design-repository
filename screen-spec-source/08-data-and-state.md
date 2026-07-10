@@ -4,6 +4,8 @@
 
 이 문서는 기준 HTML 프로토타입에 등장하는 데이터 구조와 UI 상태를 화면명세서, API 설계, React 상태 설계에 연결하기 위한 소스다.
 
+아래 "주요 엔티티/UI 상태/API"는 **서버·React 이식을 위한 이상적 데이터 모델**이다. 현재 프로토타입(`test-web-design/`)의 **실제 저장은 localStorage 기반**이며, 그 키 목록은 문서 하단 [실제 구현 데이터 저장(localStorage)](#실제-구현-데이터-저장-localstorage) 절을 참고한다(이쪽이 현재 동작하는 화면의 데이터 기준).
+
 ## 주요 엔티티
 
 ### User
@@ -147,8 +149,7 @@
 
 주의:
 
-- 기준본은 from/text/favorite 중심이다.
-- 행운편지 분기 병합 후 to/emoji가 추가된다.
+- 현재 구현은 to/from/content/emoji/favorite를 모두 지원한다(작성은 인라인 폼, 상세는 별도 페이지 `letter_detail.html`). → [../test-web-design/05-letter/letter_detail.md](../test-web-design/05-letter/letter_detail.md)
 
 ### Tag
 
@@ -312,6 +313,30 @@
 - 일정 맞추기
 - 약속 확정
 - 만남 (약속 당일 이후 인증 사진 업로드 가능)
+
+## 실제 구현 데이터 저장 (localStorage)
+
+현재 프로토타입은 서버 없이 브라우저 localStorage(일부 sessionStorage)에 저장한다. 위 엔티티 모델과 대응하되, 실제 키는 아래와 같다. 화면별 상세는 각 화면 명세서를 우선한다.
+
+| 키 | 내용 | 관련 화면 |
+|---|---|---|
+| `accessToken` | 로그인 토큰. "로그인 유지" 여부에 따라 localStorage / sessionStorage 선택. 존재 시 로그인 화면 건너뜀 | [로그인](../test-web-design/01-auth/login.md) |
+| `clov_groupsData` | 그룹(우정공간)별 `posts`·`schedules`·`notifications`·`level`·대표사진 등 핵심 데이터. 안전 래퍼(`saveGroupsData`)로 저장(용량 초과 시 예외 대신 안내) | [메인](../test-web-design/02-main/index.md) |
+| `clov_acceptedMembers` | 수락된 참여 멤버(가입 신청 수락 시 반영) | [알림](../test-web-design/07-notification/notification.md) |
+| `clov_joinRequests` | 가입 신청 목록(신청자·코드·상태 `pending/accepted/rejected`·초대 경로) | [입장](../test-web-design/03-rooms/join_room.md) · [알림](../test-web-design/07-notification/notification.md) |
+| `clov_my_status_msg` | 내 상태메시지 | [메인](../test-web-design/02-main/index.md) |
+| `clov_darkMode` | 라이트/다크 모드 | [사용자설정](../test-web-design/08-profile/profile_edit.md) |
+| `clov_appBackground` | 바탕화면 id(`default`/이미지/`custom`) | [사용자설정](../test-web-design/08-profile/profile_edit.md) |
+| `clov_appBgCustomColor` | 커스텀 배경 HEX(물감 커스텀 색상) | [사용자설정](../test-web-design/08-profile/profile_edit.md) |
+| `clov_withdrawn` | 계정 탈퇴(익명화) 플래그 — **삭제가 아니라 익명화**(기록 보존) | [사용자설정](../test-web-design/08-profile/profile_edit.md) |
+| 프로필(이름·이메일·생년월일·아바타) | 개인정보. 저장하기 눌러야 반영 | [사용자설정](../test-web-design/08-profile/profile_edit.md) |
+| 그 외 | 대시보드 배경·대표사진·커버·편지·증거카드 테마·마스코트 테마 등 | [사용자설정](../test-web-design/08-profile/profile_edit.md) |
+
+주의:
+
+- **경험치(XP)/레벨**은 `clov_groupsData`의 그룹별 `level`에 저장된다. 적립: 약속 추가(+3)·완료(+15)·게시글 작성(기본25+사진+정성)·마스코트 교감(+2, 하루 3회). 100% 초과 시 while 루프로 연속 레벨업(초과분 이월). 만렙 777.
+- **멤버 관점 기록/참여 멤버**는 서버 모델의 `Member`/`ParticipantRecord`에 대응하지만, 현재는 `clov_acceptedMembers`와 그룹 `posts` 안의 작성자 정보로 표현된다.
+- **가입 신청 거절**은 세션 메모리에만 표시(새로고침 시 대기로 복원) — 파괴적 삭제를 피하는 정책.
 
 ## React 이식 시 상태 분리 제안
 

@@ -103,8 +103,24 @@ Clov.는 친구와의 약속이 시간이 지나 추억으로 자라나는 과�
 
 ## 실제 구현 반영 현황 (2026-07 기준)
 
-위 내용은 원본 HTML 두 파일(`Clov - 추억피드.html`, `Clov - 행운 편지.html`) 기준의 초기 계획이다. 실제 팀 구현체(`test-web-design/`)에서는 아래처럼 반영·변형되었으므로, 화면 세부 스펙을 확인할 때는 각 화면 문서의 최신 내용을 우선한다.
+위 내용은 원본 HTML 두 파일(`Clov - 추억피드.html`, `Clov - 행운 편지.html`) 기준의 초기 계획이다. 실제 팀 구현체(`test-web-design/`)에서는 아래처럼 반영·변형·확장되었으므로, 화면 세부 스펙을 확인할 때는 **각 화면별 명세서(`test-web-design/*/*.md`)의 최신 내용을 우선**한다. 마스터 문서(00~09)는 "왜/구조" 중심이고, 화면별 상세는 링크로 연결한다.
 
-- 행운편지 작성/이모지/미리보기/To·From 입력은 이미 구현되었으나, 팝업 모달이 아니라 탭 내 인라인 전환 방식으로 구현되었다. 상세 보기도 모달이 아니라 별도 페이지(`letter_detail.html`) 이동이다. → [04-lucky-letter-screen.md](04-lucky-letter-screen.md)
-- 일정계획의 `Clover Growth Path`(약속 씨앗 → D-day 새싹 → 만남 클로버 → 추억 꽃)는 "포토부스 인생4컷 카드"(제안하기 → 일정 맞추기 → 약속 확정 → 만남)로 대체되었다. → [05-schedule-screen.md](05-schedule-screen.md)
-- 우정공간 대시보드의 추억 미리보기는 "빨랫줄 폴라로이드 + 카메라 필름 스트립" 구조로 구체화되었다. → [02-dashboard-screen.md](02-dashboard-screen.md)
+### 화면 구성 확장 (초기 계획 → 현재 구현)
+
+초기 계획은 단일 앱(대시보드/피드/편지/일정) 중심이었으나, 현재는 아래 화면군까지 구현되었다.
+
+- **인증**: 로그인(자동로그인·간편로그인·성공 오버레이) + 회원가입 5단계 위저드.
+  → [../test-web-design/01-auth/login.md](../test-web-design/01-auth/login.md) · [../test-web-design/01-auth/signup.md](../test-web-design/01-auth/signup.md)
+- **우정공간 진입/관리**: 방 목록(보딩패스 카드·입장 스탬프), 친구 초대(코드 복사/전달), 방 입장(코드 → 가입 신청 → 알림 수락).
+  → [../test-web-design/03-rooms/makerooms.md](../test-web-design/03-rooms/makerooms.md) · [invite.md](../test-web-design/03-rooms/invite.md) · [join_room.md](../test-web-design/03-rooms/join_room.md)
+- **알림**: 가입 신청 수락(5분 되돌리기)·거절, 친구 활동 알림, 관리진 공지. 방장이 없으므로 **참여 멤버 누구나 1명 수락으로 입장 확정**.
+  → [../test-web-design/07-notification/notification.md](../test-web-design/07-notification/notification.md)
+- **사용자설정**: 개인정보 + 테마 스와치·물감 커스텀 색상 피커·바탕화면 아이콘 스와치. **계정 탈퇴는 삭제가 아니라 익명화**(기록 보존).
+  → [../test-web-design/08-profile/profile_edit.md](../test-web-design/08-profile/profile_edit.md)
+
+### 기존 4개 화면의 변형
+
+- 행운편지 작성/이모지/미리보기/To·From 입력은 이미 구현되었으나, 팝업 모달이 아니라 탭 내 인라인 전환 방식으로 구현되었다. 상세 보기도 모달이 아니라 별도 페이지(`letter_detail.html`) 이동이다. → [04-lucky-letter-screen.md](04-lucky-letter-screen.md) · [화면별](../test-web-design/05-letter/letter_detail.md)
+- 일정계획의 `Clover Growth Path`(약속 씨앗 → D-day 새싹 → 만남 클로버 → 추억 꽃)는 "포토부스 인생4컷 카드"(제안하기 → 일정 맞추기 → 약속 확정 → 만남) + **약속 여정 영수증**으로 대체되었다. → [05-schedule-screen.md](05-schedule-screen.md)
+- 우정공간 대시보드의 추억 미리보기는 "참여자별 추억 증거 카드"(겹침 카드/빨랫줄/일기장 3종 테마) + 카메라 필름 스트립 구조로 구체화되었고, **마스코트(크로비/롭)·경험치/레벨 시스템**이 추가되었다. → [02-dashboard-screen.md](02-dashboard-screen.md) · [화면별](../test-web-design/02-main/index.md)
+- 추억피드/추억 상세는 검색·정렬·사진 모아보기·월별 섹션 + MEMORY PASSPORT 여권 상세(약속 영수증 도장 4상태)로 확장되었다. → [03-memory-feed-screen.md](03-memory-feed-screen.md) · [화면별](../test-web-design/04-feed/feed.md)

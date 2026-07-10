@@ -240,6 +240,23 @@
 - 행운편지 작성: 팝업 모달이 아닌 인라인 전환이므로 외부 클릭 닫기 대상이 아니다. 필터 전환 또는 전송 성공으로 닫힌다.
 - 행운편지 상세: 모달이 아닌 별도 페이지 이동이므로 닫기/삭제 버튼이 메인 화면으로의 페이지 이동을 트리거한다.
 
+## 현재 구현에서 확장된 모달/인터랙션
+
+초기 기준본 이후 실제 구현(`test-web-design/`)에서 추가된 공통 모달·인터랙션. 상세는 각 화면별 명세서를 우선한다.
+
+| 모달/인터랙션 | 내용 | 화면별 |
+|---|---|---|
+| **알림 모달** | 헤더 🔔(대기 배지) → 팝오버형. 관리진 공지/친구 알림/가입 신청 탭. 수락 시 **5분 되돌리기** 카운트다운, 경합 처리 | [notification.md](../test-web-design/07-notification/notification.md) |
+| **사용자설정 모달** | 좌측 레일 + 개인정보/테마 pane + 하단 액션. 테마 변경은 즉시 적용·저장 | [profile_edit.md](../test-web-design/08-profile/profile_edit.md) |
+| **참여 멤버 리스트 모달** | 겹침 아바타 카드 클릭 → 멤버·상태메시지·초대 코드 복사 | [index.md](../test-web-design/02-main/index.md) |
+| **추억 여권(MEMORY PASSPORT) 상세** | 위 "추억 상세 바텀시트"의 확장형 — 연결 약속 영수증·도장 4상태·사진 갤러리 | [memory_detail.md](../test-web-design/04-feed/memory_detail.md) |
+| **사진 모아보기 갤러리** | 추억 사진만 모아 보는 모달 | [feed.md](../test-web-design/04-feed/feed.md) |
+| **인증 사진 업로드 확인 모달** | 4컷 프레임 클릭 → 업로드 전 확인 / 이미 업로드됨 안내 / 완성 축하 / 저장공간 부족 안내 | [05-schedule-screen.md](05-schedule-screen.md) |
+| **인생4컷 극장** | "입장하기" → 넷플릭스 로비형 완성작 상영 | [index.md](../test-web-design/02-main/index.md) |
+| **새 D-day(영수증 위 작성)** | 일정 모달이 크림 종이 영수증 위 직접 작성 방식으로 구현 | [index.md](../test-web-design/02-main/index.md) |
+
+> **그룹 변경/초대코드 모달 주의**: 위 "그룹 변경 모달"·"초대코드 모달"은 프로토타입 검토용 단순 버전이다. 실제 진입/관리는 **방 목록·초대·가입 신청·알림 수락** 흐름으로 재설계되었다(방장 없이 멤버 1명 수락으로 입장). → [makerooms.md](../test-web-design/03-rooms/makerooms.md) · [join_room.md](../test-web-design/03-rooms/join_room.md)
+
 ## Claude 명세 작성 시 요청 문장 예시
 
 ```text
