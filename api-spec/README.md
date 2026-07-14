@@ -26,7 +26,8 @@
 | [01-resource-map.md](01-resource-map.md) | **전체 엔드포인트 인벤토리** — 리소스별 메서드/경로/설명/인증, 화면 명세 링크 |
 | [02-db-api-reconciliation.md](02-db-api-reconciliation.md) | **`docs-archive`의 기존 DB/API 설계와 정합** — 채택/확장/충돌·결정(D1~D6 ✅확정) ⭐먼저 읽기 |
 | [03-db-extensions.md](03-db-extensions.md) | archive DB 스키마에 반영할 **신규 테이블·컬럼 델타**(JOIN_REQUESTS·PLAN_STAGE_PHOTOS·NOTIFICATIONS·MEMORY_MESSAGES 등) |
-| [04-erd-and-ddl.md](04-erd-and-ddl.md) | **최종 통합 ERD(mermaid) + MySQL 8 DDL**(15개 테이블 `CREATE TABLE`) |
+| [04-erd-and-ddl.md](04-erd-and-ddl.md) | ⚠️ (구버전, 15테이블) — **[05](05-db-unified-final.md)로 대체됨** |
+| [05-db-unified-final.md](05-db-unified-final.md) | ⭐**구현 기준** — 두 설계 갈래 통일한 최종 ERD + MySQL 8 DDL(**18개 테이블**) |
 | `openapi.yaml` | (다음 단계) 요청/응답 스키마·에러·예시가 담긴 기계용 OpenAPI 3.1 |
 
 > ⚠️ **중요**: `docs-archive/`에 **기획안 기반 DB/API 설계(스택·MySQL 스키마 확정)**가 이미 있다. 이 폴더의 리소스 맵은 프로토타입 역산본이라 네이밍(`spaces`↔`rooms`)·입장 흐름 등에서 그것과 어긋나므로, **[02-db-api-reconciliation.md](02-db-api-reconciliation.md)의 정합 결과를 기준**으로 확정한다.
