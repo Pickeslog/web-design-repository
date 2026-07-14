@@ -14,8 +14,10 @@
 | 2 | [`팀-시작가이드.md`](팀-시작가이드.md) | **오늘 뭘 하나** — clone·작업 사이클·main 보호 |
 | 3 | [`API-CONTRACT.md`](API-CONTRACT.md) | ⭐**API 계약 단일 기준(SSOT)** — 코드 짜기 전 필독 |
 | 4 | [`../api-spec/05-db-unified-final.md`](../api-spec/05-db-unified-final.md) | **DB 스키마**(18테이블 DDL) |
-| 5 | [`이슈백로그.md`](이슈백로그.md) | **무슨 이슈를 누가** — 25개 백로그 |
-| 6 | [`React-이관가이드.md`](React-이관가이드.md) | 프론트 이관 시 — 프로토타입 → React |
+| 5 | [`이벤트-기능정의서.md`](이벤트-기능정의서.md) | **이벤트별 동작** — 트리거→검증→API→결과→예외 (화면↔API 다리) |
+| 6 | [`이슈백로그.md`](이슈백로그.md) | **무슨 이슈를 누가** — 25개 백로그 |
+| 7 | [`React-이관가이드.md`](React-이관가이드.md) | 프론트 이관 **방법론** — 프로토타입 → React |
+| 8 | [`이관-매핑.md`](이관-매핑.md) | 프론트 이관 **분리 지도** — 어느 파일이 어디로 |
 
 > 화면 명세(동작 기준)는 `../test-web-design/*/*.md`, 컴포넌트는 `../screen-spec-source/09-component-inventory.md`.
 
