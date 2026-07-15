@@ -4,156 +4,13 @@
   const PREFIXES = ['dt', 'mb'];
 
   // State
-  const v5state = { level: 3, time: 'day', season: 'summer', event: 'none', friendName: '민지' };
+  const v5state = { level: 3, season: 'summer', event: 'none', friendName: '민지' };
   window.v5state = v5state; // 전역 스코프(window)에 노출시켜 마스코트(croby-mascot.js)와 연동
 
   // 레벨-이름/클로버 밀도 매핑은 이제 최대 777레벨까지 지원하는 clovLevelInfo()/
   // clovLevelTierIndex()(desktop.js 상단, 우정 레벨 시스템 섹션)를 그대로 재사용한다.
 
-  const GROUND_COLORS = {
-    barren: { top:'#9a7a50', bot:'#664c28' },
-    spring: { top:'#7dd97e', bot:'#4a9e5c' },
-    summer: { top:'#28ae62', bot:'#186e3e' },
-    fall:   { top:'#dfc040', bot:'#b89020' },
-    winter: { top:'#c4d8d0', bot:'#96b4aa' },
-  };
-  const MTN_COLORS = {
-    spring: { far:'rgba(138,195,138,0.90)', near:'rgba(86,158,90,0.97)' },
-    summer: { far:'rgba(68,145,98,0.90)',   near:'rgba(38,115,68,0.97)' },
-    fall:   { far:'rgba(156,118,56,0.90)',  near:'rgba(122,86,36,0.97)' },
-    winter: { far:'rgba(190,210,220,0.90)', near:'rgba(148,170,184,0.97)' },
-  };
-  const CEL = {
-    morning: { w:38, h:38, top:'64%', left:'74%', bg:'radial-gradient(circle at 38% 38%, #fffde2 0%, #ffd95c 55%, #ffbe38 100%)', shadow:'0 0 28px 10px rgba(255,218,78,0.55)' },
-    day:     { w:48, h:48, top:'15%', left:'78%', bg:'radial-gradient(circle at 38% 38%, #fffae0 0%, #ffcc60 55%, #ffb038 100%)', shadow:'0 0 42px 15px rgba(255,200,68,0.45)' },
-    evening: { w:46, h:46, top:'60%', left:'13%', bg:'radial-gradient(circle at 38% 38%, #ffe8d0 0%, #ff8c28 55%, #ff5010 100%)', shadow:'0 0 38px 12px rgba(255,100,18,0.52)' },
-    night:   { w:36, h:36, top:'13%', left:'80%', bg:'radial-gradient(circle at 35% 38%, #ffffff 0%, #dce8f4 55%, #b0c8e0 100%)', shadow:'0 0 22px 7px rgba(178,210,240,0.35)',
-               craters: [{w:'28%',h:'28%',top:'18%',left:'50%'},{w:'18%',h:'18%',top:'50%',left:'22%'},{w:'12%',h:'12%',top:'36%',left:'65%'}] },
-  };
-
-  function hexRgb(h) { return [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)]; }
-  function lerpColor(h1,h2,t) {
-    const [r1,g1,b1]=hexRgb(h1), [r2,g2,b2]=hexRgb(h2);
-    return `rgb(${Math.round(r1+(r2-r1)*t)},${Math.round(g1+(g2-g1)*t)},${Math.round(b1+(b2-b1)*t)})`;
-  }
-
-  function v5updateGround(p) {
-    const el = document.getElementById(p+'-v5ground'); if(!el) return;
-    const tierIdx = clovLevelTierIndex(v5state.level);
-    const grp = (typeof groupsData !== 'undefined' && groupsData[activeGroup]) || {};
-    const withinTier = v5state.level >= CLOV_MAX_LEVEL ? 100 : (typeof grp.levelProgress === 'number' ? grp.levelProgress : 0);
-    const t = (tierIdx + withinTier / 100) / 6, B=GROUND_COLORS.barren, S=GROUND_COLORS[v5state.season];
-    el.style.background = `linear-gradient(180deg, ${lerpColor(B.top,S.top,t)} 0%, ${lerpColor(B.bot,S.bot,t)} 100%)`;
-  }
-
-  function v5updateMountains(p) {
-    const m=MTN_COLORS[v5state.season];
-    const f=document.getElementById(p+'-v5mtnFar'), n=document.getElementById(p+'-v5mtnNear');
-    if(f) f.setAttribute('fill',m.far);
-    if(n) n.setAttribute('fill',m.near);
-  }
-
-  function v5buildStars(p) {
-    const layer=document.getElementById(p+'-v5stars'); if(!layer) return;
-    layer.innerHTML='';
-    for(let i=0;i<58;i++){
-      const s=document.createElement('div'); s.className='star';
-      const sz=Math.random()*2+0.8;
-      s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*68}%;--d:${2.2+Math.random()*3.5}s;--dl:${-Math.random()*6}s;`;
-      layer.appendChild(s);
-    }
-  }
-
-  function v5updateCelestial(p) {
-    const el=document.getElementById(p+'-v5cel'); if(!el) return;
-    const c=CEL[v5state.time];
-    el.style.cssText=`width:${c.w}px;height:${c.h}px;top:${c.top};left:${c.left};transform:translate(-50%,-50%);background:${c.bg};box-shadow:${c.shadow};`;
-    el.innerHTML='';
-    if(c.craters) c.craters.forEach(cr=>{
-      const d=document.createElement('div'); d.className='crater';
-      d.style.cssText=`width:${cr.w};height:${cr.h};top:${cr.top};left:${cr.left};transform:translate(-50%,-50%);`;
-      el.appendChild(d);
-    });
-  }
-
-  function makeSVGClover(fourLeaf=false) {
-    const svg=document.createElementNS(NS,'svg'); svg.setAttribute('viewBox','0 0 40 52'); svg.setAttribute('overflow','visible'); svg.classList.add('clover-svg');
-    const stem=document.createElementNS(NS,'path'); stem.setAttribute('d','M20 26 Q18 38 20 50'); stem.setAttribute('stroke-width','2.2'); stem.setAttribute('fill','none'); stem.setAttribute('stroke-linecap','round'); stem.classList.add('clov-stem'); svg.appendChild(stem);
-    const g=document.createElementNS(NS,'g'); g.setAttribute('transform','translate(20,22)');
-    const leafD='M 0,0 L -6,-6 C -15,-15 -12,-25 -4,-23 C -1.5,-22 0,-17 0,-17 C 0,-17 1.5,-22 4,-23 C 12,-25 15,-15 6,-6 Z';
-    const chevronD='M -9,-14 C -4,-18 -1,-12 0,-15 C 1,-12 4,-18 9,-14';
-    [45,135,225,315].forEach((angle,i)=>{
-      const leaf=document.createElementNS(NS,'path'); leaf.setAttribute('d',leafD); leaf.setAttribute('transform',`rotate(${angle})`); leaf.classList.add('clov-leaf'); if(i%2===1)leaf.classList.add('shade'); g.appendChild(leaf);
-      const ch=document.createElementNS(NS,'path'); ch.setAttribute('d',chevronD); ch.setAttribute('transform',`rotate(${angle})`); ch.setAttribute('stroke-width','1.5'); ch.setAttribute('stroke-linecap','round'); ch.setAttribute('fill','none'); ch.classList.add('clov-vein'); g.appendChild(ch);
-      const mv=document.createElementNS(NS,'path'); mv.setAttribute('d','M 0,0 Q 0.5,-8 0,-14'); mv.setAttribute('transform',`rotate(${angle})`); mv.setAttribute('stroke-width','0.6'); mv.setAttribute('stroke-linecap','round'); mv.setAttribute('fill','none'); mv.setAttribute('stroke-opacity','0.45'); mv.classList.add('clov-vein'); g.appendChild(mv);
-    });
-    svg.appendChild(g); return svg;
-  }
-
-  function v5buildClovers(p) {
-    const field=document.getElementById(p+'-v5clovers'); if(!field) return;
-    field.innerHTML='';
-    // 최대 777레벨을 감당하려고 레벨 그대로가 아니라 7단계 티어 인덱스(0~6) 기준으로 밀도를 정한다.
-    const tierIdx = clovLevelTierIndex(v5state.level);
-    const cfg = { clovers: 6 + tierIdx * 5, fourLeaf: Math.max(0, Math.round((tierIdx - 1) * 1.6)) };
-
-    // 모바일은 클로버 수 절반으로 줄임
-    const isMobile = (p === 'mb');
-    const count = isMobile ? Math.ceil(cfg.clovers * 0.5) : cfg.clovers;
-    const fourLeaf = isMobile ? Math.ceil(cfg.fourLeaf * 0.5) : cfg.fourLeaf;
-
-    // 균등 배치: x축을 슬롯으로 나눠 각 슬롯 안에서 jitter (랜덤성 적당히 추가)
-    const DEPTH_BANDS = 3; // 원경/중경/근경
-    const perBand = Math.ceil(count / DEPTH_BANDS);
-    const positions = [];
-
-    for(let band = 0; band < DEPTH_BANDS; band++){
-      const bandCount = Math.min(perBand, count - positions.length);
-      if(bandCount <= 0) break;
-      // band 0 = 원경(깊음), band 2 = 근경(가까움)
-      const depthMin = band / DEPTH_BANDS;
-      const depthMax = (band + 1) / DEPTH_BANDS;
-
-      // x를 슬롯으로 균등 분할
-      const slotW = 94 / bandCount;
-      for(let i = 0; i < bandCount; i++){
-        // 20% 확률로 인접 band 깊이로 튀어 더 자연스럽게
-        let dMin = depthMin, dMax = depthMax;
-        if(Math.random() < 0.2) {
-          const jump = Math.random() < 0.5 ? -1 : 1;
-          dMin = Math.max(0, depthMin + jump * (1/DEPTH_BANDS) * 0.5);
-          dMax = Math.min(1, depthMax + jump * (1/DEPTH_BANDS) * 0.5);
-        }
-        const depth = dMin + Math.random() * (dMax - dMin);
-        const maxSz = tierIdx === 6 ? 40 : 34;
-        const sz = maxSz - depth * (maxSz - 16);
-        // x: 슬롯 중앙 + ±45% 지터 (랜덤성 강화, 뭉침은 방지)
-        const slotCenter = 3 + slotW * (i + 0.5);
-        const jitter = (Math.random() - 0.5) * slotW * 0.9;
-        const x = Math.max(2, Math.min(98, slotCenter + jitter));
-        positions.push({
-          x, depth,
-          bottom: -8 + depth * 48,
-          size: sz,
-          rot: (Math.random() - 0.5) * 42,  // 회전 범위 살짝 더 넓게
-          op: 1 - depth * 0.42,
-        });
-      }
-    }
-
-    // 깊이 내림차순 정렬 (원경 먼저 그려 근경이 위에 겹치게)
-    positions.sort((a,b) => b.depth - a.depth).forEach((pos, idx) => {
-      const wrap = document.createElement('div'); wrap.className = 'clover-wrap';
-      const h = pos.size * (44/32);
-      wrap.style.cssText = `left:${pos.x}%;bottom:${pos.bottom}px;width:${pos.size}px;height:${h}px;transform:translateX(-50%) rotate(${pos.rot}deg);opacity:${pos.op};z-index:${200 - Math.round(pos.bottom)};`;
-      const anim = document.createElement('div'); anim.className = 'clover-anim';
-      const dur = 2.8 + Math.random() * 2.5, delay = -(Math.random() * dur);
-      anim.style.setProperty('--sw', dur+'s'); anim.style.setProperty('--sd', delay+'s');
-      const svg = makeSVGClover(idx < fourLeaf);
-      svg.style.cssText = 'width:100%;height:100%;display:block;';
-      anim.appendChild(svg); wrap.appendChild(anim); field.appendChild(wrap);
-    });
-  }
+  // 미사용 절차적 배경색 및 렌더링(산, 하늘, 클로버밭) 함수가 제거되었습니다.
 
   function v5buildParticles(p) {
     const c=document.getElementById(p+'-v5particles'); if(!c) return; c.innerHTML='';
@@ -253,17 +110,15 @@
   function v5render() {
     PREFIXES.forEach(p=>{
       const scene=document.getElementById(p+'-v5scene'); if(!scene) return;
-      scene.dataset.time=v5state.time; scene.dataset.season=v5state.season;
+      scene.dataset.season=v5state.season;
       scene.dataset.level=v5state.level; scene.dataset.event=v5state.event;
-      v5updateGround(p); v5updateMountains(p); v5updateCelestial(p);
-      v5buildClovers(p); v5buildParticles(p); v5buildBalloons(p); v5updateHUD(p);
+      v5buildParticles(p); v5buildBalloons(p); v5updateHUD(p);
       v5ApplyWallpaperImage(p);
     });
   }
 
   function v5detectNow() {
-    const h=new Date().getHours(), mo=new Date().getMonth()+1;
-    v5state.time=h>=5&&h<10?'morning':h>=10&&h<17?'day':h>=17&&h<20?'evening':'night';
+    const mo=new Date().getMonth()+1;
     v5state.season=mo>=3&&mo<=5?'spring':mo>=6&&mo<=8?'summer':mo>=9&&mo<=11?'fall':'winter';
     v5state.event='none';
   }
@@ -429,15 +284,7 @@
           <button class="tp-btn" data-v5ctrl="event" data-v5val="friend_birthday">친구 생일 🎉</button>
         </div>
       </div>
-      <div class="tp-row">
-        <span class="tp-label">⏰ 시간대</span>
-        <div class="tp-btns">
-          <button class="tp-btn" data-v5ctrl="time" data-v5val="morning">아침</button>
-          <button class="tp-btn on" data-v5ctrl="time" data-v5val="day">낮</button>
-          <button class="tp-btn" data-v5ctrl="time" data-v5val="evening">저녁</button>
-          <button class="tp-btn" data-v5ctrl="time" data-v5val="night">밤</button>
-        </div>
-      </div>
+
       <div class="tp-row">
         <span class="tp-label">🌿 계절</span>
         <div class="tp-btns">
@@ -645,8 +492,7 @@
   // 패널이 위에서 동적 생성됐으므로 바로 바인딩 가능
   v5bindButtons(); v5syncButtons();
 
-  // 초기화 (별 미리 생성)
-  PREFIXES.forEach(p=>v5buildStars(p));
+  // 초기화
   v5detectNow(); v5render();
   PREFIXES.forEach(p=>v5PositionPhotoRec(p));
   window.addEventListener('resize', function(){ PREFIXES.forEach(p=>v5PositionPhotoRec(p)); });

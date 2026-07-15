@@ -386,49 +386,6 @@
             --sun-glow-size: 66px;
         }
 
-        /* --- 시간대별 테마 (Time of Day) --- */
-        .dashboard-card[data-time="morning"] {
-            --sky-top: #a6bbed;
-            --sky-bottom: #fff0a8;
-            --haze-color: 255, 240, 168;
-            --celestial-color: radial-gradient(circle at 35% 35%, #ffffff 0%, #fff9e6 55%, #ffe680 100%);
-            --celestial-glow: rgba(255, 240, 168, 0.8);
-        }
-
-        .dashboard-card[data-time="day"] {
-            --sky-top: #a9e3f7;
-            --sky-bottom: #eef9f1;
-            --haze-color: 255, 255, 255;
-            --celestial-color: radial-gradient(circle at 35% 35%, #fff6d8 0%, #ffd76a 55%, #ffb74d 100%);
-            --celestial-glow: rgba(255, 200, 90, 0.65);
-        }
-
-        .dashboard-card[data-time="evening"] {
-            --sky-top: #e86a58;
-            --sky-bottom: #ffc273;
-            --haze-color: 255, 194, 115;
-            --celestial-color: radial-gradient(circle at 35% 35%, #ffebcd 0%, #ff8c00 55%, #ff4500 100%);
-            --celestial-glow: rgba(255, 140, 0, 0.65);
-        }
-
-        .dashboard-card[data-time="night"] {
-            --sky-top: #050a18;
-            --sky-bottom: #132233;
-            --haze-color: 150, 175, 195;
-            --celestial-color: radial-gradient(circle at 35% 35%, #ffffff 0%, #dce6f2 55%, #aebdd1 100%);
-            --celestial-glow: rgba(180, 205, 235, 0.55);
-        }
-
-        .dashboard-card[data-time="night"] .d-day-label {
-            color: rgba(255, 255, 255, 0.85);
-            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
-        }
-
-        .dashboard-card[data-time="night"] .d-day-count {
-            color: #ffffff;
-            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.8);
-        }
-
         /* 레벨업 순간 카드 전체에 퍼지는 충격파 펄스 */
         .dashboard-card.levelup-pulse {
             animation: dashboardLevelPulse 0.6s ease-out;
