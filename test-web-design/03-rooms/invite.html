@@ -1,9 +1,15 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clov - 그룹 초대</title>
+    <!-- 로그인 체크 -->
+    <script>
+      if (!localStorage.getItem('accessToken') && !sessionStorage.getItem('accessToken')) {
+        window.location.href = '../01-auth/login.html';
+      }
+    </script>
     <style>
                 :root {
             --bg-color: #cbdad2;

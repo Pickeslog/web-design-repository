@@ -1,7 +1,14 @@
-﻿<!DOCTYPE html><html lang="ko"><head>
+<!DOCTYPE html><html lang="ko"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clov. - 디자인 미리보기 &amp; 프로토타입</title>
+    <title>Clov. 추억피드</title>
+    <!-- 로그인 체크 -->
+    <script>
+      if (!localStorage.getItem('accessToken') && !sessionStorage.getItem('accessToken')) {
+        window.location.href = '../01-auth/login.html';
+      }
+    </script>
+    <link href="https://cdn.jsdelivr.net/gh/sunn-us/SUIT/fonts/variable/woff2/SUIT-Variable.css" rel="stylesheet" />
     <link rel="icon" type="image/png" href="../assets/ai-style/clov_logo_half_leaf_cartoon_transparent.png">
     <link rel="stylesheet" href="styles/base.css?v=4">
     <link rel="stylesheet" href="styles/space.css?v=24">
@@ -13,7 +20,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Gothic+A1:wght@400;500;700;800;900&display=swap" rel="stylesheet">
 <script src="components/clov-header.js?v=12"></script>
 <script src="components/clov-modal.js?v=1"></script>
-<script src="components/clov-profile-modal.js?v=22"></script>
+<script src="components/clov-profile-modal.js?v=23"></script>
 <script src="pages/space-page.js?v=1"></script>
 <script src="pages/feed-page.js?v=3"></script>
 <script src="pages/letter-page.js?v=1"></script>
@@ -761,7 +768,7 @@ body.dark-mode .wm-submit { color: #0a0f0c; }
 
       <!-- 사진 (여러 장 가능) -->
       <div class="wm-field">
-        <span class="wm-label">사진 (선택, 최대 30장)</span>
+        <span class="wm-label">사진 (선택, 최대 15장)</span>
         <div class="wm-photo-strip" id="wm-photo-strip"></div>
         <input type="file" id="wm-img-input" accept="image/*" multiple style="display:none"
                onchange="previewWriteImg(this)">
@@ -814,7 +821,7 @@ body.dark-mode .wm-submit { color: #0a0f0c; }
 <script>
 (function() {
   let _wmPhotos = [];
-  const WM_PHOTO_LIMIT = 30;
+  const WM_PHOTO_LIMIT = 15;
 
   // 약속 연결 상태: 선택된 scheduleId(null=자유 기록) + 목록/새 약속 폼 열림 여부
   let _wmScheduleId = null;
@@ -1084,21 +1091,46 @@ body.dark-mode .wm-submit { color: #0a0f0c; }
     if (typeof groupsData !== 'undefined' && groupsData[activeGroup]) {
       groupsData[activeGroup].posts.unshift(newPost);
       activeEvidenceIndexes[activeGroup] = 0;
-      saveGroupsData();
-      renderFeeds();
 
-      // 추억 기록 시 경험치 지급 (kimgyubi XP 이식). 이 경로는 ClovData.addPost를 거치지 않으므로
-      // 여기서 직접 grantXP('post')를 호출한다. XP 계산식은 addPost와 동일(기본+사진+정성 보너스).
-      if (typeof grantXP === 'function') {
-        var postXp = (typeof CLOV_XP_POST_BASE !== 'undefined') ? CLOV_XP_POST_BASE : 25;
-        var perPhoto = (typeof CLOV_XP_POST_PER_PHOTO !== 'undefined') ? CLOV_XP_POST_PER_PHOTO : 1;
-        var maxPhoto = (typeof CLOV_XP_POST_PHOTO_MAX !== 'undefined') ? CLOV_XP_POST_PHOTO_MAX : 10;
-        postXp += Math.min((newPost.photos ? newPost.photos.length : 0) * perPhoto, maxPhoto);
-        var textLen = (newPost.text || '').replace(/<[^>]*>/g, '').length;
-        if (textLen >= 100) postXp += (typeof CLOV_XP_POST_TEXT_100 !== 'undefined') ? CLOV_XP_POST_TEXT_100 : 10;
-        else if (textLen >= 50) postXp += (typeof CLOV_XP_POST_TEXT_50 !== 'undefined') ? CLOV_XP_POST_TEXT_50 : 5;
-        grantXP(postXp, 'post');
-      }
+      // 용량 초과 시 토스트 없이 조용히 저장을 시도하고 성공 여부만 반환 (유령글 방지)
+      var trySaveGroups = function() {
+        try { localStorage.setItem('clov_groupsData', JSON.stringify(groupsData)); return true; }
+        catch (e) { return false; }
+      };
+
+      // 저장 성공 시 처리 (피드 갱신 + 경험치 지급 + 모달 닫기)
+      var finishWriteSaved = function() {
+        renderFeeds();
+        // 추억 기록 시 경험치 지급 (kimgyubi XP 이식). 이 경로는 ClovData.addPost를 거치지 않으므로
+        // 여기서 직접 grantXP('post')를 호출한다. XP 계산식은 addPost와 동일(기본+사진+정성 보너스).
+        if (typeof grantXP === 'function') {
+          var postXp = (typeof CLOV_XP_POST_BASE !== 'undefined') ? CLOV_XP_POST_BASE : 25;
+          var perPhoto = (typeof CLOV_XP_POST_PER_PHOTO !== 'undefined') ? CLOV_XP_POST_PER_PHOTO : 1;
+          var maxPhoto = (typeof CLOV_XP_POST_PHOTO_MAX !== 'undefined') ? CLOV_XP_POST_PHOTO_MAX : 10;
+          postXp += Math.min((newPost.photos ? newPost.photos.length : 0) * perPhoto, maxPhoto);
+          var textLen = (newPost.text || '').replace(/<[^>]*>/g, '').length;
+          if (textLen >= 100) postXp += (typeof CLOV_XP_POST_TEXT_100 !== 'undefined') ? CLOV_XP_POST_TEXT_100 : 10;
+          else if (textLen >= 50) postXp += (typeof CLOV_XP_POST_TEXT_50 !== 'undefined') ? CLOV_XP_POST_TEXT_50 : 5;
+          grantXP(postXp, 'post');
+        }
+        window.closeWriteModal();
+      };
+
+      if (trySaveGroups()) { finishWriteSaved(); return; }
+
+      // 1차 저장 실패(용량 초과) 시 기존에 저장된 사진들을 재압축해 공간을 회수하고 1회 재시도
+      var recover = (typeof compactStoredPhotos === 'function') ? compactStoredPhotos() : Promise.resolve();
+      recover.then(function() {
+        if (trySaveGroups()) { finishWriteSaved(); return; }
+        // 재압축해도 공간 부족 시 방금 추가한 글 롤백(유령 글 방지) + 안내 후 모달 닫기
+        groupsData[activeGroup].posts.shift();
+        renderFeeds();
+        if (typeof clovAlert === 'function') {
+          clovAlert('저장 공간이 부족해 기록을 저장하지 못했어요.\n기존 사진을 정리했는데도 공간이 부족해요. 오래된 추억이나 사진을 지운 후 다시 시도해 주세요.', { icon: '💾', type: 'warn' });
+        }
+        window.closeWriteModal();
+      });
+      return;
     }
     window.closeWriteModal();
   };

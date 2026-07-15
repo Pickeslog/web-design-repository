@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Clov. - 우정공간</title>
+<!-- 로그인 체크 -->
+<script>
+  if (!localStorage.getItem('accessToken') && !sessionStorage.getItem('accessToken')) {
+    window.location.href = '../01-auth/login.html';
+  }
+</script>
 <link rel="icon" type="image/png" href="../assets/ai-style/clov_logo_half_leaf_cartoon_transparent.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css">
 <script src="../02-main/components/clov-header.js?v=12"></script>

@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clov - 알림</title>
+    <!-- 로그인 체크 -->
+    <script>
+      if (!localStorage.getItem('accessToken') && !sessionStorage.getItem('accessToken')) {
+        window.location.href = '../01-auth/login.html';
+      }
+    </script>
     <style>
         :root {
             --bg-color: #cbdad2;
@@ -352,6 +358,15 @@
     }
 
     function acceptPageJoinRequest(id, name) {
+        let members = [];
+        try { members = JSON.parse(localStorage.getItem('clov_acceptedMembers')) || []; } catch(e){}
+        if (members.length >= 8) {
+            if (typeof clovAlert === 'function') {
+                clovAlert(`우정공간의 정원(8명)이 가득 차서 더 이상 수락할 수 없습니다.`, { icon: '🚫', type: 'error' });
+            } else { alert("우정공간의 정원이 가득 차서 수락할 수 없습니다."); }
+            return;
+        }
+
         let list = [];
         try { list = JSON.parse(localStorage.getItem('clov_joinRequests')) || []; } catch(e){}
         list.forEach(r => { if (r.id === id) r.status = 'accepted'; });

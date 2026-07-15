@@ -1,0 +1,1338 @@
+openapi: 3.1.0
+info:
+  title: Clov API
+  version: 1.0.0
+  description: |
+    Clov. — 약속이 추억으로 자라는 친구 전용 기록공간.
+    화면 프로토타입(test-web-design/)·화면 명세서·DB 설계(04-erd-and-ddl.md)를 근거로 한
+    프로덕션 백/프론트 계약. 규약/보안은 00-conventions-and-security.md, 엔드포인트 인벤토리는
+    01-resource-map.md, 스키마 근거는 04-erd-and-ddl.md.
+
+    설계 불변식
+    - 역할/권한 없음(owner/host/role 금지). 인가는 "이 공간의 ACTIVE 멤버인가"만.
+    - 방장 없는 입장: 가입 신청 → 멤버 누구나 1명 수락. 중복 수락 409, 수락 후 5분 되돌리기.
+    - 정원 최대 8명(ACTIVE 기준). 초과 시 409 ROOM_CAPACITY_EXCEEDED.
+    - 기록 보존: 탈퇴=익명화, 삭제=소프트. 인생4컷 인증사진 업로드 후 잠금(422).
+    - XP/레벨/D-day/4컷 단계는 서버 계산(클라 값 신뢰 금지).
+servers:
+  - url: https://api.clov.app/api/v1
+    description: production
+  - url: http://localhost:8080/api/v1
+    description: local
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Auth
+    description: 인증·계정 (login.md · signup.md)
+  - name: Users
+    description: 내 프로필·설정 (profile_edit.md)
+  - name: Rooms
+    description: 우정공간 (makerooms.md · index.md)
+  - name: Invites
+    description: 초대 코드 (invite.md)
+  - name: JoinRequests
+    description: 가입 신청·승인 (join_room.md · notification.md)
+  - name: Plans
+    description: 약속·인생4컷 (index.md 일정계획)
+  - name: Memories
+    description: 추억피드 (feed.md · memory_detail.md)
+  - name: Letters
+    description: 행운편지 (letter_detail.md)
+  - name: Notifications
+    description: 알림 (notification.md)
+  - name: Media
+    description: 파일 업로드
+
+paths:
+  # ============================ Auth ============================
+  /auth/signup:
+    post:
+      tags: [Auth]
+      summary: 이메일 회원가입
+      description: 5단계 위저드는 프론트 UX일 뿐, 서버는 최종 1건으로 받는다.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SignupRequest' }
+      responses:
+        '201':
+          description: 생성됨
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '409':
+          description: 이메일 중복
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: 이메일+비밀번호 로그인
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+      responses:
+        '200':
+          description: 토큰 발급
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TokenResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: refresh 토큰으로 access 재발급
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken: { type: string }
+              required: [refreshToken]
+      responses:
+        '200':
+          description: 재발급
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TokenResponse' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: 로그아웃(토큰 무효화)
+      responses:
+        '204': { description: 완료 }
+  /auth/password/change:
+    post:
+      tags: [Auth]
+      summary: 비밀번호 변경
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                currentPassword: { type: string, format: password }
+                newPassword: { type: string, format: password, minLength: 8, description: 8~20자, 영문/숫자/특수 2종 이상 }
+              required: [currentPassword, newPassword]
+      responses:
+        '204': { description: 완료 }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+  /auth/email/available:
+    post:
+      tags: [Auth]
+      summary: 이메일 중복 확인
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: { email: { type: string, format: email } }
+              required: [email]
+      responses:
+        '200':
+          description: 결과
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: { available: { type: boolean } }
+
+  # ============================ Users ============================
+  /users/me:
+    get:
+      tags: [Users]
+      summary: 내 프로필
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '401': { $ref: '#/components/responses/Unauthenticated' }
+    patch:
+      tags: [Users]
+      summary: 닉네임·이메일·생일 수정
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nickname: { type: string, maxLength: 16 }
+                email: { type: string, format: email }
+                birthDate: { type: string, format: date, nullable: true }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+    delete:
+      tags: [Users]
+      summary: 계정 탈퇴 = 익명화(soft, 기록 보존)
+      description: 하드 삭제 아님. 표시명을 "언노운"으로 치환, 작성 기록 유지, 토큰 무효화.
+      responses:
+        '200':
+          description: 익명화 완료
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: { anonymized: { type: boolean } }
+  /users/me/avatar:
+    put:
+      tags: [Users]
+      summary: 프로필 사진 연결
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: { mediaId: { type: string } }
+              required: [mediaId]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+  /users/me/status-message:
+    patch:
+      tags: [Users]
+      summary: 내 상태메시지
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: { statusMessage: { type: string, maxLength: 100 } }
+      responses:
+        '200': { description: OK }
+  /users/me/rooms:
+    get:
+      tags: [Users]
+      summary: 내가 ACTIVE로 속한 우정공간 목록(정렬순서 포함)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Room' }
+  /users/me/rooms/order:
+    patch:
+      tags: [Users]
+      summary: 방 목록 정렬 순서(드래그, 사용자별)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                order: { type: array, items: { type: string } }
+      responses:
+        '204': { description: 완료 }
+
+  # ============================ Rooms ============================
+  /rooms:
+    post:
+      tags: [Rooms]
+      summary: 우정공간 생성(생성자=첫 멤버, 권한 동일)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RoomCreateRequest' }
+      responses:
+        '201':
+          description: 생성됨
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Room' }
+  /rooms/{roomId}:
+    parameters: [ { $ref: '#/components/parameters/roomId' } ]
+    get:
+      tags: [Rooms]
+      summary: 공간 상세(대시보드)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Room' }
+        '403': { $ref: '#/components/responses/NotMember' }
+    patch:
+      tags: [Rooms]
+      summary: 이름·커버 제목·테마색·소개 수정(멤버 누구나) — 변경 시 전원 알림
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string, minLength: 2, maxLength: 20 }
+                coverTitle: { type: string, maxLength: 100 }
+                themeColor: { type: string }
+                intro: { type: string, maxLength: 60 }
+                vehicle: { type: string, enum: [plane, bus, ship, train] }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Room' }
+        '403': { $ref: '#/components/responses/NotMember' }
+  /rooms/{roomId}/cover-photo:
+    parameters: [ { $ref: '#/components/parameters/roomId' } ]
+    put:
+      tags: [Rooms]
+      summary: 대표 사진 연결
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: { mediaId: { type: string } }
+              required: [mediaId]
+      responses:
+        '200': { description: OK }
+  /rooms/{roomId}/members:
+    parameters: [ { $ref: '#/components/parameters/roomId' } ]
+    get:
+      tags: [Rooms]
+      summary: 멤버 목록(ACTIVE/LEFT 포함)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/RoomMember' }
+  /rooms/{roomId}/members/me:
+    parameters: [ { $ref: '#/components/parameters/roomId' } ]
+    delete:
+      tags: [Rooms]
+      summary: 공간 나가기(row 삭제 X, status=LEFT)
+      responses:
+        '204': { description: 완료 }
+  /rooms/{roomId}/level:
+    parameters: [ { $ref: '#/components/parameters/roomId' } ]
+    get:
+      tags: [Rooms]
+      summary: 우정 레벨·exp·다음 레벨까지(서버 계산)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LevelInfo' }
+  /rooms/{roomId}/exp-logs:
+    parameters: [ { $ref: '#/components/parameters/roomId' } ]
+    get:
+      tags: [Rooms]
+      summary: 경험치 변화 이력
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ExpLog' }
+  /rooms/{roomId}/mascot/interact:
+    parameters: [ { $ref: '#/components/parameters/roomId' } ]
+    post:
+      tags: [Rooms]
+      summary: 마스코트 교감(EXP +2, 하루 3회 상한)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  xpGained: { type: integer, example: 2 }
+                  message: { type: string }
+                  dailyRemaining: { type: integer }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  # ============================ Invites ============================
+  /rooms/{roomId}/invites:
+    parameters: [ { $ref: '#/components/parameters/roomId' } ]
+    post:
+      tags: [Invites]
+      summary: 초대 코드 생성(created_by=이력)
+      responses:
+        '201':
+          description: 생성됨
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Invite' }
+    get:
+      tags: [Invites]
+      summary: 발급된 초대 코드 목록
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Invite' }
+  /invites/{inviteId}:
+    parameters:
+      - { name: inviteId, in: path, required: true, schema: { type: string } }
+    delete:
+      tags: [Invites]
+      summary: 초대 코드 취소(status=CANCELED, 만든 본인만)
+      responses:
+        '204': { description: 완료 }
+        '403': { $ref: '#/components/responses/NotWriter' }
+
+  # ============================ Join Requests ============================
+  /join-requests:
+    post:
+      tags: [JoinRequests]
+      summary: 코드로 가입 신청 → PENDING
+      description: 아직 비멤버(로그인만). 정원 8명 초과 시 409. 성공 시 멤버 1명 수락 대기.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                inviteCode: { type: string, example: CLOV-12 }
+                invitePath: { type: string, enum: [INVITED, DIRECT], default: DIRECT }
+              required: [inviteCode]
+      responses:
+        '202':
+          description: 신청 접수(대기)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/JoinRequest' }
+        '400':
+          description: 코드 형식 오류(5자 미만 등)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '409': { $ref: '#/components/responses/RoomCapacityExceeded' }
+  /rooms/{roomId}/join-requests:
+    parameters: [ { $ref: '#/components/parameters/roomId' } ]
+    get:
+      tags: [JoinRequests]
+      summary: 대기 신청 목록(알림 배지 수)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/JoinRequest' }
+  /rooms/{roomId}/join-requests/{requestId}/accept:
+    parameters:
+      - { $ref: '#/components/parameters/roomId' }
+      - { $ref: '#/components/parameters/requestId' }
+    post:
+      tags: [JoinRequests]
+      summary: 수락(멤버 누구나 1명) → 멤버 확정, 5분 되돌리기 창 시작
+      responses:
+        '200':
+          description: 수락됨
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  member: { $ref: '#/components/schemas/RoomMember' }
+                  undoUntil: { type: string, format: date-time, description: 이 시각까지 되돌리기 가능 }
+        '409':
+          description: 이미 처리된 신청(경합) 또는 정원 초과
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              examples:
+                alreadyHandled: { value: { error: { code: JOIN_REQUEST_ALREADY_HANDLED, message: "이미 처리된 가입 신청입니다." } } }
+                capacity: { value: { error: { code: ROOM_CAPACITY_EXCEEDED, message: "우정공간 정원(8명)이 가득 찼습니다." } } }
+  /rooms/{roomId}/join-requests/{requestId}/reject:
+    parameters:
+      - { $ref: '#/components/parameters/roomId' }
+      - { $ref: '#/components/parameters/requestId' }
+    post:
+      tags: [JoinRequests]
+      summary: 거절(비파괴)
+      responses:
+        '200':
+          description: 거절됨
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/JoinRequest' }
+        '409':
+          description: 이미 처리됨
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+  /rooms/{roomId}/join-requests/{requestId}/undo:
+    parameters:
+      - { $ref: '#/components/parameters/roomId' }
+      - { $ref: '#/components/parameters/requestId' }
+    post:
+      tags: [JoinRequests]
+      summary: 5분 내 되돌리기(수락 취소 → PENDING 복원, 멤버 제거)
+      responses:
+        '200':
+          description: 되돌림
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/JoinRequest' }
+        '410':
+          description: 되돌리기 만료(5분 초과)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              example: { error: { code: UNDO_EXPIRED, message: "되돌리기 가능 시간(5분)이 지났습니다." } }
+
+  # ============================ Plans ============================
+  /rooms/{roomId}/plans:
+    parameters: [ { $ref: '#/components/parameters/roomId' } ]
+    post:
+      tags: [Plans]
+      summary: 약속 등록(SCHEDULED) · EXP +3
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PlanCreateRequest' }
+      responses:
+        '201':
+          description: 생성됨
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Plan' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+    get:
+      tags: [Plans]
+      summary: 약속 목록(필터: status·날짜)
+      parameters:
+        - { name: status, in: query, schema: { type: string, enum: [all, proof, upcoming, done] } }
+        - { name: from, in: query, schema: { type: string, format: date } }
+        - { name: to, in: query, schema: { type: string, format: date } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Plan' }
+  /plans/{planId}:
+    parameters: [ { $ref: '#/components/parameters/planId' } ]
+    get:
+      tags: [Plans]
+      summary: 약속 상세(영수증·체크리스트·4컷)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Plan' }
+    patch:
+      tags: [Plans]
+      summary: 약속 수정(작성자만)
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PlanCreateRequest' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Plan' }
+        '403': { $ref: '#/components/responses/NotWriter' }
+    delete:
+      tags: [Plans]
+      summary: 약속 삭제(작성자만)
+      responses:
+        '204': { description: 완료 }
+        '403': { $ref: '#/components/responses/NotWriter' }
+  /plans/{planId}/complete:
+    parameters: [ { $ref: '#/components/parameters/planId' } ]
+    post:
+      tags: [Plans]
+      summary: 완료 → COMPLETED, memory_status=CANDIDATE(다녀온 사람 누구나)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Plan' }
+  /plans/{planId}/cancel:
+    parameters: [ { $ref: '#/components/parameters/planId' } ]
+    post:
+      tags: [Plans]
+      summary: 취소 → CANCELED(작성자만)
+      responses:
+        '200': { description: OK }
+        '403': { $ref: '#/components/responses/NotWriter' }
+  /plans/{planId}/skip-memory:
+    parameters: [ { $ref: '#/components/parameters/planId' } ]
+    post:
+      tags: [Plans]
+      summary: 추억 작성 안 함 → memory_status=SKIPPED
+      responses:
+        '200': { description: OK }
+  /plans/{planId}/stages/{stage}/photo:
+    parameters:
+      - { $ref: '#/components/parameters/planId' }
+      - name: stage
+        in: path
+        required: true
+        schema: { type: string, enum: [PROPOSAL, SCHEDULING, CONFIRMED, MEETING] }
+    put:
+      tags: [Plans]
+      summary: 인생4컷 단계 인증사진. 업로드 후 잠금(재업로드 422). MEETING 완료 시 EXP +15
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: { mediaId: { type: string } }
+              required: [mediaId]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Plan' }
+        '403':
+          description: 단계 잠금(이전 단계·날짜 조건 미충족)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              example: { error: { code: STAGE_LOCKED, message: "이전 단계 인증이 필요합니다." } }
+        '413': { $ref: '#/components/responses/StorageFull' }
+        '422':
+          description: 이미 업로드됨(증거, 변경 불가)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              example: { error: { code: STAGE_ALREADY_UPLOADED, message: "이미 업로드된 단계입니다." } }
+  /plans/{planId}/checklists:
+    parameters: [ { $ref: '#/components/parameters/planId' } ]
+    post:
+      tags: [Plans]
+      summary: 체크리스트 항목 추가(멤버 누구나)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: { content: { type: string } }
+              required: [content]
+      responses:
+        '201':
+          description: 생성됨
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Checklist' }
+  /checklists/{checklistId}:
+    parameters:
+      - { name: checklistId, in: path, required: true, schema: { type: string } }
+    patch:
+      tags: [Plans]
+      summary: 체크리스트 수정·checked 토글
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                content: { type: string }
+                checked: { type: boolean }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Checklist' }
+    delete:
+      tags: [Plans]
+      summary: 체크리스트 삭제
+      responses:
+        '204': { description: 완료 }
+
+  # ============================ Memories ============================
+  /rooms/{roomId}/memories:
+    parameters: [ { $ref: '#/components/parameters/roomId' } ]
+    post:
+      tags: [Memories]
+      summary: 추억 작성. planId 선택(null=FREE MEMORY). EXP 지급
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MemoryCreateRequest' }
+      responses:
+        '201':
+          description: 생성됨
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Memory' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+        '409':
+          description: 연결 약속이 완료 상태 아님
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              example: { error: { code: PLAN_NOT_COMPLETED, message: "완료된 약속에만 추억을 연결할 수 있습니다." } }
+    get:
+      tags: [Memories]
+      summary: 추억 피드(검색·정렬·필터·월, 페이지네이션)
+      parameters:
+        - { name: q, in: query, schema: { type: string } }
+        - { name: sort, in: query, schema: { type: string, enum: [new, old], default: new } }
+        - { name: filter, in: query, schema: { type: string, enum: [all, mine, others], default: all } }
+        - { name: month, in: query, schema: { type: string, example: "2026-06" } }
+        - { $ref: '#/components/parameters/page' }
+        - { $ref: '#/components/parameters/size' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - { $ref: '#/components/schemas/Page' }
+                  - type: object
+                    properties:
+                      content:
+                        type: array
+                        items: { $ref: '#/components/schemas/Memory' }
+  /memories/{memoryId}:
+    parameters: [ { $ref: '#/components/parameters/memoryId' } ]
+    get:
+      tags: [Memories]
+      summary: 추억 여권 상세(사진·약속 영수증·도장·메시지)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Memory' }
+    patch:
+      tags: [Memories]
+      summary: 수정(약속 연결 편집 포함, 작성자만)
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MemoryCreateRequest' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Memory' }
+        '403': { $ref: '#/components/responses/NotWriter' }
+    delete:
+      tags: [Memories]
+      summary: 삭제(소프트, 작성자만)
+      responses:
+        '204': { description: 완료 }
+        '403': { $ref: '#/components/responses/NotWriter' }
+  /memories/{memoryId}/images:
+    parameters: [ { $ref: '#/components/parameters/memoryId' } ]
+    post:
+      tags: [Memories]
+      summary: 이미지 연결(최대 15장)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                mediaId: { type: string }
+                sortOrder: { type: integer }
+              required: [mediaId]
+      responses:
+        '201':
+          description: 생성됨
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MemoryImage' }
+        '413': { $ref: '#/components/responses/StorageFull' }
+  /memories/{memoryId}/images/order:
+    parameters: [ { $ref: '#/components/parameters/memoryId' } ]
+    patch:
+      tags: [Memories]
+      summary: 이미지 순서 재정렬
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                order: { type: array, items: { type: string } }
+      responses:
+        '204': { description: 완료 }
+  /memory-images/{imageId}:
+    parameters:
+      - { name: imageId, in: path, required: true, schema: { type: string } }
+    delete:
+      tags: [Memories]
+      summary: 이미지 삭제
+      responses:
+        '204': { description: 완료 }
+  /memories/{memoryId}/messages:
+    parameters: [ { $ref: '#/components/parameters/memoryId' } ]
+    post:
+      tags: [Memories]
+      summary: 친구 한 줄 메시지 추가(멤버 누구나 — 친구별 관점)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: { content: { type: string, maxLength: 255 } }
+              required: [content]
+      responses:
+        '201':
+          description: 생성됨
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MemoryMessage' }
+  /memory-messages/{messageId}:
+    parameters:
+      - { name: messageId, in: path, required: true, schema: { type: string } }
+    delete:
+      tags: [Memories]
+      summary: 내 한 줄 메시지 삭제
+      responses:
+        '204': { description: 완료 }
+        '403': { $ref: '#/components/responses/NotWriter' }
+  /rooms/{roomId}/photos:
+    parameters: [ { $ref: '#/components/parameters/roomId' } ]
+    get:
+      tags: [Memories]
+      summary: 사진 모아보기(방 전체 갤러리)
+      parameters:
+        - { name: month, in: query, schema: { type: string } }
+        - { name: q, in: query, schema: { type: string } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    memoryId: { type: string }
+                    imageUrl: { type: string }
+                    memoryDate: { type: string, format: date }
+                    title: { type: string }
+
+  # ============================ Letters ============================
+  /rooms/{roomId}/letters:
+    parameters: [ { $ref: '#/components/parameters/roomId' } ]
+    post:
+      tags: [Letters]
+      summary: 편지 작성(receiverId null=전체 발송)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LetterCreateRequest' }
+      responses:
+        '201':
+          description: 생성됨
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Letter' }
+        '400': { $ref: '#/components/responses/ValidationError' }
+    get:
+      tags: [Letters]
+      summary: 편지 목록(filter=all/favorite; box=received/sent)
+      parameters:
+        - { name: filter, in: query, schema: { type: string, enum: [all, favorite] } }
+        - { name: box, in: query, schema: { type: string, enum: [received, sent] } }
+        - { $ref: '#/components/parameters/page' }
+        - { $ref: '#/components/parameters/size' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - { $ref: '#/components/schemas/Page' }
+                  - type: object
+                    properties:
+                      content:
+                        type: array
+                        items: { $ref: '#/components/schemas/Letter' }
+  /letters/{letterId}:
+    parameters: [ { $ref: '#/components/parameters/letterId' } ]
+    get:
+      tags: [Letters]
+      summary: 편지 상세
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Letter' }
+    delete:
+      tags: [Letters]
+      summary: 편지 삭제(작성자만)
+      responses:
+        '204': { description: 완료 }
+        '403': { $ref: '#/components/responses/NotWriter' }
+  /letters/{letterId}/read:
+    parameters: [ { $ref: '#/components/parameters/letterId' } ]
+    patch:
+      tags: [Letters]
+      summary: 읽음 처리(수신자)
+      responses:
+        '200': { description: OK }
+  /letters/{letterId}/favorite:
+    parameters: [ { $ref: '#/components/parameters/letterId' } ]
+    patch:
+      tags: [Letters]
+      summary: 즐겨찾기 토글
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: { favorite: { type: boolean } }
+              required: [favorite]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Letter' }
+
+  # ============================ Notifications ============================
+  /rooms/{roomId}/notifications:
+    parameters: [ { $ref: '#/components/parameters/roomId' } ]
+    get:
+      tags: [Notifications]
+      summary: 알림 목록(type=NOTICE/FRIEND/JOIN)
+      parameters:
+        - { name: type, in: query, schema: { type: string, enum: [NOTICE, FRIEND, JOIN] } }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/Notification' }
+                  pendingCount: { type: integer, description: 헤더 🔔 배지(대기 가입 신청 수) }
+  /rooms/{roomId}/notifications/read:
+    parameters: [ { $ref: '#/components/parameters/roomId' } ]
+    post:
+      tags: [Notifications]
+      summary: 읽음 처리
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: { ids: { type: array, items: { type: string } } }
+      responses:
+        '204': { description: 완료 }
+
+  # ============================ Media ============================
+  /media/uploads:
+    post:
+      tags: [Media]
+      summary: presigned 업로드 URL 발급 → 스토리지 직접 업로드 → mediaId 반환
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                contentType: { type: string, example: image/jpeg }
+                purpose: { type: string, enum: [avatar, cover, memory, stage] }
+              required: [contentType]
+      responses:
+        '201':
+          description: 발급됨
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mediaId: { type: string }
+                  uploadUrl: { type: string, description: presigned PUT URL }
+                  fileUrl: { type: string, description: 업로드 완료 후 접근 URL }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    roomId: { name: roomId, in: path, required: true, schema: { type: string } }
+    planId: { name: planId, in: path, required: true, schema: { type: string } }
+    memoryId: { name: memoryId, in: path, required: true, schema: { type: string } }
+    letterId: { name: letterId, in: path, required: true, schema: { type: string } }
+    requestId: { name: requestId, in: path, required: true, schema: { type: string } }
+    page: { name: page, in: query, schema: { type: integer, default: 0, minimum: 0 } }
+    size: { name: size, in: query, schema: { type: integer, default: 20, minimum: 1, maximum: 100 } }
+
+  responses:
+    ValidationError:
+      description: 유효성 실패
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: { code: VALIDATION_ERROR, message: "필수 항목을 입력해주세요." } }
+    Unauthenticated:
+      description: 미인증/토큰 만료
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: { code: UNAUTHENTICATED, message: "로그인이 필요합니다." } }
+    NotMember:
+      description: 공간 멤버 아님
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: { code: ROOM_MEMBER_NOT_FOUND, message: "이 우정공간의 멤버가 아닙니다." } }
+    NotWriter:
+      description: 작성자 본인 아님
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: { code: NOT_WRITER, message: "작성자만 수정/삭제할 수 있습니다." } }
+    RoomCapacityExceeded:
+      description: 정원(8명) 초과
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: { code: ROOM_CAPACITY_EXCEEDED, message: "우정공간 정원(8명)이 가득 찼습니다." } }
+    StorageFull:
+      description: 파일 용량 초과
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: { code: STORAGE_FULL, message: "저장 공간이 부족합니다." } }
+    RateLimited:
+      description: 요청 상한 초과
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: { code: RATE_LIMITED, message: "잠시 후 다시 시도해주세요." } }
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: { type: string, description: 프론트 분기용 안정 상수 }
+            message: { type: string, description: 사용자 노출 한국어 }
+            details: { type: object, additionalProperties: true, nullable: true }
+          required: [code, message]
+      required: [error]
+    Page:
+      type: object
+      properties:
+        page: { type: integer }
+        size: { type: integer }
+        totalElements: { type: integer }
+        totalPages: { type: integer }
+
+    SignupRequest:
+      type: object
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, format: password, description: 8~20자, 영문/숫자/특수 2종 이상 }
+        nickname: { type: string, maxLength: 16 }
+        birthDate: { type: string, format: date, nullable: true }
+        avatarMediaId: { type: string, nullable: true }
+        agreements:
+          type: object
+          properties:
+            service: { type: boolean }
+            privacy: { type: boolean }
+            marketing: { type: boolean }
+          required: [service, privacy]
+      required: [email, password, nickname, agreements]
+    LoginRequest:
+      type: object
+      properties:
+        email: { type: string, format: email }
+        password: { type: string, format: password }
+        remember: { type: boolean, default: false, description: refresh 토큰 발급/수명 }
+      required: [email, password]
+    TokenResponse:
+      type: object
+      properties:
+        accessToken: { type: string }
+        refreshToken: { type: string }
+        expiresIn: { type: integer, example: 3600 }
+        user: { $ref: '#/components/schemas/User' }
+
+    User:
+      type: object
+      properties:
+        id: { type: string }
+        email: { type: string, format: email }
+        nickname: { type: string }
+        personalInviteCode: { type: string }
+        avatarUrl: { type: string, nullable: true }
+        birthDate: { type: string, format: date, nullable: true }
+        statusMessage: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }
+
+    Room:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        friendshipLevel: { type: integer }
+        expPoint: { type: integer }
+        status: { type: string, enum: [ACTIVE, INACTIVE, ARCHIVED] }
+        coverImageUrl: { type: string, nullable: true }
+        coverTitle: { type: string, nullable: true }
+        themeColor: { type: string, nullable: true }
+        vehicle: { type: string, enum: [plane, bus, ship, train], nullable: true }
+        inviteCode: { type: string, nullable: true }
+        memberCount: { type: integer, description: ACTIVE 멤버 수 (≤8) }
+        createdAt: { type: string, format: date-time }
+    RoomCreateRequest:
+      type: object
+      properties:
+        name: { type: string, minLength: 2, maxLength: 20 }
+        vehicle: { type: string, enum: [plane, bus, ship, train] }
+        themeColor: { type: string }
+        intro: { type: string, maxLength: 60 }
+      required: [name]
+    RoomMember:
+      type: object
+      properties:
+        userId: { type: string }
+        nickname: { type: string, description: 탈퇴 시 "언노운" }
+        avatarUrl: { type: string, nullable: true }
+        statusMessage: { type: string, nullable: true }
+        status: { type: string, enum: [ACTIVE, LEFT] }
+        joinedAt: { type: string, format: date-time }
+
+    Invite:
+      type: object
+      properties:
+        id: { type: string }
+        inviteCode: { type: string, example: CLOV-12 }
+        link: { type: string }
+        status: { type: string, enum: [ACTIVE, USED, EXPIRED, CANCELED] }
+        expiresAt: { type: string, format: date-time, nullable: true }
+        createdAt: { type: string, format: date-time }
+    JoinRequest:
+      type: object
+      properties:
+        id: { type: string }
+        roomId: { type: string }
+        applicantId: { type: string }
+        applicantName: { type: string }
+        inviteCode: { type: string, nullable: true }
+        invitePath: { type: string, enum: [INVITED, DIRECT] }
+        status: { type: string, enum: [PENDING, ACCEPTED, REJECTED] }
+        acceptedBy: { type: string, nullable: true }
+        acceptedAt: { type: string, format: date-time, nullable: true }
+        undoUntil: { type: string, format: date-time, nullable: true }
+        createdAt: { type: string, format: date-time }
+
+    Plan:
+      type: object
+      properties:
+        id: { type: string }
+        roomId: { type: string }
+        writerId: { type: string }
+        title: { type: string, maxLength: 100 }
+        planDate: { type: string, format: date, nullable: true }
+        planTime: { type: string, nullable: true }
+        placeName: { type: string, nullable: true }
+        address: { type: string, nullable: true }
+        description: { type: string, nullable: true }
+        status: { type: string, enum: [SCHEDULED, COMPLETED, CANCELED] }
+        memoryStatus: { type: string, enum: [NONE, CANDIDATE, WRITTEN, SKIPPED] }
+        dday: { type: integer, description: 서버 파생(plan_date vs now) }
+        currentStage: { type: string, enum: [PROPOSAL, SCHEDULING, CONFIRMED, MEETING], description: 서버 파생 }
+        stagePhotos:
+          type: array
+          items: { $ref: '#/components/schemas/StagePhoto' }
+        checklists:
+          type: array
+          items: { $ref: '#/components/schemas/Checklist' }
+        completedAt: { type: string, format: date-time, nullable: true }
+        createdAt: { type: string, format: date-time }
+    PlanCreateRequest:
+      type: object
+      properties:
+        title: { type: string, maxLength: 20 }
+        planDate: { type: string, format: date }
+        planTime: { type: string, nullable: true }
+        placeName: { type: string, nullable: true }
+        address: { type: string, nullable: true }
+        description: { type: string, description: 리치 텍스트 HTML(MEMO) }
+      required: [title, planDate]
+    StagePhoto:
+      type: object
+      properties:
+        stage: { type: string, enum: [PROPOSAL, SCHEDULING, CONFIRMED, MEETING] }
+        imageUrl: { type: string }
+        uploadedBy: { type: string }
+        uploadedAt: { type: string, format: date-time }
+    Checklist:
+      type: object
+      properties:
+        id: { type: string }
+        content: { type: string }
+        checked: { type: boolean }
+
+    Memory:
+      type: object
+      properties:
+        id: { type: string }
+        roomId: { type: string }
+        planId: { type: string, nullable: true, description: null=FREE MEMORY }
+        writerId: { type: string }
+        writerName: { type: string, description: 탈퇴 시 "언노운" }
+        title: { type: string, maxLength: 25 }
+        content: { type: string, maxLength: 100, nullable: true }
+        moodTag: { type: string, nullable: true }
+        memoryDate: { type: string, format: date, nullable: true }
+        images:
+          type: array
+          items: { $ref: '#/components/schemas/MemoryImage' }
+        messages:
+          type: array
+          items: { $ref: '#/components/schemas/MemoryMessage' }
+        participants:
+          type: array
+          items:
+            type: object
+            properties:
+              userId: { type: string }
+              nickname: { type: string }
+        plan:
+          type: object
+          nullable: true
+          description: 연결 약속 요약(여권 영수증)
+          properties:
+            planId: { type: string }
+            planDate: { type: string, format: date }
+            dday: { type: integer }
+            stampState: { type: string, enum: [DDAY_ONLY, FOURCUT_PENDING, MEMORY_COMPLETE, FREE_MEMORY], description: 도장 4상태 }
+        createdAt: { type: string, format: date-time }
+    MemoryCreateRequest:
+      type: object
+      properties:
+        title: { type: string, maxLength: 25 }
+        content: { type: string, maxLength: 100 }
+        moodTag: { type: string, nullable: true }
+        tags: { type: array, items: { type: string } }
+        participantIds: { type: array, items: { type: string } }
+        planId: { type: string, nullable: true, description: 없으면 FREE MEMORY }
+        imageMediaIds: { type: array, items: { type: string }, maxItems: 15 }
+      required: [title]
+    MemoryImage:
+      type: object
+      properties:
+        id: { type: string }
+        imageUrl: { type: string }
+        sortOrder: { type: integer }
+    MemoryMessage:
+      type: object
+      properties:
+        id: { type: string }
+        writerId: { type: string }
+        writerName: { type: string }
+        content: { type: string, maxLength: 255 }
+        createdAt: { type: string, format: date-time }
+
+    Letter:
+      type: object
+      properties:
+        id: { type: string }
+        roomId: { type: string }
+        senderId: { type: string }
+        senderName: { type: string }
+        receiverId: { type: string, nullable: true, description: null=전체 발송 }
+        receiverName: { type: string, nullable: true, description: null이면 "전체" }
+        content: { type: string, description: 한글 500 / 영 1000자 }
+        emoji: { type: string, nullable: true }
+        isFavorite: { type: boolean }
+        isMine: { type: boolean, description: 내가 보낸 편지(수정/삭제 가능) }
+        readAt: { type: string, format: date-time, nullable: true }
+        sentAt: { type: string, format: date-time }
+    LetterCreateRequest:
+      type: object
+      properties:
+        receiverId: { type: string, nullable: true, description: null=전체 발송(모두에게) }
+        content: { type: string }
+        emoji: { type: string, nullable: true }
+      required: [content]
+
+    Notification:
+      type: object
+      properties:
+        id: { type: string }
+        roomId: { type: string }
+        type: { type: string, enum: [NOTICE, FRIEND, JOIN] }
+        payload: { type: object, additionalProperties: true }
+        readAt: { type: string, format: date-time, nullable: true }
+        createdAt: { type: string, format: date-time }
+
+    LevelInfo:
+      type: object
+      properties:
+        friendshipLevel: { type: integer }
+        levelName: { type: string, example: 초록 클로버 우정 }
+        expPoint: { type: integer }
+        nextLevelExp: { type: integer }
+        progress: { type: number, format: float, description: 0.0~1.0 }
+    ExpLog:
+      type: object
+      properties:
+        id: { type: string }
+        actionType: { type: string, enum: [PLAN_CREATE, PLAN_COMPLETE, MEMORY_WRITE, LETTER_SEND, MASCOT_INTERACT] }
+        expDelta: { type: integer }
+        triggeredBy: { type: string }
+        referenceId: { type: string, nullable: true }
+        createdAt: { type: string, format: date-time }

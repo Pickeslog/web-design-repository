@@ -1,4 +1,4 @@
-# 우정공간 대시보드 화면 명세 소스
+﻿# 우정공간 대시보드 화면 명세 소스
 
 ## 화면 목적
 
@@ -25,7 +25,7 @@
 - `.scene-celestial` 해/달
 - `.scene-clouds` 구름 (3개, 각기 다른 animation-duration으로 개별 이동)
 - `.scene-mountains` 산
-- `.scene-clover-field` 지면 클로버밭
+
 - `.scene-particles` 파티클
 - `.scene-balloons` 풍선
 
@@ -41,8 +41,8 @@ HUD 요소:
 
 상태:
 
-- 라이트 모드: 낮 하늘, 따뜻한 햇빛 느낌
-- 다크 모드: 밤 하늘, 별과 달 느낌
+- 라이트 모드
+- 다크 모드
 - 레벨 변화: 배지명, 진행률, 배경 성장 정도 변경
 
 ### 2. 대표 사진 카드

@@ -161,11 +161,13 @@
         function saveGroupsData() {
             try {
                 localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
+                return true;
             } catch (error) {
                 // 저장 공간 초과(QuotaExceeded) 등 — 조용히 실패하지 않고 사용자에게 알린다
                 if (typeof clovToast === 'function') {
                     clovToast('⚠️ 변경사항 저장에 실패했어요. 저장 공간을 확인해주세요.', 'warn');
                 }
+                return false;
             }
         }
 
@@ -223,14 +225,14 @@
             return post;
         }
 
-        const MEMORY_PHOTO_LIMIT = 30;
+        const MEMORY_PHOTO_LIMIT = 15;
 
         // 추억 사진 압축의 핵심(데이터URL/이미지 src → 리사이즈된 JPEG 데이터URL).
         // 서버가 없어 사진을 base64로 localStorage(도메인당 약 5MB)에 저장하므로,
         // 원본을 그대로 넣으면 몇 장만으로도 용량이 초과된다("저장 공간이 부족해요" 모달).
-        // 30장 한도를 감당하기 위해 640px·품질 0.5로 줄여 저장한다. (기존 1080px 0.7에서 하향)
-        const MEMORY_PHOTO_MAXDIM = 640;
-        const MEMORY_PHOTO_QUALITY = 0.5;
+        // 15장 한도를 감당하기 위해 1000px·품질 0.72로 저장한다.
+        const MEMORY_PHOTO_MAXDIM = 1000;
+        const MEMORY_PHOTO_QUALITY = 0.72;
         function compressImageSrc(src, maxDim, quality, callback) {
             const img = new Image();
             img.onload = () => {

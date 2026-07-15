@@ -4,6 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Clov. - 방 접속하기</title>
+<!-- 로그인 체크 -->
+<script>
+  if (!localStorage.getItem('accessToken') && !sessionStorage.getItem('accessToken')) {
+    window.location.href = '../01-auth/login.html';
+  }
+</script>
 <style>
     :root {
         --primary-green: #1b4332;
@@ -330,6 +336,15 @@
         const group = document.getElementById('code-group');
         const code = input.value.trim().toUpperCase();
         
+        let members = [];
+        try { members = JSON.parse(localStorage.getItem('clov_acceptedMembers')) || []; } catch(e){}
+        if (members.length >= 8) {
+            if (typeof clovAlert === 'function') {
+                clovAlert(`우정공간의 정원(8명)이 초과되어 가입 신청을 보낼 수 없습니다.`, { icon: '🚫', type: 'error' });
+            } else { alert("우정공간의 정원(8명)이 초과되어 가입 신청을 보낼 수 없습니다."); }
+            return;
+        }
+
         if (code.length < 5) {
             group.classList.add('invalid');
             input.focus();

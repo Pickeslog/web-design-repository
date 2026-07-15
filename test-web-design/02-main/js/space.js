@@ -26,7 +26,7 @@
             const styleBg = coverPhoto ? `background-image: url('${escapeHtml(coverPhoto)}');` : '';
             const imageContent = coverPhoto
                 ? ''
-                : `<div class="cline-no-photo" style="width: 100%; height: 100%; background: #d8eadb; justify-content: center;"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"/><path d="m4 18 4-4 3 2 4-5 5 4"/></svg></span><span class="cline-no-photo-text">사진 없음</span></div>`;
+                : `<div class="cline-no-photo"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"/><path d="m4 18 4-4 3 2 4-5 5 4"/></svg></span><span class="cline-no-photo-text">사진 없음</span></div>`;
             const photoCountBadge = normalizedPost.photos.length > 1
                 ? `<span class="polaroid-photo-count"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:2px;"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"/><circle cx="12" cy="13" r="3.5"/></svg>${normalizedPost.photos.length}</span>`
                 : '';
@@ -209,7 +209,7 @@
                         ${extraThumbCount > 0 ? `<button type="button" class="mp-thumb mp-thumb--more" onclick="openMemoryGallery(${MP_MAX_THUMBS})">+${extraThumbCount}</button>` : ''}
                     </div>
                 ` : ''}
-            ` : `<div class="mp-photo-main mp-photo-main--empty"><div class="cline-no-photo" style="width: 100%; height: 100%; background: #d8eadb; justify-content: center;"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"/><path d="m4 18 4-4 3 2 4-5 5 4"/></svg></span><span class="cline-no-photo-text">사진 없음</span></div></div>`;
+            ` : `<div class="mp-photo-main mp-photo-main--empty"><div class="cline-no-photo"><span><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8a2 2 0 0 1 2-2h1l1.5-2h7L17 6h1a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8z"/><path d="m4 18 4-4 3 2 4-5 5 4"/></svg></span><span class="cline-no-photo-text">사진 없음</span></div></div>`;
 
             let statusText;
             let statusClass;
@@ -1730,7 +1730,7 @@
                 friendshipLevel = grp.level;
             }
 
-            localStorage.setItem('clov_groupsData', JSON.stringify(groupsData));
+            saveGroupsData();
             updateFriendshipUI();
             triggerXpFlash();
 
@@ -1738,7 +1738,7 @@
             if (window.ClovMascot && typeof window.ClovMascot.say === 'function' && finalXp > 0) {
                 let msg = '';
                 const isRobot = !!(window.CrobyMascot && typeof CrobyMascot.getCharacter === 'function' && CrobyMascot.getCharacter() === 'robot');
-                const buffSuffix = multiplier > 1.0 ? `\n(가속 x${multiplier})` : '';
+                const buffSuffix = multiplier > 1.0 ? `<br>(가속 x${multiplier})` : '';
 
                 const maxLevelReached = (oldLevel < CLOV_MAX_LEVEL && grp.level >= CLOV_MAX_LEVEL);
 

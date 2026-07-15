@@ -263,8 +263,8 @@
         }
 
         .feed-sort-btn.active {
-            background: var(--primary-green);
-            color: #ffffff;
+            background: var(--btn-primary-bg);
+            color: var(--button-text);
         }
 
         .feed-grid {
