@@ -49,6 +49,10 @@
   - 모달/인터랙션: `screen-spec-source/06-modal-and-interaction.md`
 - 흐름/상태가 필요하면 `07-user-flow.md`, `08-data-and-state.md`도 함께 확인한다.
 
+## 기술 스택 및 백엔드 연동 규칙
+
+- 실시간 알림 및 데이터 동기화는 **SSE(Server-Sent Events)** 방식을 사용한다.
+
 ## 코드 작업 규칙
 
 - 기존 구조와 스타일을 우선한다.
