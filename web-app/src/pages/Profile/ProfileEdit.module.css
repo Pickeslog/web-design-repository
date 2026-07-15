@@ -1,0 +1,214 @@
+/* 원본: test-web-design/08-profile/profile_edit.html 의 <style> 블록. .profileEditPage 하위로 스코프. */
+.profileEditPage,
+.profileEditPage * {
+  box-sizing: border-box;
+}
+.profileEditPage {
+  --bg-color: #cbdad2;
+  --card-bg: #ffffff;
+  --text-color: #2c3e35;
+  --text-muted: #61766a;
+  --border-color: #eef2f0;
+  --primary-green: #1b4332;
+  --accent-green: #52b788;
+  --btn-hover: #357a58;
+  --input-bg: #fafbfc;
+  --danger: #e74c3c;
+  --danger-hover: #c0392b;
+  --section-bg: #f4f8f6;
+
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 40px 20px 80px;
+  transition: background-color 0.3s, color 0.3s;
+}
+:global(body.dark-mode) .profileEditPage {
+  --bg-color: #090d0a;
+  --card-bg: #151f18;
+  --text-color: #f0fdf4;
+  --text-muted: #86efac;
+  --border-color: #1e2f24;
+  --primary-green: #007c2e;
+  --accent-green: #4ade80;
+  --btn-hover: #16a34a;
+  --input-bg: #0d1510;
+  --danger: #f87171;
+  --danger-hover: #ef4444;
+  --section-bg: #0e1a11;
+}
+
+.container { width: 100%; max-width: 540px; animation: profileFadeUp 0.5s ease-out; }
+@keyframes profileFadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.pageHeader { display: flex; align-items: center; gap: 14px; margin-bottom: 32px; }
+.backBtn {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; cursor: pointer; color: var(--text-muted);
+  transition: background 0.2s, color 0.2s;
+}
+.backBtn:hover { background: var(--section-bg); color: var(--text-color); }
+.pageHeader h1 { font-size: 22px; font-weight: 700; color: var(--text-color); }
+.pageHeader .emoji { font-size: 22px; }
+
+.avatarSection { display: flex; flex-direction: column; align-items: center; gap: 12px; padding-bottom: 24px; }
+.sectionGap { margin-top: 20px; }
+.avatarWrap { position: relative; }
+.avatarCircle {
+  width: 88px; height: 88px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent-green), var(--primary-green));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 36px; font-weight: 700; color: #fff;
+  cursor: pointer;
+  border: 3px solid var(--border-color);
+  overflow: hidden;
+  transition: opacity 0.2s;
+}
+.avatarCircle:hover { opacity: 0.85; }
+.avatarCircle img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.avatarEditBadge {
+  position: absolute;
+  bottom: 2px; right: 2px;
+  background: var(--accent-green);
+  border-radius: 50%;
+  width: 26px; height: 26px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px;
+  border: 2px solid var(--card-bg);
+  cursor: pointer;
+}
+.avatarName { font-size: 18px; font-weight: 700; color: var(--text-color); }
+.avatarStatus { font-size: 13px; color: var(--text-muted); }
+
+.card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 24px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+}
+.cardTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 18px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.formRow { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
+.formRow:last-child { margin-bottom: 0; }
+.formRow label { font-size: 13px; font-weight: 600; color: var(--text-muted); }
+.profileEditPage input,
+.profileEditPage select,
+.profileEditPage textarea {
+  background: var(--input-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 13px 16px;
+  color: var(--text-color);
+  font-size: 15px;
+  width: 100%;
+  transition: border-color 0.25s, box-shadow 0.25s;
+  font-family: inherit;
+}
+.profileEditPage input:focus,
+.profileEditPage select:focus,
+.profileEditPage textarea:focus {
+  outline: none;
+  border-color: var(--accent-green);
+  box-shadow: 0 0 0 3px rgba(82, 183, 136, 0.18);
+}
+.hintText { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+.emojiPickerRow { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.emojiChip {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  border: 2px solid var(--border-color);
+  background: var(--input-bg);
+  font-size: 20px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.15s;
+}
+.emojiChip:hover { transform: scale(1.15); }
+.emojiChip.selected { border-color: var(--accent-green); background: rgba(82, 183, 136, 0.1); }
+
+.inputIconWrap { position: relative; }
+.inputIconWrap input { padding-right: 46px; }
+.togglePwBtn {
+  position: absolute; right: 14px; top: 50%;
+  transform: translateY(-50%);
+  background: none; border: none; cursor: pointer;
+  color: var(--text-muted); font-size: 16px;
+  display: inline-flex; align-items: center;
+}
+.togglePwBtn .eyeOff { display: none; }
+.togglePwBtn.isVisible .eye { display: none; }
+.togglePwBtn.isVisible .eyeOff { display: inline-flex; }
+
+.divider { height: 1px; background: var(--border-color); margin: 16px 0; }
+
+.btnSave {
+  width: 100%;
+  background: var(--primary-green);
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  padding: 16px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s;
+  margin-top: 4px;
+}
+.btnSave:hover { background: var(--btn-hover); transform: translateY(-2px); }
+.btnSave:active { transform: translateY(0); }
+
+.btnDanger {
+  width: 100%;
+  background: transparent;
+  color: var(--danger);
+  border: 1px solid var(--danger);
+  border-radius: 14px;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+  margin-top: 8px;
+}
+.btnDanger:hover { background: rgba(231, 76, 60, 0.08); }
+
+.toast {
+  position: fixed;
+  bottom: 30px; left: 50%;
+  transform: translateX(-50%) translateY(80px);
+  background: var(--primary-green);
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 50px;
+  font-size: 14px; font-weight: 600;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s;
+  opacity: 0;
+  z-index: 999;
+}
+.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }

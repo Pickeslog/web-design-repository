@@ -1,0 +1,238 @@
+/* 원본: test-web-design/03-rooms/join_room.html 의 <style> 블록. Login.module.css와
+   동일하게 .joinRoomPage 하위로 스코프했다. 원본은 다크모드를 body.dark-mode 클래스로
+   전환했는데(이 화면 자체 토글 버튼, localStorage 'theme' 키), 이 앱은 SPA라 body에
+   클래스가 남아있을 수 있어 :global(body.dark-mode)로 명시적으로 상위를 참조한다. */
+.joinRoomPage,
+.joinRoomPage * {
+  box-sizing: border-box;
+}
+.joinRoomPage {
+  --primary-green: #1b4332;
+  --accent-green: #52b788;
+  --body-bg: #cbdad2;
+  --card-bg: #ffffff;
+  --bg-light: #fafbfc;
+  --text-color: #2c3e35;
+  --text-muted: #61766a;
+  --border-color: #eef2f0;
+  --header-glass-bg: rgba(255, 255, 255, 0.86);
+  --input-bg: #ffffff;
+  --input-border: #d8ebd2;
+  --nav-item-bg-active: #e8f3ed;
+  --shadow-color: rgba(0, 0, 0, 0.1);
+  --button-text: #ffffff;
+  --btn-primary-bg: #357a58;
+  --danger: #d95f5f;
+  --danger-bg: #fff4f4;
+
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: var(--body-bg);
+  padding: 40px 20px;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  color: var(--text-color);
+}
+:global(body.dark-mode) .joinRoomPage {
+  --primary-green: #5a7a3e;
+  --accent-green: #9ccc65;
+  --body-bg: #14150e;
+  --card-bg: #1e2016;
+  --bg-light: #191a12;
+  --text-color: #eef0e2;
+  --text-muted: #b7c99a;
+  --border-color: #2a2c1e;
+  --header-glass-bg: rgba(20, 21, 14, 0.78);
+  --input-bg: #191a12;
+  --input-border: #6b8f47;
+  --nav-item-bg-active: #2b3020;
+  --shadow-color: rgba(0, 0, 0, 0.5);
+  --button-text: #12150a;
+  --btn-primary-bg: #7c9c52;
+  --danger: #ff8a8a;
+  --danger-bg: #271414;
+}
+.joinRoomPage * {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.desktopWindow {
+  width: 850px;
+  max-width: 100%;
+  height: 750px;
+  background: var(--card-bg);
+  border-radius: 16px;
+  box-shadow: 0 20px 50px var(--shadow-color);
+  overflow: hidden;
+  border: 4px solid var(--primary-green);
+  display: flex;
+  flex-direction: column;
+}
+.desktopBrowserBar {
+  height: 32px;
+  background: var(--primary-green);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.browserDot { width: 12px; height: 12px; border-radius: 50%; background: rgba(255, 255, 255, 0.3); }
+
+.windowContent {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-light);
+}
+
+.header {
+  padding: 18px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--header-glass-bg);
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+  border-bottom: 1px solid var(--border-color);
+  z-index: 10;
+  flex-shrink: 0;
+}
+.logo {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--primary-green);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  letter-spacing: -0.5px;
+  cursor: pointer;
+  text-decoration: none;
+}
+.headerActions { display: flex; align-items: center; gap: 10px; }
+.iconBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: var(--nav-item-bg-active);
+  border: none;
+  cursor: pointer;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary-green);
+}
+.iconBtn:hover { background-color: var(--input-border); }
+.toggleIcon { display: inline-flex; }
+.toggleIcon .iconMoon { display: none; }
+:global(body.dark-mode) .toggleIcon .iconSun { display: none; }
+:global(body.dark-mode) .toggleIcon .iconMoon { display: inline-flex; }
+.avatarBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: var(--primary-green);
+  color: #fff;
+  border: none;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.mainContent {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px 24px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.formContainer { width: 100%; max-width: 400px; }
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-bottom: 24px;
+  padding: 0;
+  text-decoration: none;
+}
+.backLink:hover { color: var(--primary-green); }
+
+.pageHeading { margin-bottom: 30px; text-align: center; }
+.pageHeading h2 { font-size: 24px; color: var(--primary-green); margin-bottom: 10px; }
+.pageHeading p { font-size: 14px; color: var(--text-muted); line-height: 1.5; }
+
+.inputGroup { margin-bottom: 24px; }
+.inputGroup label {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-color);
+  margin-bottom: 8px;
+}
+.inputGroup input {
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 12px;
+  font-size: 15px;
+  outline: none;
+  color: var(--text-color);
+  text-align: center;
+  letter-spacing: 1px;
+  font-weight: 700;
+}
+.inputGroup input::placeholder {
+  color: var(--text-muted);
+  font-weight: 400;
+  letter-spacing: normal;
+}
+.inputGroup input:focus {
+  border-color: var(--accent-green);
+  box-shadow: 0 0 0 3px rgba(82, 183, 136, 0.18);
+}
+.inputGroup.invalid input { border-color: var(--danger); background: var(--danger-bg); }
+
+.warningText {
+  display: block;
+  min-height: 16px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--danger);
+  opacity: 0;
+  text-align: center;
+}
+.inputGroup.invalid .warningText { opacity: 1; }
+
+.btnMain {
+  width: 100%;
+  background: var(--btn-primary-bg);
+  color: var(--button-text);
+  border: none;
+  padding: 16px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 10px;
+}
+.btnMain:hover { opacity: 0.9; }
+
+.successPanelInner { text-align: center; padding: 18px 0; display: none; }
+.successPanelInner.active { display: block; }
+.successIcon { font-size: 48px; margin-bottom: 16px; }
+.successPanelInner h3 { font-size: 20px; color: var(--primary-green); margin-bottom: 10px; }
+.successPanelInner p { font-size: 14px; color: var(--text-muted); margin-bottom: 30px; line-height: 1.5; }

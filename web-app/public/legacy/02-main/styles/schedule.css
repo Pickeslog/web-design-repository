@@ -1,0 +1,2614 @@
+        /* ══════════════ 인생4컷 극장 — 로비(포스터) ══════════════ */
+        .modal-box.fourcut-gallery-modal .fourcut-lobby-headtext h3 {
+            margin: 0;
+            font-size: 17px;
+            font-weight: 900;
+            color: #f4f1e8;
+        }
+
+        .fourcut-lobby-kicker {
+            display: block;
+            font: 700 11px 'Space Mono', monospace;
+            letter-spacing: 2px;
+            color: #52b788;
+            margin-bottom: 4px;
+        }
+
+        .fourcut-lobby-subtitle {
+            margin: 6px 0 0;
+            font-size: 12.5px;
+            font-weight: 600;
+            color: #a9a394;
+        }
+
+        /* 넷플릭스 "Trending Now" 행처럼 — 완성작들을 포스터 카드로 가로 나열.
+           카드 자체에 그라디언트 캡션을 얹어 어두운 모달 배경과 하나로 이어지게 한다 */
+        .fourcut-row {
+            margin-top: 22px;
+        }
+
+        .fourcut-row-head {
+            font-size: 15px;
+            font-weight: 800;
+            color: #f4f1e8;
+            margin-bottom: 12px;
+        }
+
+        .fourcut-row-head span {
+            color: #52b788;
+            font-weight: 700;
+        }
+
+        .fourcut-row-track {
+            display: flex;
+            gap: 14px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            scrollbar-width: thin;
+            scrollbar-color: #3a6b43 transparent;
+        }
+
+        .fourcut-row-track::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .fourcut-row-track::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .fourcut-row-track::-webkit-scrollbar-thumb {
+            background: #3a6b43;
+            border-radius: 999px;
+        }
+
+        .fourcut-row-card {
+            position: relative;
+            flex: 0 0 190px;
+            aspect-ratio: 16 / 10;
+            background: none;
+            border: none;
+            padding: 0;
+            border-radius: 10px;
+            overflow: hidden;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+            transition: transform 0.24s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.24s ease;
+        }
+
+        .fourcut-row-card:hover {
+            transform: scale(1.06) translateY(-4px);
+            box-shadow: 0 16px 30px rgba(0, 0, 0, 0.5);
+            z-index: 2;
+        }
+
+        .fourcut-row-thumb {
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center;
+            background-color: #1c1327;
+        }
+
+        .fourcut-row-badge {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            font: 700 9.5px 'Space Mono', monospace;
+            letter-spacing: 0.5px;
+            color: #ffd27a;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(212, 175, 90, 0.4);
+            border-radius: 5px;
+            padding: 2px 6px;
+        }
+
+        .fourcut-row-scrim {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 62%;
+            background: linear-gradient(0deg, rgba(9, 7, 15, 0.92) 10%, transparent 100%);
+        }
+
+        .fourcut-row-title {
+            position: absolute;
+            left: 10px;
+            right: 10px;
+            bottom: 9px;
+            font-size: 12.5px;
+            font-weight: 800;
+            color: #f4f1e8;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .fourcut-poster {
+            position: relative;
+            margin-top: 16px;
+            height: 366px;
+            border-radius: 16px;
+            overflow: hidden;
+            background: radial-gradient(120% 92% at 50% -12%, #3a2340, #170f24 58%, #0b0912 100%);
+            box-shadow: inset 0 0 0 6px #1c1327, inset 0 0 0 8px rgba(212, 175, 90, 0.5), 0 18px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .fourcut-poster-slides {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            overflow: hidden;
+            background: #0b0912;
+        }
+
+        .fourcut-poster-slide {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            transition: opacity 1.2s ease;
+            background-size: cover;
+            background-position: center;
+            animation: fourcutKenburns 11s ease-in-out infinite alternate;
+            will-change: transform, opacity;
+        }
+
+        @keyframes fourcutKenburns {
+            0% { transform: scale(1.06) translate(0, 0); }
+            100% { transform: scale(1.18) translate(-2%, -2%); }
+        }
+
+        .fourcut-nowplaying {
+            position: absolute;
+            top: 24px;
+            right: 30px;
+            z-index: 3;
+            font: 700 10.5px 'Space Mono', monospace;
+            letter-spacing: 1px;
+            color: #ffd27a;
+            background: rgba(0, 0, 0, 0.38);
+            border: 1px solid rgba(212, 175, 90, 0.32);
+            border-radius: 999px;
+            padding: 5px 12px;
+        }
+
+        .fourcut-poster-scrim {
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            pointer-events: none;
+            background: linear-gradient(0deg, rgba(9, 7, 15, 0.94) 0%, rgba(9, 7, 15, 0.5) 30%, rgba(9, 7, 15, 0.06) 54%, rgba(9, 7, 15, 0.42) 100%);
+        }
+
+        .fourcut-poster-bulbs {
+            position: absolute;
+            top: 11px;
+            left: 34px;
+            right: 34px;
+            height: 8px;
+            z-index: 3;
+            background: radial-gradient(circle, #ffe6a2 0 2.2px, transparent 3px) 0 50%/19px 8px repeat-x;
+            filter: drop-shadow(0 0 4px rgba(255, 214, 120, 0.85));
+        }
+
+        .fourcut-poster-title {
+            position: absolute;
+            left: 32px;
+            right: 32px;
+            bottom: 52px;
+            z-index: 3;
+        }
+
+        .fourcut-poster-kicker {
+            display: block;
+            font: 700 11px 'Space Mono', monospace;
+            letter-spacing: 4px;
+            color: #ffd27a;
+            margin-bottom: 9px;
+        }
+
+        .fourcut-poster-heading {
+            font: 900 34px 'Gothic A1', sans-serif;
+            color: #f7efe0;
+            letter-spacing: -1px;
+            text-shadow: 0 3px 22px rgba(0, 0, 0, 0.7);
+        }
+
+        .fourcut-poster-tagline {
+            font: 600 13.5px 'Gothic A1', sans-serif;
+            color: #dccfba;
+            margin-top: 7px;
+            text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7);
+        }
+
+        .fourcut-poster-bar {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 38px;
+            z-index: 3;
+            background: linear-gradient(#1c1327, #120c1c);
+            border-top: 1px solid rgba(212, 175, 90, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 26px;
+        }
+
+        .fourcut-poster-bar-left {
+            font: 700 10.5px 'Space Mono', monospace;
+            letter-spacing: 1.5px;
+            color: #ffd27a;
+        }
+
+        .fourcut-poster-bar-right {
+            font: 700 10.5px 'Space Mono', monospace;
+            letter-spacing: 1.5px;
+            color: #8a8272;
+        }
+
+        /* 넷플릭스 히어로 배너처럼, 필터 칩과 입장 버튼을 포스터 이미지 위에 바로 얹는다 */
+        .fourcut-poster-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 14px;
+            flex-wrap: wrap;
+        }
+
+        .fourcut-poster-chip {
+            font: 700 12px 'Gothic A1', sans-serif;
+            color: #f4f1e8;
+            background: rgba(255, 255, 255, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            backdrop-filter: blur(3px);
+            border-radius: 999px;
+            padding: 7px 14px;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .fourcut-poster-chip b {
+            color: #ffd27a;
+        }
+
+        .fourcut-poster-chip.muted {
+            color: #dccfba;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .fourcut-enter-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #357a58;
+            color: #fff;
+            border: none;
+            border-radius: 999px;
+            padding: 12px 22px;
+            font: 800 14px 'Gothic A1', sans-serif;
+            cursor: pointer;
+            box-shadow: 0 6px 16px rgba(27, 67, 50, 0.28);
+        }
+
+        /* ══════════════ 인생4컷 극장 — 상영관 (풀스크린 오버레이) ══════════════ */
+        .fourcut-theater {
+            position: fixed;
+            inset: 0;
+            z-index: 500;
+            opacity: 0;
+            pointer-events: none;
+            background: radial-gradient(circle at 50% 22%, #241c26, #0a0809 80%);
+            perspective: 1100px;
+            overflow: hidden;
+        }
+
+        .fourcut-theater-scene {
+            position: absolute;
+            inset: 0;
+            transform-origin: 50% 92%;
+            transform: scale(0.68) translateY(-6px);
+            z-index: 3;
+        }
+
+        .fourcut-seatwall {
+            position: absolute;
+            bottom: 0;
+            width: 22%;
+            height: 76%;
+            background: repeating-linear-gradient(0deg, #150f18 0 22px, #231b28 22px 38px);
+            opacity: 0.92;
+        }
+
+        .fourcut-seatwall-l {
+            left: 0;
+            transform: perspective(360px) rotateY(32deg);
+            transform-origin: left bottom;
+        }
+
+        .fourcut-seatwall-r {
+            right: 0;
+            transform: perspective(360px) rotateY(-32deg);
+            transform-origin: right bottom;
+        }
+
+        .fourcut-aisle {
+            position: absolute;
+            left: 50%;
+            bottom: 0;
+            transform: translateX(-50%);
+            width: 20%;
+            height: 54%;
+            background: linear-gradient(#2c2436, #0c0a0d);
+            clip-path: polygon(30% 0, 70% 0, 100% 100%, 0 100%);
+            opacity: 0.8;
+        }
+
+        .fourcut-screen {
+            position: absolute;
+            left: 50%;
+            top: 8%;
+            transform: translateX(-50%);
+            width: 56%;
+            aspect-ratio: 16 / 10;
+            background: #0b0b0e;
+            border: 9px solid #1a1512;
+            border-radius: 6px;
+            box-shadow: 0 0 0 2px #000, 0 26px 60px rgba(0, 0, 0, 0.66);
+            padding: 16px;
+            overflow: hidden;
+        }
+
+        .fourcut-shot {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            opacity: 0;
+        }
+
+        .fourcut-filmstrip {
+            position: relative;
+            width: 100%;
+            background: #141013;
+            border-radius: 5px;
+            padding: 11px 9px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .fourcut-sprocket {
+            position: absolute;
+            left: 6px;
+            right: 6px;
+            height: 6px;
+            background: repeating-linear-gradient(90deg, transparent 0 7px, rgba(235, 235, 222, 0.8) 7px 13px);
+            border-radius: 2px;
+        }
+
+        .fourcut-sprocket-top { top: 3px; }
+        .fourcut-sprocket-bottom { bottom: 3px; }
+
+        .fourcut-strip {
+            display: flex;
+            gap: 7px;
+            padding: 5px 2px;
+        }
+
+        .fourcut-frame {
+            position: relative;
+            flex: 1;
+            aspect-ratio: 3 / 4;
+            border-radius: 3px;
+            overflow: hidden;
+            background-size: cover;
+            background-position: center;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+        }
+
+        .fourcut-frame-label {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            font: 700 8.5px 'Gothic A1', sans-serif;
+            color: #fff;
+            text-align: center;
+            padding: 3px 0;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.6));
+        }
+
+        .fourcut-caption {
+            text-align: center;
+        }
+
+        .fourcut-caption-title {
+            font: 800 16px 'Gothic A1', sans-serif;
+            color: #f4f1e8;
+        }
+
+        .fourcut-caption-date {
+            font: 700 11px 'Space Mono', monospace;
+            color: #a9b3a6;
+            letter-spacing: 0.5px;
+            margin-top: 2px;
+        }
+
+        .fourcut-scrglow {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at 50% 42%, #fff, rgba(255, 255, 255, 0.35));
+            opacity: 0;
+            mix-blend-mode: screen;
+            pointer-events: none;
+            z-index: 9;
+        }
+
+        .fourcut-grain {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 8;
+            background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.04) 0 1px, transparent 1px 3px);
+            mix-blend-mode: overlay;
+            animation: fourcutGrain 0.32s steps(2) infinite;
+        }
+
+        @keyframes fourcutGrain {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 0.85; }
+        }
+
+        .fourcut-countdown {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%) scale(1);
+            width: 74px;
+            height: 74px;
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font: 700 34px 'Space Mono', monospace;
+            color: #fff;
+            opacity: 0;
+            z-index: 7;
+            text-shadow: 0 0 12px rgba(255, 255, 255, 0.7);
+            overflow: hidden;
+        }
+
+        .fourcut-countdown-sweep {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            width: 2px;
+            height: 50%;
+            background: rgba(255, 255, 255, 0.7);
+            transform-origin: bottom center;
+            animation: fourcutSpin 1s linear infinite;
+        }
+
+        @keyframes fourcutSpin {
+            to { transform: rotate(360deg); }
+        }
+
+        .fourcut-curtain {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 58%;
+            z-index: 6;
+        }
+
+        .fourcut-curtain-l {
+            left: 0;
+            transform-origin: left center;
+            background: repeating-linear-gradient(90deg, #14311f 0 9px, #2e5233 9px 20px, #3a6b43 20px 24px);
+            box-shadow: inset -12px 0 20px rgba(0, 0, 0, 0.55);
+        }
+
+        .fourcut-curtain-r {
+            right: 0;
+            transform-origin: right center;
+            background: repeating-linear-gradient(90deg, #3a6b43 0 4px, #2e5233 4px 15px, #14311f 15px 24px);
+            box-shadow: inset 12px 0 20px rgba(0, 0, 0, 0.55);
+        }
+
+        .fourcut-valance {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 20px;
+            z-index: 8;
+            background: linear-gradient(#3a6b43, #14311f);
+            border-bottom: 2px solid rgba(212, 175, 90, 0.55);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45);
+        }
+
+        .fourcut-beam {
+            position: absolute;
+            left: 50%;
+            bottom: 12%;
+            transform: translateX(-50%);
+            width: 60%;
+            height: 64%;
+            opacity: 0;
+            z-index: 2;
+            background: linear-gradient(0deg, rgba(206, 232, 255, 0), rgba(206, 232, 255, 0.14));
+            clip-path: polygon(42% 100%, 58% 100%, 96% 0, 4% 0);
+            mix-blend-mode: screen;
+            pointer-events: none;
+        }
+
+        .fourcut-dustwrap {
+            position: absolute;
+            inset: 0;
+        }
+
+        .fourcut-dust {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(230, 240, 255, 0.9);
+            animation-name: fourcutDust;
+            animation-timing-function: linear;
+            animation-iteration-count: infinite;
+        }
+
+        @keyframes fourcutDust {
+            0% { transform: translate(0, 0); opacity: 0; }
+            20% { opacity: 0.8; }
+            100% { transform: translate(var(--dx, 10px), -70px); opacity: 0; }
+        }
+
+        .fourcut-spill {
+            position: absolute;
+            left: 50%;
+            top: 34%;
+            transform: translate(-50%, -50%);
+            width: 70%;
+            height: 64%;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(206, 232, 255, 0.26), transparent 66%);
+            opacity: 0;
+            z-index: 5;
+            mix-blend-mode: screen;
+            pointer-events: none;
+        }
+
+        .fourcut-house {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 0;
+            height: 34%;
+            background: radial-gradient(ellipse at 50% 0, rgba(255, 224, 170, 0.5), transparent 72%);
+            opacity: 0.5;
+            z-index: 6;
+            pointer-events: none;
+        }
+
+        .fourcut-seats {
+            position: absolute;
+            left: -2%;
+            right: -2%;
+            bottom: 0;
+            height: 22%;
+            transform: translateY(100%);
+            z-index: 10;
+        }
+
+        .fourcut-seats-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60%;
+            background: linear-gradient(180deg, #100b0e, #050304);
+            border-radius: 52px 52px 0 0;
+        }
+
+        .fourcut-seat-head {
+            position: absolute;
+            bottom: 44%;
+            width: 60px;
+            height: 64px;
+            border-radius: 50% 50% 44% 44%;
+            background: #0a0709;
+        }
+
+        .fourcut-exit-btn {
+            position: absolute;
+            left: 50%;
+            bottom: 70px;
+            transform: translateX(-50%);
+            z-index: 16;
+            opacity: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            color: #f4f1e8;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 999px;
+            padding: 8px 14px;
+            font: 800 12px 'Gothic A1', sans-serif;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+        }
+
+        .fourcut-sit-btn {
+            position: absolute;
+            left: 50%;
+            bottom: 24%;
+            transform: translate(-50%, 0);
+            z-index: 16;
+            opacity: 0;
+            pointer-events: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            background: #357a58;
+            color: #fff;
+            border: none;
+            border-radius: 999px;
+            padding: 15px 28px;
+            font: 800 15px 'Gothic A1', sans-serif;
+            cursor: pointer;
+            animation: fourcutSitPulse 2.2s ease-out infinite;
+        }
+
+        @keyframes fourcutSitPulse {
+            0%, 100% { box-shadow: 0 10px 26px rgba(27, 67, 50, 0.5), 0 0 0 0 rgba(82, 183, 136, 0.55); }
+            70% { box-shadow: 0 10px 26px rgba(27, 67, 50, 0.5), 0 0 0 14px rgba(82, 183, 136, 0); }
+        }
+
+        .fourcut-nav {
+            position: absolute;
+            left: 50%;
+            bottom: 18px;
+            transform: translateX(-50%);
+            z-index: 16;
+            opacity: 0;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .fourcut-nav button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            color: #f4f1e8;
+            font: 700 18px 'Gothic A1', sans-serif;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+        }
+
+        .fourcut-nav span {
+            font: 700 12px 'Space Mono', monospace;
+            color: #f4f1e8;
+            letter-spacing: 1px;
+            min-width: 52px;
+            text-align: center;
+        }
+
+        .growth-card-list {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            gap: 14px;
+        }
+
+        .growth-card {
+            position: relative;
+            overflow: hidden;
+            padding: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 26px;
+            background: rgba(255, 255, 255, 0.94);
+            box-shadow: none;
+            cursor: pointer;
+            transition: transform 0.22s ease, box-shadow 0.22s ease, opacity 0.22s ease, filter 0.22s ease;
+        }
+
+        .growth-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .growth-card.is-selected {
+            box-shadow: none;
+            outline: 2px solid rgba(82, 183, 136, 0.55);
+        }
+
+        .growth-card.is-complete {
+            opacity: 0.66;
+            filter: grayscale(0.55);
+        }
+
+        .growth-card.is-locked {
+            opacity: 0.58;
+        }
+
+        .growth-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .growth-card-title {
+            color: var(--text-color);
+            font-size: 15px;
+            font-weight: 900;
+            line-height: 1.35;
+            margin-bottom: 5px;
+        }
+
+        .growth-card-date {
+            color: var(--text-muted);
+            font-size: 11.5px;
+            font-weight: 800;
+        }
+
+        .growth-dday-pill {
+            min-width: 58px;
+            min-height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 10px;
+            border-radius: 999px;
+            background: var(--growth-accent, var(--primary-green));
+            color: #ffffff;
+            font-size: 11px;
+            font-weight: 900;
+            box-shadow: none;
+        }
+
+        .growth-stage-track {
+            position: relative;
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .growth-stage-track::before {
+            content: "";
+            position: absolute;
+            top: 23px;
+            left: 12%;
+            right: 12%;
+            height: 3px;
+            border-radius: 999px;
+            background: rgba(27, 67, 50, 0.12);
+        }
+
+        .growth-stage {
+            position: relative;
+            z-index: 1;
+            min-width: 0;
+            display: grid;
+            justify-items: center;
+            gap: 6px;
+            text-align: center;
+        }
+
+        .growth-stage-dot {
+            width: 46px;
+            height: 46px;
+            display: grid;
+            place-items: center;
+            border-radius: 17px;
+            background: #f1f7f4;
+            color: var(--text-muted);
+            font-size: 22px;
+            border: 1px solid rgba(82, 183, 136, 0.16);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        }
+
+        .growth-stage.complete .growth-stage-dot {
+            background: linear-gradient(145deg, #e8f8ef, #ffffff);
+            color: var(--primary-green);
+        }
+
+        .growth-stage.active .growth-stage-dot {
+            background: linear-gradient(145deg, #52b788, #1b4332);
+            color: #ffffff;
+            box-shadow:
+                0 10px 24px rgba(82, 183, 136, 0.3),
+                0 0 0 5px rgba(82, 183, 136, 0.16);
+            animation: growthStagePulse 1.9s ease-in-out infinite;
+        }
+
+        @keyframes growthStagePulse {
+
+            0%,
+            100% {
+                transform: translateY(0) scale(1);
+            }
+
+            50% {
+                transform: translateY(-2px) scale(1.04);
+            }
+        }
+
+        .growth-stage.future .growth-stage-dot {
+            opacity: 0.56;
+        }
+
+        .growth-stage-name {
+            max-width: 72px;
+            color: var(--text-muted);
+            font-size: 10.5px;
+            font-weight: 900;
+            line-height: 1.25;
+        }
+
+        .growth-stage.active .growth-stage-name {
+            color: var(--primary-green);
+        }
+
+        .growth-progress {
+            height: 7px;
+            border-radius: 999px;
+            overflow: hidden;
+            background: rgba(27, 67, 50, 0.08);
+        }
+
+        .growth-progress span {
+            display: block;
+            width: var(--growth-progress, 25%);
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, #52b788, #1b4332);
+        }
+
+        .growth-status-line {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 10px;
+            color: var(--text-muted);
+            font-size: 11px;
+            font-weight: 800;
+        }
+
+        .growth-next {
+            color: var(--primary-green);
+        }
+
+        /* CSS 스크롤 트리거 애니메이션 — 개별 카드가 아니라 캐러셀 줄 전체에 걸어서,
+           카드마다 있는 hover/선택 상태의 transform·opacity·filter와 겹치지 않게 하고
+           한 번에 크게 움직여 눈에 띄게 만든다. 스크롤 컨테이너에서 이 줄이 세로로
+           뷰포트에 들어오는 만큼 애니메이션 진행률이 실시간으로 따라간다 (JS 없이 순수 CSS). */
+        @keyframes growthRailReveal {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* animation-timeline을 지원하지 않는 브라우저에서는 줄이 영영 안 보이는 일이
+           없도록 애니메이션을 끄고 항상 보이는 상태로 되돌린다 */
+        @supports not (animation-timeline: view()) {
+            .growth-card-rail {
+                animation: none;
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        /* ── 4컷 포토부스 카드 ── */
+        .growth-card-rail {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            min-width: 0;
+            width: 100%;
+            position: relative;
+            animation: growthRailReveal linear both;
+            animation-timeline: view();
+            animation-range: entry 0% entry 90%;
+        }
+
+        .carousel-btn {
+            flex-shrink: 0;
+            width: 28px;
+            height: 60px;
+            border-radius: 8px;
+            background: rgba(82, 183, 136, 0.10);
+            border: 1px solid rgba(82, 183, 136, 0.22);
+            color: var(--primary-green, #52b788);
+            font-size: 22px;
+            font-weight: 900;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.18s, transform 0.15s;
+            line-height: 1;
+            user-select: none;
+            z-index: 4;
+            position: relative;
+        }
+        .carousel-btn:hover {
+            background: rgba(82, 183, 136, 0.22);
+            transform: scale(1.06);
+        }
+        .carousel-btn:active {
+            transform: scale(0.94);
+        }
+
+        .growth-card-viewport {
+            flex: 0 1 936px;
+            min-width: 0;
+            max-width: 936px;
+            overflow-x: auto;
+            overflow-y: visible;
+            scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
+            scrollbar-width: none;
+        }
+        .growth-card-viewport::-webkit-scrollbar { display: none; }
+
+        /* viewport::before/after는 더 이상 fade로 사용 안 함 */
+        .growth-card-viewport::before,
+        .growth-card-viewport::after {
+            display: none;
+        }
+
+        .growth-card-list {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            gap: 14px;
+            align-items: flex-start;
+            justify-content: flex-start;
+            padding-top: 6px;
+            padding-bottom: 8px;
+            min-width: max-content;
+        }
+
+        .growth-filter-empty {
+            min-width: 240px;
+            min-height: 180px;
+            display: grid;
+            place-items: center;
+            padding: 18px;
+            border: 1px dashed rgba(82,183,136,0.38);
+            border-radius: 15px;
+            background: rgba(255,255,255,0.45);
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 800;
+            text-align: center;
+        }
+
+        .growth-card.four-cut {
+            flex: 0 0 var(--dt-carousel-card-w, 176px);
+            width: var(--dt-carousel-card-w, 176px);
+            scroll-snap-align: start;
+            padding: 12px 11px 13px;
+            background: #8a9a82;
+            border-radius: 14px;
+            overflow: hidden;
+            color: #f4f1e8;
+            border: none;
+            box-shadow: none;
+            font-family: 'Gothic A1', -apple-system, BlinkMacSystemFont, sans-serif;
+            transition: transform 0.22s ease, box-shadow 0.22s ease;
+        }
+
+        .growth-card.four-cut:hover {
+            transform: translateY(-3px);
+        }
+
+        .growth-card.four-cut.is-selected {
+            outline: none;
+            box-shadow: 0 0 0 2px #4a7c52, 0 10px 22px rgba(46, 82, 51, 0.28);
+            transform: translateY(-3px);
+        }
+
+        .growth-card.four-cut.is-complete {
+            opacity: 1;
+            filter: none;
+        }
+
+        .strip-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 7px;
+            padding: 1px 2px 9px;
+        }
+
+        .strip-title-wrap {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .strip-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-family: 'Space Mono', 'Courier New', monospace;
+            font-size: 8.5px;
+            font-weight: 700;
+            letter-spacing: 0.6px;
+            color: rgba(244, 241, 232, 0.72);
+            line-height: 1;
+            white-space: nowrap;
+        }
+
+        .strip-kicker.is-shooting {
+            color: #ffb3a3;
+        }
+
+        .strip-kicker-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #c0392b;
+            animation: stripRecBlink 1.2s ease-in-out infinite;
+        }
+
+        .strip-title {
+            font-size: 12px;
+            font-weight: 850;
+            color: #f4f1e8;
+            line-height: 1.25;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .growth-card.four-cut .growth-dday-pill {
+            font-family: 'Space Mono', 'Courier New', monospace;
+            font-size: 9px;
+            min-height: 20px;
+            min-width: 40px;
+            padding: 0 7px;
+            flex-shrink: 0;
+            background: #2e5233;
+            color: #f4f1e8;
+            box-shadow: none;
+        }
+
+        .strip-body {
+            position: relative;
+            padding: 12px 8px 8px;
+            background: #f4f1e8;
+            border: none;
+            border-radius: 3px;
+            overflow: visible;
+        }
+
+        /* 상하단 스캘럽(물결) 엣지 — 크림 티켓이 세이지 마운트 위에서 뜯긴 것처럼 */
+        .strip-body::before,
+        .strip-body::after {
+            content: '';
+            position: absolute;
+            left: -1px;
+            right: -1px;
+            height: 7px;
+            background-image: radial-gradient(circle at 7px 7px, #8a9a82 7px, transparent 7.5px);
+            background-size: 14px 14px;
+            background-repeat: repeat-x;
+        }
+
+        .strip-body::before {
+            top: -7px;
+            background-position: 0 0;
+        }
+
+        .strip-body::after {
+            bottom: -7px;
+            transform: scaleY(-1);
+        }
+
+        /* 컷 사이 점선 퍼포레이션 + 양쪽 노치 */
+        .strip-perforation {
+            position: relative;
+            height: 0;
+            margin: 7px -8px;
+            border-top: 2px dashed rgba(46, 82, 51, 0.32);
+        }
+
+        .strip-perforation::before,
+        .strip-perforation::after {
+            content: '';
+            position: absolute;
+            top: -6px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #8a9a82;
+        }
+
+        .strip-perforation::before { left: -6px; }
+        .strip-perforation::after { right: -6px; }
+
+        .strip-frames {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            min-width: 0;
+            overflow: visible;
+            background: transparent;
+            z-index: 1;
+        }
+
+        .strip-frame {
+            position: relative;
+            height: 106px;
+            background:
+                linear-gradient(135deg, rgba(232,225,211,0.5) 0 25%, transparent 25% 50%, rgba(232,225,211,0.5) 50% 75%, transparent 75%),
+                #faf6ee;
+            background-size: 18px 18px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            gap: 4px;
+            border: 1px solid #eee1cf;
+            border-radius: 5px;
+        }
+
+        .strip-frame-number {
+            position: absolute;
+            top: 8px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 26px;
+            font-weight: 850;
+            color: rgba(28,26,23,0.12);
+            line-height: 1;
+            z-index: 0;
+        }
+
+        .strip-frame-photo {
+            position: absolute;
+            inset: 0;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .strip-frame--done .strip-frame-label {
+            position: absolute;
+            bottom: 6px;
+            left: 7px;
+            right: auto;
+            z-index: 1;
+            background: rgba(255,255,255,0.88);
+            color: #2f7d5f;
+            padding: 2px 6px;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .strip-frame-label {
+            font-size: 9.5px;
+            font-weight: 850;
+            color: #1c1a17;
+            text-align: center;
+            line-height: 1.2;
+            z-index: 1;
+            padding: 0 4px;
+        }
+
+        .strip-frame-icon {
+            font-size: 22px;
+            z-index: 1;
+        }
+
+        /* 인생4컷 단계 상태는 세 가지뿐이다: locked / active / done */
+
+        /* ACTIVE — 지금 업로드 가능한 단계. 뷰파인더 톤 + REC 배지 + 아이콘 pulse */
+        .strip-frame--active {
+            background:
+                linear-gradient(135deg, rgba(204,230,216,0.88) 0 25%, transparent 25% 50%, rgba(204,230,216,0.88) 50% 75%, transparent 75%),
+                #edf8f2;
+            background-size: 18px 18px;
+            border-color: rgba(47,125,95,0.38);
+            box-shadow: inset 0 0 0 1px rgba(47,125,95,0.22);
+            cursor: pointer;
+        }
+
+        .strip-frame--active:hover {
+            background:
+                linear-gradient(135deg, rgba(207,230,218,0.86) 0 25%, transparent 25% 50%, rgba(207,230,218,0.86) 50% 75%, transparent 75%),
+                #e3f4ea;
+            background-size: 18px 18px;
+        }
+
+        .strip-frame--active .strip-upload-icon {
+            animation: stripGrow 2s ease-in-out infinite;
+        }
+
+        @keyframes stripGrow {
+            0%, 100% { transform: scale(1);   filter: drop-shadow(0 0 3px rgba(82,183,136,0.5)); }
+            50%       { transform: scale(1.18); filter: drop-shadow(0 0 10px rgba(82,183,136,1)); }
+        }
+
+        .strip-rec-badge {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            font-size: 8px;
+            font-weight: 850;
+            letter-spacing: 0.4px;
+            color: #c0392b;
+            z-index: 1;
+        }
+
+        .strip-rec-dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #c0392b;
+            animation: stripRecBlink 1.2s ease-in-out infinite;
+        }
+
+        @keyframes stripRecBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.25; }
+        }
+
+        /* LOCKED — 아직 열리지 않은 단계. 흑백 + 흐림 + 자물쇠 */
+        .strip-frame--locked {
+            filter: grayscale(0.9) blur(0.2px);
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .strip-lock-icon {
+            font-size: 20px;
+            z-index: 1;
+            opacity: 0.75;
+        }
+
+        .strip-frame--uploadable {
+            cursor: pointer;
+        }
+
+        .strip-frame--locked-proof {
+            cursor: not-allowed;
+        }
+
+        .strip-upload-btn {
+            border: 0;
+            background: transparent;
+            color: inherit;
+            font: inherit;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            cursor: pointer;
+            z-index: 1;
+        }
+
+        .strip-upload-icon {
+            width: 22px;
+            height: 22px;
+            display: grid;
+            place-items: center;
+            color: #2f7d5f;
+            z-index: 1;
+        }
+
+        .strip-upload-svg {
+            width: 22px;
+            height: 22px;
+            display: block;
+        }
+
+        .strip-upload-hint {
+            font-size: 9px;
+            font-weight: 800;
+            color: #2f7d5f;
+        }
+
+        .strip-footer {
+            min-height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+            padding: 9px 2px 0;
+            text-align: center;
+        }
+
+        .strip-footer-brand {
+            font-family: 'Space Mono', 'Courier New', monospace;
+            font-size: 8.5px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            color: rgba(244, 241, 232, 0.6);
+        }
+
+        .strip-footer-count {
+            font-family: 'Space Mono', 'Courier New', monospace;
+            font-size: 9.5px;
+            font-weight: 700;
+            color: #f4f1e8;
+        }
+
+        .growth-card.four-cut.is-complete .strip-footer-count {
+            color: #b9ffb0;
+        }
+
+        /* 세이지/크림 티켓 톤은 다크모드에서도 그대로 유지 */
+        body.dark-mode .growth-card.four-cut {
+            background: #8a9a82;
+            color: #f4f1e8;
+        }
+
+        .mobile-window .growth-card.four-cut {
+            padding: 10px 10px 12px;
+            flex: 0 0 var(--mb-carousel-card-w, 150px);
+            width: var(--mb-carousel-card-w, 150px);
+        }
+
+        .mobile-window .growth-card-rail {
+            max-width: 100%;
+            padding: 0;
+        }
+        .mobile-window .carousel-btn {
+            display: none;
+        }
+
+        .mobile-window .growth-card-viewport {
+            flex: 1;
+            max-width: 100%;
+            overflow-x: auto;
+            overflow-y: visible;
+            scrollbar-width: none;
+        }
+        .mobile-window .growth-card-viewport::-webkit-scrollbar { display: none; }
+
+        .mobile-window .growth-card-viewport::before,
+        .mobile-window .growth-card-viewport::after {
+            display: none;
+        }
+
+        .mobile-window .growth-card-list {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            min-width: max-content;
+        }
+
+        /* 약속 여정 탭 타이틀 — growth-kicker/growth-title과 같은 2단 구성으로 통일, 아래 영수증 카드와 폭을 맞춰 버튼도 가깝게 */
+        .journey-section-title {
+            max-width: 660px;
+            margin: 0 auto 14px;
+            align-items: flex-end;
+        }
+
+        .journey-heading {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .journey-page-kicker {
+            font-family: 'Space Mono', 'Courier New', monospace;
+            font-size: 11px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            color: #2e5233;
+        }
+
+        .journey-page-title {
+            font-size: 19px;
+            font-weight: 900;
+            line-height: 1.25;
+            color: var(--text-color);
+        }
+
+        body.dark-mode .journey-page-kicker {
+            color: #9ccc65;
+        }
+
+        /* 약속 여정 상세 카드 — 세이지 앨범 마운트에 붙인 포토부스 영수증 (인생4컷 레일과 톤 통일) */
+        .growth-detail {
+            position: relative;
+            max-width: 660px;
+            margin: 0 auto;
+            padding: 34px 22px 30px;
+            border-radius: 18px;
+            color: #1c1a17;
+            background:
+                radial-gradient(circle at 88% 12%, rgba(244, 241, 232, 0.14), transparent 34%),
+                repeating-linear-gradient(135deg, rgba(28, 26, 23, 0.03) 0 3px, transparent 3px 7px),
+                #8a9a82;
+            border: none;
+            box-shadow: 0 18px 40px rgba(46, 82, 51, 0.26);
+            overflow: hidden;
+        }
+
+        .receipt-paper {
+            position: relative;
+            width: 600px;
+            max-width: 100%;
+            margin: 0 auto;
+            background: #faf6ee;
+            padding: 28px 40px 36px;
+            box-shadow: 0 10px 24px rgba(28, 26, 23, 0.2);
+            font-family: 'Space Mono', 'Courier New', monospace;
+            color: #1c1a17;
+        }
+
+        .receipt-paper::before,
+        .receipt-paper::after {
+            content: "";
+            position: absolute;
+            top: -14px;
+            width: 110px;
+            height: 26px;
+            background: rgba(244, 241, 232, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+        }
+
+        .receipt-paper::before {
+            left: -16px;
+            transform: rotate(-6deg);
+        }
+
+        .receipt-paper::after {
+            right: -16px;
+            transform: rotate(5deg);
+        }
+
+        .receipt-zigzag {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: -8px;
+            height: 9px;
+            background-image:
+                linear-gradient(135deg, #faf6ee 50%, transparent 50%),
+                linear-gradient(-135deg, #faf6ee 50%, transparent 50%);
+            background-size: 14px 9px;
+            background-repeat: repeat-x;
+        }
+
+        .receipt-head {
+            text-align: center;
+            padding-bottom: 14px;
+            border-bottom: 1px dashed rgba(28, 26, 23, 0.3);
+        }
+
+        .receipt-brand {
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 3.5px;
+        }
+
+        .receipt-sub {
+            font-size: 9.5px;
+            color: rgba(28, 26, 23, 0.5);
+            margin-top: 4px;
+            letter-spacing: 1px;
+        }
+
+        .receipt-stamp-wrap {
+            display: flex;
+            justify-content: center;
+            padding: 18px 0 12px;
+        }
+
+        .receipt-stamp {
+            transform: rotate(-4deg);
+            border: 3px solid var(--stamp, #c0392b);
+            color: var(--stamp, #c0392b);
+            padding: 7px 24px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 0 0 3px #faf6ee, 0 0 0 4px color-mix(in srgb, var(--stamp, #c0392b) 25%, transparent);
+        }
+
+        .receipt-stamp-label {
+            display: block;
+            font-size: 9px;
+            letter-spacing: 1.5px;
+            font-weight: 700;
+        }
+
+        .receipt-stamp-dday {
+            display: block;
+            font-size: 42px;
+            font-weight: 700;
+            line-height: 1;
+            letter-spacing: -1px;
+        }
+
+        .receipt-title {
+            font-family: 'Gothic A1', sans-serif;
+            text-align: center;
+            font-size: 24px;
+            font-weight: 900;
+            line-height: 1.3;
+            margin-bottom: 16px;
+            color: #1c1a17;
+        }
+
+        .receipt-meta {
+            font-size: 12.5px;
+            line-height: 2.3;
+            border-top: 1px dashed rgba(28, 26, 23, 0.3);
+            border-bottom: 1px dashed rgba(28, 26, 23, 0.3);
+            padding: 9px 0;
+        }
+
+        .receipt-meta > div {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .receipt-meta > div > span:first-child {
+            color: rgba(28, 26, 23, 0.5);
+        }
+
+        .receipt-meta > div > span:last-child {
+            letter-spacing: .5px;
+            text-align: right;
+        }
+
+        .receipt-memo-label {
+            font-size: 9px;
+            color: rgba(28, 26, 23, 0.45);
+            letter-spacing: 1.5px;
+            margin: 14px 0 8px;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .receipt-memo {
+            font-family: 'Gothic A1', sans-serif;
+            font-size: 14px;
+            line-height: 1.9;
+            color: #1c1a17;
+            outline: none;
+        }
+
+        .receipt-memo:empty::before {
+            content: attr(placeholder);
+            display: block;
+            text-align: center;
+            font-style: italic;
+            color: rgba(28, 26, 23, 0.4);
+            padding: 4px 0;
+        }
+
+        .receipt-paper:has(.receipt-memo:empty) .receipt-memo-label {
+            display: none;
+        }
+
+        .receipt-paper:has(.receipt-memo:empty) .receipt-memo:empty::before {
+            padding: 16px 0 4px;
+        }
+
+        .receipt-memo ul,
+        .receipt-memo ol {
+            padding-left: 20px;
+            margin: 8px 0;
+        }
+
+        .receipt-memo li {
+            margin-bottom: 5px;
+        }
+
+        .receipt-memo h1,
+        .receipt-memo h2,
+        .receipt-memo h3,
+        .receipt-memo h4 {
+            font-size: 14px;
+            font-weight: 800;
+            color: #2e5233;
+            margin: 12px 0 6px;
+        }
+
+        .receipt-memo hr {
+            border: none;
+            border-top: 1px dashed rgba(28, 26, 23, 0.35);
+            margin: 12px 0;
+        }
+
+        .receipt-barcode {
+            height: 24px;
+            margin: 16px 0 14px;
+            background-image: repeating-linear-gradient(90deg, #1c1a17 0 2px, transparent 2px 4px, #1c1a17 4px 5px, transparent 5px 9px);
+        }
+
+        .receipt-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .receipt-actions button {
+            flex: 1;
+            font-family: 'Space Mono', 'Courier New', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            padding: 11px 0;
+            border-radius: 5px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            background: #2e5233;
+            color: #f4f1e8;
+            transition: filter 0.2s ease;
+        }
+
+        .receipt-actions button:hover {
+            filter: brightness(1.08);
+        }
+
+        .receipt-actions button.danger {
+            background: transparent;
+            color: #c0392b;
+            border-color: #c0392b;
+        }
+
+        .receipt-actions button.danger:hover {
+            background: rgba(192, 57, 43, 0.1);
+        }
+
+        .mobile-window .growth-hero {
+            grid-template-columns: 1fr;
+            padding: 14px 0 14px;
+        }
+
+        .mobile-window .growth-density {
+            width: 100%;
+        }
+
+        .mobile-window .growth-density button {
+            flex: 1;
+            padding: 0 8px;
+        }
+
+        .mobile-window .growth-card {
+            padding: 14px;
+            border-radius: 22px;
+        }
+
+        .mobile-window .growth-stage-track {
+            gap: 4px;
+        }
+
+        .mobile-window .growth-stage-dot {
+            width: 38px;
+            height: 38px;
+            border-radius: 14px;
+            font-size: 19px;
+        }
+
+        .mobile-window .growth-stage-name {
+            max-width: 58px;
+            font-size: 9.5px;
+        }
+
+        .mobile-window .growth-detail {
+            padding: 24px 14px 22px;
+            border-radius: 16px;
+        }
+
+        .mobile-window .receipt-paper {
+            width: 100%;
+            padding: 22px 20px 30px;
+        }
+
+        .mobile-window .receipt-title {
+            font-size: 19px;
+        }
+
+        .mobile-window .receipt-stamp-dday {
+            font-size: 34px;
+        }
+
+        /* 일정계획: 캘린더 대신 약속까지 걸어가는 마일스톤 여정 */
+        .journey-shell {
+            display: grid;
+            gap: 16px;
+        }
+
+        .journey-topbar {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 14px;
+            align-items: center;
+            padding: 16px;
+            border-radius: 24px;
+            background:
+                radial-gradient(circle at 100% 0%, rgba(82, 183, 136, 0.22), transparent 34%),
+                linear-gradient(135deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.08));
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 18px 38px rgba(8, 28, 22, 0.18);
+            backdrop-filter: blur(14px);
+        }
+
+        .journey-kicker {
+            display: block;
+            font-size: 11px;
+            font-weight: 900;
+            color: rgba(255, 255, 255, 0.58);
+            margin-bottom: 4px;
+        }
+
+        .journey-title {
+            display: block;
+            font-size: 18px;
+            font-weight: 900;
+            color: rgba(255, 255, 255, 0.96);
+            margin-bottom: 4px;
+        }
+
+        .journey-subtitle {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1.45;
+            color: rgba(255, 255, 255, 0.66);
+        }
+
+        .journey-density-control {
+            display: flex;
+            gap: 6px;
+            padding: 5px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.82);
+            box-shadow: inset 0 0 0 1px rgba(82, 183, 136, 0.16);
+        }
+
+        .journey-density-btn {
+            min-height: 34px;
+            padding: 0 12px;
+            border: 0;
+            border-radius: 999px;
+            background: transparent;
+            color: var(--primary-green);
+            font-size: 11px;
+            font-weight: 900;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+        }
+
+        .journey-density-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .journey-density-btn.active {
+            background: var(--btn-primary-bg);
+            color: var(--button-text);
+            box-shadow: 0 8px 18px rgba(27, 67, 50, 0.2);
+        }
+
+        .journey-map {
+            position: relative;
+            min-height: var(--journey-height, 620px);
+            border-radius: 28px;
+            overflow: hidden;
+            padding: 24px 16px;
+            background:
+                radial-gradient(circle at 50% 12%, rgba(82, 183, 136, 0.18), transparent 30%),
+                linear-gradient(180deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.06));
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            box-shadow:
+                0 22px 48px rgba(8, 28, 22, 0.22),
+                inset 0 1px 0 rgba(255, 255, 255, 0.18);
+        }
+
+        .journey-road-svg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0.98;
+        }
+
+        .journey-road-base {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.28);
+            stroke-width: 18;
+            stroke-linecap: round;
+        }
+
+        .journey-road-progress {
+            fill: none;
+            stroke: rgba(82, 183, 136, 0.82);
+            stroke-width: 8;
+            stroke-linecap: round;
+            filter: drop-shadow(0 0 10px rgba(82, 183, 136, 0.36));
+        }
+
+        .journey-avatar {
+            position: absolute;
+            top: var(--avatar-top, 54px);
+            left: 50%;
+            z-index: 4;
+            width: 54px;
+            height: 54px;
+            display: grid;
+            place-items: center;
+            border-radius: 20px;
+            background: linear-gradient(145deg, #f8fffb, #dff7e9);
+            color: var(--primary-green);
+            font-size: 26px;
+            box-shadow:
+                0 14px 30px rgba(8, 28, 22, 0.24),
+                0 0 0 5px rgba(82, 183, 136, 0.24),
+                inset 0 1px 0 rgba(255, 255, 255, 0.9);
+            transform: translate(-50%, -50%);
+            animation: avatarBreathe 2.8s ease-in-out infinite;
+        }
+
+        @keyframes avatarBreathe {
+
+            0%,
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+            }
+
+            50% {
+                transform: translate(-50%, -54%) scale(1.04);
+            }
+        }
+
+        .journey-node {
+            position: absolute;
+            top: var(--node-top);
+            left: var(--node-left);
+            z-index: 3;
+            width: min(260px, 43%);
+            min-height: 96px;
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr);
+            gap: 10px;
+            align-items: center;
+            padding: 13px;
+            border-radius: 22px;
+            border: 1px solid rgba(255, 255, 255, 0.34);
+            background: rgba(255, 255, 255, 0.92);
+            box-shadow: 0 18px 34px rgba(8, 28, 22, 0.18);
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            transition: transform 0.22s ease, opacity 0.22s ease, filter 0.22s ease, box-shadow 0.22s ease;
+        }
+
+        .journey-node:hover {
+            transform: translate(-50%, -53%) scale(1.02);
+        }
+
+        .journey-node.is-selected {
+            box-shadow:
+                0 20px 38px rgba(8, 28, 22, 0.22),
+                0 0 0 2px var(--node-accent, var(--accent-green)),
+                0 0 22px var(--node-glow, rgba(82, 183, 136, 0.28));
+        }
+
+        .journey-node.is-complete {
+            opacity: 0.62;
+            filter: grayscale(0.75);
+        }
+
+        .journey-node.is-next {
+            animation: nextMilestonePulse 1.9s ease-in-out infinite;
+        }
+
+        @keyframes nextMilestonePulse {
+
+            0%,
+            100% {
+                box-shadow: 0 20px 38px rgba(8, 28, 22, 0.22), 0 0 0 2px var(--node-accent), 0 0 12px var(--node-glow);
+            }
+
+            50% {
+                box-shadow: 0 22px 42px rgba(8, 28, 22, 0.28), 0 0 0 5px rgba(245, 158, 11, 0.22), 0 0 26px var(--node-glow);
+            }
+        }
+
+        .journey-node.is-locked {
+            opacity: 0.52;
+            filter: blur(0.25px) saturate(0.7);
+        }
+
+        .journey-node-icon {
+            width: 42px;
+            height: 42px;
+            display: grid;
+            place-items: center;
+            border-radius: 16px;
+            background: color-mix(in srgb, var(--node-accent, #52b788) 18%, white);
+            color: var(--node-accent, var(--primary-green));
+            font-size: 21px;
+            font-weight: 900;
+        }
+
+        .journey-node-meta {
+            min-width: 0;
+        }
+
+        .journey-node-dday {
+            display: inline-flex;
+            align-items: center;
+            min-height: 22px;
+            padding: 0 8px;
+            border-radius: 999px;
+            background: var(--node-accent, var(--primary-green));
+            color: #ffffff;
+            font-size: 10px;
+            font-weight: 900;
+            margin-bottom: 6px;
+        }
+
+        .journey-node-title {
+            color: var(--text-color);
+            font-size: 13px;
+            font-weight: 900;
+            line-height: 1.3;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .journey-node-sub {
+            margin-top: 4px;
+            color: var(--text-muted);
+            font-size: 11px;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .journey-node-gauge {
+            grid-column: 1 / -1;
+            height: 6px;
+            border-radius: 999px;
+            overflow: hidden;
+            background: rgba(27, 67, 50, 0.1);
+        }
+
+        .journey-node-gauge span {
+            display: block;
+            width: var(--node-progress, 20%);
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, var(--node-accent, #52b788), rgba(255, 255, 255, 0.88));
+        }
+
+        .journey-spotlight {
+            position: relative;
+            padding: 22px;
+            border-radius: 26px;
+            color: #ffffff;
+            background:
+                radial-gradient(circle at 82% 18%, var(--chip-glow, rgba(74, 222, 128, 0.28)), transparent 30%),
+                linear-gradient(135deg, rgba(27, 67, 50, 0.92), rgba(18, 49, 59, 0.88));
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            box-shadow: 0 22px 48px rgba(8, 28, 22, 0.24);
+            overflow: hidden;
+        }
+
+        .journey-spotlight::after {
+            content: "🍀";
+            position: absolute;
+            right: 24px;
+            bottom: 14px;
+            font-size: 56px;
+            opacity: 0.14;
+            transform: rotate(-12deg);
+        }
+
+        .journey-spotlight .spotlight-note {
+            margin-top: 18px;
+        }
+
+        .journey-lock-note {
+            margin-top: 8px;
+            color: rgba(255, 255, 255, 0.62);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .mobile-window .journey-topbar {
+            grid-template-columns: 1fr;
+            padding: 14px;
+            border-radius: 22px;
+        }
+
+        .mobile-window .journey-density-control {
+            width: 100%;
+            justify-content: space-between;
+        }
+
+        .mobile-window .journey-density-btn {
+            flex: 1;
+            padding: 0 8px;
+        }
+
+        .mobile-window .journey-map {
+            min-height: var(--journey-height, 620px);
+            padding: 18px 10px;
+            border-radius: 24px;
+        }
+
+        .mobile-window .journey-node {
+            width: 78%;
+            left: 58% !important;
+            min-height: 90px;
+            padding: 12px;
+        }
+
+        .mobile-window .journey-node:nth-of-type(even) {
+            left: 42% !important;
+        }
+
+        .mobile-window .journey-avatar {
+            width: 48px;
+            height: 48px;
+            font-size: 24px;
+        }
+
+        .mobile-window .journey-spotlight {
+            padding: 18px;
+            border-radius: 22px;
+        }
+
+        /* 하단 탭 바 고정 내비게이션 */
+        .bottom-nav {
+            height: 68px;
+            background-color: var(--header-glass-bg);
+            backdrop-filter: blur(18px) saturate(1.4);
+            -webkit-backdrop-filter: blur(18px) saturate(1.4);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding-bottom: 8px;
+            z-index: 10;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            background: none;
+            border: none;
+            color: var(--nav-item-color);
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            flex: 1;
+            height: 100%;
+            justify-content: center;
+            transition: color 0.3s ease;
+        }
+
+        .nav-item.active {
+            color: var(--primary-green);
+        }
+
+        .nav-icon {
+            font-size: 18px;
+        }
+
+
+        /* 모바일에서 D-day 스포트라이트 카드가 화면에 맞게 살짝 더 컴팩트해지도록 */
+        .mobile-window .dday-spotlight {
+            padding: 22px 18px;
+            border-radius: 22px;
+        }
+
+        /* ==========================================
+           10. 일정 상세 게시글 스타일 (신규 탭 전용)
+           ========================================== */
+        /* ==========================================
+           일정계획: 캘린더가 아니라 "D-day 카운트다운" 중심 UI
+           ========================================== */
+
+        /* 상단 가로 스크롤 D-day 칩 목록 */
+        .dday-chip-row {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 4px 2px 12px;
+            margin-bottom: 4px;
+        }
+
+        .dday-chip {
+            flex: 0 0 auto;
+            min-width: 92px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 12px 14px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.85);
+            border: 1.5px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 10px 24px rgba(8, 28, 22, 0.16);
+            cursor: pointer;
+            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+        }
+
+        .dday-chip:hover {
+            transform: translateY(-2px);
+        }
+
+        .dday-chip.active {
+            background: #ffffff;
+            border-color: var(--chip-accent, var(--primary-green));
+            box-shadow: 0 14px 30px rgba(8, 28, 22, 0.2), 0 0 0 3px var(--chip-glow, rgba(82, 183, 136, 0.18));
+        }
+
+        .dday-chip .chip-dday {
+            font-size: 16px;
+            font-weight: 900;
+            letter-spacing: -0.3px;
+            color: var(--chip-accent, var(--primary-green));
+        }
+
+        .dday-chip .chip-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 90px;
+        }
+
+        .dday-chip.is-past {
+            opacity: 0.55;
+        }
+
+        /* 선택된 일정을 크게 보여주는 D-day 스포트라이트 카드 */
+        .dday-spotlight {
+            position: relative;
+            border-radius: 26px;
+            padding: 28px 24px;
+            overflow: hidden;
+            background:
+                radial-gradient(circle at 18% 12%, var(--chip-glow, rgba(82, 183, 136, 0.32)), transparent 50%),
+                linear-gradient(135deg, rgba(24, 75, 52, 0.88) 0%, rgba(16, 41, 50, 0.92) 100%);
+            color: #ffffff;
+            box-shadow: 0 24px 52px rgba(8, 28, 22, 0.28);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            margin-bottom: 18px;
+            transition: background 0.4s ease;
+        }
+
+        .spotlight-empty {
+            text-align: center;
+            padding: 50px 20px;
+            color: var(--text-muted);
+            font-size: 13px;
+            background: var(--bg-light);
+            border-radius: 20px;
+            border: 1px dashed var(--border-color);
+        }
+
+        /* ==========================================
+           일정 세부 사이드바 (Schedule Detail Sidebar)
+           ========================================== */
+        .schedule-detail-sidebar {
+            position: absolute;
+            right: -100%;
+            top: 0;
+            bottom: 0;
+            width: 320px;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            border-left: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.08);
+            transition: right 0.4s cubic-bezier(0.33, 1, 0.68, 1);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .schedule-detail-sidebar.open {
+            right: 0;
+        }
+
+        .mobile-window .schedule-detail-sidebar {
+            width: 80%;
+            max-width: 300px;
+        }
+
+        body.dark-mode .schedule-detail-sidebar {
+            background: rgba(15, 23, 18, 0.88);
+            border-left-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--primary-green);
+        }
+
+        .sidebar-close-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: var(--text-muted);
+            padding: 4px;
+        }
+
+        .sidebar-close-btn:hover {
+            color: var(--danger);
+        }
+
+        .sidebar-form-section {
+            padding: 20px;
+            background: rgba(82, 183, 136, 0.05);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .sidebar-form-group {
+            margin-bottom: 12px;
+        }
+
+        .sidebar-form-group label {
+            display: block;
+            font-size: 11px;
+            margin-bottom: 4px;
+            color: var(--text-muted);
+        }
+
+        .sidebar-form-group input {
+            width: 100%;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--input-border);
+            background: var(--input-bg);
+            color: var(--text-color);
+            font-size: 13px;
+        }
+
+        .detail-timeline-list {
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .detail-timeline-item {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .detail-timeline-time {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--accent-green);
+            flex-shrink: 0;
+            width: 40px;
+            margin-top: 2px;
+        }
+
+        .detail-timeline-content {
+            background: var(--card-bg);
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            flex: 1;
+            font-size: 13px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+            position: relative;
+        }
+
+        .detail-timeline-content::before {
+            content: "";
+            position: absolute;
+            left: -18px;
+            top: 14px;
+            width: 8px;
+            height: 8px;
+            background: var(--accent-green);
+            border-radius: 50%;
+            border: 2px solid var(--body-bg);
+        }
+
+        .timeline-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+
+/* 이 모달은 영수증 종이 자체가 표면 — 바깥 흰 영역(모달 배경/패딩) 제거 */
+#dt-schedule-modal .modal-box {
+    max-width: 680px;
+    background: #faf6ee;
+    padding: 0;
+    overflow: hidden;
+    color: #1c1a17;
+    border: 1px solid rgba(28, 26, 23, 0.14);
+    box-shadow: 0 24px 60px rgba(8, 28, 22, 0.28);
+}
+#dt-schedule-modal .modal-box h3 {
+    color: #1c1a17;
+    padding: 20px 30px 0;
+    margin: 0;
+}
+#dt-schedule-modal .modal-buttons {
+    margin: 0;
+    padding: 6px 30px 22px;
+}
+/* 모달은 항상 크림 종이 표면이므로 버튼도 테마와 무관하게 라이트 스타일로 고정한다.
+   (다크모드 토큰을 따라가면 크림 위에서 어두운 올리브가 되어 튄다) */
+#dt-schedule-modal .btn-main {
+    background: #357a58;
+    color: #ffffff;
+}
+#dt-schedule-modal .btn-sub {
+    background: #e7f0ea;
+    color: #2e5233;
+}
+
+/* ── 영수증 위에서 바로 작성하는 편집 영수증 (약속 여정 영수증 재사용) ── */
+.schedule-editor {
+    margin: 0;
+}
+.schedule-editor .growth-detail {
+    max-width: 100%;
+    padding: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+    overflow: visible;
+    cursor: default;
+}
+/* base.css의 `body.dark-mode .growth-detail`이 다크에서 어두운 초록 데스크 배경(#20261d)을
+   입혀 종이 뒤/가장자리로 배어나오므로(구획 분리), 더 높은 specificity로 다크에서도 액자 배경 제거 */
+body.dark-mode .schedule-editor .growth-detail {
+    background: none;
+}
+.schedule-editor .receipt-paper {
+    width: 100%;
+    padding: 14px 30px 22px;
+    box-shadow: none;
+}
+/* 초록 액자에 종이를 붙이던 테이프 장식 제거 (액자가 사라졌으므로) */
+.schedule-editor .receipt-paper::before,
+.schedule-editor .receipt-paper::after { display: none; }
+.schedule-editor .receipt-brand { font-size: 15px; letter-spacing: 3px; }
+.schedule-editor .receipt-stamp-wrap { padding: 14px 0 10px; }
+.schedule-editor .receipt-stamp-dday { font-size: 36px; }
+.schedule-editor .receipt-barcode { margin: 14px 0 2px; }
+
+/* 제목 입력 — 영수증 타이틀처럼 보이게 */
+.receipt-title-input {
+    display: block;
+    width: 100%;
+    border: none;
+    background: transparent;
+    text-align: center;
+    font-family: 'Gothic A1', sans-serif;
+    font-size: 21px;
+    font-weight: 900;
+    line-height: 1.3;
+    color: #1c1a17;
+    margin-bottom: 14px;
+    padding: 2px 4px;
+    outline: none;
+    border-bottom: 1px dashed transparent;
+    transition: border-color .15s;
+}
+.receipt-title-input::placeholder { color: rgba(28, 26, 23, 0.42); font-weight: 700; }
+.receipt-title-input:focus { border-bottom-color: rgba(28, 26, 23, 0.28); }
+
+/* 날짜 입력 — DATE 셀 값 위에 투명 date 피커를 겹쳐 클릭 시 달력 */
+.receipt-date-cell {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border-bottom: 1px dashed rgba(28, 26, 23, 0.4);
+    cursor: pointer;
+    padding: 0 2px 1px;
+}
+.receipt-date-cell #dt-prev-date,
+.receipt-date-cell #mb-prev-date { letter-spacing: .5px; }
+.receipt-date-cell .is-empty { color: rgba(28, 26, 23, 0.5); }
+.receipt-date-cell::after {
+    content: "📅";
+    font-size: 11px;
+    opacity: .6;
+    line-height: 1;
+}
+.receipt-date-input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    border: none;
+    opacity: 0;
+    cursor: pointer;
+}
+
+/* 메모 편집 영역 — MEMO 라벨은 항상 표시, 작성 박스는 점선 테두리 */
+.schedule-editor .receipt-memo-label { display: block !important; }
+.receipt-memo-toolbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 3px;
+    margin-bottom: 9px;
+    padding-bottom: 9px;
+    border-bottom: 1px dashed rgba(28, 26, 23, 0.2);
+}
+.receipt-memo-input {
+    min-height: 96px;
+    border: 1px dashed rgba(28, 26, 23, 0.28);
+    border-radius: 8px;
+    padding: 11px 13px;
+    background: rgba(255, 255, 255, 0.4);
+    transition: border-color .15s;
+}
+.receipt-memo-input:focus { outline: none; border-color: rgba(46, 82, 51, 0.55); }
+.schedule-editor .receipt-memo-input:empty::before {
+    text-align: left !important;
+    padding: 0 !important;
+    color: rgba(28, 26, 23, 0.5) !important;
+}
+
+/* ── 다크모드 가시성: 이 모달은 라이트/다크 모두 크림 종이 표면이므로
+      테마 변수를 쓰는 텍스트·아이콘을 크림 위에서 또렷한 다크 계열로 고정한다 ── */
+.schedule-editor .rich-btn { color: #2e5233; }               /* 툴바 아이콘 (다크모드 옅은 올리브 방지) */
+/* '＋단계 넣기'는 rich-btn 클래스를 공유해 위 색 규칙에 영향받으므로, 초록 배경+흰 글자를 명시(테마 무관 고정) */
+.schedule-editor .rich-btn-steps { background: #357a58; color: #ffffff; }
+.schedule-editor .rich-divider { background: rgba(28, 26, 23, 0.22); }
+.schedule-editor .receipt-memo-label { color: rgba(28, 26, 23, 0.55); }  /* — MEMO — */
+.schedule-editor .receipt-sub { color: rgba(28, 26, 23, 0.55); }         /* ★ 약속메모 ★ */
+.schedule-editor .receipt-meta > div > span:first-child { color: rgba(28, 26, 23, 0.6); } /* DATE / D-DAY 라벨 */
+
+.rich-editor-container {
+    border: 1px solid var(--input-border);
+    border-radius: 12px;
+    background: #ffffff;
+    overflow: hidden;
+    transition: border-color 0.2s;
+}
+
+.rich-editor-container:focus-within {
+    border-color: var(--primary-green);
+}
+
+.rich-editor-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 12px;
+    background: rgba(27, 67, 50, 0.04);
+    border-bottom: 1px solid var(--input-border);
+}
+
+.rich-btn {
+    background: none;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: var(--primary-green);
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.rich-btn:hover {
+    background: rgba(27, 67, 50, 0.08);
+}
+
+.rich-divider {
+    width: 1px;
+    height: 16px;
+    background: rgba(27, 67, 50, 0.2);
+    margin: 0 4px;
+}
+
+.rich-btn-steps {
+    width: auto;
+    padding: 0 10px;
+    font-size: 12px;
+    font-weight: 800;
+    color: #fff;
+    background: var(--btn-primary-bg, #357a58);
+    border-radius: 6px;
+    white-space: nowrap;
+}
+
+.rich-btn-steps:hover {
+    filter: brightness(1.08);
+}
+
+.rich-editor-content {
+    min-height: 160px;
+    max-height: 280px;
+    overflow-y: auto;
+    padding: 14px;
+    outline: none;
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: var(--text-color);
+}
+
+.rich-editor-content:empty::before {
+    content: attr(placeholder);
+    color: var(--text-muted);
+    font-style: italic;
+    cursor: text;
+}
+
+.rich-editor-content ul, .rich-editor-content ol {
+    padding-left: 20px;
+    margin: 10px 0;
+}
+
+.rich-editor-content li {
+    margin-bottom: 6px;
+}
+
+.rich-editor-content h3 {
+    font-size: 16px;
+    color: var(--primary-green);
+    margin-top: 14px;
+    margin-bottom: 8px;
+    font-weight: 700;
+}

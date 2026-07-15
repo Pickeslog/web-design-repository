@@ -1,0 +1,108 @@
+/* 원본: test-web-design/03-rooms/invite.html 의 <style> 블록. .invitePage 하위로 스코프. */
+.invitePage,
+.invitePage * {
+  box-sizing: border-box;
+}
+.invitePage {
+  --bg-color: #cbdad2;
+  --card-bg: #ffffff;
+  --text-color: #2c3e35;
+  --text-muted: #61766a;
+  --border-color: #eef2f0;
+  --primary-green: #1b4332;
+  --accent-green: #52b788;
+  --btn-hover: #357a58;
+  --input-bg: #fafbfc;
+
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 40px 20px;
+}
+:global(body.dark-mode) .invitePage {
+  --bg-color: #14150e;
+  --card-bg: #1e2016;
+  --text-color: #eef0e2;
+  --text-muted: #b7c99a;
+  --border-color: #2a2c1e;
+  --primary-green: #5a7a3e;
+  --accent-green: #9ccc65;
+  --btn-hover: #6b8f47;
+  --input-bg: #191a12;
+}
+
+.container {
+  width: 100%;
+  max-width: 480px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 24px;
+  padding: 32px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  animation: inviteFadeUp 0.6s ease-out;
+  text-align: center;
+}
+@keyframes inviteFadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 16px;
+}
+.header h1 { font-size: 24px; font-weight: 700; color: var(--accent-green); }
+.backBtn {
+  background: transparent;
+  color: var(--text-muted);
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+.backBtn:hover { color: #fff; }
+
+.inviteIcon { font-size: 48px; margin-bottom: 16px; }
+.inviteDesc { color: var(--text-muted); margin-bottom: 24px; line-height: 1.5; }
+
+.codeInput {
+  width: 100%;
+  background: var(--input-bg);
+  border: 2px solid var(--border-color);
+  border-radius: 16px;
+  padding: 16px;
+  color: var(--text-color);
+  font-size: 20px;
+  text-align: center;
+  letter-spacing: 4px;
+  margin-bottom: 24px;
+  transition: all 0.3s;
+}
+.codeInput:focus {
+  outline: none;
+  border-color: var(--accent-green);
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.15);
+}
+
+.btnSubmit {
+  width: 100%;
+  background: var(--primary-green);
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  padding: 16px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s;
+}
+.btnSubmit:hover { background: var(--btn-hover); transform: translateY(-2px); }
+.btnSubmit:active { transform: translateY(0); }

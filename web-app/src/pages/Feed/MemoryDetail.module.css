@@ -1,0 +1,125 @@
+/* 원본: test-web-design/04-feed/memory_detail.html 의 <style> 블록. .memoryDetailPage 하위로 스코프. */
+.memoryDetailPage,
+.memoryDetailPage * {
+  box-sizing: border-box;
+}
+.memoryDetailPage {
+  --bg-color: #cbdad2;
+  --card-bg: #ffffff;
+  --text-color: #2c3e35;
+  --text-muted: #61766a;
+  --border-color: #eef2f0;
+  --primary-green: #1b4332;
+  --accent-green: #52b788;
+  --btn-hover: #357a58;
+  --input-bg: #fafbfc;
+  --btn-secondary-bg: rgba(0, 0, 0, 0.05);
+
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 40px 20px;
+}
+:global(body.dark-mode) .memoryDetailPage {
+  --bg-color: #090d0a;
+  --card-bg: #151f18;
+  --text-color: #f0fdf4;
+  --text-muted: #86efac;
+  --border-color: #1e2f24;
+  --primary-green: #007c2e;
+  --accent-green: #4ade80;
+  --btn-hover: #16a34a;
+  --input-bg: #0d1510;
+  --btn-secondary-bg: rgba(255, 255, 255, 0.05);
+}
+
+.container {
+  width: 100%;
+  max-width: 600px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 24px;
+  padding: 32px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  animation: memoryFadeUp 0.6s ease-out;
+}
+@keyframes memoryFadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 16px;
+}
+.header h1 { font-size: 24px; font-weight: 700; color: var(--accent-green); }
+.backBtn {
+  background: transparent;
+  color: var(--text-muted);
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+.backBtn:hover { color: #fff; }
+
+.detailMeta { font-size: 14px; color: var(--text-muted); margin-bottom: 16px; }
+.detailTitle { font-size: 22px; font-weight: 700; margin-bottom: 24px; }
+.detailBody {
+  background: var(--input-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 24px;
+  font-size: 16px;
+  line-height: 1.6;
+  margin-bottom: 24px;
+  white-space: pre-wrap;
+}
+.editTextarea {
+  width: 100%;
+  height: 150px;
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--input-bg);
+  color: var(--text-color);
+  resize: vertical;
+  font-size: 15px;
+  font-family: inherit;
+}
+
+.actions { display: flex; gap: 12px; flex-wrap: wrap; }
+.btnActionSm {
+  background: var(--btn-secondary-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.3s;
+  flex: 1;
+  text-align: center;
+  min-width: 120px;
+}
+.btnActionSm:hover { background: rgba(255, 255, 255, 0.1); }
+.btnDelete { color: #d95f5f; }
+.btnEditPost { background: var(--bg-color); }
+.btnSave { background: var(--primary-green); color: #fff; }
+
+.tags { margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+.tag {
+  background: rgba(74, 222, 128, 0.1);
+  color: var(--accent-green);
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+}
