@@ -305,7 +305,11 @@
    * duration = ms (기본 2400)
    */
   window.clovToast = function (message, type = 'success', duration = 2400) {
-    return; // 사용자 요청에 따라 하단 토스트 메시지 생성 기능을 아예 제거함
+    // 사용자 요청(까만 토스트 알림창 제거)을 존중하여, 토스트를 중앙 모달인 clovAlert로 우회하여 띄움.
+    // 이렇게 하면 '테마 적용 완료', '복사 완료' 등 필수 안내가 조용히 무시되는 버그를 막을 수 있음.
+    if (typeof clovAlert === 'function') {
+      clovAlert(message, { type: type, icon: type === 'success' ? '✅' : '💬' });
+    }
   };
 
   /* 하위 호환: 이전 alert() 호출을 자동으로 교체하려면

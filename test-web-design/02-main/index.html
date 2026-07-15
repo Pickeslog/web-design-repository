@@ -1398,6 +1398,7 @@ body.dark-mode .wm-submit { color: #0a0f0c; }
   window.acceptJoinRequest = function(id, name) {
     var list = [];
     try { list = JSON.parse(localStorage.getItem('clov_joinRequests')) || []; } catch(e){}
+
     // A-7 경합: 이미 다른 멤버가 수락/거절한 신청이면 늦은 클릭은 무효
     var reqA = null; for (var k = 0; k < list.length; k++) { if (list[k].id === id) { reqA = list[k]; break; } }
     var effA = reqA ? (notiSessionOverrides[id] || reqA.status) : null;
@@ -1406,6 +1407,17 @@ body.dark-mode .wm-submit { color: #0a0f0c; }
       renderJoinRequestsNoti();
       return;
     }
+
+    // 8인 제한 검사: 현재 멤버 수(방장 등 4명 기본 + 초대 멤버 최대 4명 = 8명)
+    var members = [];
+    try { members = JSON.parse(localStorage.getItem('clov_acceptedMembers')) || []; } catch(e){}
+    if (members.length >= 4) {
+      if (typeof clovAlert === 'function') {
+        clovAlert('우정공간 정원이 꽉 찼습니다. (최대 8명)\n더 이상 멤버를 받을 수 없습니다.', { icon: '🚫', type: 'warn' });
+      }
+      return;
+    }
+
     list.forEach(function(r) { if (r.id === id) { r.status = 'accepted'; r.acceptedAt = Date.now(); } });
     localStorage.setItem('clov_joinRequests', JSON.stringify(list));
 

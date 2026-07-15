@@ -1,4 +1,4 @@
-# 🍀 Clov — API 계약 (단일 기준 · SSOT)
+﻿# 🍀 Clov — API 계약 (단일 기준 · SSOT)
 
 > **이 문서가 프론트·백 공통 API 계약의 유일한 기준(Single Source of Truth)이다.**
 > `clov-api/docs/API-CONTRACT.md`·`clov-web/docs/API-CONTRACT.md`는 이 문서를 가리키는 포인터일 뿐이다.

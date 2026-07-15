@@ -1,4 +1,4 @@
-# Clov DB — 통합 최종 ERD & DDL (MySQL 8) ⭐구현 기준
+﻿# Clov DB — 통합 최종 ERD & DDL (MySQL 8) ⭐구현 기준
 
 > **이 문서가 최종 구현 기준이다.** 기존 [04-erd-and-ddl.md](04-erd-and-ddl.md)를 **대체(supersede)** 한다.
 > 대상: MySQL 8 · InnoDB · `utf8mb4`. 컨벤션: `snake_case`, `BIGINT PK AUTO_INCREMENT`, 상태값 `VARCHAR` + 컬럼 코멘트.
