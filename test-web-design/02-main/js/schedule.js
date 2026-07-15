@@ -1,4 +1,4 @@
-        function getClosestSchedule() {
+﻿        function getClosestSchedule() {
             const schedules = groupsData[activeGroup].schedules || [];
             if (schedules.length === 0) return null;
 
@@ -58,7 +58,7 @@
                 if (bodyInput) bodyInput.innerHTML = schedule.content || '';
                 if (idInput) idInput.value = schedule.id;
             } else {
-                if (modalTitle) modalTitle.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>다가오는 약속, D-day 새로 세기';
+                if (modalTitle) modalTitle.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>다가오는 약속, 새 D-day 만들기';
                 if (titleInput) titleInput.value = '';
                 // 새 약속은 지난 날짜(어제 이전)로 D-day를 맞출 수 없도록 오늘부터 선택 가능
                 if (dateInput) { dateInput.value = ''; dateInput.min = getTodayDateStr(); }
@@ -66,7 +66,42 @@
                 if (idInput) idInput.value = '';
             }
 
+            updateSchedulePreview(prefix);
             openModal(`${prefix}-schedule-modal`);
+        }
+
+function updateSchedulePreview(viewType) {
+            const prefix = viewType === 'mb' ? 'mb' : 'dt';
+            const previewRoot = document.getElementById(`${prefix}-schedule-preview`);
+            if (!previewRoot) return;
+
+            const dateInput = document.getElementById(`${prefix}-input-schedule-date`);
+            const dateVal = (dateInput && dateInput.value) || '';
+
+            const dateEl = document.getElementById(`${prefix}-prev-date`);
+            const ddayEl = document.getElementById(`${prefix}-prev-dday`);
+            const dday2El = document.getElementById(`${prefix}-prev-dday2`);
+            const phraseEl = document.getElementById(`${prefix}-prev-phrase`);
+
+            if (dateVal) {
+                const diffDays = getDdayDiffDays(dateVal);
+                const ddayText = calculateDday(dateVal);
+                const friendlyDate = formatFriendlyDate(dateVal);
+                const ddayPhrase = diffDays < 0 ? '함께 보낸 그날로부터' : diffDays === 0 ? '바로 오늘, 약속의 날!' : '함께할 그날까지';
+                const stampColor = diffDays < 0 ? '#2e5233' : '#c0392b';
+
+                if (dateEl) { dateEl.textContent = friendlyDate; dateEl.classList.remove('is-empty'); }
+                if (ddayEl) ddayEl.textContent = ddayText;
+                if (dday2El) dday2El.textContent = ddayText;
+                if (phraseEl) phraseEl.textContent = ddayPhrase;
+                previewRoot.style.setProperty('--stamp', stampColor);
+            } else {
+                if (dateEl) { dateEl.textContent = '연도-월-일'; dateEl.classList.add('is-empty'); }
+                if (ddayEl) ddayEl.textContent = 'D-day';
+                if (dday2El) dday2El.textContent = 'D-day';
+                if (phraseEl) phraseEl.textContent = '함께할 그날까지';
+                previewRoot.style.setProperty('--stamp', '#c0392b');
+            }
         }
 
         function saveSchedule(viewType) {
@@ -898,6 +933,9 @@
                 '<li><b>만남</b> — </li>' +
                 '</ul><p><br></p>';
             document.execCommand('insertHTML', false, scaffold);
+            // 단계 스캐폴드는 innerHTML 직접 삽입이라 oninput이 안 뜰 수 있어 프리뷰를 직접 갱신
+            const stepPrefix = editorId.startsWith('mb') ? 'mb' : 'dt';
+            if (typeof updateSchedulePreview === 'function') updateSchedulePreview(stepPrefix);
         }
         window.insertScheduleSteps = insertScheduleSteps;
 
@@ -952,4 +990,5 @@
                 contentInput.value = '';
             }
         }
+
 

@@ -1,4 +1,4 @@
-        /* ══════════════ 인생4컷 극장 — 로비(포스터) ══════════════ */
+﻿        /* ══════════════ 인생4컷 극장 — 로비(포스터) ══════════════ */
         .modal-box.fourcut-gallery-modal .fourcut-lobby-headtext h3 {
             margin: 0;
             font-size: 17px;
@@ -2378,6 +2378,155 @@
     max-width: 680px;
 }
 
+/* 이 모달은 영수증 종이 자체가 표면 — 바깥 흰 영역(모달 배경/패딩) 제거 */
+#dt-schedule-modal .modal-box {
+    max-width: 680px;
+    background: #faf6ee;
+    padding: 0;
+    overflow: hidden;
+    color: #1c1a17;
+    border: 1px solid rgba(28, 26, 23, 0.14);
+    box-shadow: 0 24px 60px rgba(8, 28, 22, 0.28);
+}
+#dt-schedule-modal .modal-box h3 {
+    color: #1c1a17;
+    padding: 20px 30px 0;
+    margin: 0;
+}
+#dt-schedule-modal .modal-buttons {
+    margin: 0;
+    padding: 6px 30px 22px;
+}
+/* 모달은 항상 크림 종이 표면이므로 버튼도 테마와 무관하게 라이트 스타일로 고정한다.
+   (다크모드 토큰을 따라가면 크림 위에서 어두운 올리브가 되어 튄다) */
+#dt-schedule-modal .btn-main {
+    background: #357a58;
+    color: #ffffff;
+}
+#dt-schedule-modal .btn-sub {
+    background: #e7f0ea;
+    color: #2e5233;
+}
+
+/* ── 영수증 위에서 바로 작성하는 편집 영수증 (약속 여정 영수증 재사용) ── */
+.schedule-editor {
+    margin: 0;
+}
+.schedule-editor .growth-detail {
+    max-width: 100%;
+    padding: 0;
+    border-radius: 0;
+    background: none;
+    box-shadow: none;
+    overflow: visible;
+    cursor: default;
+}
+/* base.css의 `body.dark-mode .growth-detail`이 다크에서 어두운 초록 데스크 배경(#20261d)을
+   입혀 종이 뒤/가장자리로 배어나오므로(구획 분리), 더 높은 specificity로 다크에서도 액자 배경 제거 */
+body.dark-mode .schedule-editor .growth-detail {
+    background: none;
+}
+.schedule-editor .receipt-paper {
+    width: 100%;
+    padding: 14px 30px 22px;
+    box-shadow: none;
+}
+/* 초록 액자에 종이를 붙이던 테이프 장식 제거 (액자가 사라졌으므로) */
+.schedule-editor .receipt-paper::before,
+.schedule-editor .receipt-paper::after { display: none; }
+.schedule-editor .receipt-brand { font-size: 15px; letter-spacing: 3px; }
+.schedule-editor .receipt-stamp-wrap { padding: 14px 0 10px; }
+.schedule-editor .receipt-stamp-dday { font-size: 36px; }
+.schedule-editor .receipt-barcode { margin: 14px 0 2px; }
+
+/* 제목 입력 — 영수증 타이틀처럼 보이게 */
+.receipt-title-input {
+    display: block;
+    width: 100%;
+    border: none;
+    background: transparent;
+    text-align: center;
+    font-family: 'Gothic A1', sans-serif;
+    font-size: 21px;
+    font-weight: 900;
+    line-height: 1.3;
+    color: #1c1a17;
+    margin-bottom: 14px;
+    padding: 2px 4px;
+    outline: none;
+    border-bottom: 1px dashed transparent;
+    transition: border-color .15s;
+}
+.receipt-title-input::placeholder { color: rgba(28, 26, 23, 0.42); font-weight: 700; }
+.receipt-title-input:focus { border-bottom-color: rgba(28, 26, 23, 0.28); }
+
+/* 날짜 입력 — DATE 셀 값 위에 투명 date 피커를 겹쳐 클릭 시 달력 */
+.receipt-date-cell {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border-bottom: 1px dashed rgba(28, 26, 23, 0.4);
+    cursor: pointer;
+    padding: 0 2px 1px;
+}
+.receipt-date-cell #dt-prev-date,
+.receipt-date-cell #mb-prev-date { letter-spacing: .5px; }
+.receipt-date-cell .is-empty { color: rgba(28, 26, 23, 0.5); }
+.receipt-date-cell::after {
+    content: "📅";
+    font-size: 11px;
+    opacity: .6;
+    line-height: 1;
+}
+.receipt-date-input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    border: none;
+    opacity: 0;
+    cursor: pointer;
+}
+
+/* 메모 편집 영역 — MEMO 라벨은 항상 표시, 작성 박스는 점선 테두리 */
+.schedule-editor .receipt-memo-label { display: block !important; }
+.receipt-memo-toolbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 3px;
+    margin-bottom: 9px;
+    padding-bottom: 9px;
+    border-bottom: 1px dashed rgba(28, 26, 23, 0.2);
+}
+.receipt-memo-input {
+    min-height: 96px;
+    border: 1px dashed rgba(28, 26, 23, 0.28);
+    border-radius: 8px;
+    padding: 11px 13px;
+    background: rgba(255, 255, 255, 0.4);
+    transition: border-color .15s;
+}
+.receipt-memo-input:focus { outline: none; border-color: rgba(46, 82, 51, 0.55); }
+.schedule-editor .receipt-memo-input:empty::before {
+    text-align: left !important;
+    padding: 0 !important;
+    color: rgba(28, 26, 23, 0.5) !important;
+}
+
+/* ── 다크모드 가시성: 이 모달은 라이트/다크 모두 크림 종이 표면이므로
+      테마 변수를 쓰는 텍스트·아이콘을 크림 위에서 또렷한 다크 계열로 고정한다 ── */
+.schedule-editor .rich-btn { color: #2e5233; }               /* 툴바 아이콘 (다크모드 옅은 올리브 방지) */
+/* '＋단계 넣기'는 rich-btn 클래스를 공유해 위 색 규칙에 영향받으므로, 초록 배경+흰 글자를 명시(테마 무관 고정) */
+.schedule-editor .rich-btn-steps { background: #357a58; color: #ffffff; }
+.schedule-editor .rich-divider { background: rgba(28, 26, 23, 0.22); }
+.schedule-editor .receipt-memo-label { color: rgba(28, 26, 23, 0.55); }  /* — MEMO — */
+.schedule-editor .receipt-sub { color: rgba(28, 26, 23, 0.55); }         /* ★ 약속메모 ★ */
+.schedule-editor .receipt-meta > div > span:first-child { color: rgba(28, 26, 23, 0.6); } /* DATE / D-DAY 라벨 */
+
 .rich-editor-container {
     border: 1px solid var(--input-border);
     border-radius: 12px;
@@ -2472,17 +2621,22 @@
     font-weight: 700;
 }
 
-body.dark-mode .modal-input, body.dark-mode textarea, body.dark-mode input[type="date"] { color: var(--text-color); }
 
-body.dark-mode .rich-editor-container {
-    background: var(--input-bg);
-    border-color: var(--input-border);
+
+
+/* 사용자 요청: 영수증 종이 색상 일치 및 쉐이드/지그재그 제거 강제 적용 */
+#dt-schedule-modal .modal-box,
+#mb-schedule-modal .modal-box {
+    background: #faf6ee !important;
 }
-body.dark-mode .rich-editor-toolbar {
-    background: rgba(255, 255, 255, 0.04);
-    border-bottom-color: rgba(255, 255, 255, 0.14);
+
+.schedule-editor .receipt-paper {
+    background-color: transparent !important;
+    box-shadow: none !important;
 }
-body.dark-mode .rich-editor-content {
-    background: transparent;
-    color: var(--text-color);
+
+.schedule-editor .receipt-paper::before,
+.schedule-editor .receipt-paper::after,
+.schedule-editor .receipt-zigzag {
+    display: none !important;
 }
