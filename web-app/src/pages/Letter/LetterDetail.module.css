@@ -1,0 +1,117 @@
+/* 원본: test-web-design/05-letter/letter_detail.html 의 <style> 블록. .letterDetailPage 하위로 스코프. */
+.letterDetailPage,
+.letterDetailPage * {
+  box-sizing: border-box;
+}
+.letterDetailPage {
+  --bg-color: #cbdad2;
+  --card-bg: #ffffff;
+  --text-color: #2c3e35;
+  --text-muted: #61766a;
+  --border-color: #eef2f0;
+  --primary-green: #1b4332;
+  --accent-green: #52b788;
+  --btn-hover: #357a58;
+  --input-bg: #fafbfc;
+  --btn-secondary-bg: rgba(0, 0, 0, 0.05);
+  --yellow-color: #eab308;
+  --delete-red: #d95f5f;
+
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 40px 20px;
+}
+:global(body.dark-mode) .letterDetailPage {
+  --bg-color: #090d0a;
+  --card-bg: #151f18;
+  --text-color: #f0fdf4;
+  --text-muted: #86efac;
+  --border-color: #1e2f24;
+  --primary-green: #007c2e;
+  --accent-green: #4ade80;
+  --btn-hover: #16a34a;
+  --input-bg: #0d1510;
+  --btn-secondary-bg: rgba(255, 255, 255, 0.05);
+}
+
+.container {
+  width: 100%;
+  max-width: 600px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 24px;
+  padding: 32px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  animation: letterFadeUp 0.6s ease-out;
+}
+@keyframes letterFadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 16px;
+}
+.header h1 { font-size: 24px; font-weight: 700; color: var(--accent-green); }
+.backBtn {
+  background: transparent;
+  color: var(--text-muted);
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+.backBtn:hover { color: #fff; }
+
+.letterContent {
+  background: var(--input-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 32px;
+  font-size: 18px;
+  line-height: 1.6;
+  margin-bottom: 24px;
+  position: relative;
+}
+.letterFrom { font-size: 14px; color: var(--text-muted); margin-bottom: 16px; font-weight: 600; }
+.letterText { white-space: pre-wrap; }
+.editTextarea {
+  width: 100%;
+  height: 150px;
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--input-bg);
+  color: var(--text-color);
+  resize: vertical;
+  font-size: 15px;
+  font-family: inherit;
+}
+
+.actions { display: flex; gap: 12px; margin-top: 24px; }
+.btnActionSm {
+  background: var(--btn-secondary-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.3s;
+  flex: 1;
+}
+.btnActionSm:hover { background: rgba(255, 255, 255, 0.1); }
+.btnFavorite { color: var(--text-muted); }
+.btnFavorite.active { color: var(--yellow-color); border-color: var(--yellow-color); }
+.btnDelete { color: var(--delete-red); }
+.btnSave { background: var(--primary-green); color: #fff; }

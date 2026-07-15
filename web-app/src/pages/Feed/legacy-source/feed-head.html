@@ -1,0 +1,106 @@
+<!-- 공통 디자인 시스템 (CSS 변수 + 피드/카드 스타일 재사용) -->
+<link rel="stylesheet" href="../02-main/css/desktop.css">
+<script src="../02-main/components/clov-profile-modal.js"></script>
+<style>
+  /* ===== 스탠드얼론 레이아웃 재정의 ===== */
+  body {
+    display: block !important;
+    padding: 0 !important;
+    align-items: unset !important;
+    background-color: var(--bg-light);
+    min-height: 100vh;
+  }
+
+  /* ===== 헤더 ===== */
+  .feed-header {
+    position: sticky; top: 0; z-index: 200;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 56px; padding: 0 28px;
+    background: var(--header-glass-bg);
+    backdrop-filter: blur(18px) saturate(1.4);
+    border-bottom: 1px solid var(--border-color);
+  }
+  .feed-header-left { display: flex; align-items: center; gap: 12px; }
+  .feed-back-btn {
+    display: flex; align-items: center; gap: 4px;
+    background: none; border: none; cursor: pointer;
+    color: var(--text-muted); font-size: 13px; font-weight: 600;
+    padding: 6px 10px; border-radius: 8px;
+    transition: background .15s, color .15s;
+    text-decoration: none;
+  }
+  .feed-back-btn:hover { background: var(--nav-item-bg-active); color: var(--primary-green); }
+  .feed-back-btn svg { width: 14px; height: 14px; }
+  .feed-logo {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 16px; font-weight: 800; color: var(--primary-green); letter-spacing: -.3px;
+  }
+  .feed-logo-mark { width: 20px; height: 20px; object-fit: contain; display: block; }
+  .feed-header-right { display: flex; align-items: center; gap: 6px; }
+  .hdr-icon-btn {
+    width: 34px; height: 34px; border-radius: 9px; border: none;
+    background: none; cursor: pointer; font-size: 16px; color: var(--text-muted);
+    display: flex; align-items: center; justify-content: center;
+    transition: background .15s, color .15s;
+  }
+  .hdr-icon-btn:hover { background: var(--nav-item-bg-active); color: var(--primary-green); }
+  .dark-toggle-btn {
+    width: 44px; height: 26px; border-radius: 13px;
+    background: rgba(120,120,128,.28); border: none; cursor: pointer;
+    position: relative; transition: background .25s;
+  }
+  body.dark-mode .dark-toggle-btn { background: var(--accent-green); }
+  .toggle-knob-dot {
+    position: absolute; top: 2px; left: 2px;
+    width: 22px; height: 22px; border-radius: 50%;
+    background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25);
+    color: #5c7a6a; display: flex; align-items: center; justify-content: center;
+    transition: transform .25s cubic-bezier(.2,.9,.2,1.1);
+  }
+  body.dark-mode .toggle-knob-dot { transform: translateX(18px); }
+  /* 해/달 아이콘 — body.dark-mode 여부로 CSS가 자동 전환, JS는 텍스트를 건드리지 않는다 */
+  .toggle-knob-dot .knob-icon-moon { display: none; }
+  body.dark-mode .toggle-knob-dot .knob-icon-sun { display: none; }
+  body.dark-mode .toggle-knob-dot .knob-icon-moon { display: inline-flex; }
+  .avatar-btn {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--primary-green); color: #fff;
+    font-size: 11px; font-weight: 700; border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* ===== 페이지 컨테이너 ===== */
+  .feed-page {
+    max-width: 900px; margin: 0 auto; padding: 32px 24px 80px;
+  }
+
+  /* ===== 피드 헤더 영역 재정의 ===== */
+  .feed-hero {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    flex-wrap: wrap; gap: 12px; margin-bottom: 20px;
+  }
+  .feed-title { font-size: 20px; font-weight: 800; color: var(--primary-green); }
+  .feed-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 4px; line-height: 1.5; }
+  .feed-hero-meta { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .feed-month-summary {
+    font-size: 13px; color: var(--text-muted); font-weight: 600;
+    background: var(--nav-item-bg-active); padding: 5px 12px;
+    border-radius: 20px;
+  }
+
+  /* ===== 그룹 선택 칩 ===== */
+  .group-chips {
+    display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;
+  }
+  .group-chip {
+    padding: 6px 14px; border-radius: 20px;
+    border: 1.5px solid var(--border-color);
+    background: var(--card-bg); color: var(--text-muted);
+    font-size: 12px; font-weight: 600; cursor: pointer;
+    transition: all .15s;
+  }
+  .group-chip.active { background: var(--primary-green); border-color: var(--primary-green); color: #fff; }
+  body.dark-mode .group-chip.active { color: #0a0f0c; }
+  .group-chip:hover:not(.active) { border-color: var(--accent-green); color: var(--primary-green); }
+</style>
+<link rel="stylesheet" href="../02-main/css/global-theme.css">

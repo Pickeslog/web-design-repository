@@ -1,0 +1,104 @@
+/* 원본: test-web-design/07-notification/notification.html 의 <style> 블록.
+   .notificationPage 하위로 스코프. 원본은 관리진공지/친구알림/가입신청 카드 대부분을
+   인라인 style="..."로 직접 그려서, 이 파일은 컨테이너/헤더/탭/빈 상태만 담당한다. */
+.notificationPage,
+.notificationPage * {
+  box-sizing: border-box;
+}
+.notificationPage {
+  --bg-color: #cbdad2;
+  --card-bg: #ffffff;
+  --text-color: #2c3e35;
+  --text-muted: #61766a;
+  --border-color: #eef2f0;
+  --primary-green: #1b4332;
+  --accent-green: #52b788;
+  --btn-hover: #357a58;
+  --input-bg: #fafbfc;
+  --btn-secondary-bg: rgba(0, 0, 0, 0.05);
+
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 40px 20px;
+}
+:global(body.dark-mode) .notificationPage {
+  --bg-color: #090d0a;
+  --card-bg: #151f18;
+  --text-color: #f0fdf4;
+  --text-muted: #86efac;
+  --border-color: #1e2f24;
+  --primary-green: #007c2e;
+  --accent-green: #4ade80;
+  --btn-hover: #16a34a;
+  --input-bg: #0d1510;
+  --btn-secondary-bg: rgba(255, 255, 255, 0.05);
+}
+
+.container {
+  width: 100%;
+  max-width: 480px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 24px;
+  padding: 32px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  animation: notiFadeUp 0.6s ease-out;
+  min-height: 500px;
+}
+@keyframes notiFadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 16px;
+}
+.header h1 { font-size: 24px; font-weight: 700; color: var(--accent-green); display: flex; align-items: center; gap: 8px; }
+.backBtn {
+  background: transparent;
+  color: var(--text-muted);
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+.backBtn:hover { color: var(--text-color); }
+
+.tabBtn {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  background: var(--card-bg);
+  color: var(--text-muted);
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.tabBtn.active {
+  background: var(--primary-green);
+  color: #fff;
+  border-color: var(--primary-green);
+}
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  color: var(--text-muted);
+  text-align: center;
+}
+.emptyState .icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+.emptyState p { font-size: 16px; line-height: 1.5; }
