@@ -67,6 +67,8 @@ erDiagram
     FRIENDSHIP_ROOMS ||--o{ LUCKY_LETTERS : has
     USERS ||--o{ LUCKY_LETTERS : sends
     USERS ||--o{ LUCKY_LETTERS : receives
+    LUCKY_LETTERS ||--o{ LETTER_FAVORITES : starred_in
+    USERS ||--o{ LETTER_FAVORITES : stars
 
     FRIENDSHIP_ROOMS ||--o{ NOTIFICATIONS : has
     USERS ||--o{ NOTIFICATIONS : receives
@@ -204,7 +206,7 @@ erDiagram
     MEMORY_TAGS {
         BIGINT id PK
         BIGINT memory_id FK
-        VARCHAR tag
+        VARCHAR tag "UNIQUE(memory_id, tag) — 같은 태그 중복 차단"
     }
     MEMORY_PARTICIPANTS {
         BIGINT memory_id PK, FK
@@ -225,9 +227,13 @@ erDiagram
         BIGINT receiver_id FK "전체발송은 팬아웃(항상 단일값)"
         TEXT content
         VARCHAR emoji "nullable"
-        BOOLEAN is_favorite
         DATETIME read_at "nullable"
         DATETIME sent_at
+    }
+    LETTER_FAVORITES {
+        BIGINT letter_id PK, FK
+        BIGINT user_id PK, FK
+        DATETIME created_at
     }
     NOTIFICATIONS {
         BIGINT id PK
@@ -465,8 +471,8 @@ CREATE TABLE memory_tags (
   memory_id  BIGINT      NOT NULL,
   tag        VARCHAR(50) NOT NULL,
   PRIMARY KEY (id),
+  UNIQUE KEY uk_memory_tags (memory_id, tag),  -- 같은 추억에 같은 태그 중복 차단
   KEY idx_memory_tags_tag (tag),        -- 태그로 검색
-  KEY idx_memory_tags_memory (memory_id),
   CONSTRAINT fk_memory_tags_memory FOREIGN KEY (memory_id) REFERENCES memories(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -502,7 +508,6 @@ CREATE TABLE lucky_letters (
   receiver_id  BIGINT      NOT NULL,
   content      TEXT        NOT NULL,
   emoji        VARCHAR(20) NULL COMMENT '미입력 시 프론트 기본값 💌',
-  is_favorite  BOOLEAN     NOT NULL DEFAULT FALSE,
   read_at      DATETIME    NULL,
   sent_at      DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
@@ -511,6 +516,18 @@ CREATE TABLE lucky_letters (
   CONSTRAINT fk_letters_room FOREIGN KEY (room_id) REFERENCES friendship_rooms(id),
   CONSTRAINT fk_letters_sender FOREIGN KEY (sender_id) REFERENCES users(id),
   CONSTRAINT fk_letters_receiver FOREIGN KEY (receiver_id) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 15-1. LETTER_FAVORITES ✨ (즐겨찾기는 보는 사람마다 다르다 — 발신자/수신자 각각)
+-- lucky_letters.is_favorite(단일 컬럼)에서 분리. 한 칸이면 발신자와 수신자가 서로를 덮어썼다.
+CREATE TABLE letter_favorites (
+  letter_id   BIGINT   NOT NULL,
+  user_id     BIGINT   NOT NULL,
+  created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (letter_id, user_id),  -- 복합 PK로 중복 즐겨찾기 원천 차단
+  KEY idx_letter_favorites_user (user_id),  -- 즐겨찾기 필터(내가 별 단 편지)
+  CONSTRAINT fk_letter_favorites_letter FOREIGN KEY (letter_id) REFERENCES lucky_letters(id),
+  CONSTRAINT fk_letter_favorites_user FOREIGN KEY (user_id) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 16. NOTIFICATIONS ✨ (팬아웃 구조, recipient별 1행)
@@ -575,6 +592,8 @@ CREATE TABLE refresh_tokens (
 - **소셜 로그인(D6)**: 자체(email+password) + OAuth(`oauth_provider`/`oauth_subject`). 소셜 전용 계정은 `password` NULL. `UNIQUE(oauth_provider, oauth_subject)`로 소셜 계정 중복 차단.
 - **XP 서버 계산**: 클라 값 신뢰 금지. `friendship_exp_logs`에 서버가 부수효과로 적립(마스코트 교감만 전용 엔드포인트, 하루 3회 제한도 로그 COUNT로 판정).
 - **상태값**: `VARCHAR`+코멘트(archive 관례). 팀이 원하면 `ENUM`으로 강화 가능.
+- **즐겨찾기는 "보는 사람" 속성**: 편지 즐겨찾기는 `letter_favorites(letter_id, user_id)`로 분리한다. `lucky_letters`에 `is_favorite` 한 칸을 두면 발신자와 수신자가 같은 값을 덮어쓴다(1-6-05는 "발신자 또는 수신자" 둘 다 토글 가능). 반면 `room_members.is_favorite`은 이미 (방, 사람) 조합의 행이라 그대로 둔다 — 같은 이름이지만 성격이 다르다.
+- **중복 차단은 제약으로**: 다대다 연결 테이블은 복합 PK 또는 UNIQUE로 중복을 원천 차단한다(`memory_participants`, `letter_favorites`, `memory_tags`). 앱 로직에만 맡기지 않는다.
 
 ---
 
@@ -582,7 +601,8 @@ CREATE TABLE refresh_tokens (
 
 | 변경 | 내용 |
 |---|---|
-| ➕ 테이블 4종 추가 | `USER_PREFERENCES` · `MEMORY_TAGS` · `MEMORY_COMMENTS` · `REFRESH_TOKENS` (15→**18**) |
+| ➕ 테이블 4종 추가 | `USER_PREFERENCES` · `MEMORY_TAGS` · `MEMORY_COMMENTS` · `REFRESH_TOKENS` (15→18) |
+| ➕ 정규화 보정 (7/15) | `LETTER_FAVORITES` 신설 + `lucky_letters.is_favorite` 제거, `UNIQUE(memory_id, tag)` 추가 (18→**19**) |
 | 🔀 `MEMORY_MESSAGES` → `MEMORY_COMMENTS` | 명칭 통일(댓글=친구 한 줄 메시지 원천) |
 | ➖ 죽은 컬럼 제거 | `PLANS.plan_time`/`place_name`/`address` |
 | ➖ 단일 태그 폐기 | `MEMORIES.mood_tag` → `MEMORY_TAGS`로 정규화 |
