@@ -2,7 +2,9 @@
 
 > 카카오·네이버·구글 개발자 콘솔이 **제대로 등록됐는지 확인**하기 위한 문서.
 > 계약 근거: [`API-CONTRACT.md`](API-CONTRACT.md) §4 인증 · DB: [`../api-spec/05-db-unified-final.md`](../api-spec/05-db-unified-final.md) `users.oauth_provider`/`oauth_subject`
-> 작성: 2026-07-20 · 상태: **콘솔 확인 전 / 백엔드 설정 미작성**
+> 작성: 2026-07-20 · 상태: **콘솔 3사 설정 완료 / 팀원 등록·백엔드 설정 잔여**
+> 진행 결과는 [`../work-logs/2026-07-20-레포진단-및-카카오-OAuth설정.md`](../work-logs/2026-07-20-레포진단-및-카카오-OAuth설정.md) §5 참고.
+> ⚠️ 콘솔 메뉴 경로는 3사 모두 개편돼 아래 §2~§4의 일부 경로가 실제와 다르다. 최신 경로는 위 work-log에 정리돼 있다.
 
 ---
 
