@@ -16,6 +16,11 @@
 - **D ✅** Testcontainers(MySQL) 통합테스트 CI. `schema.sql`(05-db DDL 파생)·`IntegrationTestSupport`(싱글턴 컨테이너 `@ServiceConnection`)·`application-test.yaml`·ci.yml `./gradlew test`. **PR #18 CLEAN·`build` SUCCESS**(14 테스트 통과). Claude가 fallback 규칙 하 직접 구현(도커 로컬 부재로 컴파일만 로컬, 테스트는 CI 검증). **사용자 머지 대기.**
 - **E(⚪)** User→domain/user 이동: **리더 결정=현 위치 유지**(레지스트리 §5에 경계 명문화). 미실행.
 
+## 온보딩 착수 (M2 앞 단계)
+- 팀 로스터: 리더(Codex+Claude) · **chacha1650a=Claude · kimgyubi1234=Gemini · lami2342=Gemini**(3명 비전공·온보딩). collaborator=clov-web·clov-api 양쪽 확인(+code1218).
+- 온보딩 가이드 `team-guides/16-onboarding-first-pr.md`(clov-web `docs/team/<id>.md` 자기소개 1파일 추가 — 파일 분리로 충돌0, docs라 CI 안전, `build` required 경험).
+- clov-web 온보딩 이슈 생성·배정: **#13 chacha · #14 kimgyubi · #15 lami**. 3명 PR 완주(리더 리뷰·머지) → **M2 도메인 배정 맵** 단계.
+
 ## 리더 결정(모두 확정)
 1. User 위치=**유지**. 2. 계약 스키마 보강=**클로드 진행(완료)**. 3. governance 통합=**승인(완료)**. 4. CI required=**Yes(clov-api 완료, clov-web 사용자 대기)**. 5. DB 스키마 실행자산=**Yes(D 완료)**. + 역할 대체 규칙=**승인·추가**.
 
