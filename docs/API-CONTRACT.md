@@ -3,7 +3,7 @@
 > **이 문서가 프론트·백 공통 API 계약의 유일한 기준(Single Source of Truth)이다.**
 > `clov-api/docs/API-CONTRACT.md`·`clov-web/docs/API-CONTRACT.md`는 이 문서를 가리키는 포인터일 뿐이다.
 > **계약 변경은 리더만** 이 문서를 수정한다. 다른 사람은 이슈로 제안한다.
-> 근거: DB [`../api-spec/05-db-unified-final.md`](../api-spec/05-db-unified-final.md)(18테이블) · 화면 명세(`../test-web-design/*/*.md`).
+> 근거: DB [`../api-spec/05-db-unified-final.md`](../api-spec/05-db-unified-final.md)(19테이블) · 화면 명세(`../test-web-design/*/*.md`).
 > 최종 갱신: 2026-07-20 — §2 `details`·§14 공통 6종(#3) + §4-1 auth 스키마·인증 에러코드·비번 정책(#6) + §4-2 소셜 토큰 전달(일회성 코드)·동의(#5 준비) + **§4-3 공통 읽기 모델·§5~§13 요청/응답·pagination 스키마 보강**(발명 위험 제거, M2 팬아웃 선행) + §4 소셜 콜백 `users` 생성 시점 정정(consent-선행). 이전 2026-07-14 — 구 계약(즉시입장·OAuth-only·SB3.5) 대체.
 
 ---
@@ -561,6 +561,6 @@
 ---
 
 ## 관련 문서
-- DB 스키마(18테이블) → [`../api-spec/05-db-unified-final.md`](../api-spec/05-db-unified-final.md)
+- DB 스키마(19테이블) → [`../api-spec/05-db-unified-final.md`](../api-spec/05-db-unified-final.md)
 - 개발 로드맵 → [`roadmap.md`](roadmap.md) · 팀 시작 → [`팀-시작가이드.md`](팀-시작가이드.md)
 - 화면 명세(동작 기준) → `../test-web-design/*/*.md`
