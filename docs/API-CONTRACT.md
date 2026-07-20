@@ -4,7 +4,7 @@
 > `clov-api/docs/API-CONTRACT.md`·`clov-web/docs/API-CONTRACT.md`는 이 문서를 가리키는 포인터일 뿐이다.
 > **계약 변경은 리더만** 이 문서를 수정한다. 다른 사람은 이슈로 제안한다.
 > 근거: DB [`../api-spec/05-db-unified-final.md`](../api-spec/05-db-unified-final.md)(18테이블) · 화면 명세(`../test-web-design/*/*.md`).
-> 최종 갱신: 2026-07-14 — **구 계약(즉시입장·OAuth-only·SB3.5)을 대체함.**
+> 최종 갱신: 2026-07-20 — §2 `details`·§14 공통 6종(#3) + §4-1 auth 스키마·인증 에러코드·비번 정책(#6) + §4-2 소셜 토큰 전달(일회성 코드)·동의(#5 준비). 이전 2026-07-14 — 구 계약(즉시입장·OAuth-only·SB3.5) 대체.
 
 ---
 
@@ -41,6 +41,9 @@
 { "success": true, "data": { "items": [ ... ], "page": 0, "size": 20, "total": 137 } }
 // 실패 (HTTP status + 봉투)
 { "success": false, "error": { "code": "ROOM_MEMBER_NOT_FOUND", "message": "해당 우정공간의 멤버가 아닙니다." } }
+// 실패 (검증) — error.details는 VALIDATION_FAILED에서만 채운다(그 외 생략)
+{ "success": false, "error": { "code": "VALIDATION_FAILED", "message": "입력값을 확인해주세요.",
+    "details": [ { "field": "email", "reason": "형식 오류" } ] } }
 ```
 
 ## 3. 인가 — 2단 규칙 (역할 없음)
@@ -72,6 +75,78 @@
 
 - 비밀번호는 **BCrypt 해시** 저장. 소셜 전용 계정은 `password` NULL(`oauth_provider`/`oauth_subject`로 식별).
 - Access Token 만료 짧게(예: 30분). 토큰 무효화는 Refresh `revoked_at`으로.
+
+### 4-1. 요청/응답 본문 (2026-07-20 확정)
+
+> 봉투는 §2. 아래는 성공 시 `data` 또는 요청 본문. **camelCase · ID는 문자열.**
+
+**인증 성공 data (signup·login 공통)**
+```jsonc
+{ "accessToken": "eyJ...", "refreshToken": "eyJ...",
+  "user": { "id": "1024", "email": "a@b.com", "nickname": "클로버",
+            "profileImageUrl": null, "birthdate": "1998-03-21",
+            "personalInviteCode": "CLV-7X2A9K" } }
+```
+
+**signup** `POST /api/v1/auth/signup` — **가입 즉시 로그인**(위 data 그대로 201)
+```jsonc
+// 요청
+{ "email": "a@b.com", "password": "aB3!xyzq", "nickname": "클로버",
+  "birthdate": "1998-03-21",            // 선택, 생략/null 허용
+  "agreements": { "service": true, "privacy": true, "marketing": false } }
+```
+- `service`·`privacy`가 false면 `400 TERMS_REQUIRED`. 동의 시각을 `users`의 `terms_agreed_at`·`privacy_agreed_at`·`marketing_agreed_at`에 기록.
+- 프로필 이미지는 **가입 시 받지 않는다**(기본 이미지). 가입 후 `POST /users/me/profile-image/presign`으로 업로드.
+- `personal_invite_code`는 **서버 생성**(예: `CLV-` + Base32 6자, UNIQUE 충돌 시 재생성).
+- 이메일 중복 → `409 EMAIL_DUPLICATED`.
+
+**login** `POST /api/v1/auth/login`
+```jsonc
+{ "email": "a@b.com", "password": "aB3!xyzq" }   // → 위 인증 성공 data (200)
+```
+- 실패는 이메일 존재 여부를 노출하지 않도록 **동일** `401 INVALID_CREDENTIALS`.
+
+**refresh** `POST /api/v1/auth/refresh` — refreshToken은 **요청 본문**으로 전송(URL 쿼리스트링 금지)
+```jsonc
+{ "refreshToken": "eyJ..." }
+// → { "accessToken": "eyJ...", "refreshToken": "eyJ..." }   회전: 기존 revoke, 신규 발급
+```
+- 위조/형식 오류 `401 INVALID_TOKEN`, 만료 또는 `revoked_at` 존재 `401 TOKEN_EXPIRED`.
+
+**logout** `POST /api/v1/auth/logout`
+```jsonc
+{ "refreshToken": "eyJ..." }   // → data: null, 해당 refresh의 revoked_at 기록
+```
+
+**비밀번호 정책**: 8~20자, 영문·숫자·특수문자 중 **2종 이상**. 백엔드 `@Valid`와 프론트 규칙을 동일하게 맞춘다.
+
+### 4-2. 소셜 로그인 — 토큰 전달·약관 동의 (2026-07-20 확정)
+
+브라우저 리다이렉트 흐름이라 토큰을 JSON 본문으로 못 준다. **일회성 교환 코드**로 넘긴다. ❌ URL 쿼리스트링에 `accessToken`/`refreshToken` 직접 담기 금지(로그·Referer 유출).
+
+1. 프론트: 소셜 버튼 → `GET /oauth2/authorization/{provider}` 로 이동
+2. 소셜 콜백 `GET /login/oauth2/code/{provider}`(Spring 처리) → 성공 핸들러가 `(oauth_provider, oauth_subject)`로 사용자 조회 후 **일회성 코드**(수명 ~60초·1회용) 발급 → 프론트로 리다이렉트: `{app.oauth2.redirect-url}?code={oneTimeCode}` (예: `http://localhost:5173/oauth2/redirect?code=...`)
+3. 프론트 `/oauth2/redirect`: URL의 `code`를 읽어 교환 요청
+
+**exchange** `POST /api/v1/auth/oauth/exchange`
+```jsonc
+{ "code": "..." }   // 일회성 코드
+// (A) 기존 사용자/동의 완료 → 인증 성공 data(§4-1과 동일)
+{ "authenticated": true, "accessToken": "...", "refreshToken": "...", "user": { /* UserSummary */ } }
+// (B) 신규 소셜 사용자(약관 동의 필요)
+{ "authenticated": false, "registrationToken": "...",
+  "profile": { "email": "a@b.com", "nickname": "카카오닉네임", "provider": "kakao" } }
+```
+- 코드 무효/만료/재사용 → `401 OAUTH_CODE_INVALID` · 이메일 미수신 → `400 OAUTH_EMAIL_REQUIRED`
+
+**consent** `POST /api/v1/auth/oauth/consent` — 위 (B) 신규 소셜 사용자만
+```jsonc
+{ "registrationToken": "...", "agreements": { "service": true, "privacy": true, "marketing": false } }
+// → users 생성(동의 시각 기록) 후 인증 성공 data(§4-1)
+{ "accessToken": "...", "refreshToken": "...", "user": { /* UserSummary */ } }
+```
+- 필수 약관(`service`·`privacy`) false → `400 TERMS_REQUIRED` · `registrationToken` 무효/만료 → `401 OAUTH_CODE_INVALID`
+- 소셜 계정은 `password` NULL, `oauth_provider`/`oauth_subject`로 식별. 이메일 로그인 불가(§4-1 login은 password NULL 계정 거부).
 
 ## 5. Users / Preferences
 
@@ -195,6 +270,14 @@
 
 | code | HTTP | 의미 |
 |---|---|---|
+| **공통 (프레임워크)** | | |
+| `VALIDATION_FAILED` | 400 | `@Valid` 입력 검증 실패(필드 상세는 `error.details`) |
+| `UNAUTHORIZED` | 401 | 인증 토큰 없음/무효/만료 |
+| `FORBIDDEN` | 403 | 인가 실패(도메인 코드 없을 때 fallback) |
+| `NOT_FOUND` | 404 | 리소스 없음 |
+| `METHOD_NOT_ALLOWED` | 405 | 허용되지 않은 HTTP 메서드 |
+| `INTERNAL_ERROR` | 500 | 처리되지 않은 예외 catch-all |
+| **도메인** | | |
 | `ROOM_MEMBER_NOT_FOUND` | 403 | 공간 멤버 아님 |
 | `NOT_WRITER` | 403 | 작성자 본인 아님 |
 | `ROOM_CAPACITY_EXCEEDED` | 409 | 정원 8명 초과 |
@@ -208,6 +291,16 @@
 | `STORAGE_QUOTA_EXCEEDED` | 507 | 저장 공간 부족(롤백) |
 | `MASCOT_INTERACTION_LIMIT_REACHED` | 429 | 마스코트 하루 3회 초과 |
 | `RATE_LIMITED` | 429 | 발송/코드생성 속도 제한 |
+| **인증 (§4)** | | |
+| `INVALID_CREDENTIALS` | 401 | 로그인 실패(이메일/비번). 계정 존재 여부 노출 금지 — 동일 응답 |
+| `EMAIL_DUPLICATED` | 409 | 회원가입 이메일 중복 |
+| `TERMS_REQUIRED` | 400 | 필수 약관(서비스·개인정보) 미동의 |
+| `INVALID_TOKEN` | 401 | refresh 토큰 위조/형식 오류 |
+| `TOKEN_EXPIRED` | 401 | refresh 토큰 만료 또는 `revoked_at` 존재 |
+| `OAUTH_EMAIL_REQUIRED` | 400 | 소셜 로그인인데 이메일 미수신(`users.email` NOT NULL 방어) |
+| `OAUTH_CODE_INVALID` | 401 | 소셜 일회성 코드/registrationToken 무효·만료·재사용(§4-2) |
+
+> 규약: 에러코드는 **UPPER_SNAKE_CASE**. `VALIDATION_FAILED`의 `error.details`는 `[{field, reason}]` 배열(§2).
 
 ---
 

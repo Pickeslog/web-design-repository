@@ -1,5 +1,13 @@
 # AGENTS.md
 
+## Shared Code Convention
+
+Before naming or structuring any API or web code, read `docs/CODE-CONVENTION.md`.
+It is the shared naming and folder-structure SSOT for all team agents.
+
+Before starting an issue, read `docs/AI-TEAM-HARNESS.md` for the shared
+workflow, safety rules, review gate, and completion format.
+
 이 문서는 Codex가 Clov Web Design Repository에서 작업할 때 따라야 할 프로젝트 지침이다.
 
 ## 프로젝트 개요
