@@ -1,6 +1,8 @@
 # AGENTS.md
 
 이 문서는 Codex가 Clov Web Design Repository에서 작업할 때 따라야 할 프로젝트 지침이다.
+> ⚠️ **팀 공통 개발 가이드 및 예시 코드:**
+> 이 프로젝트의 전체 협업 규칙과 실전 예시 코드는 @Harness.md 를 따른다.
 
 ## 프로젝트 개요
 
