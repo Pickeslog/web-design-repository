@@ -24,8 +24,8 @@
 | Controller/Service | `<Term>Controller`, `<Term>Service` | `RoomController`, `RoomService` |
 | Mapper | `<Term>Mapper`(.java) + `mapper/<term>/<Term>Mapper.xml`(동일 namespace) | `RoomMapper` |
 | Entity | `<Term>`(단수, PascalCase) | `Room` |
-| DTO | `<Action><Term>Request` / `<Term>Response` (`Dto`·`Data`·`Result` 금지) | `CreateRoomRequest`, `RoomResponse` |
-| 프론트 page 폴더 | `src/pages/<plural>/<Component>/{<Component>.jsx, <Component>.style.js}` | `pages/rooms/RoomList/` |
+| DTO | **가이드**(엄격 규칙 아님): 액션/목적 + `Request`/`Response`. Term이 자명하면 생략 가능. `Dto`·`Data`·`Result` 금지 | `CreateRoomRequest`·`RoomResponse` — auth 실제: `LoginRequest`·`AuthResponse`·`TokenResponse`·`AgreementsRequest` |
+| 프론트 page 폴더 | `src/pages/<도메인그룹>/<Component>/{<Component>.jsx, <Component>.style.js}` — 그룹명은 `pages/auth`처럼 소문자 도메인(**강제 복수화 아님**). 단순 단독 페이지는 `pages/Home.jsx`처럼 최상위 허용 | `pages/auth/Login/`·`pages/rooms/RoomList/` |
 | 프론트 api 모듈 | `src/api/<term>.js` (액션명 함수) | `api/room.js` → `createRoom`, `getRoom` |
 | 프론트 store | `src/stores/<term>Store.js` (**클라 UI 상태만**) | `stores/roomStore.js` |
 | TanStack Query key | `['<plural>', ...params]` | `['rooms']`, `['room', roomId]` |
@@ -36,9 +36,9 @@
 
 ## 2. 도메인별 확정 이름표
 
-> 백엔드 base path·엔드포인트는 계약 §번호 참조. 프론트 담당은 [이관-매핑 §6](이관-매핑.md).
+> **route family = 대표 프리픽스일 뿐, 전체 경로가 아니다.** 실제 엔드포인트(중첩 `/rooms/{id}/plans`, auth의 `/oauth2/authorization/*`·`/login/oauth2/code/*` 등 `/api/v1` 밖 경로 포함)는 계약 §번호를 본다. 프론트 담당은 [이관-매핑 §6](이관-매핑.md).
 
-| # | 도메인(term) | API 패키지 | 핵심 클래스 | base path (계약) | Entity(=DB테이블) | 프론트 page/컴포넌트 | api 모듈 | query key | 담당 |
+| # | 도메인(term) | API 패키지 | 핵심 클래스 | route family (대표 프리픽스·계약) | Entity(=DB테이블) | 프론트 page/컴포넌트 | api 모듈 | query key | 담당 |
 |---|---|---|---|---|---|---|---|---|---|
 | §4 | **auth** ✅ | `domain/auth` | `AuthController`·`AuthService`·`OAuthAuthService`·`UserMapper` | `/api/v1/auth` | `User`(users) | `pages/auth/{Login,Signup}` | `api/auth.js` | — | 리더(완료) |
 | §5 | **user** | `domain/user` | `UserController`·`PreferenceController`·`UserService`·`UserPreferenceMapper` | `/api/v1/users/me` | `User`(재사용)·`UserPreference`(user_preferences) | `components/SettingsModal` | `api/user.js`·`api/preference.js` | `['me']`·`['preferences']` | 리더 |
@@ -48,11 +48,11 @@
 | §9 | **checklist** | `domain/plan` (plan에 포함) | `ChecklistController`·`ChecklistMapper` | `/api/v1/plans/{id}/checklists`·`/checklists` | `PlanChecklist`(plan_checklists) | (Schedule 내부) | `api/plan.js` | `['plan',id]` | 팀원2 |
 | §10 | **memory** | `domain/memory` | `MemoryController`·`CommentController`·`MemoryService`·`MemoryMapper`·`MemoryImageMapper`·`CommentMapper` | `/api/v1/memories` | `Memory`(memories)·`MemoryImage`·`MemoryComment`·`MemoryTag`·`MemoryParticipant` | `pages/feed/Feed` | `api/memory.js` | `['memories',roomId]`·`['memory',id]` | 팀원3 |
 | §11 | **letter** | `domain/letter` | `LetterController`·`LetterService`·`LetterMapper` | `/api/v1/rooms/{id}/letters`·`/letters` | `LuckyLetter`(lucky_letters)·`LetterFavorite`(letter_favorites) | `pages/letters/Letters` | `api/letter.js` | `['letters',roomId,box]` | 팀원3 |
-| §12 | **exp / mascot** | `domain/room` (exp/level)·`domain/mascot` (interact) | `RoomLevelController`(또는 Room에 포함)·`MascotController`·`MascotService` | `/api/v1/rooms/{id}/level`·`/exp-logs`·`/mascot/interact` | `exp_logs` 등(서버계산) | `components/{SceneBanner,Mascot}` | `api/room.js`·`api/mascot.js` | `['level',roomId]` | 팀원1 |
+| §12 | **exp / mascot** | `domain/room` (**분리 안 함** — exp·level·mascot 모두 room-scoped) | `RoomLevelController`·`MascotController`(또는 Room에 포함)·`MascotService` | `/api/v1/rooms/{id}/level`·`/exp-logs`·`/mascot/interact` | `FriendshipExpLog`(friendship_exp_logs, 서버계산). **마스코트 전용 테이블 없음**(`user_preferences.mascot_type` 참조) | `components/{SceneBanner,Mascot}` | `api/room.js` | `['level',roomId]` | 팀원1 |
 | §13 | **notification** | `domain/notification` | `NotificationController`·`NotificationService`·`NotificationMapper` | `/api/v1/notifications`·`/rooms/{id}/notifications` | `Notification`(notifications) | `pages/notifications/Notifications` | `api/notification.js` | `['notifications',roomId]` | 리더 |
 
 ### 반드시 지킬 예외/주의
-- **`User` 엔티티·`UserMapper`는 `domain/auth`에 이미 있다(#6).** §5 user 도메인은 **재사용**하고 메서드만 추가한다. **`User`를 다시 만들지 말 것.**
+- **`User`·`UserMapper`는 `domain/auth` 소유(이미 존재).** §5 `domain/user`의 컨트롤러·서비스는 이 `User`/`UserMapper`를 **가져다 쓴다** — cross-domain 읽기 의존(`domain/user → domain/auth`)은 **의도된 경계**다. **`User`를 `domain/user`로 옮기거나 다시 만들지 않는다**(리더 결정: 현 위치 유지). user 도메인 고유 조회가 필요하면 `UserMapper`에 메서드만 추가한다.
 - 소문자 단수 패키지(`domain/room`), 복수 프론트 폴더(`pages/rooms`) — 혼용 금지.
 - Mapper XML namespace = Mapper 인터페이스 FQN, SQL id = 메서드명, `#{}`만.
 - 새 공유 추상화(2번째 axios client·토큰 store·봉투 파서·디자인토큰)를 만들지 말고 기존 것 확장.
@@ -68,4 +68,4 @@ auth 슬라이스(domain/auth, pages/auth/Login)를 구조 그대로 복사하�
 
 ## 관련 문서
 - 코드 규약 → [`CODE-CONVENTION.md`](CODE-CONVENTION.md) · 계약 → [`API-CONTRACT.md`](API-CONTRACT.md)
-- 프론트 이관 담당/매핑 → [`이관-매핑.md`](이관-매핑.md) · 협업 루프 → [`AI-협업-운영규칙.md`](AI-협업-운영규칙.md)
+- 프론트 이관 담당/매핑 → [`이관-매핑.md`](이관-매핑.md) · 협업/워크플로우 정본 → [`AI-TEAM-HARNESS.md`](AI-TEAM-HARNESS.md)

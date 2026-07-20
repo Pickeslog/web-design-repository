@@ -52,8 +52,11 @@ third pattern.
 
 ## Web: React and JavaScript
 
-- React components, page folders, and component files use `PascalCase`, matching
-  the existing `pages/auth/Login/Login.jsx` pattern.
+- React components and component files use `PascalCase`. Page folders group a
+  domain's screens under a **lowercase domain folder**, matching the existing
+  `pages/auth/Login/Login.jsx` pattern — do **not** force pluralization
+  (`pages/auth`, not `pages/auths`). A simple standalone page may live directly
+  in `src/pages/` (for example `pages/Home.jsx`).
 - Other JavaScript files use the nearest existing pattern. API and store modules
   are lowercase, for example `src/api/auth.js` and `src/stores/authStore.js`.
 - Functions, variables, props, and hooks use `camelCase`. Hooks begin with
@@ -69,7 +72,7 @@ third pattern.
 ## Known Gotchas (빌드 중 실제로 걸린 함정 — 되풀이 금지)
 
 - **Emotion 컴포넌트 셀렉터** `${StyledComp} { ... }` 는 babel/swc 플러그인 없으면 런타임 크래시(`Component selectors can only be used...`). 요소·클래스 셀렉터(`label`, `& > div + div`)를 쓴다.
-- **OAuth 일회성 코드 재교환**: React StrictMode 이중 마운트로 `exchange`가 2번 호출돼 2번째가 `401 OAUTH_CODE_INVALID`. `useRef` 원샷 가드로 1회만 교환한다.
+- **OAuth 일회성 코드 재교환**: React StrictMode 이중 마운트로 `exchange`가 2번 호출돼 2번째가 `401 OAUTH_CODE_INVALID`. **모듈 레벨 `Map`(code → in-flight Promise)으로 교환을 1회로 dedup**한다 — `OAuthRedirect.jsx`의 `exchangeOnce(code)`가 같은 code면 진행 중인 Promise를 재사용(마운트/언마운트와 무관하게 모듈 스코프에서 공유). effect cleanup의 `active` 플래그는 언마운트 후 setState를 막는 별도 장치. **`useRef` 가드가 아니다** — ref는 마운트마다 새로 생겨 StrictMode 이중 마운트를 못 막는다.
 - **dev 서버 실행 중 npm 의존성 추가** → Vite 최적화 캐시 꼬임(React 중복/`useContext` null). `node_modules/.vite` 삭제 후 dev 서버 재시작.
 - **CORS**: 브라우저 `5173`→`8080` 호출은 백엔드 CORS 설정 필수(`app.cors.allowed-origins`). 없으면 `net::ERR_FAILED`.
 - **eslint `react-hooks/immutability`**: `window.location.href = ...` 할당 금지 → `window.location.assign(...)`.
