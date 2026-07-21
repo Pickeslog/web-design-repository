@@ -75,16 +75,21 @@ RoomList(#26)·plan 프론트 스캐폴드(#29)·notification 봉투 백엔드(#
 - 공통 `lib/uploadImage(presignFn, file)` — presign→**순수 fetch로 R2 PUT**(axios 인터셉터 우회)→commit. 클라 검증(타입·5MB).
 - 프로필(설정 모달 아바타)·추억(피드 상세 갤러리: 추가/삭제/순서)·인생4컷(일정 상세 4단계, 멤버 업로드·서버 잠김계산). → **이미지 R2 전체(백+프론트) 완료.**
 
-### 진짜 남은 것 = R2 버킷 CORS 하나 (리더 config, 코드 아님)
-- 브라우저가 R2로 직접 PUT하므로 **버킷 CORS 없으면 업로드가 브라우저에서 차단**된다(코드·presign 정상, PUT만 막힘). Cloudflare R2 → `clov-media` → Settings → **CORS Policy**에 앱 오리진 PUT 허용:
-  `[{"AllowedOrigins":["http://localhost:5173","<배포 오리진>"],"AllowedMethods":["PUT","GET"],"AllowedHeaders":["Content-Type"]}]`
-- 이거 넣으면 이미지 업로드 E2E 완성. **그 전까진 UI는 뜨지만 업로드 실패**.
+### R2 실 연동 + E2E 검증 ✅ 완료 (리더 config + 라이브 확인)
+- **버킷 CORS** 설정 완료: `[{"AllowedOrigins":["http://localhost:5173"],"AllowedMethods":["PUT","GET"],"AllowedHeaders":["Content-Type"]}]`. (배포 시 배포 오리진 추가.)
+- **presigner 브라우저 호환 가드** → clov-api **#47 머지**: SDK v2 2.30+가 presigned PUT에 flexible-checksum을 끼우면 브라우저 업로드가 깨지는데, 현재(BOM 2.31.6) 안 끼움을 확인·회귀 테스트로 고정.
+- **E2E 라이브 확인**: 백엔드 기동(`/v3/api-docs` 200) + **프로필 사진 업로드 성공**(아바타에 R2 공개 URL 이미지 렌더). presign→R2 PUT→커밋→공개조회 전 구간 관통. → **이미지 R2 = 백+프론트+실버킷 완주.**
+
+### 셋업 함정 (오늘 겪음 — 다음에 참고)
+- **startup 실패 `Illegal character in authority ... <ACCOUNT_ID>`**: secret의 `app.storage.endpoint`에 템플릿 placeholder `<ACCOUNT_ID>`가 남아 `URI.create`가 터짐. → R2 개요의 **계정 ID/S3 API** 실값으로 교체. (테스트는 더미 endpoint라 CI 미검출 — 실 bootRun에서만 드러남.)
+- **R2 Secret Access Key는 토큰 생성 시 1회성**: 안 적어놨으면 재확인 불가 → **새 Account API 토큰(Object R&W, clov-media)** 재발급이 정답.
 - (참고) 쿼터 상한 10장·memory 이미지 이슈(#45)는 확정/문서화됨.
 
 ### 자격증명 주의 (유지)
 R2 Access/Secret Key는 **`application-secret.yaml`(gitignore)에만** 있음 — 커밋/코드/채팅 금지. `application-secret.example.yaml`엔 키 형태만(값X) 반영됨. Secret Key는 R2에서 재확인 불가하니 리더가 별도 보관.
 
 ### 상태 앵커
-- **양쪽 레포 열린 PR 0**. clov-api main=`554c5cb`(#43·#44·#46)·clov-web main=`f6e85a5`(#33·#34).
-- 팀 R2 상태: lami 댓글✅·chacha invite✅·kimgyubi actor(백+프론트✅)·user(리더 백+프론트✅)·스토리지 presign✅·**이미지 R2 백+프론트 전부✅**.
-- **전 도메인 + 이미지 R2(백+프론트) 완료.** 남은 것 = **R2 버킷 CORS 설정 하나**(리더 config, 위 참조). 그 후 이미지 업로드 E2E 완성.
+- **양쪽 레포 열린 PR 0**. clov-api main=`57c205c`(#43·#44·#46·#47)·clov-web main=`f6e85a5`(#33·#34).
+- 팀 R2 상태: lami 댓글✅·chacha invite✅·kimgyubi actor(백+프론트✅)·user(리더 백+프론트✅)·스토리지 presign✅·**이미지 R2 백+프론트+실버킷 E2E✅**.
+- **전 도메인 + 이미지 R2(백+프론트+실 연동) 완료.** R2 버킷·토큰·CORS·secret 다 세팅됨, 프로필 업로드 라이브 검증.
+- 남은 건 기능 아님 — 추억/인생4컷 업로드도 동일 배관이라 스팟 확인만 하면 됨. 배포 시 CORS `AllowedOrigins`에 배포 도메인 추가.
