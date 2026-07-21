@@ -49,6 +49,22 @@ third pattern.
   `updateRevokedAt`, `deleteById`.
 - SQL statement IDs match their mapper method names exactly. Use `#{}` only;
   `${}` is prohibited.
+- **Cross-domain shared DTOs live in `global/dto`, not in `domain/<x>/dto`.** A
+  reusable member/writer/participant view (`UserSummaryResponse`), presign
+  responses, and any DTO more than one domain returns belong under `global/`.
+  Two domains must **never** each declare a **top-level** DTO with the same
+  simple name — MyBatis aliases every scanned class by its simple name and fails
+  `ApplicationContext` startup on a duplicate (see Known Gotchas). Domain DTOs
+  stay in `domain/<x>/dto` with a domain-prefixed, unique name (`PlanResponse`,
+  not a bare `Response`); grouping them as nested records inside a
+  `PlanRequests`/`PlanResponses` holder is also fine (nested classes are not
+  aliased).
+- **`type-aliases-package` scans entity packages only** — it lists each
+  `com.korit.clovapi.domain.<domain>.entity` explicitly in `application.yaml`.
+  **When you add a new domain, add its `.entity` package to that list.** Entities
+  (uniquely named per domain) are the only classes that receive short aliases;
+  reference a DTO by its fully-qualified name if a mapper ever needs it, never by
+  a short alias.
 
 ## Web: React and JavaScript
 
@@ -78,6 +94,7 @@ third pattern.
 - **eslint `react-hooks/immutability`**: `window.location.href = ...` 할당 금지 → `window.location.assign(...)`.
 - **`git add -A`** 가 무관한 동시 변경(다른 사람의 파일)을 쓸어담는다. 파일을 지정해 add 하거나 `git status`로 확인 후 커밋. 한 이슈 = 한 PR.
 - **MyBatis**: `#{}` 만, `${}` 금지. resultMap 컬럼은 DB `snake_case`, 프로퍼티는 `camelCase`. refresh 토큰은 **해시로 저장**(원문 금지), JWT는 `jti`로 유일성 보장.
+- **MyBatis 타입-별칭 simpleName 충돌 → 컨텍스트 전체 붕괴**(#33 실제 사고): letter·memory가 각각 `domain/*/dto/UserSummaryResponse`(동일 simpleName top-level)를 만들자, `type-aliases-package`가 `com.korit.clovapi.domain` 전체를 스캔하며 `TypeException`(alias 'usersummaryresponse' already mapped)으로 `ApplicationContext` 기동 실패 → 전 도메인 다운. **stacked + 독립 CI라 각 PR은 통과, 둘 다 머지된 main에서만 터짐**(main엔 test를 안 돌려 놓쳐 다음 PR CI가 드러냄). 해결: 공유 DTO는 `global/dto`로, `type-aliases-package`는 각 도메인 `.entity`만 명시 스캔(#31). **예방: 공유 DTO는 처음부터 `global/dto`, 새 도메인은 `.entity`를 별칭 목록에 추가, 도메인 DTO는 유니크명 또는 중첩 record.**
 - **작업 후 워킹트리를 비운다**(커밋/스태시). 미커밋으로 두면 브랜치 전환·다른 에이전트가 날린다.
 
 ## Pull Request Check

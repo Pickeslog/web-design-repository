@@ -60,6 +60,7 @@
 - 소문자 단수 패키지(`domain/room`), 복수 프론트 폴더(`pages/rooms`) — 혼용 금지.
 - Mapper XML namespace = Mapper 인터페이스 FQN, SQL id = 메서드명, `#{}`만.
 - 새 공유 추상화(2번째 axios client·토큰 store·봉투 파서·디자인토큰)를 만들지 말고 기존 것 확장.
+- **여러 도메인이 반환하는 공유 DTO(`UserSummaryResponse`·presign 응답 등)는 `global/dto`에 두고 재사용** — `domain/*/dto`에 재생성 금지. 두 도메인이 같은 simpleName top-level DTO를 만들면 MyBatis 별칭 충돌로 기동 실패(#33). 새 도메인은 그 `.entity` 패키지를 `application.yaml`의 `type-aliases-package`에 추가한다. 상세 → [`CODE-CONVENTION.md`](CODE-CONVENTION.md).
 
 ---
 
