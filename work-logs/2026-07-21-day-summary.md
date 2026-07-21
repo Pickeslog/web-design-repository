@@ -71,14 +71,20 @@ RoomList(#26)·plan 프론트 스캐폴드(#29)·notification 봉투 백엔드(#
 - **memory 이미지 presign+커밋+삭제+순서** → clov-api **#46 머지**(#45, §10 4엔드포인트). `MemoryImage` 엔티티·`MemoryImageMapper`, `getDetail`가 실제 images 반환. 쿼터 `MAX_IMAGES_PER_MEMORY=10`(리더 확정 시 상수 교체).
 - plan 인생4컷 presign은 #43에 이미 포함. → **plan·프로필·memory presign 백엔드 전부 완료.**
 
-### 진짜 남은 것 (프론트만)
-- **이미지 R2 프론트**: `presign→R2로 PUT→commit` 업로드 UI. 3곳 — 프로필(설정 모달, `PATCH /me` profileImageUrl 커밋)·memory(추억 상세, `POST /memories/{id}/images`)·plan 인생4컷(`POST /plans/{id}/stage-photos`). 백엔드 presign 다 서 있음 → **순수 프론트 분배**. 골든레퍼런스 슬라이스 1개(프로필 권장) 먼저 만들고 나머지 분배.
-- **쿼터 상한(10장)·memory 이미지 이슈(#45)** 관련 리더 확정 사항은 프롬프트/이슈에 명시됨.
+### 이미지 R2 프론트 ✅ 완료 (심야, 리더가 3곳 다) → clov-web **#34 머지**
+- 공통 `lib/uploadImage(presignFn, file)` — presign→**순수 fetch로 R2 PUT**(axios 인터셉터 우회)→commit. 클라 검증(타입·5MB).
+- 프로필(설정 모달 아바타)·추억(피드 상세 갤러리: 추가/삭제/순서)·인생4컷(일정 상세 4단계, 멤버 업로드·서버 잠김계산). → **이미지 R2 전체(백+프론트) 완료.**
+
+### 진짜 남은 것 = R2 버킷 CORS 하나 (리더 config, 코드 아님)
+- 브라우저가 R2로 직접 PUT하므로 **버킷 CORS 없으면 업로드가 브라우저에서 차단**된다(코드·presign 정상, PUT만 막힘). Cloudflare R2 → `clov-media` → Settings → **CORS Policy**에 앱 오리진 PUT 허용:
+  `[{"AllowedOrigins":["http://localhost:5173","<배포 오리진>"],"AllowedMethods":["PUT","GET"],"AllowedHeaders":["Content-Type"]}]`
+- 이거 넣으면 이미지 업로드 E2E 완성. **그 전까진 UI는 뜨지만 업로드 실패**.
+- (참고) 쿼터 상한 10장·memory 이미지 이슈(#45)는 확정/문서화됨.
 
 ### 자격증명 주의 (유지)
 R2 Access/Secret Key는 **`application-secret.yaml`(gitignore)에만** 있음 — 커밋/코드/채팅 금지. `application-secret.example.yaml`엔 키 형태만(값X) 반영됨. Secret Key는 R2에서 재확인 불가하니 리더가 별도 보관.
 
 ### 상태 앵커
-- **양쪽 레포 열린 PR 0**. clov-api main=`554c5cb`(#43·#44·#46 반영)·clov-web main=`3fada74`(#33 반영).
-- 팀 R2 상태: lami 댓글✅·chacha invite✅·kimgyubi actor(백✅·프론트✅)·user(리더 백+프론트✅)·스토리지 presign✅·**이미지 presign 백엔드(plan·프로필·memory) 전부✅**.
-- **모든 도메인 백엔드 + 이미지 presign 백엔드 완료.** 남은 것 = **이미지 업로드 프론트 UI**(3곳) 하나뿐.
+- **양쪽 레포 열린 PR 0**. clov-api main=`554c5cb`(#43·#44·#46)·clov-web main=`f6e85a5`(#33·#34).
+- 팀 R2 상태: lami 댓글✅·chacha invite✅·kimgyubi actor(백+프론트✅)·user(리더 백+프론트✅)·스토리지 presign✅·**이미지 R2 백+프론트 전부✅**.
+- **전 도메인 + 이미지 R2(백+프론트) 완료.** 남은 것 = **R2 버킷 CORS 설정 하나**(리더 config, 위 참조). 그 후 이미지 업로드 E2E 완성.
