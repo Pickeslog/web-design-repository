@@ -213,6 +213,7 @@
 
 | Method | Path | 설명 | 인가 |
 |---|---|---|---|
+| GET | `/api/v1/rooms` | 내가 **ACTIVE 멤버인** 우정공간 목록(즐겨찾기 우선·최근 생성순). "잠자는 방"(INACTIVE) 목록은 후속 분리 | 로그인 |
 | POST | `/api/v1/rooms` | 생성(생성자=첫 멤버, 일반 멤버와 동일) | 로그인 |
 | GET | `/api/v1/rooms/{roomId}` | 상세(이름·레벨·exp·멤버수) | 공간 멤버 |
 | PATCH | `/api/v1/rooms/{roomId}` | 수정(`name`·`description`≤60·`theme_color`·`transport_type`·`cover_photo_url`·`cover_title`) → 전 멤버 알림 팬아웃 | 공간 멤버(누구나) |
@@ -225,6 +226,15 @@
 - 전원 `LEFT` → 서버가 `status=INACTIVE` + `scheduled_delete_at`(+30일) 자동 설정. 별도 "방 삭제" API 없음.
 
 ### 6-1. 요청/응답
+
+**GET `/rooms`** → 목록 봉투, `items` = `RoomSummary[]` (즐겨찾기 우선·최근 생성순). 내가 **ACTIVE 멤버인 ACTIVE 방만**. 빈 목록이면 `items: []`. (전원 LEFT로 INACTIVE된 "잠자는 방" 되살리기 목록은 후속 엔드포인트로 분리.)
+```jsonc
+{ "id": "31", "name": "제주 가치가자", "description": "졸업 여행 준비방",
+  "themeColor": "#7CC6A6", "transportType": "airplane", "coverPhotoUrl": null,
+  "friendshipLevel": 3, "memberCount": 5, "isFavorite": true,
+  "status": "ACTIVE", "createdAt": "2026-06-30T10:00:00" }
+```
+> `RoomSummary` = 목록 카드용 축약(RoomDetail에서 `expPoint`·`myStatusMessage`·`scheduledDeleteAt`·`coverTitle` 제외). 상세는 `GET /rooms/{roomId}`.
 
 **POST `/rooms`** (201) → `RoomDetail`
 ```jsonc
