@@ -17,7 +17,7 @@
 - **E(⚪)** User→domain/user 이동: **리더 결정=현 위치 유지**(레지스트리 §5에 경계 명문화). 미실행.
 
 ## 온보딩 착수 (M2 앞 단계)
-- 팀 로스터: 리더(Codex+Claude) · **chacha1650a=Claude · kimgyubi1234=Gemini · lami2342=Gemini**(3명 비전공·온보딩). collaborator=clov-web·clov-api 양쪽 확인(+code1218).
+- 팀 로스터: 리더(Codex+Claude) · **chacha1650a=Claude · kimgyubi1234=Gemini · lami2342=Claude**(3명 비전공·온보딩). collaborator=clov-web·clov-api 양쪽 확인(+code1218).
 - 온보딩 가이드 `team-guides/16-onboarding-first-pr.md`(clov-web `docs/team/<id>.md` 자기소개 1파일 추가 — 파일 분리로 충돌0, docs라 CI 안전, `build` required 경험).
 - clov-web 온보딩 이슈 생성·배정: **#13 chacha · #14 kimgyubi · #15 lami**. 3명 PR 완주(리더 리뷰·머지) → **M2 도메인 배정 맵** 단계.
 

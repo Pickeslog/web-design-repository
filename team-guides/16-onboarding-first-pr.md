@@ -3,7 +3,7 @@
 > **목적**: 실제 도메인 작업을 받기 **전에**, 작은 PR 하나로
 > **브랜치 → PR → CI 초록 → 리뷰 → 머지** 전체 사이클을 각자 **한 번 성공**시킨다.
 > 여기서 막히는 환경·권한 문제(collaborator 초대, gh 로그인, CI)를 미리 걸러낸다.
-> 대상: **chacha1650a**(Claude) · **kimgyubi1234**(Gemini) · **lami2342**(Gemini).
+> 대상: **chacha1650a**(Claude) · **kimgyubi1234**(Gemini) · **lami2342**(Claude).
 > 관련: [`11-claude-prompt-template.md`](11-claude-prompt-template.md) · [`13-gemini-prompt-recipes.md`](13-gemini-prompt-recipes.md) · 워크플로 정본 [`../docs/AI-TEAM-HARNESS.md`](../docs/AI-TEAM-HARNESS.md)
 
 ## 무엇을 만드나 (아주 작음)
@@ -85,13 +85,14 @@ git pull
 
 ---
 
-## §A. Claude 프롬프트 (chacha1650a용 — 붙여넣기)
+## §A. Claude 프롬프트 (chacha1650a · lami2342용 — 붙여넣기)
 
 ```
-clov-web 레포에서 작업 중이야. docs/team/chacha1650a.md 파일을 새로 하나만 만들어줘.
+clov-web 레포에서 작업 중이야. docs/team/<본인아이디>.md 파일을 새로 하나만 만들어줘.
+(파일명 예: docs/team/chacha1650a.md 또는 docs/team/lami2342.md)
 내용은 아래 형식(마크다운):
 
-# chacha1650a
+# <본인아이디>
 - 사용 에이전트: Claude
 - 관심 도메인: (예: 추억피드 — 자유롭게)
 - 한 줄 각오: (자유)
@@ -99,7 +100,7 @@ clov-web 레포에서 작업 중이야. docs/team/chacha1650a.md 파일을 새�
 규칙: 이 파일 하나만 생성하고 다른 파일은 절대 건드리지 마. 코드/설정/계약 변경 없음.
 ```
 
-## §B. Gemini 프롬프트 (kimgyubi1234 · lami2342용 — 붙여넣기)
+## §B. Gemini 프롬프트 (kimgyubi1234용 — 붙여넣기)
 
 ```
 clov-web 레포에서 작업 중입니다. docs/team/<본인아이디>.md 파일을 새로 하나만 만들어 주세요.
@@ -138,6 +139,6 @@ gh issue create --repo Pickeslog/clov-web \
   --assignee chacha1650a \
   --body "docs/team/chacha1650a.md 자기소개 1파일 추가. 완료 기준: PR CI(build) 초록 + Closes #이슈 + squash 머지. 가이드: team-guides/16-onboarding-first-pr.md"
 ```
-kimgyubi1234·lami2342도 아이디만 바꿔 동일하게. (또는 GitHub UI `Issues > New issue`.)
+kimgyubi1234·lami2342도 아이디만 바꿔 동일하게. 단, lami2342의 사용 에이전트는 Claude로 적는다. (또는 GitHub UI `Issues > New issue`.)
 
 > **리더 체크**: ①세 명 clov-web collaborator 초대 ②이슈 3개 생성·배정 ③각자 PR 리뷰·머지(머지는 리더). 세 명 모두 완주하면 → **M2 도메인 이슈 배정 단계로**.

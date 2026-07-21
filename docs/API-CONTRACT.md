@@ -384,6 +384,7 @@
 | Method | Path | 설명 | 인가 |
 |---|---|---|---|
 | POST | `/api/v1/plans/{planId}/memories` | 내 추억 작성(`title`≤25·`content`≤100·`tags[]`·`participantUserIds[]`) → plan `memory_status=WRITTEN`. `CANDIDATE`/`WRITTEN`만 허용(`NONE`→`PLAN_NOT_COMPLETED`). `UNIQUE(plan_id,writer_id)` 위반 → `409 MEMORY_ALREADY_WRITTEN`(PATCH로) | 공간 멤버 |
+| POST | `/api/v1/rooms/{roomId}/memories` | **FREE MEMORY** 작성(`plan_id` NULL, D3) — plan 없이 방 단위 추억. body는 `/plans/{planId}/memories`와 동일(단 `planId` 없음). plan `memory_status` 전이·`PLAN_NOT_COMPLETED`·`MEMORY_ALREADY_WRITTEN` 검증 **미적용** | 공간 멤버 |
 | GET | `/api/v1/rooms/{roomId}/memories` | 피드(월별·`writer_id`·`tag`·`participantUserId` 필터) | 공간 멤버 |
 | GET | `/api/v1/memories/{memoryId}` | 상세(이미지·태그·참여자·댓글수) | 공간 멤버 |
 | PATCH · DELETE | `/api/v1/memories/{memoryId}` | 수정(태그/참여자 전체교체)·삭제(soft) | 작성자 본인 |
@@ -394,7 +395,7 @@
 | POST · GET | `/api/v1/memories/{memoryId}/comments` | 친구 한 줄 댓글 작성·목록 | 공간 멤버 |
 | DELETE | `/api/v1/comments/{commentId}` | 댓글 삭제 | 작성자 본인 |
 
-- `plan_id` 없이도 작성 가능 = **FREE MEMORY**(`plan_id` NULL, D3).
+- `plan_id` 없이도 작성 가능 = **FREE MEMORY**(`plan_id` NULL, D3) → `POST /rooms/{roomId}/memories`.
 
 ### 10-1. 요청/응답
 
@@ -407,7 +408,7 @@
   "participantUserIds": ["1024", "2048"] }
 ```
 - `CANDIDATE`/`WRITTEN`만 허용(`NONE` → `409 PLAN_NOT_COMPLETED`), `(plan_id, writer_id)` 중복 → `409 MEMORY_ALREADY_WRITTEN`.
-- ⚠️ **FREE MEMORY(planId NULL) 생성 엔드포인트는 §10 표에 미기재** — 방 단위(`POST /rooms/{roomId}/memories` 유력)로 **리더 확정 필요**. 지금은 발명하지 않음.
+- ✅ **FREE MEMORY(planId NULL) 생성** = `POST /rooms/{roomId}/memories`(리더 확정 2026-07-21). body는 위 `POST /plans/{planId}/memories`와 동일하되 `planId` 없음 → `plan_id` NULL 저장, plan `memory_status` 전이 없음, `PLAN_NOT_COMPLETED`·`MEMORY_ALREADY_WRITTEN` 검증 미적용.
 
 **GET `/rooms/{roomId}/memories?month=2026-08&writerId=1024&tag=한라산&participantUserId=2048`** → 목록 봉투, `items` = `MemorySummary[]`
 ```jsonc

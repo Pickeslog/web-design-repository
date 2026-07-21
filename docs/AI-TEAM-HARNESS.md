@@ -16,7 +16,7 @@
 |---|---|---|
 | **Codex** | `clov-api` 백엔드 구현 | 동작하는 PR + 초록 CI |
 | **Claude Code** | `clov-web` 이관 + `web-design-repository` 감사·리뷰(읽기) | 이관 PR·감사 리포트·리뷰 승인 |
-| **Gemini + 팀원 2명** | M2 도메인 세로슬라이스 팬아웃 | 도메인 PR |
+| **Claude/Gemini 팀원 3명** | M2 도메인 세로슬라이스 팬아웃 | 도메인 PR |
 | **리더** | SSOT(계약·DB) 변경, 최종 머지 | 승인·머지 |
 
 ```
