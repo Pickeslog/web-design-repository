@@ -1,53 +1,51 @@
-# 2026-07-21 오전 준비 — M2 도메인 팬아웃
+# 2026-07-21 오전 준비 — M2 도메인 팬아웃 (리더 결정 확정)
 
-> 기준: `2026-07-20-day-summary.md`, `2026-07-20-governance-codex-review.md`,
-> `docs/API-CONTRACT.md`, `docs/DOMAIN-NAMING-REGISTRY.md`,
-> `docs/AI-TEAM-HARNESS.md`, `team-guides/16-onboarding-first-pr.md`.
+> **상태**: 리더 결정 확정(2026-07-21). 이 문서 = **결정 요약·체크리스트**.
+> 팀원별 실행 상세·복붙 프롬프트는 → [`2026-07-21-M2-착수-프롬프트.md`](2026-07-21-M2-착수-프롬프트.md).
+> 기준: `2026-07-20-day-summary.md` · `2026-07-20-governance-codex-review.md` · `docs/API-CONTRACT.md` · `docs/DOMAIN-NAMING-REGISTRY.md`.
+>
+> ⚠️ **개정 이력**: 이 문서 초안(세로슬라이스 추천·lami=plan·memory 보류)은 리더 결정으로 **도메인별 혼합·lami=memory 축소·FREE MEMORY 확정**으로 대체됨.
 
 ## 0. 현재 결론
 
-- 2026-07-20 기준 governance 이슈 A~D 완료, E는 **User 현 위치 유지**로 결정.
-- `clov-api`/`clov-web` 모두 main 보호와 CI required 적용 완료 상태로 기록됨.
-- 팀원 3명 온보딩 PR 완주. M2 도메인 팬아웃 시작 가능.
-- 팀 로스터: chacha1650a=Claude, kimgyubi1234=Gemini, lami2342=Claude.
-- 최신 하루 요약은 clov-api PR #18 머지 완료로 기록되어 있다. 이전 핸드오프 문서의 "PR #18 머지 대기"는 stale로 본다.
+- governance 이슈 A~E 완료(E = **User 현 위치 유지**). `clov-api`·`clov-web` 양쪽 main 보호 + CI `build` required.
+- 팀원 3명 온보딩 PR 완주. **clov-api PR #18 머지 완료**(Testcontainers). M2 팬아웃 시작 가능.
+- 팀 로스터: 리더(Codex=백 / Claude=프론트·감사) · chacha1650a=Claude · kimgyubi1234=Gemini · lami2342=Claude.
+- ✅ **FREE MEMORY 확정**: `POST /rooms/{roomId}/memories`(`plan_id` NULL). 계약 §10 반영 완료.
 
-## 1. 오전 첫 결정
+## 1. 오전 첫 결정 (확정)
 
-**추천 결정: M2는 세로슬라이스 기준으로 맡긴다.**
+**M2 슬라이스 형태 = 도메인별 혼합.**
 
-이유:
-- 한 사람이 백엔드+프론트 맥락을 같이 잡아 PR 설명과 QA가 단순해진다.
-- 온보딩에서 이미 브랜치 -> PR -> CI -> 리뷰 -> 머지 흐름을 경험했다.
-- 프론트/백을 나누면 비전공 팀원에게 대기와 핸드오프가 늘어난다.
+- **쉬운 도메인**(letter §11 · notification §13 · 축소 memory §10) = 비전공 **세로 통째**(auth 골든레퍼런스 복사). 핸드오프·대기 최소, PR·QA 단순.
+- **어려운·기반 도메인**(room §6 · invite §7 · plan §8) = **백/프론트 분리**. 백엔드를 **리더가 선행** → 프론트는 R2에서 비전공에 분배.
+- 근거: 비전공은 세로슬라이스의 단순함을 유지하고, 동시성·잠금(낙관적 락·stage 잠금)은 리더가 흡수한다.
 
-단, 어려운 동시성/잠금 로직은 리더가 직접 맡거나 리뷰 강도를 올린다.
+## 2. 배정 (확정 — 레지스트리 §2 실명 반영 완료)
 
-## 2. 오전 추천 배정
-
-| 우선순위 | 담당 후보 | 도메인 | 범위 | 난이도/주의 |
+| R | 담당 | 도메인 | 범위 | 방식 |
 |---|---|---|---|---|
-| 1 | 리더/Codex | `room` 일부 | §6 공간 생성/목록/상세의 골격 | 다른 도메인의 `roomId` 기반. 먼저 뚫으면 팀원 작업이 쉬워짐 |
-| 2 | chacha1650a | `letter` | §11 행운편지 발송/받은함/보낸함/읽음/즐겨찾기 | 비교적 독립적. `letter_favorites` 포함 |
-| 3 | kimgyubi1234 | `notification` | §13 알림 목록/읽음/전체읽음 | 단순 CRUD성. 레지스트리 담당이 리더라 실제 배정 시 담당표 갱신 필요 |
-| 4 | lami2342 | `plan` 기본 | §8 약속 CRUD + §9 checklist 기본 | stage-photo 잠금은 어려우므로 별도 이슈로 분리 권장 |
-| 5 | 리더/Codex | `invite` | §7 초대/가입신청/수락/거절/5분 undo | 낙관적 락과 경합 처리. 팀원 첫 이슈로는 무거움 |
+| R1 | **리더/Codex** | room §6 (+exp/mascot §12) | 생성/목록/상세 골격 — **최우선**(모든 도메인의 `roomId` 부모) | 백엔드 선행 |
+| R1 | **chacha1650a** | letter §11 | 발송/받은·보낸함/읽음/즐겨찾기 | 세로 통째 |
+| R1 | **kimgyubi1234** | notification §13 | 목록/읽음/전체읽음 (생성 API 없음) | 세로 통째 |
+| R1 | **lami2342** | memory §10 (축소) | 작성/피드/상세 — **이미지·댓글은 R2** | 세로 |
+| R1 | **리더/Codex** | user §5 | `/users/me`·preferences (User=auth 재사용) | 세로(백 Codex/프론트 Claude) |
+| R1 | **리더/Codex** | invite §7 · plan §8 (+§9) | 백엔드 선행(낙관적 락·stage 잠금) | 백만, 프론트 R2 |
 
-보류:
-- `memory` §10은 FREE MEMORY(`planId NULL`) 생성 엔드포인트가 미확정이다. 먼저 `POST /rooms/{roomId}/memories` 등 리더 결정을 확정하고 계약을 갱신한 뒤 배정한다.
-- `exp/mascot` §12는 `room` 기반 서버 계산이므로 `room` 골격 후 착수한다.
+**R2**: invite·plan·room의 **프론트**를 비전공 3명에 분배 + memory **이미지 업로드·댓글**.
 
-확인 필요:
-- clov-web collaborator `code1218` 신원이 필요하면 확인한다.
+**보류/주의**
+- `exp/mascot` §12는 room-scoped 서버 계산 → room 골격 후 착수(별도 분리 안 함).
+- clov-web collaborator `code1218` 신원 필요 시 확인.
 
 ## 3. 오늘 오전 체크리스트
 
-1. GitHub에서 양쪽 repo ruleset의 `build` required 유지 확인.
-2. M2 담당 방식을 "세로슬라이스"로 공지.
-3. 레지스트리 §2 담당표를 실제 이름으로 갱신할지 결정.
-4. M2 이슈를 작게 생성: `room-core`, `letter`, `notification`, `plan-core`, `invite`.
-5. 각 이슈 본문에 계약 §번호, 레지스트리 행, 완료 기준, PR 첫 줄 `Closes #N` 규칙을 넣는다.
-6. memory FREE MEMORY 엔드포인트를 리더 결정으로 확정할 때까지 memory 구현 이슈는 열지 않는다.
+1. GitHub 양쪽 repo ruleset의 `build` required **유지 확인** (clov-api PR #18 머지 후 재확인 — 한 번 사라진 이력).
+2. ✅ M2 담당 방식 = **도메인별 혼합** 확정.
+3. ✅ 레지스트리 §2 담당표 **실명 갱신 완료**.
+4. M2 이슈 작게 생성: `room-core` · `letter` · `notification` · `memory-core(축소)` · `user` + `invite`/`plan` 백엔드. 본문 = 착수 프롬프트.
+5. 각 이슈에 계약 §번호 · 레지스트리 행 · 완료 조건 · PR 첫 줄 `Closes #N` 규칙.
+6. ✅ FREE MEMORY 확정 → memory(축소) 배정 가능(더 이상 보류 아님).
 
 ## 4. M2 이슈 본문 템플릿
 
@@ -83,7 +81,7 @@
 web-design-repository/docs/AI-TEAM-HARNESS.md, DOMAIN-NAMING-REGISTRY.md,
 CODE-CONVENTION.md와 관련 API 계약 §번호를 읽어.
 
-이슈 #N의 M2 도메인 세로슬라이스를 구현해.
+이슈 #N에 배정된 M2 도메인 슬라이스를 구현해.
 auth 슬라이스를 구조 그대로 참고하고 이름은 레지스트리 확정값만 써.
 공통 ApiResponse, client.js, authStore, 기존 Query 패턴은 재사용해.
 계약, DB DDL, 시크릿, 새 공통 클라이언트는 바꾸지 마.
