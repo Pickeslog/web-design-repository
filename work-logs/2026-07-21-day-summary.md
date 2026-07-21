@@ -89,7 +89,7 @@ RoomList(#26)·plan 프론트 스캐폴드(#29)·notification 봉투 백엔드(#
 R2 Access/Secret Key는 **`application-secret.yaml`(gitignore)에만** 있음 — 커밋/코드/채팅 금지. `application-secret.example.yaml`엔 키 형태만(값X) 반영됨. Secret Key는 R2에서 재확인 불가하니 리더가 별도 보관.
 
 ### 상태 앵커
-- **양쪽 레포 열린 PR 0**. clov-api main=`57c205c`(#43·#44·#46·#47)·clov-web main=`f6e85a5`(#33·#34).
+- **양쪽 레포 열린 PR·이슈 0**. clov-api main=`9e66419`(#43·#44·#46·#47·#48)·clov-web main=`f6e85a5`(#33·#34).
 - 팀 R2 상태: lami 댓글✅·chacha invite✅·kimgyubi actor(백+프론트✅)·user(리더 백+프론트✅)·스토리지 presign✅·**이미지 R2 백+프론트+실버킷 E2E✅**.
-- **전 도메인 + 이미지 R2(백+프론트+실 연동) 완료.** R2 버킷·토큰·CORS·secret 다 세팅됨, 프로필 업로드 라이브 검증.
-- 남은 건 기능 아님 — 추억/인생4컷 업로드도 동일 배관이라 스팟 확인만 하면 됨. 배포 시 CORS `AllowedOrigins`에 배포 도메인 추가.
+- **전 도메인 + 이미지 R2(백+프론트+실 연동) 완료.** R2 버킷·토큰·CORS·secret 다 세팅됨.
+- **로드맵 3단계 진입**: 통합 스모크 QA ✅(전 기능 관통 22/23, FK 삭제 버그 #48 잡음) → [`2026-07-22-통합-스모크-QA.md`](2026-07-22-통합-스모크-QA.md). **다음 = 배포**(호스팅 결정→prod 환경변수·CORS 배포 오리진·DB·빌드).
