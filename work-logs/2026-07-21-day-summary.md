@@ -66,13 +66,19 @@ RoomList(#26)·plan 프론트 스캐폴드(#29)·notification 봉투 백엔드(#
 2. **presign 배선 (#38) ✅ = Claude 직접 구현(B안)** → clov-api **#43 머지**. (원래 Codex 배정이었으나 creds 확보·스펙 확정·소규모라 리더 승인하에 Claude가 배선.) `global/storage/`(StorageProperties·**StoragePresigner**·StorageConfig), AWS SDK v2 s3(BOM 2.31.6), `endpointOverride`+**path-style**(R2 호환), `PlanService.presign` placeholder 제거→서명 PUT URL. object key `rooms/{roomId}/plans/{planId}/{stage}-{uuid}.{ext}`. **CI Testcontainers 초록**(presign 응답 형태 검증) + 비-Spring `StoragePresignerTest`(오프라인 서명). 커밋에 실 자격증명 0.
 3. **kimgyubi actor 프론트 ✅ = Claude** → clov-web **#33 머지**. 알림 문구 `actor.nickname` 개인화(actor null이면 제네릭 폴백) + **9h 밀림 수정**(`new Date` → invite `parseUtc`(Z 부착) 정석).
 
-### 진짜 남은 것 (딱 1덩어리)
-- **이미지 R2 프론트**: memory 이미지·plan 인생4컷·프로필 업로드(`presign→PUT→commit`). `StoragePresigner` 유틸이 main에 있어 **언블록**. 단, memory/profile presign **엔드포인트는 미구현**(plan만 있음) → 그 엔드포인트 배선 후 프론트. 팀원 분배 대상.
+### 이미지 presign 백엔드 3종 ✅ 완료 (심야 추가)
+- **프로필 presign** → clov-api **#44 머지**(`POST /users/me/profile-image/presign`). 공유 `global/dto/PresignRequest·PresignResponse` 신설, `StoragePresigner.extensionFor` public static 승격(PlanService dedup).
+- **memory 이미지 presign+커밋+삭제+순서** → clov-api **#46 머지**(#45, §10 4엔드포인트). `MemoryImage` 엔티티·`MemoryImageMapper`, `getDetail`가 실제 images 반환. 쿼터 `MAX_IMAGES_PER_MEMORY=10`(리더 확정 시 상수 교체).
+- plan 인생4컷 presign은 #43에 이미 포함. → **plan·프로필·memory presign 백엔드 전부 완료.**
+
+### 진짜 남은 것 (프론트만)
+- **이미지 R2 프론트**: `presign→R2로 PUT→commit` 업로드 UI. 3곳 — 프로필(설정 모달, `PATCH /me` profileImageUrl 커밋)·memory(추억 상세, `POST /memories/{id}/images`)·plan 인생4컷(`POST /plans/{id}/stage-photos`). 백엔드 presign 다 서 있음 → **순수 프론트 분배**. 골든레퍼런스 슬라이스 1개(프로필 권장) 먼저 만들고 나머지 분배.
+- **쿼터 상한(10장)·memory 이미지 이슈(#45)** 관련 리더 확정 사항은 프롬프트/이슈에 명시됨.
 
 ### 자격증명 주의 (유지)
 R2 Access/Secret Key는 **`application-secret.yaml`(gitignore)에만** 있음 — 커밋/코드/채팅 금지. `application-secret.example.yaml`엔 키 형태만(값X) 반영됨. Secret Key는 R2에서 재확인 불가하니 리더가 별도 보관.
 
 ### 상태 앵커
-- **양쪽 레포 열린 PR 0**. clov-api main=`3a67d77`(#43 반영)·clov-web main=`3fada74`(#33 반영).
-- 팀 R2 상태: lami 댓글✅·chacha invite✅·kimgyubi actor(백✅·**프론트✅**)·user(리더 백+프론트✅)·스토리지 presign✅.
-- **모든 도메인 백+프론트 완료. 스토리지 배선 완료.** 남은 기능 = 이미지 업로드 UI 하나.
+- **양쪽 레포 열린 PR 0**. clov-api main=`554c5cb`(#43·#44·#46 반영)·clov-web main=`3fada74`(#33 반영).
+- 팀 R2 상태: lami 댓글✅·chacha invite✅·kimgyubi actor(백✅·프론트✅)·user(리더 백+프론트✅)·스토리지 presign✅·**이미지 presign 백엔드(plan·프로필·memory) 전부✅**.
+- **모든 도메인 백엔드 + 이미지 presign 백엔드 완료.** 남은 것 = **이미지 업로드 프론트 UI**(3곳) 하나뿐.
