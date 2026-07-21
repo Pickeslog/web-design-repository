@@ -48,3 +48,30 @@ RoomList(#26)·plan 프론트 스캐폴드(#29)·notification 봉투 백엔드(#
 - **R2 진행 중**: lami 댓글 백✅→댓글 프론트 대기 / chacha invite✅ / kimgyubi actor #35 미착수 / Codex user #15 / 스토리지 #38(provider 미결정).
 - 감사 큐 비었음. Codex #15·kimgyubi #35·lami 댓글 프론트 PR 오는 대로 감사.
 - 스토리지 #38 프롬프트 준비됨(`코덱스-전달-storage-presign.md`) — provider 결정 시 착수.
+
+---
+
+## ★★ 집에서 이어서 (2026-07-21 저녁, 학원 종료 시점 최신 상태 — 이게 최신)
+
+### 오후~저녁 추가 완료 (day-summary 위 목록 이후)
+- **user #15 백엔드 = Claude가 Codex 인수·완성** → clov-api **#42 머지**. (Codex가 컴파일만·유실 반복 → 리더 승인하에 Claude가 Codex 미커밋 base 위에 controller/service/preferences+통합테스트+포맷/@Valid/'언노운' 마무리)
+- **user 프론트(설정 모달) = Claude** → clov-web **#32 머지**. → **리더 도메인 100%(백+프론트) 종료.**
+- **lami memory 댓글**: 백 #39 + 프론트 #31 **머지** → 댓글 완성.
+- **kimgyubi notification actor 백엔드**: #41 **머지**(actor=UserSummary·LEFT JOIN, Codex가 main merge로 최신화). → **모든 도메인 백엔드 완료.**
+- TZ #40 머지(세션 UTC 고정).
+
+### 현재 남은 것 (딱 3덩어리)
+1. **스토리지 R2 세팅 (진행 중 — 집에서 이어서)**: provider=**Cloudflare R2**(무료·S3호환) 확정. **리더가 Cloudflare 가입까지 완료.** 남은 것:
+   - R2 버킷 `clov-media` 생성 → **Public Development URL** 켜기(pub-xxx.r2.dev)
+   - **R2 API 토큰** 발급(Object R&W) → Account ID·Access Key·Secret 확보
+   - `clov-api/src/main/resources/application-secret.yaml`(gitignore)에 `app.storage.{endpoint(https://<ACCOUNT_ID>.r2.cloudflarestorage.com)·region:auto·bucket·access-key·secret-key·public-base-url}` 주입
+   - → 완료되면 Claude가 `코덱스-전달-storage-presign.md`(#38) R2 맞게 최종점검 → **Codex presign 배선(#38)** → 머지
+2. **이미지 R2 프론트** (스토리지 후): memory 이미지·plan 인생4컷·프로필 이미지 업로드. 팀원 분배.
+3. **kimgyubi actor 프론트** (스토리지 무관, 지금 가능): 알림 메시지를 `actor.nickname`으로 개인화 + **`new Date(createdAt)`에 `Z` 붙여 UTC 파싱**(현재 알림 시각 9h 밀림).
+
+### 자격증명 주의
+R2 Access/Secret Key는 **`application-secret.yaml`(gitignore)에만** — 커밋/코드 금지, Claude에게 붙여넣지 말 것. "secret에 넣었다"고만 알리면 Claude가 #38 최종점검부터 이어감.
+
+### 상태 앵커
+- 양쪽 레포 열린 PR 0(마지막 확인 시점). clov-api·clov-web main 모두 위 머지 반영.
+- 팀 R2 상태: lami 댓글✅·chacha invite✅·kimgyubi actor(백✅·프론트 남음)·user(리더 백+프론트✅).
