@@ -423,10 +423,12 @@
 
 **GET `/rooms/{roomId}/memories?month=2026-08&writerId=1024&tag=한라산&participantUserId=2048`** → 목록 봉투, `items` = `MemorySummary[]`
 ```jsonc
-{ "id": "301", "planId": "77", "title": "인생 첫 한라산", "memoryDate": "2026-08-11",
-  "thumbnailUrl": "https://cdn.../m1.jpg", "writer": { /* UserSummary */ },
+{ "id": "301", "planId": "77", "title": "인생 첫 한라산", "content": "정상에서 라면...",
+  "memoryDate": "2026-08-11", "thumbnailUrl": "https://cdn.../m1.jpg", "imageCount": 3,
+  "writer": { /* UserSummary */ }, "participants": [ { /* UserSummary */ } ],
   "tags": ["한라산"], "commentCount": 3 }
 ```
+카드 리치 표시용: `content`(본문 미리보기)·`thumbnailUrl`(대표 이미지, 최소 sort_order)·`imageCount`(총 이미지 수)·`participants`(참여 멤버) 포함.
 **GET `/memories/{memoryId}`** → `MemoryDetail`
 ```jsonc
 { "id": "301", "roomId": "31", "planId": "77", "writer": { /* UserSummary */ },
