@@ -136,7 +136,7 @@ erDiagram
         BIGINT room_id FK
         BIGINT created_by FK "이력용, 권한 아님"
         VARCHAR invite_code UK
-        VARCHAR status "ACTIVE/USED/EXPIRED/CANCELED"
+        VARCHAR status "ACTIVE/CANCELED"
         DATETIME expires_at "nullable"
         DATETIME created_at
         DATETIME used_at "nullable"
@@ -354,13 +354,13 @@ CREATE TABLE room_invites (
   room_id      BIGINT      NOT NULL,
   created_by   BIGINT      NOT NULL COMMENT '이력용, 권한 아님',
   invite_code  VARCHAR(20) NOT NULL,
-  status       VARCHAR(20) NOT NULL DEFAULT 'ACTIVE' COMMENT 'ACTIVE/USED/EXPIRED/CANCELED',
+  status       VARCHAR(20) NOT NULL DEFAULT 'ACTIVE' COMMENT 'ACTIVE/CANCELED (A안: 방당 1행·다회용 회전 코드)',
   expires_at   DATETIME    NULL,
   created_at   DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  used_at      DATETIME    NULL,
+  used_at      DATETIME    NULL COMMENT 'A안 이후 미사용(다회용) — 하위호환 위해 컬럼 보존',
   PRIMARY KEY (id),
   UNIQUE KEY uk_room_invites_code (invite_code),
-  KEY idx_room_invites_room (room_id),
+  UNIQUE KEY uk_room_invites_room (room_id),  -- A안: 방당 초대 코드 1행(재발급=제자리 회전)
   CONSTRAINT fk_room_invites_room FOREIGN KEY (room_id) REFERENCES friendship_rooms(id),
   CONSTRAINT fk_room_invites_creator FOREIGN KEY (created_by) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -589,6 +589,7 @@ CREATE TABLE refresh_tokens (
 - **정원 8명**: `MAX_ROOM_MEMBERS=8`은 스키마 제약이 아니라 **앱 로직**으로 강제. 가입 신청 수락 트랜잭션 안에서 `SELECT COUNT(*) FROM room_members WHERE room_id=? AND status='ACTIVE' FOR UPDATE`로 잠근 뒤 8 미만 확인, 초과 시 `409 ROOM_FULL`. `LEFT`는 카운트 제외.
 - **가입 승인 동시성(D1)**: `room_join_requests.version` 낙관적 락으로 동시 수락 경합 차단(`UPDATE ... WHERE id=? AND status='PENDING' AND version=?`, 영향 0행이면 `409 JOIN_REQUEST_ALREADY_PROCESSED`). 되돌리기는 `undo_deadline_at`(수락+5분) 이내만, 초과 시 `409 JOIN_REQUEST_UNDO_EXPIRED`.
 - **인생4컷 잠금**: `plan_stage_photos` `UNIQUE(plan_id, stage)` — 재업로드는 앱에서 `409 STAGE_ALREADY_UPLOADED`. 수정/삭제 API를 아예 두지 않음(증거).
+- **초대 코드 방당 1행(A안, 2026-07-23)**: `room_invites` `UNIQUE(room_id)` — 방마다 초대 코드는 한 행. "재발급"은 새 행 INSERT가 아니라 **제자리 회전**(upsert: 코드·만료 갱신+`status='ACTIVE'`)이라 USED/CANCELED 행이 누적되지 않는다. 코드는 **다회용**(수락해도 소모 안 함). 상태 도메인=`ACTIVE`/`CANCELED`, `used_at`은 미사용(컬럼만 보존). 기존 데이터 정리는 수동 마이그레이션 `clov-api/db/manual-migrations/2026-07-23-invite-code-per-room.sql`.
 - **친구별 관점(D2)**: 같은 `plan_id`에 `writer_id` 다른 `memories` 여러 row + 그 추억에 `memory_comments` 한 줄. `UNIQUE(plan_id, writer_id)`로 "1인 1기록" 강제.
 - **FREE MEMORY(D3)**: `memories.plan_id` NULL 허용. MySQL은 UNIQUE 인덱스에서 NULL을 서로 다른 값으로 취급하므로, 한 사용자가 FREE MEMORY를 여러 개 남겨도 `uk_memories_plan_writer` 제약에 걸리지 않는다.
 - **기록 보존**: FK 기본 `RESTRICT`(하드 삭제로 고아 데이터 방지). 탈퇴=`users.is_anonymized`(익명화), 추억 삭제=`memories.deleted_at`(soft), 멤버 나가기=`room_members.status='LEFT'`, 방 잠자기=`friendship_rooms.scheduled_delete_at`(30일).

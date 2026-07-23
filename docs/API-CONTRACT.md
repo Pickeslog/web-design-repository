@@ -273,10 +273,10 @@
 
 | Method | Path | 설명 | 인가 |
 |---|---|---|---|
-| POST | `/api/v1/rooms/{roomId}/invites` | 초대 코드 생성(`created_by`=이력) | 공간 멤버 |
-| GET | `/api/v1/rooms/{roomId}/invites` | 발급된 코드 목록 | 공간 멤버 |
+| POST | `/api/v1/rooms/{roomId}/invites` | 초대 코드 생성/**재발급**(방당 1개 고정 — 재발급=제자리 회전, `created_by`=이력) | 공간 멤버 |
+| GET | `/api/v1/rooms/{roomId}/invites` | 현재 활성 코드(방당 0/1개) — `items` 봉투 유지 | 공간 멤버 |
 | DELETE | `/api/v1/invites/{inviteId}` | 코드 취소(`CANCELED`) | 만든 본인 |
-| POST | `/api/v1/invites/accept` | 코드로 **입장 신청** → `room_join_requests`(PENDING) 생성, 코드 `USED`. **입장 확정 아님** | 로그인(비멤버·정원 미만) |
+| POST | `/api/v1/invites/accept` | 코드로 **입장 신청** → `room_join_requests`(PENDING) 생성. 코드는 **다회용**(소모 안 됨). **입장 확정 아님** | 로그인(비멤버·정원 미만) |
 | GET | `/api/v1/rooms/{roomId}/join-requests` | 대기 신청 목록(알림 배지) | 공간 멤버 |
 | POST | `/api/v1/join-requests/{id}/accept` | **수락** → `room_members`(ACTIVE) 생성, `accepted_by`·`undo_deadline_at`(+5분) 기록, 전 멤버 알림 | 공간 멤버(누구나 1명), 정원 미만 |
 | POST | `/api/v1/join-requests/{id}/reject` | 거절(`REJECTED`) | 공간 멤버 |
@@ -284,6 +284,7 @@
 
 - **동시성**: `accept`/`reject`/`undo`는 `room_join_requests.version` 낙관적 락. 이미 처리됨 → `409 JOIN_REQUEST_ALREADY_PROCESSED`. 되돌리기 만료 → `409 JOIN_REQUEST_UNDO_EXPIRED`.
 - **정원**: `accept` 트랜잭션에서 ACTIVE 멤버 수 `FOR UPDATE` 카운트 ≤ 8 확인. 초과 → `409 ROOM_CAPACITY_EXCEEDED`(신청은 PENDING 유지).
+- **초대 코드 구조(A안, 2026-07-23)**: 방마다 초대 코드는 **한 행**(`room_invites` `UNIQUE(room_id)`). POST(재발급)는 새 행이 아니라 **제자리 회전**(upsert: 코드·만료 갱신, `status='ACTIVE'`) → USED/CANCELED 행이 누적되지 않는다. 코드는 **다회용**(수락해도 `USED`로 소모하지 않음 → 여러 친구가 한 코드로 신청). 유효하지 않은 코드(취소=`CANCELED`/만료)는 `409 INVITE_EXPIRED`로 통일(다회용이라 `INVITE_ALREADY_USED`는 더 이상 반환하지 않음). 상태 도메인=`ACTIVE`/`CANCELED`.
 
 ### 7-1. 요청/응답
 
