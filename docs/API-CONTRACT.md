@@ -497,7 +497,35 @@
 | GET | `/api/v1/rooms/{roomId}/level` | 현재 레벨·exp·다음까지 | 공간 멤버 |
 | POST | `/api/v1/rooms/{roomId}/mascot/interact` | 마스코트 교감 → `MASCOT_INTERACT` +2. 하루 3회 초과 `429 MASCOT_INTERACTION_LIMIT_REACHED` | 공간 멤버 |
 
-- 그 외 exp는 **직접 API 없음** — 약속등록(+3)·완료(+15)·추억작성·편지 등이 서버 내부 부수효과로 적립.
+- 그 외 exp는 **직접 API 없음** — 약속등록·완료·추억작성이 서버 내부 부수효과로 적립.
+
+**레벨 규칙 (리더 확정 2026-07-24)**
+
+- **`exp_point` = 현재 레벨 안에서의 진행 XP**(누적 총량 아님). 누적 이력은 `friendship_exp_logs`로 본다.
+- **레벨당 100 XP**(`expForNextLevel` = 100). 프로토타입 `space.js`의 `levelProgress`(0~100)와 같은 체감으로 맞춘 값 — 기존 백엔드 상수 500은 폐기.
+- **레벨업은 연속 처리**: 한 번에 큰 XP가 들어와 100을 여러 번 넘기면 넘긴 만큼 레벨이 오른다(`while (exp >= 100 && level < 777) { level++; exp -= 100 }`). 초과분이 진행도로 남는다.
+- **만렙 777**: 도달 후에는 XP를 적립하지 않고 `exp_point`를 0으로 고정한다.
+- 모든 적립은 `friendship_exp_logs`에 **한 행씩 기록**하고(`action_type`·`exp_delta`·`reference_id`·`triggered_by`), 같은 트랜잭션에서 `friendship_rooms`를 갱신한다.
+
+**XP 적립 지점 (MVP 범위 — 리더 확정 2026-07-24)**
+
+| action_type | 트리거 | exp_delta | reference_id |
+|---|---|---|---|
+| `MEMORY_CREATE` | 추억 작성 | 25 + 사진 보너스 + 글자 보너스 | memoryId |
+| `PLAN_CREATE` | 약속 등록 | 3 | planId |
+| `PLAN_COMPLETE` | 약속 완료 | 15 | planId |
+| `MASCOT_INTERACT` | 마스코트 교감 | 2 (하루 3회) | null |
+
+- **사진 보너스**: 첨부 1장당 +1, **최대 +10**(10장 초과해도 10에서 고정)
+- **글자 보너스**: 본문 100자 이상 +10 / 50자 이상 +5 — **도달한 최고 구간 1개만**(중첩 없음)
+- 추억 1건은 위 세 값을 합쳐 **한 행(`MEMORY_CREATE`)으로 기록**한다(보너스를 별도 행으로 쪼개지 않는다).
+
+**MVP 범위 밖(후속 과제)** — 이벤트정의서 §9.2·§9.3·§9.5 참조
+
+- XP 가속도(누적 게시글 30/50/70/100 → ×1.2/1.5/2/3)
+- 기억의 샘(매일 첫 접속 패시브 지급)
+- 편지 XP — §9.1 표에 없어 **MVP에서는 적립하지 않는다**(도입하려면 이벤트정의서 §9.1에 먼저 추가)
+- XP 회수(게시글 삭제 시 반환) — 프로토타입 `revokeXP`에는 있으나 명세 미정의. **MVP는 회수하지 않는다**(로그는 남고 레벨은 내려가지 않음)
 
 ### 12-1. 요청/응답
 
@@ -506,9 +534,9 @@
 { "id": "900", "actionType": "PLAN_COMPLETE", "expDelta": 15,
   "triggeredBy": { /* UserSummary */ }, "referenceId": "77", "createdAt": "2026-08-11T20:00:00" }
 ```
-**GET `/rooms/{roomId}/level`** → 레벨 현황(서버 계산)
+**GET `/rooms/{roomId}/level`** → 레벨 현황(서버 계산). `expPoint`는 **현재 레벨 안의 진행 XP**, `expForNextLevel`은 항상 100(만렙 777이면 `expPoint`=0·`remainingToNextLevel`=0)
 ```jsonc
-{ "friendshipLevel": 3, "expPoint": 420, "expForNextLevel": 500, "remainingToNextLevel": 80 }
+{ "friendshipLevel": 3, "expPoint": 42, "expForNextLevel": 100, "remainingToNextLevel": 58 }
 ```
 **POST `/rooms/{roomId}/mascot/interact`** → 교감 결과(+2). 하루 3회 초과 → `429 MASCOT_INTERACTION_LIMIT_REACHED`
 ```jsonc
