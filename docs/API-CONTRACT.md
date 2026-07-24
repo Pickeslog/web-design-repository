@@ -561,12 +561,45 @@
 
 - 서버가 멤버 입·퇴장·방 설정 변경·가입 신청 등을 트리거로 생성(클라 생성 API 없음).
 
+**탭(`type`)과 이벤트(`subType`) 분리 (리더 확정 2026-07-24)**
+
+- **`type` = 어느 탭에 보일지.** `NOTICE` / `FRIEND` / `JOIN` 세 값 고정. 목록 조회의 `?type=` 필터가 이 값을 쓴다.
+- **`subType` = 무슨 일이 일어났는지.** 화면 문구를 고르는 기준.
+- 둘을 나눈 이유: `type` 하나가 두 역할을 겸하면 새 이벤트를 넣을 때마다 탭 필터가 깨진다. `LEVEL_UP`을 `type`에 넣으면 **어느 탭 조회에도 안 걸리는 알림**이 된다.
+- **문구는 프론트가 만든다.** 서버는 사실(누가·무엇을·어떤 값)만 주고 문장은 조립하지 않는다 — 문구를 바꾸려고 백엔드를 건드리지 않게.
+
+**이벤트 카탈로그**
+
+| type(탭) | subType | 트리거 | actor | referenceId | payload |
+|---|---|---|---|---|---|
+| FRIEND | `ROOM_UPDATE` | 방 정보 수정 | 수정자 | roomId | — |
+| FRIEND | `MEMORY_WRITE` | 추억 작성 | 작성자 | memoryId | — |
+| FRIEND | `LETTER_RECEIVE` | 편지 수신 | 보낸이 | letterId | — |
+| FRIEND | `PLAN_CREATE` | 약속 등록 | 등록자 | planId | — |
+| FRIEND | `PLAN_COMPLETE` | 약속 완료 | 완료자 | planId | — |
+| FRIEND | `LEVEL_UP` | 우정 레벨업 | **null** | roomId | `{"level": 3}` |
+| JOIN | `JOIN_REQUEST` | 가입 신청 | 신청자 | joinRequestId | — |
+| JOIN | `JOIN_ACCEPTED` | 신청 수락 | 수락자 | joinRequestId | — |
+| NOTICE | `ADMIN_NOTICE` | 운영 공지 | null | null | `{"title":…,"content":…}` |
+
+- **레벨업만 `actor`가 없다**(방 전체 이벤트). `actor_id`는 nullable이라 스키마 변경 불필요.
+- **방 설정 변경은 `FRIEND`다.** 친구 활동이므로 '관리진 공지' 탭이 아니다(2026-07-24 이동).
+- `NOTICE` 탭은 운영 공지 발행 기능이 생길 때까지 비어 있다. **프론트는 정직한 빈 상태를 보여준다**(가짜 공지를 하드코딩하지 않는다).
+- `payload`는 문구에 필요한 부가 정보만 담는 자유 형식 JSON. 없으면 `null`.
+
 ### 13-1. 요청/응답
 
 **GET `/rooms/{roomId}/notifications?type=NOTICE|FRIEND|JOIN`** → 목록 봉투, `items` = `Notification[]`
 ```jsonc
-{ "id": "700", "type": "JOIN", "actor": { /* UserSummary */ },
-  "referenceId": "40", "isRead": false, "createdAt": "2026-07-20T11:00:00" }
+{ "id": "700", "type": "FRIEND", "subType": "LEVEL_UP",
+  "actor": null, "referenceId": "31", "payload": { "level": 3 },
+  "isRead": false, "createdAt": "2026-07-24T11:00:00" }
+```
+```jsonc
+// actor가 있는 일반 케이스
+{ "id": "701", "type": "FRIEND", "subType": "MEMORY_WRITE",
+  "actor": { /* UserSummary */ }, "referenceId": "88", "payload": null,
+  "isRead": false, "createdAt": "2026-07-24T11:05:00" }
 ```
 **PATCH `/notifications/{id}/read`** → `data: null`
 **PATCH `/rooms/{roomId}/notifications/read-all`** → `{ "updatedCount": 12 }`
