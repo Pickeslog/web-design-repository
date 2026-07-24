@@ -1,5 +1,8 @@
 # Gemini 프롬프트 레시피
 
+> ⚠️ **현재 미사용(2026-07-24)** — kimgyubi1234가 Gemini→Claude로 전환해 팀원 전원이 Claude를 쓴다.
+> 이 문서는 이력 보존용이며, 새 작업 프롬프트는 `11-claude-prompt-template.md`를 쓴다.
+
 ## 문서 목적
 
 이 문서는 팀원들이 Gemini AI 에이전트에 바로 붙여넣어 사용할 수 있는 프롬프트 예시를 제공한다.

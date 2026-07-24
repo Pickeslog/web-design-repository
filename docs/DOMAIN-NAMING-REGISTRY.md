@@ -38,7 +38,7 @@
 
 > **route family = 대표 프리픽스일 뿐, 전체 경로가 아니다.** 실제 엔드포인트(중첩 `/rooms/{id}/plans`, auth의 `/oauth2/authorization/*`·`/login/oauth2/code/*` 등 `/api/v1` 밖 경로 포함)는 계약 §번호를 본다. 프론트 담당은 [이관-매핑 §6](이관-매핑.md).
 >
-> **M2 배정 (리더 확정 2026-07-21, 도메인별 혼합)**: 팀=리더(Codex 백+Claude 프론트·감사)·chacha1650a=Claude·kimgyubi1234=Gemini·lami2342=Claude(뒤 3명 비전공).
+> **M2 배정 (리더 확정 2026-07-21, 도메인별 혼합)**: 팀=리더(Codex 백+Claude 프론트·감사)·chacha1650a=Claude·kimgyubi1234=Claude(2026-07-24 Gemini→Claude 전환)·lami2342=Claude(뒤 3명 비전공).
 > **R1**: 쉬운 도메인 세로 통째 — letter§11(chacha)·notification§13(kimgyubi) + 축소 memory§10 글·피드만(lami). 리더가 room§6(최우선·모든 도메인 부모)·user§5·invite§7·plan§8 **백엔드** 선행.
 > **R2**: invite·plan·room의 **프론트**를 비전공에 분배(백 완성 후). memory 이미지/댓글도 R2. 착수 프롬프트: `work-logs/2026-07-21-M2-착수-프롬프트.md`.
 
