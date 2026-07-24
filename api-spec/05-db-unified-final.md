@@ -249,7 +249,7 @@ erDiagram
         BIGINT id PK
         BIGINT room_id FK
         BIGINT triggered_by FK "활동자, 권한 아님"
-        VARCHAR action_type "PLAN_CREATE/PLAN_COMPLETE/MEMORY_WRITE/LETTER_SEND/MASCOT_INTERACT"
+        VARCHAR action_type "PLAN_CREATE/PLAN_COMPLETE/MEMORY_WRITE/MEMORY_IMAGE_BONUS/LETTER_SEND/MASCOT_INTERACT"
         INT exp_delta
         BIGINT reference_id "nullable"
         DATETIME created_at
@@ -555,7 +555,7 @@ CREATE TABLE friendship_exp_logs (
   id            BIGINT      NOT NULL AUTO_INCREMENT,
   room_id       BIGINT      NOT NULL,
   triggered_by  BIGINT      NOT NULL COMMENT '활동자, 권한 아님',
-  action_type   VARCHAR(30) NOT NULL COMMENT 'PLAN_CREATE/PLAN_COMPLETE/MEMORY_WRITE/LETTER_SEND/MASCOT_INTERACT',
+  action_type   VARCHAR(30) NOT NULL COMMENT 'PLAN_CREATE/PLAN_COMPLETE/MEMORY_WRITE/MEMORY_IMAGE_BONUS/LETTER_SEND/MASCOT_INTERACT',
   exp_delta     INT         NOT NULL,
   reference_id  BIGINT      NULL COMMENT '유발 리소스 id(plan/memory/letter)',
   created_at    DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
