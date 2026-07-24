@@ -256,8 +256,12 @@
 ```jsonc
 { "membershipId": "88", "userId": "1024", "nickname": "클로버", "profileImageUrl": null,
   "status": "ACTIVE", "statusMessage": "다이어트 중",
-  "joinedAt": "2026-06-30T10:00:00", "leftAt": null }
+  "joinedAt": "2026-06-30T10:00:00", "leftAt": null,
+  "birthMonthDay": "03-21" }
 ```
+- `birthMonthDay` — 생일의 **월·일만**(`"MM-DD"`, 제로 패딩). 생일 미입력이거나 익명화(탈퇴) 계정이면 `null`.
+- **연도를 빼는 이유**: 방 멤버 전원에게 생년(나이 추정 가능 정보)을 노출하지 않기 위해서.
+- **서버가 "오늘 생일인가"를 계산해 주지 않는 이유**: 백엔드는 UTC 기준으로 동작해서 한국 시각 00:00~09:00 사이엔 서버의 "오늘"이 아직 어제다. 월·일만 내려주고 **브라우저가 사용자 로컬 날짜로 판단**하게 해서 이 문제를 원천 차단한다.
 **DELETE `/rooms/{roomId}/members/me`** → `data: null` (`status=LEFT`)
 **PATCH `/rooms/{roomId}/members/me/status-message`** → `{ "statusMessage": "..." }`
 ```jsonc
