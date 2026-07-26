@@ -409,8 +409,8 @@
 | POST | `/api/v1/memories/{memoryId}/images` | 업로드 커밋(`image_url`·`sort_order`) | 작성자 |
 | DELETE | `/api/v1/memory-images/{imageId}` | 이미지 삭제 | 작성자 |
 | PATCH | `/api/v1/memories/{memoryId}/images/order` | 순서 재정렬 | 작성자 |
-| POST · GET | `/api/v1/memories/{memoryId}/comments` | 친구 한 줄 댓글 작성·목록 | 공간 멤버 |
-| DELETE | `/api/v1/comments/{commentId}` | 댓글 삭제 | 작성자 본인 |
+| POST · GET | `/api/v1/memories/{memoryId}/comments` | 친구 한 줄 댓글 작성·목록. **한 추억당 작성자 1인 1개** — 이미 있으면 `409 COMMENT_ALREADY_EXISTS` | 공간 멤버 |
+| PATCH · DELETE | `/api/v1/comments/{commentId}` | 댓글 수정·삭제 | 작성자 본인 |
 
 - `plan_id` 없이도 작성 가능 = **FREE MEMORY**(`plan_id` NULL, D3) → `POST /rooms/{roomId}/memories`.
 
@@ -458,7 +458,10 @@
 // →
 { "id": "55", "writer": { /* UserSummary */ }, "content": "너 진짜 웃겼어", "createdAt": "2026-08-12T10:00:00" }
 ```
+**PATCH `/comments/{commentId}`** → 갱신된 `Comment`(본문은 POST와 동일 `{ "content": … }`)
 **DELETE `/comments/{commentId}`** → `data: null`
+
+- **한 추억당 작성자 1인 1개**(2026-07-26 리더 결정) — 프로토타입의 "친구 한 줄 메시지"가 멤버마다 한 줄인 구조라 화면과 데이터를 맞춘다. DB는 `memory_comments UNIQUE (memory_id, writer_id)`로 강제하고, 중복 작성은 `409 COMMENT_ALREADY_EXISTS`. 고쳐 쓰려면 `PATCH`, 지웠으면 다시 쓸 수 있다. 구현: clov-api [#68](https://github.com/Pickeslog/clov-api/issues/68)
 
 ## 11. Lucky Letters (행운편지)
 
