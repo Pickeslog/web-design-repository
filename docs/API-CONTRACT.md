@@ -41,7 +41,8 @@
 { "success": true, "data": { "items": [ ... ], "page": 0, "size": 20, "total": 137 } }
 // 실패 (HTTP status + 봉투)
 { "success": false, "error": { "code": "ROOM_MEMBER_NOT_FOUND", "message": "해당 우정공간의 멤버가 아닙니다." } }
-// 실패 (검증) — error.details는 VALIDATION_FAILED에서만 채운다(그 외 생략)
+// 실패 (검증) — error.details는 VALIDATION_FAILED, 그리고 계약에 명시된 도메인 에러에서만 채운다
+// (명시 목록: ROOM_MEMBER_ALREADY_JOINED의 roomId. 그 외에는 생략)
 { "success": false, "error": { "code": "VALIDATION_FAILED", "message": "입력값을 확인해주세요.",
     "details": [ { "field": "email", "reason": "형식 오류" } ] } }
 ```
@@ -252,6 +253,21 @@
   "themeColor": "#7CC6A6", "transportType": "airplane",
   "coverPhotoUrl": null, "coverTitle": null }
 ```
+
+**입력 제약** (`POST`·`PATCH` 공통 — 위반 시 `400 VALIDATION_FAILED`)
+
+| 필드 | 제약 | 비고 |
+|---|---|---|
+| `name` | **필수 · 앞뒤 공백 제거 후 2~20자** | 아래 "이름 제약" 참고 |
+| `description` | 0~60자 | |
+| `themeColor`·`transportType` | ≤20자 | 허용값 열거는 후속(현재 자유 문자열) |
+| `coverTitle` | ≤100자 | |
+| `coverPhotoUrl` | ≤512자 | presign 업로드 후 커밋 |
+
+> **이름 제약 — 길이만 강제하고 문자 종류는 제한하지 않는다.**
+> 목업(`makerooms.html:2023`)은 `/^[가-힣a-zA-Z0-9\s]{2,20}$/`로 **한글·영문·숫자·공백만** 허용한다. 길이 2~20은 그대로 채택하지만 **문자 종류 화이트리스트는 채택하지 않는다** — 그대로 가져오면 `제주 가자!`·`캠핑 크루 🏕️` 같은 자연스러운 방 이름이 거부된다(목업 샘플이 전부 한글이라 규칙이 일관돼 보이지만 큐레이팅된 예시다). 사용자가 쓰는 콘텐츠는 우리가 만드는 UI 크롬과 기준이 다르다.
+> **느슨→엄격은 기존 방 이름을 깨고, 엄격→느슨은 무해하다.** 되돌릴 수 있는 쪽으로 먼저 간다. 나중에 문자 종류를 조이려면 기존 데이터 점검이 선행돼야 한다.
+> DB 컬럼은 `VARCHAR(100)`이라 상한을 20으로 좁혀도 스키마 변경은 필요 없다.
 **GET `/rooms/{roomId}`** → `RoomDetail`(RoomSummary + 상세)
 ```jsonc
 { "id": "31", "name": "제주 가치가자", "description": "졸업 여행 준비방",
@@ -298,6 +314,13 @@
 
 - **동시성**: `accept`/`reject`/`undo`는 `room_join_requests.version` 낙관적 락. 이미 처리됨 → `409 JOIN_REQUEST_ALREADY_PROCESSED`. 되돌리기 만료 → `409 JOIN_REQUEST_UNDO_EXPIRED`.
 - **정원**: `accept` 트랜잭션에서 ACTIVE 멤버 수 `FOR UPDATE` 카운트 ≤ 8 확인. 초과 → `409 ROOM_CAPACITY_EXCEEDED`(신청은 PENDING 유지).
+- **이미 참여 중인 방의 코드를 입력한 경우(2026-07-27 정정)**: `409 ROOM_MEMBER_ALREADY_JOINED` + `error.details`에 그 방의 `roomId`를 실어 보낸다. 프론트는 이 값으로 해당 방으로 이동시킨다.
+  ```jsonc
+  { "success": false, "error": { "code": "ROOM_MEMBER_ALREADY_JOINED",
+      "message": "이미 참여 중인 우정공간입니다.",
+      "details": [ { "field": "roomId", "reason": "31" } ] } }
+  ```
+  > 이전에는 이 조건에서 `403 ROOM_MEMBER_NOT_FOUND`("멤버가 아닙니다")를 던졌다 — **조건과 코드의 의미가 정반대**여서 프론트가 "이미 참여 중이거나 참여할 수 없습니다"처럼 뭉뚱그릴 수밖에 없었다. `details`를 쓰는 이유는 §2 참고(계약에 명시된 도메인 에러만 허용).
 - **초대 코드 구조(A안, 2026-07-23)**: 방마다 초대 코드는 **한 행**(`room_invites` `UNIQUE(room_id)`). POST(재발급)는 새 행이 아니라 **제자리 회전**(upsert: 코드·만료 갱신, `status='ACTIVE'`) → USED/CANCELED 행이 누적되지 않는다. 코드는 **다회용**(수락해도 `USED`로 소모하지 않음 → 여러 친구가 한 코드로 신청). 유효하지 않은 코드(취소=`CANCELED`/만료)는 `409 INVITE_EXPIRED`로 통일(다회용이라 `INVITE_ALREADY_USED`는 더 이상 반환하지 않음). 상태 도메인=`ACTIVE`/`CANCELED`.
 
 ### 7-1. 요청/응답
@@ -631,9 +654,11 @@
 | `INTERNAL_ERROR` | 500 | 처리되지 않은 예외 catch-all |
 | **도메인** | | |
 | `ROOM_MEMBER_NOT_FOUND` | 403 | 공간 멤버 아님 |
+| `ROOM_MEMBER_ALREADY_JOINED` | 409 | 이미 참여 중인 방의 초대 코드 입력(§7). `error.details`에 `roomId` 동봉 |
 | `NOT_WRITER` | 403 | 작성자 본인 아님 |
 | `ROOM_CAPACITY_EXCEEDED` | 409 | 정원 8명 초과 |
-| `INVITE_EXPIRED` / `INVITE_ALREADY_USED` | 409 | 초대 코드 |
+| `INVITE_EXPIRED` | 409 | 초대 코드 무효(취소=`CANCELED` 또는 만료) |
+| ~~`INVITE_ALREADY_USED`~~ | 409 | **더 이상 반환하지 않음** — 초대 코드 A안(다회용) 이후 사문. 클라이언트에서 분기 제거할 것 |
 | `JOIN_REQUEST_ALREADY_PROCESSED` | 409 | 낙관적 락 경합(다른 멤버가 먼저 처리) |
 | `JOIN_REQUEST_UNDO_EXPIRED` | 409 | 5분 되돌리기 만료 |
 | `PLAN_NOT_COMPLETED` | 409 | 완료 전 추억 작성 |
