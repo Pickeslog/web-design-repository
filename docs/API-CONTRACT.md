@@ -202,11 +202,20 @@
 ```
 **GET `/users/me/rooms?sort=favorite|latest|oldest`** → 목록 봉투, `items` = `RoomSummary[]`(§4-3)
 **DELETE `/users/me`** → `data: null` (익명화 = `isAnonymized` true·닉네임 "언노운", refresh 전부 revoke)
-**GET `/users/me/preferences`** → `Preferences`
+**GET `/users/me/preferences`** → `Preferences`. row가 없으면 **최초 조회 시 기본값으로 생성**되므로 응답 필드는 null이 아니다(아래 "기본값" 열).
 ```jsonc
 { "darkMode": false, "customColor": null, "wallpaperIcon": null, "dashboardBackground": null,
-  "letterTheme": "postbox", "memoryCardTheme": "clothesline", "mascotType": "crobi" }
+  "letterTheme": "postbox", "memoryCardTheme": "stack", "mascotType": "crobi" }
 ```
+
+| 필드 | 허용값 | 기본값 |
+|---|---|---|
+| `letterTheme` | `postbox` | `postbox` |
+| `memoryCardTheme` | `stack`(겹침 카드) · `clothesline`(빨랫줄) · `diary`(일기장) | **`stack`** |
+| `mascotType` | `crobi` · `robot` | `crobi` |
+
+> `memoryCardTheme` 기본값은 명세 정본(`09-component-inventory.md` §증거 카드 테마 3종 = "겹침 카드(coverflow, 기본)")을 따른다. 프로토타입의 내부 값 이름은 `coverflow`지만 **프로덕션 값 이름은 `stack`** 이다(같은 테마, 이름만 다르다 — DB에 이미 `stack`으로 저장된 row가 있어 이름은 바꾸지 않는다). 서버가 기본값 row를 만들어 주므로 프론트 fallback은 도달하지 않는다 — **기본값을 바꾸려면 서버를 고쳐야 한다**(clov-api #70).
+
 **PATCH `/users/me/preferences`** — 보낸 필드만 → 갱신된 `Preferences`
 
 ## 6. Rooms (우정공간)
