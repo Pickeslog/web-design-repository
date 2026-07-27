@@ -342,6 +342,7 @@ DB 스키마가 변경되는 배포만 별도 SQL 마이그레이션, 데이터 
 
 - [ ] GCP VM 메타데이터의 임시 시작 스크립트가 완전히 제거됐는지 재확인
 - [ ] 로컬 MySQL을 재부팅 후에도 사용하지 않으면 `sudo systemctl disable mysql`
+- [ ] 실제 `clov-api.service`에 `Wants=mysql.service`가 남아 있는지 확인하고, 학원 원격 DB만 사용할 경우 제거
 - [ ] Docker 가능한 환경에서 clov-api 전체 통합 테스트 재실행
 - [ ] OAuth 앱이 테스트 상태라면 시연 계정을 테스트 사용자/앱 멤버로 등록
 - [ ] Vite 대형 청크 경고는 성능 개선 작업에서 별도 검토
@@ -357,3 +358,183 @@ DB 스키마가 변경되는 배포만 별도 SQL 마이그레이션, 데이터 
 - 로컬 DB와 실제 원격 DB를 먼저 구분해야 불필요한 DB 생성·이관 작업을 피할 수 있다.
 - 배포는 빌드보다 운영 환경의 DNS, 방화벽, 권한, 서비스 자동 시작, 롤백 준비가 더 중요하다.
 - 큰 장애가 나도 VM 재생성부터 하지 말고, 로그와 복구 경로를 이용하면 기존 배포 파일을 보존할 수 있다.
+
+---
+
+## 14. 환경변수와 시크릿 관리 방식
+
+오늘 적용한 방식의 핵심은 프론트와 백엔드 설정을 같은 `.env` 파일로 합치지 않는 것이다.
+
+```text
+프론트 Vite 환경변수 = 빌드할 때 결정
+백엔드 Spring 환경변수 = 실행할 때 결정
+.env 파일 = 해당 파일을 읽도록 설정된 도구만 사용
+```
+
+### 14.1 이번 프론트 배포에서 실제 사용한 방식
+
+`clov-web`에 `.env.production`을 만들지 않고 PowerShell 프로세스 환경변수로 운영 API 주소를 주입했다.
+
+```powershell
+cd C:\gov\project\clov-web
+$env:VITE_API_BASE_URL="https://clovlabcalss.store/api/v1"
+npm run build
+```
+
+이 값은 Vite 빌드 시 `dist` JavaScript에 포함된다. 서버에 올린 뒤 환경변수를 바꿔도 기존 `dist`는 변하지 않으므로 반드시 다시 빌드하고 배포해야 한다.
+
+PowerShell에서 임시 값을 제거하려면:
+
+```powershell
+Remove-Item Env:VITE_API_BASE_URL
+```
+
+향후 파일로 분리한다면 아래 구성을 권장한다.
+
+```text
+.env.example                 공용 키 예시, 커밋
+.env.development.local       개인 개발 URL, 커밋 금지
+.env.production.local        개인 운영 URL, 커밋 금지
+```
+
+개발환경:
+
+```dotenv
+# .env.development.local
+VITE_API_BASE_URL=http://localhost:8080/api/v1
+```
+
+```powershell
+npm run dev
+```
+
+배포환경:
+
+```dotenv
+# .env.production.local
+VITE_API_BASE_URL=https://clovlabcalss.store/api/v1
+```
+
+```powershell
+npm run build
+```
+
+Vite mode별 로딩 파일:
+
+| 명령 | mode | 함께 읽는 파일 |
+|---|---|---|
+| `npm run dev` | `development` | `.env`, `.env.local`, `.env.development`, `.env.development.local` |
+| `npm run build` | `production` | `.env`, `.env.local`, `.env.production`, `.env.production.local` |
+| `npm run build -- --mode staging` | `staging` | `.env`, `.env.local`, `.env.staging`, `.env.staging.local` |
+| `npm run preview` | 기존 `dist` 제공 | 실행 시 env를 바꿔도 이미 빌드된 API 주소는 바뀌지 않음 |
+
+Vite 우선순위는 `명령 실행 전 OS 환경변수`가 가장 높고, 그다음 mode 전용 local → mode 전용 → 공통 local → 공통 파일 순이다. `VITE_` 접두 값은 브라우저 번들에 공개되므로 비밀번호·OAuth Client Secret·DB 정보는 넣지 않는다.
+
+### 14.2 이번 백엔드 배포에서 실제 사용한 방식
+
+백엔드는 두 파일로 역할을 분리했다.
+
+```text
+/opt/clov-api/application-secret.yaml
+  → DB·OAuth·JWT·R2 실제 시크릿
+
+/opt/clov-api/clov-api.env
+  → CORS·공개 도메인·OAuth 공개 복귀 주소
+```
+
+`application-secret.yaml`은 JAR 밖에 있고 권한은 `clov:clov`, `600`이다. JAR 내부 `application.yaml`의 다음 설정이 `secret` 프로필을 포함한다.
+
+```yaml
+spring:
+  profiles:
+    include:
+      - secret
+```
+
+systemd의 `WorkingDirectory=/opt/clov-api` 덕분에 Spring Boot가 같은 디렉터리의 외부 `application-secret.yaml`을 찾는다.
+
+배포 도메인은 `/opt/clov-api/clov-api.env`에 작성했다.
+
+```dotenv
+APP_CORS_ALLOWED_ORIGINS=https://clovlabcalss.store
+APP_OAUTH2_REDIRECT_URL=https://clovlabcalss.store/oauth2/redirect
+APP_OAUTH_REDIRECT_BASE=https://clovlabcalss.store
+```
+
+Spring이 `.env` 파일을 자동으로 읽는 것이 아니라 systemd 유닛의 아래 설정이 파일을 읽어 Java 프로세스 환경변수로 전달한다.
+
+```ini
+WorkingDirectory=/opt/clov-api
+EnvironmentFile=/opt/clov-api/clov-api.env
+ExecStart=/usr/bin/java -jar /opt/clov-api/clov-api.jar
+```
+
+### 14.3 로컬 백엔드 개발환경
+
+로컬에서는 예시 파일을 복사해 Git에서 무시되는 실제 시크릿 파일을 만든다.
+
+```powershell
+cd C:\gov\project\clov-api
+Copy-Item src\main\resources\application-secret.example.yaml `
+  src\main\resources\application-secret.yaml
+.\gradlew.bat bootRun
+```
+
+`bootRun`은 기본 `application.yaml`과 포함된 `application-secret.yaml`을 함께 읽는다. 현재 개발용 기본값은 프론트 `http://localhost:5173`, 백엔드 `http://localhost:8080`이다.
+
+별도 `application-dev.yaml`을 추가한 경우에만 다음처럼 `dev` 프로필을 활성화한다.
+
+```powershell
+.\gradlew.bat bootRun --args="--spring.profiles.active=dev"
+```
+
+현재 프로젝트에는 `application-dev.yaml`·`application-prod.yaml`이 없으므로, 서버의 개발/배포 차이는 profile 자동 전환이 아니라 외부 시크릿과 systemd 환경변수로 결정된다.
+
+테스트는 통합 테스트 기반 클래스의 `@ActiveProfiles("test")` 때문에 `src/test/resources/application-test.yaml`을 사용한다.
+
+```powershell
+.\gradlew.bat test
+```
+
+실제 시크릿 대신 테스트 더미 설정과 Testcontainers MySQL을 사용하므로 Docker가 필요하다.
+
+### 14.4 설정 변경 후 필요한 명령
+
+| 변경 대상 | 반영 방법 |
+|---|---|
+| 프론트 `.env.development.local` | `npm run dev` 재시작 |
+| 프론트 `.env.production.local` 또는 `VITE_API_BASE_URL` | `npm run build` 후 `dist` 재배포 |
+| 로컬 `application-secret.yaml` | `bootRun` 재시작 |
+| 서버 `application-secret.yaml` | `sudo systemctl restart clov-api` |
+| 서버 `clov-api.env` | `sudo systemctl restart clov-api` |
+| `/etc/systemd/system/clov-api.service` | `sudo systemctl daemon-reload` 후 restart |
+| Nginx 설정 | `sudo nginx -t` 성공 후 `sudo systemctl reload nginx` |
+
+`clov-api.env`나 `application-secret.yaml`의 값만 수정했다면 `daemon-reload`는 필요 없다. 서비스 재시작 시 systemd와 Spring이 새 값을 읽는다.
+
+### 14.5 Spring 설정 우선순위
+
+이번 프로젝트에서 주로 사용하는 범위의 우선순위는 다음과 같다.
+
+```text
+명령행 --key=value
+→ Java -D 시스템 속성
+→ OS/systemd 환경변수
+→ JAR 외부 application-{profile}.yaml
+→ JAR 외부 application.yaml
+→ JAR 내부 application-{profile}.yaml
+→ JAR 내부 application.yaml
+→ ${ENV_NAME:기본값}의 기본값
+```
+
+같은 설정을 YAML과 env 여러 곳에 중복 작성하면 높은 우선순위 값이 낮은 파일을 덮어쓴다. “파일을 수정했는데 반영되지 않는다”면 먼저 OS 환경변수와 systemd `EnvironmentFile` 중복 여부를 확인한다.
+
+---
+
+## 15. 협업 기록 갱신
+
+- clov-api [#72 개인 최종 배포](https://github.com/Pickeslog/clov-api/issues/72)의 완료 항목과 남은 검증을 갱신했다.
+- 이슈는 Docker 통합 테스트와 핵심 기능 스모크 테스트가 남아 있어 `OPEN`으로 유지했다.
+- 작업일지 브랜치: `docs/myeongjundev-personal-final-deploy-log`
+- 최초 작업일지 커밋: `418a0ae docs: record myeongjundev personal GCP deployment`
+- 파일명과 문서 상단에 GitHub 작업자 `@myeongjundev`를 명시해 팀 공용 배포 기록과 구분했다.
