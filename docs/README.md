@@ -14,7 +14,7 @@
 | 2 | [`팀-시작가이드.md`](팀-시작가이드.md) | **오늘 뭘 하나** — clone·작업 사이클·main 보호 |
 | 3 | [`API-CONTRACT.md`](API-CONTRACT.md) | ⭐**API 계약 단일 기준(SSOT)** — 코드 짜기 전 필독 |
 | 3.5 | [`DB-SETUP.md`](DB-SETUP.md) | 🆕**DB 접속 설정** — 코드 돌리기 전 필수(5분). DB는 이미 완성됨 |
-| 4 | [`../api-spec/05-db-unified-final.md`](../api-spec/05-db-unified-final.md) | **DB 스키마**(19테이블 DDL) |
+| 4 | [`../api-spec/05-db-unified-final.md`](../api-spec/05-db-unified-final.md) | **DB 스키마**(20테이블 DDL) |
 | 5 | [`이벤트-기능정의서.md`](이벤트-기능정의서.md) | **이벤트별 동작** — 트리거→검증→API→결과→예외 (화면↔API 다리) |
 | 6 | [`이슈백로그.md`](이슈백로그.md) | **무슨 이슈를 누가** — 25개 백로그 |
 | 7 | [`React-이관가이드.md`](React-이관가이드.md) | 프론트 이관 **방법론** — 프로토타입 → React |

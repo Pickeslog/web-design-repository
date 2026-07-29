@@ -3,7 +3,7 @@
 > **이 문서가 프론트·백 공통 API 계약의 유일한 기준(Single Source of Truth)이다.**
 > `clov-api/docs/API-CONTRACT.md`·`clov-web/docs/API-CONTRACT.md`는 이 문서를 가리키는 포인터일 뿐이다.
 > **계약 변경은 리더만** 이 문서를 수정한다. 다른 사람은 이슈로 제안한다.
-> 근거: DB [`../api-spec/05-db-unified-final.md`](../api-spec/05-db-unified-final.md)(19테이블) · 화면 명세(`../test-web-design/*/*.md`).
+> 근거: DB [`../api-spec/05-db-unified-final.md`](../api-spec/05-db-unified-final.md)(20테이블) · 화면 명세(`../test-web-design/*/*.md`).
 > 최종 갱신: 2026-07-20 — §2 `details`·§14 공통 6종(#3) + §4-1 auth 스키마·인증 에러코드·비번 정책(#6) + §4-2 소셜 토큰 전달(일회성 코드)·동의(#5 준비) + **§4-3 공통 읽기 모델·§5~§13 요청/응답·pagination 스키마 보강**(발명 위험 제거, M2 팬아웃 선행) + §4 소셜 콜백 `users` 생성 시점 정정(consent-선행). 이전 2026-07-14 — 구 계약(즉시입장·OAuth-only·SB3.5) 대체.
 
 ---
@@ -71,6 +71,9 @@
 | POST | `/api/v1/auth/login` | 이메일/비번 로그인 → Access(JWT, 단기) + Refresh(장기) 발급 |
 | POST | `/api/v1/auth/refresh` | Refresh로 Access 재발급(`refresh_tokens`에서 `revoked_at IS NULL`·미만료 검증) |
 | POST | `/api/v1/auth/logout` | 현재 세션 Refresh `revoked_at` 기록(무효화) |
+| POST | `/api/v1/auth/password/forgot` | 비밀번호 재설정 메일 요청 — **결과와 무관하게 항상 200**(§4-4) |
+| GET | `/api/v1/auth/password/reset` | 재설정 토큰 유효성 확인(화면 진입 시) |
+| POST | `/api/v1/auth/password/reset` | 재설정 실행 — 성공 시 해당 사용자 Refresh 전부 revoke |
 | GET | `/oauth2/authorization/{provider}` | 소셜 로그인 시작(kakao/naver/google, Spring Security 제공) |
 | GET | `/login/oauth2/code/{provider}` | 소셜 콜백(Spring 처리) — 성공 시 **일회성 코드 발급 후 프론트로 리다이렉트**. 여기서 `users`를 만들지 않는다(신규 판정=exchange, 생성=consent → §4-2) |
 
@@ -167,6 +170,46 @@
 ```jsonc
 { "uploadUrl": "https://.../put?...", "imageUrl": "https://cdn.../abc.jpg", "expiresIn": 300 }
 ```
+
+### 4-4. 비밀번호 재설정 (2026-07-29 신설)
+
+> 이메일 가입 사용자의 유일한 열쇠가 비밀번호라, 복구 수단이 없으면 계정이 잠긴다. 소셜 전용 계정은 대상이 아니다(`password` NULL).
+
+**POST `/auth/password/forgot`**
+```jsonc
+{ "email": "a@b.com" }
+// → 200  data: null   (계정 유무·소셜 여부와 무관하게 동일)
+```
+- 이메일 계정이 존재하면 재설정 토큰을 발급하고 메일을 보낸다. **이전에 발급된 미사용 토큰은 모두 무효화**(`revoked_at`)한다 — 살아 있는 링크는 항상 최대 1개.
+- 소셜 전용 계정은 토큰을 발급하지 않고 메일 본문에서 해당 소셜로 로그인하도록 안내한다. **응답은 동일.**
+- 존재하지 않는 이메일은 아무 동작도 하지 않는다. **응답은 동일.**
+- 메일 발송은 **비동기**다. 발송 실패도 응답을 바꾸지 않는다 — 응답 시간 차이로 계정 유무가 새는 것도 막는다.
+- 속도 제한 초과 → `429 RATE_LIMITED`.
+- 메일 링크의 베이스 주소는 서버 설정 `client.url`(dev `http://localhost:5173` / prod `https://clovlabcalss.store`)이다.
+
+**GET `/auth/password/reset?token=...`**
+```jsonc
+// → 200  { "valid": true }
+// → 400  PASSWORD_RESET_TOKEN_INVALID   무효·만료·사용됨
+```
+> 이 엔드포인트가 없으면 사용자가 새 비밀번호를 다 입력하고 제출한 **뒤에야** 만료를 알게 된다. 화면 진입 시점에 판정해 폼 대신 재요청 안내를 띄운다.
+
+**POST `/auth/password/reset`**
+```jsonc
+{ "token": "...", "newPassword": "aB3!xyzq" }
+// → 200  data: null
+```
+- 토큰 무효·만료·이미 사용됨 → `400 PASSWORD_RESET_TOKEN_INVALID`. **세 경우를 구분하지 않는다.**
+- `newPassword`는 §4-1 비밀번호 정책(8~20자, 영문·숫자·특수문자 중 2종 이상)을 따른다. 위반 → `400 VALIDATION_FAILED`.
+- 성공 시 토큰을 `used_at` 마킹하고 **해당 사용자의 refresh 토큰을 전부 revoke**한다(`PATCH /users/me/password`와 동일 규칙). 다른 기기 세션이 전부 끊긴다.
+
+**★ 실패가 401이 아니라 400인 이유** — 프론트 `api/client.js`의 응답 인터셉터는 **401을 받으면 `/auth/refresh`를 시도**한다. 재설정 API가 401을 주면 비로그인 상태인데 갱신을 부르고, 실패해 토큰을 `clear()`하는 엉뚱한 경로로 빠진다. refresh 계열(`INVALID_TOKEN`·`TOKEN_EXPIRED`)이 401인 것과 다른 이유가 이것이다. **401로 바꾸지 말 것.**
+
+**토큰을 URL 쿼리로 전달하는 예외** — §4-2는 URL 쿼리스트링에 `accessToken`/`refreshToken`을 담는 것을 금지한다(로그·Referer 유출). 재설정 토큰은 **메일 링크라 쿼리스트링 외 전달 수단이 없어 예외**로 둔다. 위험은 셋으로 상쇄한다: ① 수명 1시간·**1회용**·재요청 시 이전 토큰 즉시 폐기 ② 권한이 **비밀번호 재설정 하나뿐**(세션 토큰이 아니다) ③ 사용 즉시 소모되어 로그에 남은 값은 재사용 불가.
+
+**가입 시 이메일 소유 확인이 없다는 점** — §4-1의 가입은 이메일 인증 없이 즉시 로그인시킨다. 따라서 남의 이메일로 가입된 계정이 있으면 **실제 이메일 주인이 재설정으로 그 계정의 통제권을 가져갈 수 있다.** 이는 취약점이 아니라 **의도된 동작**으로 둔다 — 원래 그 이메일 주인에게 통제권이 가는 것이 맞고, 재설정 기능이 사후 이메일 소유 확인 수단 역할을 한다. 가입 시 이메일 인증을 도입하면 이 항목을 재검토한다.
+
+---
 
 ## 5. Users / Preferences
 
@@ -676,12 +719,13 @@
 | `TOKEN_EXPIRED` | 401 | refresh 토큰 만료 또는 `revoked_at` 존재 |
 | `OAUTH_EMAIL_REQUIRED` | 400 | 소셜 로그인인데 이메일 미수신(`users.email` NOT NULL 방어) |
 | `OAUTH_CODE_INVALID` | 401 | 소셜 일회성 코드/registrationToken 무효·만료·재사용(§4-2) |
+| `PASSWORD_RESET_TOKEN_INVALID` | **400** | 재설정 토큰 무효·만료·이미 사용됨(§4-4). **세 경우를 구분하지 않는다.** 401이 아닌 이유는 §4-4 — 프론트 401 인터셉터가 refresh를 시도한다 |
 
 > 규약: 에러코드는 **UPPER_SNAKE_CASE**. `VALIDATION_FAILED`의 `error.details`는 `[{field, reason}]` 배열(§2).
 
 ---
 
 ## 관련 문서
-- DB 스키마(19테이블) → [`../api-spec/05-db-unified-final.md`](../api-spec/05-db-unified-final.md)
+- DB 스키마(20테이블) → [`../api-spec/05-db-unified-final.md`](../api-spec/05-db-unified-final.md)
 - 개발 로드맵 → [`roadmap.md`](roadmap.md) · 팀 시작 → [`팀-시작가이드.md`](팀-시작가이드.md)
 - 화면 명세(동작 기준) → `../test-web-design/*/*.md`
