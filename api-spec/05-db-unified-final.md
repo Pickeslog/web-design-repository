@@ -584,6 +584,22 @@ CREATE TABLE refresh_tokens (
   KEY idx_refresh_tokens_user (user_id),
   CONSTRAINT fk_refresh_tokens_user FOREIGN KEY (user_id) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 19. PASSWORD_RESET_TOKENS ✨ (비밀번호 재설정 — 계약 §4-4, 2026-07-29)
+CREATE TABLE password_reset_tokens (
+  id          BIGINT       NOT NULL AUTO_INCREMENT,
+  user_id     BIGINT       NOT NULL,
+  token_hash  VARCHAR(255) NOT NULL COMMENT '원문 아닌 해시 저장(refresh_tokens와 동일 방식)',
+  expires_at  DATETIME     NOT NULL COMMENT '발급 +1시간',
+  used_at     DATETIME     NULL COMMENT '1회용 — 재설정 성공 시 기록',
+  revoked_at  DATETIME     NULL COMMENT '같은 계정이 재요청하면 이전 토큰 무효화',
+  created_at  DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_password_reset_token_hash (token_hash),
+  KEY idx_password_reset_tokens_user (user_id),
+  CONSTRAINT fk_password_reset_tokens_user FOREIGN KEY (user_id) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- 유효 판정: used_at IS NULL AND revoked_at IS NULL AND expires_at > NOW()
 ```
 
 ---
@@ -599,6 +615,7 @@ CREATE TABLE refresh_tokens (
 - **FREE MEMORY(D3)**: `memories.plan_id` NULL 허용. MySQL은 UNIQUE 인덱스에서 NULL을 서로 다른 값으로 취급하므로, 한 사용자가 FREE MEMORY를 여러 개 남겨도 `uk_memories_plan_writer` 제약에 걸리지 않는다.
 - **기록 보존**: FK 기본 `RESTRICT`(하드 삭제로 고아 데이터 방지). 탈퇴=`users.is_anonymized`(익명화), 추억 삭제=`memories.deleted_at`(soft), 멤버 나가기=`room_members.status='LEFT'`, 방 잠자기=`friendship_rooms.scheduled_delete_at`(30일).
 - **소셜 로그인(D6)**: 자체(email+password) + OAuth(`oauth_provider`/`oauth_subject`). 소셜 전용 계정은 `password` NULL. `UNIQUE(oauth_provider, oauth_subject)`로 소셜 계정 중복 차단.
+- **비밀번호 재설정(2026-07-29, 계약 §4-4)**: `password_reset_tokens`는 원문이 아닌 **해시**를 저장하고 수명 **1시간·1회용**이다. 같은 계정이 재요청하면 이전 미사용 토큰을 `revoked_at`으로 즉시 폐기해 **살아 있는 링크가 항상 최대 1개**다. 무효화 사유가 둘(사용자가 실제로 재설정 완료=`used_at` / 재요청으로 자동 폐기=`revoked_at`)이라 `refresh_tokens`와 달리 컬럼을 나눴다 — 판정 쿼리는 어차피 둘 다 NULL을 요구한다. 재설정이 성공하면 `refresh_tokens`를 전부 revoke한다(계정 탈취 복구 시 공격자 세션까지 끊기 위해).
 - **XP 서버 계산**: 클라 값 신뢰 금지. `friendship_exp_logs`에 서버가 부수효과로 적립(마스코트 교감만 전용 엔드포인트, 하루 3회 제한도 로그 COUNT로 판정).
 - **상태값**: `VARCHAR`+코멘트(archive 관례). 팀이 원하면 `ENUM`으로 강화 가능.
 - **즐겨찾기는 "보는 사람" 속성**: 편지 즐겨찾기는 `letter_favorites(letter_id, user_id)`로 분리한다. `lucky_letters`에 `is_favorite` 한 칸을 두면 발신자와 수신자가 같은 값을 덮어쓴다(1-6-05는 "발신자 또는 수신자" 둘 다 토글 가능). 반면 `room_members.is_favorite`은 이미 (방, 사람) 조합의 행이라 그대로 둔다 — 같은 이름이지만 성격이 다르다.

@@ -20,6 +20,6 @@
 
 ## 관련 문서
 
-- 테이블 정의 원본(SSOT): [`../api-spec/05-db-unified-final.md`](../api-spec/05-db-unified-final.md) — ERD + DDL 19테이블
+- 테이블 정의 원본(SSOT): [`../api-spec/05-db-unified-final.md`](../api-spec/05-db-unified-final.md) — ERD + DDL 20테이블
 - 구축 경위·결정·리스크: [`../work-logs/2026-07-15-db-bootstrap.md`](../work-logs/2026-07-15-db-bootstrap.md)
 - API 계약: [`API-CONTRACT.md`](API-CONTRACT.md)
