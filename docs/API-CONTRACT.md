@@ -4,7 +4,7 @@
 > `clov-api/docs/API-CONTRACT.md`·`clov-web/docs/API-CONTRACT.md`는 이 문서를 가리키는 포인터일 뿐이다.
 > **계약 변경은 리더만** 이 문서를 수정한다. 다른 사람은 이슈로 제안한다.
 > 근거: DB [`../api-spec/05-db-unified-final.md`](../api-spec/05-db-unified-final.md)(20테이블) · 화면 명세(`../test-web-design/*/*.md`).
-> 최종 갱신: 2026-07-30 — **§15 Shop(상점)·Wallet 신설**(#14) + §14 상점 에러 6종 + §5 `equippedItem`. 이전 2026-07-20 — §2 `details`·§14 공통 6종(#3) + §4-1 auth 스키마·인증 에러코드·비번 정책(#6) + §4-2 소셜 토큰 전달(일회성 코드)·동의(#5 준비) + **§4-3 공통 읽기 모델·§5~§13 요청/응답·pagination 스키마 보강**(발명 위험 제거, M2 팬아웃 선행) + §4 소셜 콜백 `users` 생성 시점 정정(consent-선행). 이전 2026-07-14 — 구 계약(즉시입장·OAuth-only·SB3.5) 대체.
+> 최종 갱신: 2026-07-30 — **§15 Shop(상점)·Wallet 신설**(#14) + §14 상점 에러 6종 + §5 `equippedItem` + **시작 골드 1,000 확정**(구현값 20,000은 테스트 데이터에 맞춘 값이라 폐기). 이전 2026-07-20 — §2 `details`·§14 공통 6종(#3) + §4-1 auth 스키마·인증 에러코드·비번 정책(#6) + §4-2 소셜 토큰 전달(일회성 코드)·동의(#5 준비) + **§4-3 공통 읽기 모델·§5~§13 요청/응답·pagination 스키마 보강**(발명 위험 제거, M2 팬아웃 선행) + §4 소셜 콜백 `users` 생성 시점 정정(consent-선행). 이전 2026-07-14 — 구 계약(즉시입장·OAuth-only·SB3.5) 대체.
 
 ---
 
@@ -255,7 +255,7 @@
 ```jsonc
 // 상점 코스튬을 장착한 경우 (§15)
 { /* …위와 동일… */ "mascotType": "robot",
-  "equippedItem": { "itemId": "13", "name": "네온 후드", "imageUrl": "https://.../costume-neon-hood.svg" } }
+  "equippedItem": { "itemId": "4", "name": "별빛 이펙트 코스튬", "imageUrl": "https://.../costume-starlight.svg" } }
 ```
 
 | 필드 | 허용값 | 기본값 |
@@ -766,13 +766,29 @@ finalPrice = price - (price * discountRate / 100)
 
 클라이언트가 금액을 실으면 그것을 검증하는 코드가 필요해지고, **검증을 한 번 빠뜨리는 순간 가격 조작이 된다.** 보낼 수 없게 만드는 것이 검증보다 강하다. **"요청 본문에 금액을 추가하자"는 제안은 받지 않는다.**
 
-#### (2) 지갑은 회원가입이 아니라 **첫 접근**에서 만들어진다
+#### ★ (2) 시작 골드는 **1,000**이다 — 카탈로그를 사게 하는 돈이 아니다
 
-`user_wallets` 행은 가입 시점에 생기지 않는다. `GET /shop/wallet` 또는 첫 구매에서 없으면 그때 만들고 **시작 골드 20,000을 `SIGNUP_GRANT`로 지급**한다.
+지갑 최초 생성 시 `SIGNUP_GRANT`로 **1,000골드**를 지급한다.
+
+이 값은 **가장 싼 코스튬 하나를 즉시 사고, 두 번째는 못 사는** 금액이다.
+
+| | |
+|---|---|
+| 카탈로그 전체(할인 반영) | **42,260 G** |
+| 가장 싼 코스튬(클로버 배지) | 600 G |
+| 시작 골드 | **1,000 G** |
+
+장착 대상이 `COSTUME`뿐이라((3) 참조) 신규 사용자의 첫 의미 있는 구매는 코스튬이다. 1,000이면 **구매 → 장착 → 마스코트가 바뀌는 루프를 한 번 완주**하고 400골드가 남는다. 다음 것을 사려면 모아야 한다.
+
+> ⚠️ **이 값을 카탈로그 총액에 가깝게 올리지 말 것.** 시작 골드가 카탈로그의 절반을 덮으면 획득 수단(§15-4)이 무의미해진다. 실제로 초기 구현값은 20,000이었는데, 그건 설계값이 아니라 **개발 DB의 테스트 원장 데이터에 코드를 맞춘 숫자**였다.
+
+#### (2-1) 지갑은 회원가입이 아니라 **첫 접근**에서 만들어진다
+
+`user_wallets` 행은 가입 시점에 생기지 않는다. `GET /shop/wallet` 또는 첫 구매에서 없으면 그때 만들면서 위 지급이 일어난다.
 
 - 그래서 `GET /shop/wallet`은 **읽기 전용이 아니다**(행을 만들 수 있다). 캐시나 리트라이를 걸 때 이 점을 감안한다.
-- 가입 로직에 상점 의존을 넣지 않으려는 선택이다. 상점을 한 번도 안 여는 사용자에게 지갑 행을 만들지 않는다.
-- 잔액이 `20000`으로 오는 것은 **아직 상점을 안 열어본 사용자**라는 뜻일 수 있다. 프론트가 "신규 가입 보너스" 같은 문구를 띄우려면 이 시점 차이를 알고 있어야 한다.
+- **가입 로직에 상점 의존을 넣지 않으려는 선택이다.** 상점이 나중에 비활성화되거나 빠져도 가입이 깨지지 않는다. 상점을 한 번도 안 여는 사용자에게는 지갑 행도 만들지 않는다.
+- 잔액이 정확히 `1000`으로 오는 것은 **아직 아무것도 안 산 사용자**라는 뜻이다. 프론트가 "신규 가입 보너스" 같은 문구를 띄우려면 이 시점 차이를 알고 있어야 한다.
 
 #### (3) 장착은 **COSTUME만** 가능하다
 
@@ -790,10 +806,10 @@ finalPrice = price - (price * discountRate / 100)
 **GET `/shop/items?category=COSTUME&rarity=RARE`** → 목록 봉투, `items` = `ShopItem[]`
 
 ```jsonc
-{ "id": "13", "name": "네온 후드", "description": "디스토피아 감성 후드",
-  "category": "COSTUME", "rarity": "RARE",
+{ "id": "4", "name": "별빛 이펙트 코스튬", "description": "마스코트 주위로 별이 흩날린다",
+  "category": "COSTUME", "rarity": "UNCOMMON",
   "price": 1200, "discountRate": 20, "finalPrice": 960,
-  "imageUrl": "https://.../costume-neon-hood.svg", "owned": false }
+  "imageUrl": "https://.../costume-starlight.svg", "owned": false }
 ```
 
 - **`category`·`rarity`는 생략 가능**하다. 미지정 · 빈 문자열 · `all`(대소문자 무관) 셋 다 **필터 없음**으로 처리된다. 프론트가 `all`을 보내도 된다.
@@ -801,14 +817,15 @@ finalPrice = price - (price * discountRate / 100)
 - **`RETIRED` 아이템도 목록에는 나온다**(보유자 화면에서 이름·이미지가 필요하다). 구매만 막힌다 → `409 ITEM_NOT_PURCHASABLE`.
 - `owned`는 **호출자 기준**이다. 같은 아이템이 사람마다 다른 값으로 온다.
 
-**GET `/shop/wallet`** → `{ "balance": 20000 }`
+**GET `/shop/wallet`** → `{ "balance": 1000 }` (아무것도 안 산 신규 사용자)
 
 **GET `/shop/inventory`** → 목록 봉투, `items` = `ShopItem[]`. `owned`는 항상 `true`. 정렬은 **구매 최신순**.
 
 **POST `/shop/items/{itemId}/purchase`** — 본문 없음 → `PurchaseResponse`
 
 ```jsonc
-{ "item": { /* ShopItem, owned=true */ }, "balance": 19040 }
+// 위 별빛 코스튬(finalPrice 960)을 시작 골드 1,000으로 구매한 직후
+{ "item": { /* ShopItem, owned=true */ }, "balance": 40 }
 ```
 
 > **차감 후 잔액을 같이 준다.** 프론트가 헤더 골드를 다시 조회하지 않아도 되게 한 것이다. 다만 다른 탭에서 구매했을 수 있어, 헤더는 `wallet` 쿼리를 무효화하는 방식도 함께 쓴다.
@@ -816,7 +833,7 @@ finalPrice = price - (price * discountRate / 100)
 **POST `/shop/items/{itemId}/equip`** → `EquippedItem`
 
 ```jsonc
-{ "itemId": "13", "name": "네온 후드", "imageUrl": "https://.../costume-neon-hood.svg" }
+{ "itemId": "4", "name": "별빛 이펙트 코스튬", "imageUrl": "https://.../costume-starlight.svg" }
 ```
 
 **DELETE `/shop/equipped`** → `data: null`
@@ -826,7 +843,7 @@ finalPrice = price - (price * discountRate / 100)
 | 필드 | 허용값 | 비고 |
 |---|---|---|
 | `category` | `COSTUME` · `SKIN` · `EVENT` | 장착 가능한 것은 `COSTUME`뿐(§15-1 (3)) |
-| `rarity` | `COMMON` · `UNCOMMON` · `RARE` · `EPIC` · `LEGENDARY` | 등급색은 라이트/다크 공통 고정 |
+| `rarity` | `COMMON` · `UNCOMMON` · `RARE` · `EPIC` · `LEGENDARY` | **5등급 전부 실사용 중**(시드 12종 분포: 2·2·3·3·2). 등급색은 라이트/다크 공통 고정 |
 | `discountRate` | `0`~`100` | 주간 할인용. **운영 주체·주기는 아직 미정** |
 
 **응답에 없는 내부 필드** — `code`(내부 식별자) · `status`(`ACTIVE`/`RETIRED`) · `sortOrder` · `createdAt`/`updatedAt`. 클라이언트가 판단에 쓸 일이 없어 노출하지 않는다. `status`가 필요해 보이면 그건 `ITEM_NOT_PURCHASABLE` 에러로 다루는 것이 맞다.
@@ -834,6 +851,12 @@ finalPrice = price - (price * discountRate / 100)
 ### 15-4. 원장(`wallet_transactions`)
 
 모든 잔액 변동은 원장에 남는다 — `reason`은 `SIGNUP_GRANT`(지급, 양수) · `PURCHASE`(구매, 음수). `balance_after`와 `reference_id`(구매면 아이템 id)를 함께 기록한다.
+
+> **골드 획득 수단은 아직 계약에 없다.** 지금은 시작 골드 1,000이 전부이고, 쓰면 다시 벌 방법이 없다.
+> 마스코트 교감·추억 등록으로 지급하는 안이 **제안 중**이다(#16). 추가할 때 아래 둘을 반드시 지킨다.
+>
+> - **캡은 유저 단위로 잡는다.** 방 단위로 잡으면 캡이 되지 않는다 — 한 사람이 가입할 수 있는 방 수에 상한이 없고 혼자서도 만들 수 있어서, 하루 획득량이 방 개수에 비례해 늘어난다.
+> - **§12의 XP 캡을 그대로 쓰지 않는다.** XP는 만렙 777에서 멈추고 우정 레벨 표시에만 쓰여 많아도 무해하지만, 골드는 상한이 없고 아이템을 산다. 같은 캡 구조를 공유하면 상점 경제가 깨진다.
 
 **조회 API는 없다.** 현재 화면에 거래 내역이 없어서다. 필요해지면 `GET /shop/transactions`로 추가하되, 그때 §15에 함께 적는다.
 
