@@ -4,7 +4,7 @@
 > `clov-api/docs/API-CONTRACT.md`·`clov-web/docs/API-CONTRACT.md`는 이 문서를 가리키는 포인터일 뿐이다.
 > **계약 변경은 리더만** 이 문서를 수정한다. 다른 사람은 이슈로 제안한다.
 > 근거: DB [`../api-spec/05-db-unified-final.md`](../api-spec/05-db-unified-final.md)(20테이블) · 화면 명세(`../test-web-design/*/*.md`).
-> 최종 갱신: 2026-07-20 — §2 `details`·§14 공통 6종(#3) + §4-1 auth 스키마·인증 에러코드·비번 정책(#6) + §4-2 소셜 토큰 전달(일회성 코드)·동의(#5 준비) + **§4-3 공통 읽기 모델·§5~§13 요청/응답·pagination 스키마 보강**(발명 위험 제거, M2 팬아웃 선행) + §4 소셜 콜백 `users` 생성 시점 정정(consent-선행). 이전 2026-07-14 — 구 계약(즉시입장·OAuth-only·SB3.5) 대체.
+> 최종 갱신: 2026-07-30 — **§15 Shop(상점)·Wallet 신설**(#14) + §14 상점 에러 6종 + §5 `equippedItem`. 이전 2026-07-20 — §2 `details`·§14 공통 6종(#3) + §4-1 auth 스키마·인증 에러코드·비번 정책(#6) + §4-2 소셜 토큰 전달(일회성 코드)·동의(#5 준비) + **§4-3 공통 읽기 모델·§5~§13 요청/응답·pagination 스키마 보강**(발명 위험 제거, M2 팬아웃 선행) + §4 소셜 콜백 `users` 생성 시점 정정(consent-선행). 이전 2026-07-14 — 구 계약(즉시입장·OAuth-only·SB3.5) 대체.
 
 ---
 
@@ -249,7 +249,13 @@
 **GET `/users/me/preferences`** → `Preferences`. row가 없으면 **최초 조회 시 기본값으로 생성**되므로 응답 필드는 null이 아니다(아래 "기본값" 열).
 ```jsonc
 { "darkMode": false, "customColor": null, "wallpaperIcon": null, "dashboardBackground": null,
-  "letterTheme": "postbox", "memoryCardTheme": "stack", "mascotType": "crobi" }
+  "letterTheme": "postbox", "memoryCardTheme": "stack", "mascotType": "crobi",
+  "equippedItem": null }
+```
+```jsonc
+// 상점 코스튬을 장착한 경우 (§15)
+{ /* …위와 동일… */ "mascotType": "robot",
+  "equippedItem": { "itemId": "13", "name": "네온 후드", "imageUrl": "https://.../costume-neon-hood.svg" } }
 ```
 
 | 필드 | 허용값 | 기본값 |
@@ -257,6 +263,9 @@
 | `letterTheme` | `postbox` | `postbox` |
 | `memoryCardTheme` | `stack`(겹침 카드) · `clothesline`(빨랫줄) · `diary`(일기장) | **`stack`** |
 | `mascotType` | `crobi` · `robot` | `crobi` |
+| `equippedItem` | `EquippedItem` 또는 `null` | `null` |
+
+> **`equippedItem`은 읽기 전용이다.** `PATCH /users/me/preferences`로 바꾸지 않는다 — 보유 검증과 카테고리 제약이 필요해서 §15의 `equip`/`unequip` 전용 엔드포인트를 쓴다. 여기 실리는 이유는 **마스코트를 그리는 화면이 설정 한 번으로 필요한 값을 다 받게** 하려는 것이다(장착 정보만 따로 조회하지 않는다).
 
 > `memoryCardTheme` 기본값은 명세 정본(`09-component-inventory.md` §증거 카드 테마 3종 = "겹침 카드(coverflow, 기본)")을 따른다. 프로토타입의 내부 값 이름은 `coverflow`지만 **프로덕션 값 이름은 `stack`** 이다(같은 테마, 이름만 다르다 — DB에 이미 `stack`으로 저장된 row가 있어 이름은 바꾸지 않는다). 서버가 기본값 row를 만들어 주므로 프론트 fallback은 도달하지 않는다 — **기본값을 바꾸려면 서버를 고쳐야 한다**(clov-api #70).
 
@@ -720,8 +729,115 @@
 | `OAUTH_EMAIL_REQUIRED` | 400 | 소셜 로그인인데 이메일 미수신(`users.email` NOT NULL 방어) |
 | `OAUTH_CODE_INVALID` | 401 | 소셜 일회성 코드/registrationToken 무효·만료·재사용(§4-2) |
 | `PASSWORD_RESET_TOKEN_INVALID` | **400** | 재설정 토큰 무효·만료·이미 사용됨(§4-4). **세 경우를 구분하지 않는다.** 401이 아닌 이유는 §4-4 — 프론트 401 인터셉터가 refresh를 시도한다 |
+| **상점 (§15)** | | |
+| `SHOP_ITEM_NOT_FOUND` | 404 | 존재하지 않는 아이템 |
+| `INSUFFICIENT_BALANCE` | 409 | 골드 부족 |
+| `ITEM_ALREADY_OWNED` | 409 | 이미 보유 중 — 재구매 차단(`(user_id, item_id)` 유니크) |
+| `ITEM_NOT_PURCHASABLE` | 409 | `status`가 `ACTIVE`가 아님(판매 종료). **목록에는 보이지만 구매만 막힌다** |
+| `ITEM_NOT_OWNED` | **403** | 보유하지 않은 아이템 장착 시도. 404가 아닌 이유는 **아이템은 존재하고 권한이 없는 것**이라서다 |
+| `ITEM_NOT_EQUIPPABLE` | 409 | `COSTUME`이 아닌 카테고리 장착 시도(§15-1 (3)) |
 
 > 규약: 에러코드는 **UPPER_SNAKE_CASE**. `VALIDATION_FAILED`의 `error.details`는 `[{field, reason}]` 배열(§2).
+
+---
+
+## 15. Shop (상점) & Wallet
+
+| Method | Path | 설명 | 인가 |
+|---|---|---|---|
+| GET | `/api/v1/shop/items` | 상점 목록(`category`·`rarity` 필터) | 로그인 |
+| GET | `/api/v1/shop/wallet` | 내 골드 잔액 | 본인 |
+| GET | `/api/v1/shop/inventory` | 내 보유 아이템 | 본인 |
+| POST | `/api/v1/shop/items/{itemId}/purchase` | 구매 | 본인 |
+| POST | `/api/v1/shop/items/{itemId}/equip` | 마스코트에 장착 | 본인·보유자 |
+| DELETE | `/api/v1/shop/equipped` | 장착 해제 | 본인 |
+
+**재화는 사용자 단위다 — 방과 무관하다.** 경로에 `roomId`가 없다. 골드·보유 아이템·장착 상태는 전부 사용자에게 붙는다. §3의 2단 인가에서 **1단(로그인)만 적용되는** 몇 안 되는 도메인이고, 그래서 `/rooms/{roomId}/shop/...` 형태로 바꾸지 않는다.
+
+### 15-1. 되돌리면 안 되는 결정 4개
+
+#### ★ (1) 청구액은 서버가 계산한다 — 구매 요청에 본문이 없다
+
+`POST /shop/items/{itemId}/purchase`는 **본문이 비어 있다.** 가격·수량·할인율을 클라이언트가 보내지 않는다. 최종가는 서버가 계산한다.
+
+```
+finalPrice = price - (price * discountRate / 100)
+```
+
+클라이언트가 금액을 실으면 그것을 검증하는 코드가 필요해지고, **검증을 한 번 빠뜨리는 순간 가격 조작이 된다.** 보낼 수 없게 만드는 것이 검증보다 강하다. **"요청 본문에 금액을 추가하자"는 제안은 받지 않는다.**
+
+#### (2) 지갑은 회원가입이 아니라 **첫 접근**에서 만들어진다
+
+`user_wallets` 행은 가입 시점에 생기지 않는다. `GET /shop/wallet` 또는 첫 구매에서 없으면 그때 만들고 **시작 골드 20,000을 `SIGNUP_GRANT`로 지급**한다.
+
+- 그래서 `GET /shop/wallet`은 **읽기 전용이 아니다**(행을 만들 수 있다). 캐시나 리트라이를 걸 때 이 점을 감안한다.
+- 가입 로직에 상점 의존을 넣지 않으려는 선택이다. 상점을 한 번도 안 여는 사용자에게 지갑 행을 만들지 않는다.
+- 잔액이 `20000`으로 오는 것은 **아직 상점을 안 열어본 사용자**라는 뜻일 수 있다. 프론트가 "신규 가입 보너스" 같은 문구를 띄우려면 이 시점 차이를 알고 있어야 한다.
+
+#### (3) 장착은 **COSTUME만** 가능하다
+
+`SKIN`·`EVENT`는 보유할 수 있지만 장착 대상이 아니다. 장착은 **마스코트 이미지 자체를 교체**하는 동작이라 의미가 있는 카테고리가 코스튬뿐이다. 다른 카테고리로 `equip`을 부르면 `409 ITEM_NOT_EQUIPPABLE`.
+
+- 장착 슬롯은 **하나**다. 새로 장착하면 이전 것이 교체된다(별도 해제 호출 불필요).
+- 해제는 `DELETE /shop/equipped` — **itemId를 받지 않는다.** 슬롯이 하나라 지정할 것이 없다.
+
+#### (4) 구매가는 **구매 시점 가격으로 고정**된다
+
+`user_inventory_items.paid_price`에 그때의 최종가를 박아둔다. 이후 정가나 할인율이 바뀌어도 과거 구매 기록은 변하지 않는다. **환불·재판매 기능이 생기면 이 값을 기준으로 삼는다.**
+
+### 15-2. 요청/응답
+
+**GET `/shop/items?category=COSTUME&rarity=RARE`** → 목록 봉투, `items` = `ShopItem[]`
+
+```jsonc
+{ "id": "13", "name": "네온 후드", "description": "디스토피아 감성 후드",
+  "category": "COSTUME", "rarity": "RARE",
+  "price": 1200, "discountRate": 20, "finalPrice": 960,
+  "imageUrl": "https://.../costume-neon-hood.svg", "owned": false }
+```
+
+- **`category`·`rarity`는 생략 가능**하다. 미지정 · 빈 문자열 · `all`(대소문자 무관) 셋 다 **필터 없음**으로 처리된다. 프론트가 `all`을 보내도 된다.
+- 정렬은 `sort_order` → `id` 순. 클라이언트가 정렬 기준을 지정하는 파라미터는 없다.
+- **`RETIRED` 아이템도 목록에는 나온다**(보유자 화면에서 이름·이미지가 필요하다). 구매만 막힌다 → `409 ITEM_NOT_PURCHASABLE`.
+- `owned`는 **호출자 기준**이다. 같은 아이템이 사람마다 다른 값으로 온다.
+
+**GET `/shop/wallet`** → `{ "balance": 20000 }`
+
+**GET `/shop/inventory`** → 목록 봉투, `items` = `ShopItem[]`. `owned`는 항상 `true`. 정렬은 **구매 최신순**.
+
+**POST `/shop/items/{itemId}/purchase`** — 본문 없음 → `PurchaseResponse`
+
+```jsonc
+{ "item": { /* ShopItem, owned=true */ }, "balance": 19040 }
+```
+
+> **차감 후 잔액을 같이 준다.** 프론트가 헤더 골드를 다시 조회하지 않아도 되게 한 것이다. 다만 다른 탭에서 구매했을 수 있어, 헤더는 `wallet` 쿼리를 무효화하는 방식도 함께 쓴다.
+
+**POST `/shop/items/{itemId}/equip`** → `EquippedItem`
+
+```jsonc
+{ "itemId": "13", "name": "네온 후드", "imageUrl": "https://.../costume-neon-hood.svg" }
+```
+
+**DELETE `/shop/equipped`** → `data: null`
+
+### 15-3. 필드 허용값
+
+| 필드 | 허용값 | 비고 |
+|---|---|---|
+| `category` | `COSTUME` · `SKIN` · `EVENT` | 장착 가능한 것은 `COSTUME`뿐(§15-1 (3)) |
+| `rarity` | `COMMON` · `UNCOMMON` · `RARE` · `EPIC` · `LEGENDARY` | 등급색은 라이트/다크 공통 고정 |
+| `discountRate` | `0`~`100` | 주간 할인용. **운영 주체·주기는 아직 미정** |
+
+**응답에 없는 내부 필드** — `code`(내부 식별자) · `status`(`ACTIVE`/`RETIRED`) · `sortOrder` · `createdAt`/`updatedAt`. 클라이언트가 판단에 쓸 일이 없어 노출하지 않는다. `status`가 필요해 보이면 그건 `ITEM_NOT_PURCHASABLE` 에러로 다루는 것이 맞다.
+
+### 15-4. 원장(`wallet_transactions`)
+
+모든 잔액 변동은 원장에 남는다 — `reason`은 `SIGNUP_GRANT`(지급, 양수) · `PURCHASE`(구매, 음수). `balance_after`와 `reference_id`(구매면 아이템 id)를 함께 기록한다.
+
+**조회 API는 없다.** 현재 화면에 거래 내역이 없어서다. 필요해지면 `GET /shop/transactions`로 추가하되, 그때 §15에 함께 적는다.
+
+> ⚠️ 동시 구매를 막기 위해 구매는 **지갑 행을 잠그고**(`SELECT ... FOR UPDATE`) 읽는다. 단일 인스턴스 전제가 아니어도 안전하다.
 
 ---
 
