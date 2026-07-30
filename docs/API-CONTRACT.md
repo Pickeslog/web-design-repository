@@ -4,7 +4,7 @@
 > `clov-api/docs/API-CONTRACT.md`·`clov-web/docs/API-CONTRACT.md`는 이 문서를 가리키는 포인터일 뿐이다.
 > **계약 변경은 리더만** 이 문서를 수정한다. 다른 사람은 이슈로 제안한다.
 > 근거: DB [`../api-spec/05-db-unified-final.md`](../api-spec/05-db-unified-final.md)(20테이블) · 화면 명세(`../test-web-design/*/*.md`).
-> 최종 갱신: 2026-07-30 — **§15 Shop(상점)·Wallet 신설**(#14) + §14 상점 에러 6종 + §5 `equippedItem`. 이전 2026-07-20 — §2 `details`·§14 공통 6종(#3) + §4-1 auth 스키마·인증 에러코드·비번 정책(#6) + §4-2 소셜 토큰 전달(일회성 코드)·동의(#5 준비) + **§4-3 공통 읽기 모델·§5~§13 요청/응답·pagination 스키마 보강**(발명 위험 제거, M2 팬아웃 선행) + §4 소셜 콜백 `users` 생성 시점 정정(consent-선행). 이전 2026-07-14 — 구 계약(즉시입장·OAuth-only·SB3.5) 대체.
+> 최종 갱신: 2026-07-30 — **§15-4 원장에 골드 획득 사유(`EARN_MASCOT`/`EARN_MEMORY`) 추가**(제안, #<이슈번호>) + §15 Shop(상점)·Wallet 신설(#14) + §14 상점 에러 6종 + §5 `equippedItem`. 이전 2026-07-20 — §2 `details`·§14 공통 6종(#3) + §4-1 auth 스키마·인증 에러코드·비번 정책(#6) + §4-2 소셜 토큰 전달(일회성 코드)·동의(#5 준비) + **§4-3 공통 읽기 모델·§5~§13 요청/응답·pagination 스키마 보강**(발명 위험 제거, M2 팬아웃 선행) + §4 소셜 콜백 `users` 생성 시점 정정(consent-선행). 이전 2026-07-14 — 구 계약(즉시입장·OAuth-only·SB3.5) 대체.
 
 ---
 
@@ -833,7 +833,16 @@ finalPrice = price - (price * discountRate / 100)
 
 ### 15-4. 원장(`wallet_transactions`)
 
-모든 잔액 변동은 원장에 남는다 — `reason`은 `SIGNUP_GRANT`(지급, 양수) · `PURCHASE`(구매, 음수). `balance_after`와 `reference_id`(구매면 아이템 id)를 함께 기록한다.
+모든 잔액 변동은 원장에 남는다 — `reason`은 `SIGNUP_GRANT`(지급, 양수) · `PURCHASE`(구매, 음수) · `EARN_MASCOT`(지급, 양수) · `EARN_MEMORY`(지급, 양수). `balance_after`와 `reference_id`(구매면 아이템 id, `EARN_MEMORY`면 추억 id, `EARN_MASCOT`은 null)를 함께 기록한다.
+
+**골드 적립(§12 연동)**
+
+| reason | 금액 | 발생 시점 | 제한 |
+|---|---|---|---|
+| `EARN_MASCOT` | +100 | 마스코트 교감 성공(`POST /rooms/{roomId}/mascot/interact`) | §12의 하루 3회 캡을 그대로 공유한다(캡 초과 시 골드도 지급되지 않는다). **방 단위 캡**이라 여러 방에 속한 유저는 방마다 별도로 하루 최대 300골드를 받을 수 있다. |
+| `EARN_MEMORY` | +50 | 추억 등록 성공(`POST /rooms/{roomId}/memories`, `POST /plans/{planId}/memories`) | 없음 |
+
+지급은 XP 지급과 같은 트랜잭션 안에서 일어난다 — 하나만 반영되고 다른 하나가 빠지는 경우는 없다.
 
 **조회 API는 없다.** 현재 화면에 거래 내역이 없어서다. 필요해지면 `GET /shop/transactions`로 추가하되, 그때 §15에 함께 적는다.
 
