@@ -484,7 +484,7 @@
 
 | Method | Path | 설명 | 인가 |
 |---|---|---|---|
-| POST | `/api/v1/plans/{planId}/memories` | 내 추억 작성(`title`≤25·`content`≤100·`tags[]`·`participantUserIds[]`) → plan `memory_status=WRITTEN`. `CANDIDATE`/`WRITTEN`만 허용(`NONE`→`PLAN_NOT_COMPLETED`). `UNIQUE(plan_id,writer_id)` 위반 → `409 MEMORY_ALREADY_WRITTEN`(PATCH로) | 공간 멤버 |
+| POST | `/api/v1/plans/{planId}/memories` | 내 추억 작성(`title`≤40·`content`≤100·`tags[]`·`participantUserIds[]`) → plan `memory_status=WRITTEN`. `CANDIDATE`/`WRITTEN`만 허용(`NONE`→`PLAN_NOT_COMPLETED`). `UNIQUE(plan_id,writer_id)` 위반 → `409 MEMORY_ALREADY_WRITTEN`(PATCH로) | 공간 멤버 |
 | POST | `/api/v1/rooms/{roomId}/memories` | **FREE MEMORY** 작성(`plan_id` NULL, D3) — plan 없이 방 단위 추억. body는 `/plans/{planId}/memories`와 동일(단 `planId` 없음). plan `memory_status` 전이·`PLAN_NOT_COMPLETED`·`MEMORY_ALREADY_WRITTEN` 검증 **미적용** | 공간 멤버 |
 | GET | `/api/v1/rooms/{roomId}/memories` | 피드(월별·`writer_id`·`tag`·`participantUserId` 필터) | 공간 멤버 |
 | GET | `/api/v1/memories/{memoryId}` | 상세(이미지·태그·참여자·댓글수) | 공간 멤버 |
@@ -502,7 +502,7 @@
 
 **POST `/plans/{planId}/memories`** (201) → `MemoryDetail`
 ```jsonc
-{ "title": "인생 첫 한라산",        // ≤ 25
+{ "title": "인생 첫 한라산",        // ≤ 40 — 목업 space.js:169 기준(2026-07-31). 이전 25는 설계값이 아니라 DTO에 박힌 값을 계약으로 옮긴 것이었다
   "content": "정상에서 라면...",    // ≤ 100
   "memoryDate": "2026-08-11",
   "tags": ["한라산", "라면"],
