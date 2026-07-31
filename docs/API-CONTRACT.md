@@ -265,7 +265,9 @@
 | `mascotType` | `crobi` · `rob` · `burgerOldman` | `crobi` |
 | `equippedItem` | `EquippedItem` 또는 `null` | `null` |
 
-> ⚠️ **`mascotType`은 서버가 검증하지 않는다.** `UpdatePreferencesRequest.mascotType`이 제약 없는 `String`이라 **표에 없는 값도 그대로 저장된다**(컬럼 `VARCHAR(20)`만 제약). 프론트는 아는 값이 아니면 `crobi`로 떨어뜨린다. 검증 추가는 별건(2026-07-31 확인).
+> **위 표의 허용값은 서버가 막는다**(`UpdatePreferencesRequest`의 `@Pattern`, 2026-07-31 신설). 표에 없는 값은 `400 VALIDATION_FAILED`다. `null`은 통과한다 — 부분 수정이라 "안 보냄"과 "잘못된 값"을 구분해야 한다.
+>
+> ⚠️ **새 값을 추가할 때는 이 표와 서버 `@Pattern`을 함께 고친다.** 한쪽만 고치면 프론트에서 고를 수 있는 값이 저장에서 400으로 튕긴다(§10 추억 제목 40자에서 실제로 겪은 형태). 검증이 없던 동안에는 반대 방향으로 새고 있었다 — 표에 없는 값이 **에러 없이 저장되고 화면에서만 조용히 깨졌다**(프론트가 아는 값이 아니면 기본값으로 떨어뜨려서 설정이 이유 없이 되돌아간 것처럼 보인다).
 >
 > 롭의 값은 **`rob`**이다 — 계약에 `robot`으로 적혀 있었으나 프로덕션·DB·프론트 모두 `rob`을 쓴다(2026-07-31 정정). `robot`은 프로토타입 위젯(`croby-mascot.js`의 `CHARACTERS`)에서만 쓰는 이름이다.
 
@@ -493,14 +495,16 @@
 | GET | `/api/v1/rooms/{roomId}/memories` | 피드(월별·`writer_id`·`tag`·`participantUserId` 필터) | 공간 멤버 |
 | GET | `/api/v1/memories/{memoryId}` | 상세(이미지·태그·참여자·댓글수) | 공간 멤버 |
 | PATCH · DELETE | `/api/v1/memories/{memoryId}` | 수정(태그/참여자 전체교체)·삭제(soft) | 작성자 본인 |
-| POST | `/api/v1/memories/{memoryId}/images/presign` | 이미지 presign(쿼터 초과 `507 STORAGE_QUOTA_EXCEEDED`) | 작성자 |
-| POST | `/api/v1/memories/{memoryId}/images` | 업로드 커밋(`image_url`·`sort_order`) | 작성자 |
+| POST | `/api/v1/memories/{memoryId}/images/presign` | 이미지 presign. **추억당 8장** 초과 → `507 STORAGE_QUOTA_EXCEEDED` | 작성자 |
+| POST | `/api/v1/memories/{memoryId}/images` | 업로드 커밋(`image_url`·`sort_order`). 여기서도 **8장** 초과 → `507` | 작성자 |
 | DELETE | `/api/v1/memory-images/{imageId}` | 이미지 삭제 | 작성자 |
-| PATCH | `/api/v1/memories/{memoryId}/images/order` | 순서 재정렬 | 작성자 |
+| PATCH | `/api/v1/memories/{memoryId}/images/order` | 순서 재정렬. ⚠️ **프론트가 호출하지 않는다**(아래) | 작성자 |
 | POST · GET | `/api/v1/memories/{memoryId}/comments` | 친구 한 줄 댓글 작성·목록. **한 추억당 작성자 1인 1개** — 이미 있으면 `409 COMMENT_ALREADY_EXISTS` | 공간 멤버 |
 | PATCH · DELETE | `/api/v1/comments/{commentId}` | 댓글 수정·삭제 | 작성자 본인 |
 
 - `plan_id` 없이도 작성 가능 = **FREE MEMORY**(`plan_id` NULL, D3) → `POST /rooms/{roomId}/memories`.
+- **사진은 추억당 8장.** 프로토타입은 30이지만 프로덕션은 추억마다 R2에 실제 파일이 올라가 저장 쿼터 도달 속도가 4배 가까이 빨라진다(리더 확정 2026-07-30, `screen-spec-source/03-memory-feed-screen.md`). **프론트 상수(`clov-web` `MEMORY_PHOTO_LIMIT`)와 서버 상수(`MemoryService.MAX_IMAGES_PER_MEMORY`)가 같아야 한다** — 프론트가 크면 화면에서 고를 수 있는 사진이 업로드에서 507로 튕긴다(실제로 프론트 15 vs 서버 10이던 시기가 있었다). §12의 이미지 보너스 상한도 같은 8이다.
+- **순서 재정렬은 서버에만 있고 프론트가 부르지 않는다**(2026-07-31~). 추억 수정 모달이 목업대로 그리드+개별 삭제로 바뀌면서 ◀/▶ 순서 이동 UI가 빠졌다(`clov-web` #181/#192). **엔드포인트는 유지**한다 — 순서 UI가 다시 필요해지면 프론트 호출만 되살리면 된다.
 
 ### 10-1. 요청/응답
 
@@ -615,7 +619,7 @@
 
 - **글자 보너스**: 본문 100자 이상 +10 / 50자 이상 +5 — **도달한 최고 구간 1개만**(중첩 없음). `MEMORY_WRITE` 한 행에 합산해 기록한다.
 - **사진 보너스는 커밋 시 증분 적립**(리더 확정 2026-07-24). 프로덕션은 추억 생성 → presign → R2 PUT → 커밋 순서라 **작성 시점엔 사진 수를 알 수 없다**(`CreateMemoryRequest`에 이미지 필드 없음). 그래서 이미지가 실제로 커밋될 때마다 `MEMORY_IMAGE_BONUS` +1을 적립한다.
-  - **추억당 상한 10** — 해당 `memoryId`의 `MEMORY_IMAGE_BONUS` 합이 이미 10이면 더 적립하지 않는다(11번째 사진부터 XP 없음).
+  - **추억당 상한 8** — 해당 `memoryId`의 `MEMORY_IMAGE_BONUS` 합이 이미 8이면 더 적립하지 않는다. **§10의 사진 개수 상한(8)과 같은 값이어야 한다** — 보너스 상한이 더 크면 초과분은 영원히 도달할 수 없는 죽은 규칙이 된다(사진 상한이 8로 확정된 뒤에도 여기가 10이라 9·10번째가 닿지 않았다, 2026-07-31 정합).
   - 업로드가 실패해 커밋이 안 되면 XP도 오르지 않는다. 나중에 사진을 추가하면 그때 적립된다.
   - 이미지 **삭제 시 회수하지 않는다**(MVP 범위 밖 XP 회수 규칙과 동일).
 
