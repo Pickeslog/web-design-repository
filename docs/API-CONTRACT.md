@@ -262,8 +262,12 @@
 |---|---|---|
 | `letterTheme` | `postbox` | `postbox` |
 | `memoryCardTheme` | `stack`(겹침 카드) · `clothesline`(빨랫줄) · `diary`(일기장) | **`stack`** |
-| `mascotType` | `crobi` · `robot` | `crobi` |
+| `mascotType` | `crobi` · `rob` · `burgerOldman` | `crobi` |
 | `equippedItem` | `EquippedItem` 또는 `null` | `null` |
+
+> ⚠️ **`mascotType`은 서버가 검증하지 않는다.** `UpdatePreferencesRequest.mascotType`이 제약 없는 `String`이라 **표에 없는 값도 그대로 저장된다**(컬럼 `VARCHAR(20)`만 제약). 프론트는 아는 값이 아니면 `crobi`로 떨어뜨린다. 검증 추가는 별건(2026-07-31 확인).
+>
+> 롭의 값은 **`rob`**이다 — 계약에 `robot`으로 적혀 있었으나 프로덕션·DB·프론트 모두 `rob`을 쓴다(2026-07-31 정정). `robot`은 프로토타입 위젯(`croby-mascot.js`의 `CHARACTERS`)에서만 쓰는 이름이다.
 
 > **`equippedItem`은 읽기 전용이다.** `PATCH /users/me/preferences`로 바꾸지 않는다 — 보유 검증과 카테고리 제약이 필요해서 §15의 `equip`/`unequip` 전용 엔드포인트를 쓴다. 여기 실리는 이유는 **마스코트를 그리는 화면이 설정 한 번으로 필요한 값을 다 받게** 하려는 것이다(장착 정보만 따로 조회하지 않는다).
 
