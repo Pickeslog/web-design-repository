@@ -666,10 +666,14 @@
 | FRIEND | `PLAN_COMPLETE` | 약속 완료 | 완료자 | planId | — |
 | FRIEND | `LEVEL_UP` | 우정 레벨업 | **null** | roomId | `{"level": 3}` |
 | JOIN | `JOIN_REQUEST` | 가입 신청 | 신청자 | joinRequestId | — |
-| JOIN | `JOIN_ACCEPTED` | 신청 수락 | 수락자 | joinRequestId | — |
+| JOIN | `JOIN_ACCEPTED` | 신청 수락 → **신청자 본인에게** | 수락자 | joinRequestId | — |
+| JOIN | `MEMBER_JOINED` | 신청 수락 → **기존 멤버 전원에게**(합류자 제외) | **합류자** | joinRequestId | — |
 | NOTICE | `ADMIN_NOTICE` | 운영 공지 | null | null | `{"title":…,"content":…}` |
 
 - **레벨업만 `actor`가 없다**(방 전체 이벤트). `actor_id`는 nullable이라 스키마 변경 불필요.
+- **★ `MEMBER_JOINED`를 따로 둔 이유 (리더 확정 2026-07-31, clov-api #91)** — 수락 시점에는 **성격이 다른 알림 두 개**가 나간다. `JOIN_ACCEPTED`는 **신청자 본인에게** "수락됐어요"(actor=수락자), `MEMBER_JOINED`는 **기존 멤버 전원에게** "X님이 합류했어요"(actor=합류자)다. **수신자도 actor도 다르므로 한 subType으로 겸할 수 없다.** 특히 `JOIN_REQUEST`(가입 신청)를 재사용하면 "가입 신청 N건"을 세는 순간 **이미 수락된 합류까지 신청으로 센다.**
+- **`MEMBER_JOINED`의 수신자에서 합류자 본인은 뺀다.** 공용 팬아웃(`NotificationMapper.insertMany`)이 `actor_id`와 같은 수신자를 제외하는 규칙과 같다 — 도메인이 자체 SQL로 팬아웃을 다시 쓰면 이 조건을 빠뜨리기 쉽다(clov-api #90).
+- 기존에 `JOIN_REQUEST`로 쌓인 합류 알림 row는 **마이그레이션하지 않는다.** 데모 전 테스트 데이터뿐이라 `@test.local` 정리와 함께 지운다. 새 값부터 적용한다.
 - **방 설정 변경은 `FRIEND`다.** 친구 활동이므로 '관리진 공지' 탭이 아니다(2026-07-24 이동).
 - `NOTICE` 탭은 운영 공지 발행 기능이 생길 때까지 비어 있다. **프론트는 정직한 빈 상태를 보여준다**(가짜 공지를 하드코딩하지 않는다).
 - `payload`는 문구에 필요한 부가 정보만 담는 자유 형식 JSON. 없으면 `null`.
