@@ -260,7 +260,7 @@
 
 | 필드 | 허용값 | 기본값 |
 |---|---|---|
-| `letterTheme` | `postbox` | `postbox` |
+| `letterTheme` | `postbox` · `giftbox` | `postbox` |
 | `memoryCardTheme` | `stack`(겹침 카드) · `clothesline`(빨랫줄) · `diary`(일기장) | **`stack`** |
 | `mascotType` | `crobi` · `rob` · `burgerOldman` · `takoGun` · `kimCheolsu` | `crobi` |
 | `equippedItem` | `EquippedItem` 또는 `null` | `null` |
