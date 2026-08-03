@@ -262,7 +262,7 @@
 |---|---|---|
 | `letterTheme` | `postbox` · `giftbox` | `postbox` |
 | `memoryCardTheme` | `stack`(겹침 카드) · `clothesline`(빨랫줄) · `diary`(일기장) | **`stack`** |
-| `mascotType` | `crobi` · `rob` · `burgerOldman` · `takoGun` · `kimCheolsu` | `crobi` |
+| `mascotType` | `crobi` · `rob` · `burgerOldman` · `takoGun` · `kimCheolsu` · `onyx` | `crobi` |
 | `equippedItem` | `EquippedItem` 또는 `null` | `null` |
 
 > **위 표의 허용값은 서버가 막는다**(`UpdatePreferencesRequest`의 `@Pattern`, 2026-07-31 신설). 표에 없는 값은 `400 VALIDATION_FAILED`다. `null`은 통과한다 — 부분 수정이라 "안 보냄"과 "잘못된 값"을 구분해야 한다.
