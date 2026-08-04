@@ -88,8 +88,7 @@
 ```jsonc
 { "accessToken": "eyJ...", "refreshToken": "eyJ...",
   "user": { "id": "1024", "email": "a@b.com", "nickname": "클로버",
-            "profileImageUrl": null, "birthdate": "1998-03-21",
-            "personalInviteCode": "CLV-7X2A9K" } }
+            "profileImageUrl": null, "birthdate": "1998-03-21" } }
 ```
 
 **signup** `POST /api/v1/auth/signup` — **가입 즉시 로그인**(위 data 그대로 201)
@@ -229,9 +228,24 @@
 **GET `/users/me`** → `UserProfile`
 ```jsonc
 { "id": "1024", "email": "a@b.com", "nickname": "클로버", "profileImageUrl": null,
-  "birthdate": "1998-03-21", "personalInviteCode": "CLV-7X2A9K",
-  "isSocial": false, "createdAt": "2026-07-01T09:12:00" }
+  "birthdate": "1998-03-21", "isSocial": false, "createdAt": "2026-07-01T09:12:00" }
 ```
+> ### ⚠️ `personalInviteCode`는 2026-08-04에 제거했다 — 다시 넣지 말 것
+>
+> `users.personal_invite_code`(`CLV-XXXXXX`)가 2026-07-20 인증 API 첫 구현부터 있었는데, **2주 넘게 아무것도 이 값으로 사람을 찾지 않았다.** 생성·저장·노출은 완성돼 있었고 **받는 API도 화면도 계약 규정도 없었다** — 이 문서에도 응답 예시 두 줄에만 있었지 "이걸로 무엇을 한다"는 문장이 없었다.
+>
+> **방 초대코드와 다른 물건이다.** 헷갈려서 남겨두지 말 것.
+>
+> | | 개인 | 방 |
+> |---|---|---|
+> | 형식 | `CLV-XXXXXX` | `CLV-JOIN-XXXXXX` |
+> | 위치 | `users.personal_invite_code` | `invites.invite_code` |
+> | 쓰임 | **없었다** | `POST /invites/accept` 등 |
+>
+> **지운 이유는 "안 쓴다"가 아니라 "화면에 이름이 붙어 있었다"는 쪽이다.** 사용자설정에 `내 초대코드`로 보이니 사용자는 그걸 방 입장 칸에 넣어보고, 테이블도 접두사도 달라서 실패한다.
+>
+> **다시 필요해지면(예: 개인 코드로 사람을 방에 초대) 그때 만든다.** 지금 Clov에는 방 밖의 '친구' 개념이 없다 — 테이블 24개가 전부 방 단위다. 없는 그래프를 대비해 `NOT NULL UNIQUE` 컬럼을 두는 건 대비가 아니라 부채다.
+
 **PATCH `/users/me`** — 보낸 필드만 수정 → `UserProfile`
 ```jsonc
 { "nickname": "새클로버", "profileImageUrl": "https://cdn.../me.jpg", "birthdate": "1998-03-21" }
