@@ -873,7 +873,8 @@ finalPrice = price - (price * discountRate / 100)
 **GET `/shop/items?category=COSTUME&rarity=RARE`** → 목록 봉투, `items` = `ShopItem[]`
 
 ```jsonc
-{ "id": "4", "name": "별빛 이펙트 코스튬", "description": "마스코트 주위로 별이 흩날린다",
+{ "id": "4", "code": "COSTUME_STARLIGHT", "name": "별빛 이펙트 코스튬",
+  "description": "마스코트 주위로 별이 흩날린다",
   "category": "COSTUME", "rarity": "UNCOMMON",
   "price": 1200, "discountRate": 20, "finalPrice": 960,
   "imageUrl": "https://.../costume-starlight.svg", "owned": false }
@@ -881,7 +882,12 @@ finalPrice = price - (price * discountRate / 100)
 
 - **`category`·`rarity`는 생략 가능**하다. 미지정 · 빈 문자열 · `all`(대소문자 무관) 셋 다 **필터 없음**으로 처리된다. 프론트가 `all`을 보내도 된다.
 - 정렬은 `sort_order` → `id` 순. 클라이언트가 정렬 기준을 지정하는 파라미터는 없다.
-- **`RETIRED` 아이템도 목록에는 나온다**(보유자 화면에서 이름·이미지가 필요하다). 구매만 막힌다 → `409 ITEM_NOT_PURCHASABLE`.
+- **`RETIRED` 아이템은 목록에 안 나온다.** `findCatalog`가 `status='ACTIVE'`로 거른다.
+  > **2026-08-04에 뒤집힌 항목이다**(clov-api #130). 원래는 "보유자 화면에서 이름·이미지가
+  > 필요하다"는 이유로 목록에 넣고 구매만 막았는데, 실제로는 **보이는데 누르면
+  > `ITEM_NOT_PURCHASABLE`로 떨어지는 상태**가 됐다. 보유자 화면이 필요로 하는 건
+  > `GET /shop/inventory`이고 그쪽은 `status`를 안 보므로, **내린 상품을 이미 산 사람은
+  > 계속 보고 장착도 된다.** 즉 원래 이유는 카탈로그가 아니라 인벤토리가 이미 충족하고 있었다.
 - `owned`는 **호출자 기준**이다. 같은 아이템이 사람마다 다른 값으로 온다.
 
 **GET `/shop/wallet`** → `{ "balance": 1000 }` (아무것도 안 산 신규 사용자)
@@ -909,11 +915,32 @@ finalPrice = price - (price * discountRate / 100)
 
 | 필드 | 허용값 | 비고 |
 |---|---|---|
-| `category` | `COSTUME` · `SKIN` · `EVENT` | 장착 가능한 것은 `COSTUME`뿐(§15-1 (3)) |
+| `category` | `COSTUME` · `BACKGROUND` · `SKIN` · `EVENT` | 장착 가능한 것은 `COSTUME`뿐(§15-1 (3)) |
 | `rarity` | `COMMON` · `UNCOMMON` · `RARE` · `EPIC` · `LEGENDARY` | **5등급 전부 실사용 중**(시드 12종 분포: 2·2·3·3·2). 등급색은 라이트/다크 공통 고정 |
 | `discountRate` | `0`~`100` | 주간 할인용. **운영 주체·주기는 아직 미정** |
 
-**응답에 없는 내부 필드** — `code`(내부 식별자) · `status`(`ACTIVE`/`RETIRED`) · `sortOrder` · `createdAt`/`updatedAt`. 클라이언트가 판단에 쓸 일이 없어 노출하지 않는다. `status`가 필요해 보이면 그건 `ITEM_NOT_PURCHASABLE` 에러로 다루는 것이 맞다.
+#### `BACKGROUND`는 장착이 아니라 소유만 본다
+
+배경은 **사용자설정 > 바탕화면**에서 고르는 물건이고, 고른 값은 서버가 아니라 **기기-로컬**
+(`localStorage 'clov_appBgTheme'`)에 저장된다. 그래서 `equip`을 부르지 않는다 — 부르면
+`COSTUME`이 아니라서 `409 ITEM_NOT_EQUIPPABLE`이 맞게 떨어진다.
+
+**상점이 답하는 건 "고를 수 있는가"(소유)까지고, "무엇을 골랐는가"는 기기가 갖는다.**
+화면은 `GET /shop/inventory`의 `code`로 잠금을 표시한다.
+
+> ⚠️ 이 잠금은 **보안 경계가 아니라 화면 안내다.** 적용은 CSS 변수라 콘솔로 바꿀 수 있다.
+> 서버가 지켜야 할 건 구매뿐이고 그건 `user_inventory_items`가 이미 지킨다. 여기에
+> 서버 검증을 더 붙이려 하지 말 것 — 지킬 자산이 없다.
+
+**응답에 없는 내부 필드** — `status`(`ACTIVE`/`RETIRED`) · `sortOrder` · `createdAt`/`updatedAt`. 클라이언트가 판단에 쓸 일이 없어 노출하지 않는다. `status`가 필요해 보이면 그건 `ITEM_NOT_PURCHASABLE` 에러로 다루는 것이 맞다.
+
+> **`code`는 2026-08-04에 노출로 바꿨다.** 원래는 여기 함께 적혀 있었다("클라이언트가
+> 판단에 쓸 일이 없다"). 배경 상품이 그 전제를 깼다 — 사용자설정이 **특정 아이템을 지목해서**
+> 보유 여부를 물어야 하는데, `id`는 환경마다 다른 auto-increment PK라 프론트에 상수로
+> 박을 수 없다.
+>
+> **`imageUrl`로 대조하는 우회는 쓰지 말 것.** 썸네일 경로를 바꾸는 순간(배경 id 변경 등)
+> **이미 산 사람의 소유가 풀린다.** 표현용 필드를 신원 확인에 쓰면 이렇게 된다.
 
 ### 15-4. 원장(`wallet_transactions`)
 
