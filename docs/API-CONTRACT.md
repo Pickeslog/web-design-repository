@@ -4,7 +4,7 @@
 > `clov-api/docs/API-CONTRACT.md`·`clov-web/docs/API-CONTRACT.md`는 이 문서를 가리키는 포인터일 뿐이다.
 > **계약 변경은 리더만** 이 문서를 수정한다. 다른 사람은 이슈로 제안한다.
 > 근거: DB [`../api-spec/05-db-unified-final.md`](../api-spec/05-db-unified-final.md)(20테이블) · 화면 명세(`../test-web-design/*/*.md`).
-> 최종 갱신: 2026-08-04 — **§13 `MEMBER_LEFT` 신설**(clov-api #122) — 프로즈가 이미 약속하던 '퇴장'에 대응 행이 없던 것을 메웠다. 탭은 `FRIEND`(근거는 §13 해당 항목). 이전 2026-07-30 — **§15 Shop(상점)·Wallet 신설**(#14) + §14 상점 에러 6종 + §5 `equippedItem` + **시작 골드 1,000 확정**(구현값 20,000은 테스트 데이터에 맞춘 값이라 폐기). 이전 2026-07-20 — §2 `details`·§14 공통 6종(#3) + §4-1 auth 스키마·인증 에러코드·비번 정책(#6) + §4-2 소셜 토큰 전달(일회성 코드)·동의(#5 준비) + **§4-3 공통 읽기 모델·§5~§13 요청/응답·pagination 스키마 보강**(발명 위험 제거, M2 팬아웃 선행) + §4 소셜 콜백 `users` 생성 시점 정정(consent-선행). 이전 2026-07-14 — 구 계약(즉시입장·OAuth-only·SB3.5) 대체.
+> 최종 갱신: 2026-08-04 — **§13 `MEMBER_JOINED`·`JOIN_ACCEPTED`를 `JOIN`→`FRIEND`로 이동**(web-design-repository#51) — `JOIN` 탭은 알림 테이블을 조회하지 않는 가입 신청 처리함이라 정보성 알림이 안 보이던 문제(`MEMBER_LEFT`와 같은 원인). 이전 — **§13 `MEMBER_LEFT` 신설**(clov-api #122) — 프로즈가 이미 약속하던 '퇴장'에 대응 행이 없던 것을 메웠다. 탭은 `FRIEND`(근거는 §13 해당 항목). 이전 2026-07-30 — **§15 Shop(상점)·Wallet 신설**(#14) + §14 상점 에러 6종 + §5 `equippedItem` + **시작 골드 1,000 확정**(구현값 20,000은 테스트 데이터에 맞춘 값이라 폐기). 이전 2026-07-20 — §2 `details`·§14 공통 6종(#3) + §4-1 auth 스키마·인증 에러코드·비번 정책(#6) + §4-2 소셜 토큰 전달(일회성 코드)·동의(#5 준비) + **§4-3 공통 읽기 모델·§5~§13 요청/응답·pagination 스키마 보강**(발명 위험 제거, M2 팬아웃 선행) + §4 소셜 콜백 `users` 생성 시점 정정(consent-선행). 이전 2026-07-14 — 구 계약(즉시입장·OAuth-only·SB3.5) 대체.
 
 ---
 
@@ -669,14 +669,14 @@
 |---|---|---|---|---|---|
 | FRIEND | `ROOM_UPDATE` | 방 정보 수정 | 수정자 | roomId | — |
 | FRIEND | `MEMBER_LEFT` | 방 나가기 → **남은 멤버 전원에게**(나간 사람 제외) | **나간 사람** | roomId | — |
+| FRIEND | `MEMBER_JOINED` | 신청 수락 → **기존 멤버 전원에게**(합류자 제외) | **합류자** | joinRequestId | — |
+| FRIEND | `JOIN_ACCEPTED` | 신청 수락 → **신청자 본인에게** | 수락자 | joinRequestId | — |
 | FRIEND | `MEMORY_WRITE` | 추억 작성 | 작성자 | memoryId | — |
 | FRIEND | `LETTER_RECEIVE` | 편지 수신 | 보낸이 | letterId | — |
 | FRIEND | `PLAN_CREATE` | 약속 등록 | 등록자 | planId | — |
 | FRIEND | `PLAN_COMPLETE` | 약속 완료 | 완료자 | planId | — |
 | FRIEND | `LEVEL_UP` | 우정 레벨업 | **null** | roomId | `{"level": 3}` |
 | JOIN | `JOIN_REQUEST` | 가입 신청 | 신청자 | joinRequestId | — |
-| JOIN | `JOIN_ACCEPTED` | 신청 수락 → **신청자 본인에게** | 수락자 | joinRequestId | — |
-| JOIN | `MEMBER_JOINED` | 신청 수락 → **기존 멤버 전원에게**(합류자 제외) | **합류자** | joinRequestId | — |
 | NOTICE | `ADMIN_NOTICE` | 운영 공지 | null | null | `{"title":…,"content":…}` |
 
 - **레벨업만 `actor`가 없다**(방 전체 이벤트). `actor_id`는 nullable이라 스키마 변경 불필요.
@@ -684,10 +684,13 @@
 - **`MEMBER_JOINED`의 수신자에서 합류자 본인은 뺀다.** 공용 팬아웃(`NotificationMapper.insertMany`)이 `actor_id`와 같은 수신자를 제외하는 규칙과 같다 — 도메인이 자체 SQL로 팬아웃을 다시 쓰면 이 조건을 빠뜨리기 쉽다(clov-api #90).
 - 기존에 `JOIN_REQUEST`로 쌓인 합류 알림 row는 **마이그레이션하지 않는다.** 데모 전 테스트 데이터뿐이라 `@test.local` 정리와 함께 지운다. 새 값부터 적용한다.
 - **★ `MEMBER_LEFT`가 `JOIN`이 아니라 `FRIEND`인 이유 (리더 확정 2026-08-04, clov-api #122)** — 위 정의대로 **`type`은 "어느 탭에 보일지"이지 주제 분류가 아니다.** `JOIN` 탭은 가입 신청을 **승인/거절하는 처리함**이다(프론트 `Notifications.jsx`는 JOIN 탭에서 알림을 조회조차 하지 않는다 — `enabled: activeTab !== 'JOIN'`). 퇴장은 처리할 게 없는 **정보성 알림**이라 처리함에 넣으면 두 가지가 깨진다. ①**사용자가 볼 수 없다** — 알림 목록에 안 뜨고 소식 피드에서만 보인다. 나가기 확인창은 "남은 멤버에게 나갔다고 알림이 가요"라고 약속한다. ②**처리함은 비워야 하는 통인데** 안 없어지는 항목이 섞이면 뱃지가 0이 되지 않고, 그때부터 뱃지가 무시된다.
-  - 짝인 `MEMBER_JOINED`(JOIN)와 **탭이 갈리는 것은 알고 내린 결정이다.** 대칭보다 "사용자가 실제로 볼 수 있는 곳에 뜨는 것"을 우선했다. 입장 쪽 배치는 별도로 다룬다.
   - 수신자·actor 규칙은 `MEMBER_JOINED`와 같다 — **남은 멤버 전원에게, 나간 사람 본인은 제외**, actor는 나간 사람. 공용 팬아웃(`NotificationMapper.insertMany`)이 `actor_id`와 같은 수신자를 빼는 규칙을 그대로 탄다.
   - `referenceId`는 `roomId`다. 나가기에는 `joinRequestId` 같은 참조 대상이 없다(`ROOM_UPDATE`·`LEVEL_UP`과 같은 처리).
   - 이 절 도입부가 이미 "서버가 멤버 입·**퇴장**…을 트리거로 생성"이라고 적고 있었는데 표에 대응 행이 없었다. **프로즈가 약속한 것을 표가 빠뜨린 상태였고, 이 행이 그 구멍을 메운다.**
+- **★ `MEMBER_JOINED`·`JOIN_ACCEPTED`도 `JOIN`이 아니라 `FRIEND`다 (리더 확정 2026-08-04, web-design-repository#51)** — `MEMBER_LEFT`를 `FRIEND`로 정할 때 세운 원칙("`type`은 처리할 게 있는 탭인지로 가른다")을 그대로 적용한다. `JOIN` 탭은 `Notifications.jsx`가 알림 테이블을 아예 조회하지 않는 **가입 신청 처리함**이다(`enabled: activeTab !== 'JOIN'`) — 정보성 알림을 거기 두면 사용자가 볼 방법이 없다. 실제로 `#112`/`#113`으로 두 subType을 만든 뒤에도 알림 화면 어디에도 안 뜨는 상태였다(소식 피드의 "최신 5건" 안에 남아 있을 때만 보임). `MEMBER_JOINED`와의 대칭 때문에 처음엔 `JOIN`이 맞아 보였지만, **대칭보다 "실제로 보이는 곳"을 다시 한번 우선했다** — `MEMBER_LEFT` 때와 같은 판단.
+  - `JOIN` 탭에는 이제 `JOIN_REQUEST`만 남는다(사문화된 정의 — 생산자 없음, `getJoinRequests()` 리소스가 그 역할을 대신함). **`JOIN` 탭은 알림 테이블과 사실상 무관해진다.**
+  - `clov-web` 쪽 변경은 없다 — `RoomPreviewModal.metaFor`가 `#239`에서 이미 `subType` 기준으로 갈라둬서, `type` 값이 바뀌어도 같은 `JOIN_SUBTYPE_META`를 `FRIEND_SUBTYPE_META`로 옮기기만 하면 된다(구현 PR에서 처리). **`#239`가 먼저 머지돼 있어야 한다** — 순서가 반대면 입장·수락 알림이 잠깐 "◯◯님의 행운편지"로 잘못 뜨는 회귀가 생긴다.
+  - 기존에 `type='JOIN'`으로 쌓인 row는 `MEMBER_LEFT` 때와 같은 이유로 **마이그레이션하지 않는다**(데모 전 테스트 데이터).
 - **방 설정 변경은 `FRIEND`다.** 친구 활동이므로 '관리진 공지' 탭이 아니다(2026-07-24 이동).
 - `NOTICE` 탭은 운영 공지 발행 기능이 생길 때까지 비어 있다. **프론트는 정직한 빈 상태를 보여준다**(가짜 공지를 하드코딩하지 않는다).
 - `payload`는 문구에 필요한 부가 정보만 담는 자유 형식 JSON. 없으면 `null`.
