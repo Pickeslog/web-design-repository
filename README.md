@@ -1,24 +1,43 @@
 # 🍀 Clov Web Design Repository
 
-> Clov 프로젝트의 **화면 명세서·UI/UX 설계 문서**와 **동작하는 HTML 프로토타입**을 함께 관리하는 저장소입니다.
+> Clov 프로젝트의 **화면 명세서·UI/UX 설계 문서**, **API 계약(SSOT)·DB 설계**, **동작하는 HTML 프로토타입**을 함께 관리하는 저장소입니다.
 
 ## 📖 목적
 
 Clov는 "친구와의 약속을 함께 완성하고, 그 순간을 추억으로 남기는" 우정 기록 서비스입니다.
-이 저장소는 두 가지 산출물을 담습니다.
+이 저장소는 세 가지 산출물을 담습니다.
 
 1. **설계 문서** — 서비스 구조 원칙, 화면 명세서, 사용자 플로우, 컴포넌트 설계, 팀 작업 가이드
-2. **프로토타입** — 프레임워크 없이 순수 HTML/CSS/JavaScript로 만든, 실제로 클릭·전환되는 화면(`test-web-design/`)
+2. **API 계약·DB 설계** — `clov-api`·`clov-web`이 함께 보는 단일 기준(SSOT) 문서
+3. **프로토타입** — 프레임워크 없이 순수 HTML/CSS/JavaScript로 만든, 실제로 클릭·전환되는 화면(`test-web-design/`)
 
 ## 📂 저장소 구성
 
 | 폴더 | 내용 |
 |---|---|
-| `test-web-design/` | 동작하는 HTML/CSS/JS 화면 프로토타입 (이 저장소의 핵심) |
+| [`docs/`](docs/) | ⭐**API 계약(SSOT)·DB 접속 설정·코드 컨벤션 등 공용 문서 허브** — [`docs/README.md`](docs/README.md)부터 읽으세요 |
+| [`api-spec/`](api-spec/) | DB 통합 ERD·DDL, 리소스 맵, OpenAPI 스펙 |
+| `test-web-design/` | 동작하는 HTML/CSS/JS 화면 프로토타입 |
 | `screen-spec-source/` | 화면 명세서 소스 문서 (`00`~`09`) |
 | `team-guides/` | 팀원·AI 에이전트 협업 작업 가이드 (`10`~`15`) |
+| `templates/` | 이슈·PR·버그 리포트 템플릿 |
 | `work-logs/` | 팀원별 작업 내역 기록 |
 | `CLAUDE.md` / `AGENTS.md` | AI 에이전트가 이 저장소에서 작업할 때 따르는 지침 |
+
+## 📚 API·DB 문서 (`docs/`, `api-spec/`)
+
+`clov-api`·`clov-web`은 각자 저장소에 문서를 복제하지 않고, 이 저장소를 **단일 기준(SSOT)** 으로 가리키는 포인터만 둡니다. 계약을 바꿀 때는 이 저장소의 문서를 먼저 고칩니다.
+
+| 문서 | 내용 |
+|---|---|
+| [docs/API-CONTRACT.md](docs/API-CONTRACT.md) | ⭐API 계약 단일 기준 — 요청/응답 스키마, 에러 코드, 권한 모델 |
+| [docs/DB-SETUP.md](docs/DB-SETUP.md) | 로컬 DB 접속 설정 |
+| [docs/CODE-CONVENTION.md](docs/CODE-CONVENTION.md) | 팀 공통 코드 컨벤션 |
+| [docs/roadmap.md](docs/roadmap.md) | 전체 진행 흐름·역할 |
+| [api-spec/05-db-unified-final.md](api-spec/05-db-unified-final.md) | DB 통합 ERD·DDL (구현 기준) |
+| [api-spec/openapi.yaml](api-spec/openapi.yaml) | OpenAPI 스펙 |
+
+> `docs/`에서 읽는 순서는 [docs/README.md](docs/README.md)에 정리되어 있습니다.
 
 ## 🖥 화면 프로토타입 (`test-web-design/`)
 
