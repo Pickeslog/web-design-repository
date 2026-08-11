@@ -1181,7 +1181,16 @@ finalPrice = price - (price * discountRate / 100)
 >
 > ⚠️ **이 값을 더 올리면 카탈로그가 며칠 만에 비어 상점 화면이 의미를 잃는다.** 획득량을 늘리기 전에 **카탈로그를 먼저 늘리는지** 본다. 반대로 스킨이 계속 늘면 같은 상한으로도 일수가 늘어나므로, **획득량과 카탈로그는 같이 본다.**
 
-**조회 API는 없다.** 현재 화면에 거래 내역이 없어서다. 필요해지면 `GET /shop/transactions`로 추가하되, 그때 §15에 함께 적는다.
+**조회 API — `clov-api#135`.** 골드가 왜 0인지 화면에서 확인할 방법이 없던 문제를 풀기 위해 추가했다.
+
+```
+GET /api/v1/shop/transactions?page=&size=
+```
+
+- 응답: `{ items: [{ id, reason, amount, balanceAfter, referenceId, createdAt }], earnedToday, dailyCap, remaining }`
+- `items`는 최신순(`created_at DESC`), 기본 `size=20`(다른 목록 API와 동일한 page/size 관례, 전체 개수는 안 준다 — `GET /rooms/{roomId}/memories`와 동일)
+- `reason`은 가공하지 않고 원문(`SIGNUP_GRANT`·`PURCHASE`·`EARN_MASCOT`·`EARN_MEMORY`·`EARN_MEMORY_FREE`·`ADMIN_GRANT`) 그대로 준다 — 화면 문구 매핑은 프론트 책임
+- `earnedToday`·`remaining`은 §15-4의 하루 총 상한(`dailyCap`, 현재 6,000) 기준 — 화면이 "오늘 3,200 / 6,000"을 그릴 수 있다
 
 > ⚠️ 동시 구매를 막기 위해 구매는 **지갑 행을 잠그고**(`SELECT ... FOR UPDATE`) 읽는다. 단일 인스턴스 전제가 아니어도 안전하다.
 
