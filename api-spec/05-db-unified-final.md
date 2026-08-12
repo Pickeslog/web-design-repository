@@ -77,6 +77,13 @@ erDiagram
     USERS ||--o{ FRIENDSHIP_EXP_LOGS : triggers
 
     USERS ||--o{ REFRESH_TOKENS : owns
+    USERS ||--o{ PASSWORD_RESET_TOKENS : requests
+
+    USERS ||--|| USER_WALLETS : has
+    USERS ||--o{ USER_INVENTORY_ITEMS : owns
+    SHOP_ITEMS ||--o{ USER_INVENTORY_ITEMS : purchased_as
+    USERS ||--o{ WALLET_TRANSACTIONS : has
+    SHOP_ITEMS ||--o{ USER_PREFERENCES : equipped_by
 
     USERS {
         BIGINT id PK
@@ -87,7 +94,6 @@ erDiagram
         VARCHAR nickname
         VARCHAR profile_image_url "nullable"
         DATE birthdate "nullable"
-        VARCHAR personal_invite_code UK
         BOOLEAN is_anonymized
         DATETIME anonymized_at "nullable"
         DATETIME created_at
@@ -102,6 +108,7 @@ erDiagram
         VARCHAR letter_theme "nullable"
         VARCHAR memory_card_theme "nullable"
         VARCHAR mascot_type
+        BIGINT equipped_item_id FK "✨ nullable, shop_items(COSTUME만)"
         DATETIME updated_at
     }
     FRIENDSHIP_ROOMS {
@@ -262,6 +269,52 @@ erDiagram
         DATETIME revoked_at "nullable"
         DATETIME created_at
     }
+    PASSWORD_RESET_TOKENS {
+        BIGINT id PK
+        BIGINT user_id FK
+        VARCHAR token_hash UK
+        DATETIME expires_at "발급 +1시간"
+        DATETIME used_at "nullable, 1회용"
+        DATETIME revoked_at "nullable, 재요청 시 이전 토큰 무효화"
+        DATETIME created_at
+    }
+    SHOP_ITEMS {
+        BIGINT id PK
+        VARCHAR code UK
+        VARCHAR name
+        VARCHAR description "nullable"
+        VARCHAR category "COSTUME/SKIN/EVENT"
+        VARCHAR rarity "COMMON/UNCOMMON/RARE/EPIC/LEGENDARY"
+        INT price
+        INT discount_rate
+        VARCHAR image_url "nullable"
+        VARCHAR status "ACTIVE/RETIRED"
+        INT sort_order
+        DATETIME created_at
+        DATETIME updated_at
+    }
+    USER_WALLETS {
+        BIGINT user_id PK, FK
+        INT balance
+        DATETIME created_at
+        DATETIME updated_at
+    }
+    USER_INVENTORY_ITEMS {
+        BIGINT id PK
+        BIGINT user_id FK
+        BIGINT item_id FK
+        INT paid_price
+        DATETIME purchased_at
+    }
+    WALLET_TRANSACTIONS {
+        BIGINT id PK
+        BIGINT user_id FK
+        VARCHAR reason "SIGNUP_GRANT/PURCHASE/ADMIN_GRANT/EARN_*"
+        INT amount
+        INT balance_after
+        BIGINT reference_id "nullable"
+        DATETIME created_at
+    }
 ```
 
 ---
@@ -284,16 +337,17 @@ CREATE TABLE users (
   terms_agreed_at       DATETIME     NULL COMMENT '✚ 서비스 이용약관 동의 시각(이메일 가입 필수, 앱 레벨 강제)',
   privacy_agreed_at     DATETIME     NULL COMMENT '✚ 개인정보 처리방침 동의 시각(이메일 가입 필수, 앱 레벨 강제)',
   marketing_agreed_at   DATETIME     NULL COMMENT '✚ 마케팅 수신 동의 시각(선택, NULL=미동의)',
-  personal_invite_code  VARCHAR(20)  NOT NULL,
   is_anonymized         BOOLEAN      NOT NULL DEFAULT FALSE COMMENT '탈퇴=익명화(기록 보존)',
   anonymized_at         DATETIME     NULL,
   created_at            DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at            DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   UNIQUE KEY uk_users_email (email),
-  UNIQUE KEY uk_users_invite_code (personal_invite_code),
-  UNIQUE KEY uk_users_oauth (oauth_provider, oauth_subject)  -- ✚ 소셜 계정 중복 방지
+  UNIQUE KEY uk_users_oauth (oauth_provider, oauth_subject)  -- ✚ 소셜 계정 중복 차단
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- ⚠️ 2026-08-13 정정: personal_invite_code 컬럼은 2026-08-04에 제거됐다(계약 §5 — 2주 넘게
+-- 아무도 쓰지 않았고 받는 API·화면도 없었다). 이 문서만 반영이 안 돼 있었다. 다시 필요해지면
+-- (예: 개인 코드로 방 밖 친구를 초대) 그때 새로 설계한다 — 계약 §5의 근거를 그대로 따른다.
 
 -- 2. USER_PREFERENCES ✨ (사용자설정 08 테마 pane)
 CREATE TABLE user_preferences (
@@ -305,6 +359,7 @@ CREATE TABLE user_preferences (
   letter_theme          VARCHAR(20)  NULL COMMENT '선물상자/우체통',
   memory_card_theme     VARCHAR(20)  NULL COMMENT '빨랫줄/겹침/일기장',
   mascot_type           VARCHAR(20)  NOT NULL DEFAULT 'crobi' COMMENT 'crobi/rob',
+  equipped_item_id      BIGINT       NULL COMMENT '✨ 장착 중인 shop_items.id(COSTUME만), NULL=미장착. FK는 shop_items 생성 후 §2 끝에서 추가',
   updated_at            DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (user_id),
   CONSTRAINT fk_user_prefs_user FOREIGN KEY (user_id) REFERENCES users(id)
@@ -600,7 +655,71 @@ CREATE TABLE password_reset_tokens (
   CONSTRAINT fk_password_reset_tokens_user FOREIGN KEY (user_id) REFERENCES users(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- 유효 판정: used_at IS NULL AND revoked_at IS NULL AND expires_at > NOW()
+
+-- 20. SHOP_ITEMS ✨ (2026-07-30 계약 §15 신설, #14 — 상점 카탈로그)
+CREATE TABLE shop_items (
+  id             BIGINT       NOT NULL AUTO_INCREMENT,
+  code           VARCHAR(50)  NOT NULL,
+  name           VARCHAR(100) NOT NULL,
+  description    VARCHAR(200) NULL,
+  category       VARCHAR(20)  NOT NULL COMMENT 'COSTUME/SKIN/EVENT',
+  rarity         VARCHAR(20)  NOT NULL COMMENT 'COMMON/UNCOMMON/RARE/EPIC/LEGENDARY',
+  price          INT          NOT NULL,
+  discount_rate  INT          NOT NULL DEFAULT 0,
+  image_url      VARCHAR(512) NULL,
+  status         VARCHAR(20)  NOT NULL DEFAULT 'ACTIVE',
+  sort_order     INT          NOT NULL DEFAULT 0,
+  created_at     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_shop_items_code (code)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 21. USER_WALLETS ✨ (골드는 사용자 단위 — 방과 무관)
+CREATE TABLE user_wallets (
+  user_id     BIGINT   NOT NULL,
+  balance     INT      NOT NULL DEFAULT 0,
+  created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (user_id),
+  CONSTRAINT fk_user_wallets_user FOREIGN KEY (user_id) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 22. USER_INVENTORY_ITEMS ✨ (보유함)
+CREATE TABLE user_inventory_items (
+  id            BIGINT   NOT NULL AUTO_INCREMENT,
+  user_id       BIGINT   NOT NULL,
+  item_id       BIGINT   NOT NULL,
+  paid_price    INT      NOT NULL,
+  purchased_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_user_inventory_items_user_item (user_id, item_id),
+  CONSTRAINT fk_user_inventory_items_user FOREIGN KEY (user_id) REFERENCES users(id),
+  CONSTRAINT fk_user_inventory_items_item FOREIGN KEY (item_id) REFERENCES shop_items(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 23. WALLET_TRANSACTIONS ✨ (지갑 변동 원장 — reason: SIGNUP_GRANT/PURCHASE/ADMIN_GRANT/
+--     EARN_MASCOT/EARN_MEMORY/EARN_MEMORY_FREE. 계약 §15-4 — 획득 사유만 EARN_ 접두사를
+--     쓰고, 하루 총 상한 합산이 그 접두사로 판정한다)
+CREATE TABLE wallet_transactions (
+  id             BIGINT      NOT NULL AUTO_INCREMENT,
+  user_id        BIGINT      NOT NULL,
+  reason         VARCHAR(30) NOT NULL,
+  amount         INT         NOT NULL,
+  balance_after  INT         NOT NULL,
+  reference_id   BIGINT      NULL,
+  created_at     DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_wallet_transactions_user (user_id, created_at),
+  CONSTRAINT fk_wallet_transactions_user FOREIGN KEY (user_id) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- user_preferences.equipped_item_id는 shop_items보다 먼저 정의되므로 FK를 여기서 뒤늦게 건다.
+ALTER TABLE user_preferences
+  ADD CONSTRAINT fk_user_preferences_equipped_item FOREIGN KEY (equipped_item_id) REFERENCES shop_items(id);
 ```
+
+> ⚠️ **2026-08-13 정정**: 위 4개 테이블(20~23번)은 2026-07-30 계약 §15(상점·지갑) 신설 때 이 SSOT를 거치지 않고 개발 DB·`clov-api/src/test/resources/schema.sql`에 직접 반영됐던 것을, 이번에 뒤늦게 문서로 옮겨왔다(총 **19 → 24 테이블**). 앞으로 스키마를 바꿀 땐 이 문서를 먼저 고치고 `schema.sql`을 다시 뽑는 순서를 지킨다 — `schema.sql` 자체에도 "SSOT에서 파생, 수동 복제 금지"라고 적혀 있다.
 
 ---
 
@@ -635,6 +754,7 @@ CREATE TABLE password_reset_tokens (
 | ➕ 제약 강화 | `UNIQUE(plan_id, writer_id)` · `room_join_requests.version` · 방별 인덱스 |
 | ➕ 컬럼 보강 | `friendship_rooms.scheduled_delete_at`·`description`·`transport_type`, `room_members.status_message`·`is_favorite` |
 | ✚ B에서 이식 | `users.oauth_*` · `memories.deleted_at` · `plan_stage_photos.stage` 명명 enum |
+| ➕ 상점 도메인 4종 추가 (7/30 계약 §15, 2026-08-13 문서 반영) | `SHOP_ITEMS` · `USER_WALLETS` · `USER_INVENTORY_ITEMS` · `WALLET_TRANSACTIONS` + `USER_PREFERENCES.equipped_item_id` (19→**24**) — 개발 DB엔 이미 있었는데 이 SSOT만 안 따라가고 있었다 |
 
 ---
 

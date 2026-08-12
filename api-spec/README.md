@@ -27,8 +27,8 @@
 | [02-db-api-reconciliation.md](02-db-api-reconciliation.md) | **`docs-archive`의 기존 DB/API 설계와 정합** — 채택/확장/충돌·결정(D1~D6 ✅확정) ⭐먼저 읽기 |
 | [03-db-extensions.md](03-db-extensions.md) | archive DB 스키마에 반영할 **신규 테이블·컬럼 델타**(JOIN_REQUESTS·PLAN_STAGE_PHOTOS·NOTIFICATIONS·MEMORY_MESSAGES 등) |
 | [04-erd-and-ddl.md](04-erd-and-ddl.md) | ⚠️ (구버전, 15테이블) — **[05](05-db-unified-final.md)로 대체됨** |
-| [05-db-unified-final.md](05-db-unified-final.md) | ⭐**구현 기준** — 두 설계 갈래 통일한 최종 ERD + MySQL 8 DDL(**20개 테이블**). 실제 실행되는 DDL은 [`clov-api/src/main/resources/schema.sql`](https://github.com/Pickeslog/clov-api/blob/main/src/main/resources/schema.sql)에 이관됨(2026-07-15) |
-| `openapi.yaml` | (다음 단계) 요청/응답 스키마·에러·예시가 담긴 기계용 OpenAPI 3.1 |
+| [05-db-unified-final.md](05-db-unified-final.md) | ⭐**구현 기준** — 두 설계 갈래 통일한 최종 ERD + MySQL 8 DDL(**24개 테이블**, 상점 도메인 4종 포함). 테스트 DB 초기화용 DDL은 [`clov-api/src/test/resources/schema.sql`](https://github.com/Pickeslog/clov-api/blob/main/src/test/resources/schema.sql) |
+| `openapi.yaml` | ⚠️ 초안 상태로 방치됨(갱신 안 됨) — 실제 API 계약 SSOT는 [`docs/API-CONTRACT.md`](../docs/API-CONTRACT.md) |
 
 > ⚠️ **중요**: `docs-archive/`에 **기획안 기반 DB/API 설계(스택·MySQL 스키마 확정)**가 이미 있다. 이 폴더의 리소스 맵은 프로토타입 역산본이라 네이밍(`spaces`↔`rooms`)·입장 흐름 등에서 그것과 어긋나므로, **[02-db-api-reconciliation.md](02-db-api-reconciliation.md)의 정합 결과를 기준**으로 확정한다.
 
@@ -51,13 +51,3 @@
 3. **기록 보존** — 탈퇴는 삭제가 아니라 **익명화**("언노운"), 추억·편지·사진 유지.
 4. **친구별 관점 기록** — 같은 약속(`scheduleId` 참조)에 친구별 메시지·기록.
 5. **XP/레벨은 서버 계산** — 클라 값 신뢰 금지.
-
----
-
-## 진행 상태
-
-- ✅ 규약·보안([00](00-conventions-and-security.md)) / 리소스 맵([01](01-resource-map.md)) / 정합·결정([02](02-db-api-reconciliation.md)) / DB 델타([03](03-db-extensions.md)) — 정합 확정본 완료(D1~D6 반영).
-- ✅ **ERD+DDL([05](05-db-unified-final.md), 20테이블)** — 04를 대체. 정규화 보정 완료(`LETTER_FAVORITES` 분리, `UNIQUE(memory_id, tag)`).
-- ✅ **DB 부트스트랩 (2026-07-15)** — MySQL `st4_clov`에 테이블 19개 생성, `clov-api` 연결 설정·팀원 가이드 완료. → [작업 로그](../work-logs/2026-07-15-db-bootstrap.md) · [팀원용 설정법](../docs/DB-SETUP.md)
-- 🔶 **`openapi.yaml`** — 초안 존재(~85%). 단일 계약으로 **승격 전 정리 필요**: 응답 봉투(`{success,data}`), `stage_no`→`stage`, `ROOM_FULL`↔`ROOM_CAPACITY_EXCEEDED`. → [작업 로그 §4](../work-logs/2026-07-15-db-bootstrap.md)
-- ⬜ **코드 스캐폴딩** — MyBatis 매퍼/도메인 + React api 서비스·훅. 프론트는 아직 빈 Vite 스켈레톤(스택 미설치).
