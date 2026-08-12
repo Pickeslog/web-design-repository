@@ -726,7 +726,7 @@ ALTER TABLE user_preferences
 ## 3. 설계 노트 (Clov 원칙 반영)
 
 - **방장 없음**: 어떤 테이블에도 `owner_id`/`role` 없음. `room_invites.created_by`·`exp_logs.triggered_by`·`notifications.actor_id`는 이력/유발자일 뿐.
-- **정원 8명**: `MAX_ROOM_MEMBERS=8`은 스키마 제약이 아니라 **앱 로직**으로 강제. 가입 신청 수락 트랜잭션 안에서 `SELECT COUNT(*) FROM room_members WHERE room_id=? AND status='ACTIVE' FOR UPDATE`로 잠근 뒤 8 미만 확인, 초과 시 `409 ROOM_FULL`. `LEFT`는 카운트 제외.
+- **정원 8명**: `MAX_ROOM_MEMBERS=8`은 스키마 제약이 아니라 **앱 로직**으로 강제. 가입 신청 수락 트랜잭션 안에서 `SELECT COUNT(*) FROM room_members WHERE room_id=? AND status='ACTIVE' FOR UPDATE`로 잠근 뒤 8 미만 확인, 초과 시 `409 ROOM_CAPACITY_EXCEEDED`. `LEFT`는 카운트 제외.
 - **가입 승인 동시성(D1)**: `room_join_requests.version` 낙관적 락으로 동시 수락 경합 차단(`UPDATE ... WHERE id=? AND status='PENDING' AND version=?`, 영향 0행이면 `409 JOIN_REQUEST_ALREADY_PROCESSED`). 되돌리기는 `undo_deadline_at`(수락+5분) 이내만, 초과 시 `409 JOIN_REQUEST_UNDO_EXPIRED`.
 - **인생4컷 잠금**: `plan_stage_photos` `UNIQUE(plan_id, stage)` — 재업로드는 앱에서 `409 STAGE_ALREADY_UPLOADED`. 수정/삭제 API를 아예 두지 않음(증거).
 - **초대 코드 방당 1행(A안, 2026-07-23)**: `room_invites` `UNIQUE(room_id)` — 방마다 초대 코드는 한 행. "재발급"은 새 행 INSERT가 아니라 **제자리 회전**(upsert: 코드·만료 갱신+`status='ACTIVE'`)이라 USED/CANCELED 행이 누적되지 않는다. 코드는 **다회용**(수락해도 소모 안 함). 상태 도메인=`ACTIVE`/`CANCELED`, `used_at`은 미사용(컬럼만 보존). 기존 데이터 정리는 수동 마이그레이션 `clov-api/db/manual-migrations/2026-07-23-invite-code-per-room.sql`.
