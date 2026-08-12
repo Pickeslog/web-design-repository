@@ -144,7 +144,7 @@
 { "authenticated": false, "linkCandidate": true, "registrationToken": "...",
   "maskedEmail": "k***@gmail.com" }
 ```
-- 코드 무효/만료/재사용 → `401 OAUTH_CODE_INVALID` · 이메일 미수신 → `400 OAUTH_EMAIL_REQUIRED`
+- 코드 무효/만료/재사용 → `400 OAUTH_CODE_INVALID` · 이메일 미수신 → `400 OAUTH_EMAIL_REQUIRED`
 - **(C)는 (B)와 다르다.** `findByOauth`는 실패했지만 같은 이메일의 기존 계정(다른 provider로 가입됨)이 있을 때 반환된다. `registrationToken`은 (B)와 같은 저장소(`OAuthOneTimeCodeStore`)를 재사용하지만 **가리키는 대상이 다르다** — 신규 프로필이 아니라 "이 계정에 연결해도 되는가"라는 확인 대상이다. `maskedEmail`만 주고 전체 이메일은 노출하지 않는다.
 
 **consent** `POST /api/v1/auth/oauth/consent` — 위 (B) 신규 소셜 사용자만
@@ -153,7 +153,7 @@
 // → users 생성(동의 시각 기록) 후 인증 성공 data(§4-1)
 { "accessToken": "...", "refreshToken": "...", "user": { /* UserSummary */ } }
 ```
-- 필수 약관(`service`·`privacy`) false → `400 TERMS_REQUIRED` · `registrationToken` 무효/만료 → `401 OAUTH_CODE_INVALID`
+- 필수 약관(`service`·`privacy`) false → `400 TERMS_REQUIRED` · `registrationToken` 무효/만료 → `400 OAUTH_CODE_INVALID`
 - 소셜 계정은 `password` NULL, `oauth_provider`/`oauth_subject`로 식별. 이메일 로그인 불가(§4-1 login은 password NULL 계정 거부).
 
 **link-confirm** `POST /api/v1/auth/oauth/link-confirm` — 위 (C) 연결 후보만 (2026-08-13 신설, web-design-repository#90)
@@ -162,7 +162,7 @@
 // → 기존 계정으로 인증 성공 data(§4-1) — 새 users row는 만들지 않는다
 { "accessToken": "...", "refreshToken": "...", "user": { /* UserSummary */ } }
 ```
-- `registrationToken` 무효/만료/재사용 → `401 OAUTH_CODE_INVALID`
+- `registrationToken` 무효/만료/재사용 → `400 OAUTH_CODE_INVALID`
 - 사용자가 연결을 거절하면 별도 API 호출 없이 그냥 로그인 흐름을 중단한다(프론트가 화면을 닫으면 끝).
 - `oauth_provider`/`oauth_subject`는 **바꾸지 않는다** — 최초 가입 provider 값을 그대로 유지한다. 다음에 이 provider로 다시 로그인해도 매번 이 (C)→`link-confirm` 경로를 탄다 — 스키마 변경 없이 여러 provider를 계속 지원하는 방식이다.
 - ⚠️ **자동 로그인이 아니라 확인을 반드시 거친다.** 소셜 프로필의 이메일이 실제로 검증된 값인지 100% 보장할 수 없어서, 확인 없이 바로 로그인시키면 계정 탈취 리스크가 있다고 판단했다(팀 확정, 2026-08-13).
@@ -834,7 +834,7 @@
 | `INVALID_TOKEN` | 401 | refresh 토큰 위조/형식 오류 |
 | `TOKEN_EXPIRED` | 401 | refresh 토큰 만료 또는 `revoked_at` 존재 |
 | `OAUTH_EMAIL_REQUIRED` | 400 | 소셜 로그인인데 이메일 미수신(`users.email` NOT NULL 방어) |
-| `OAUTH_CODE_INVALID` | 401 | 소셜 일회성 코드/registrationToken 무효·만료·재사용(§4-2) |
+| `OAUTH_CODE_INVALID` | 400 | 소셜 일회성 코드/registrationToken 무효·만료·재사용(§4-2). ⚠️ 예전엔 401로 적혀 있었으나 실제 구현(`ErrorCode.java`)은 처음부터 400 — 문서만 실제와 어긋나 있었다(clov-api#169 작업 중 발견). 401로 바꾸면 안 되는 이유는 §4-4의 `PASSWORD_RESET_TOKEN_INVALID`와 같다 — 401은 프론트 인터셉터가 `/auth/refresh`를 시도하게 만든다 |
 | `PASSWORD_RESET_TOKEN_INVALID` | **400** | 재설정 토큰 무효·만료·이미 사용됨(§4-4). **세 경우를 구분하지 않는다.** 401이 아닌 이유는 §4-4 — 프론트 401 인터셉터가 refresh를 시도한다 |
 | **상점 (§15)** | | |
 | `SHOP_ITEM_NOT_FOUND` | 404 | 존재하지 않는 아이템 |
