@@ -738,6 +738,7 @@
 | FRIEND | `MEMBER_JOINED` | 신청 수락 → **기존 멤버 전원에게**(합류자 제외) | **합류자** | joinRequestId | — |
 | FRIEND | `JOIN_ACCEPTED` | 신청 수락 → **신청자 본인에게** | 수락자 | joinRequestId | — |
 | FRIEND | `MEMORY_WRITE` | 추억 작성 | 작성자 | memoryId | — |
+| FRIEND | `COMMENT` | 댓글 작성 → **그 추억의 작성자 1명에게만**(팬아웃 아님, 작성자 본인 댓글은 제외) | 댓글 작성자 | memoryId | — |
 | FRIEND | `LETTER_RECEIVE` | 편지 수신 | 보낸이 | letterId | — |
 | FRIEND | `PLAN_CREATE` | 약속 등록 | 등록자 | planId | — |
 | FRIEND | `PLAN_COMPLETE` | 약속 완료 | 완료자 | planId | — |
